@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AII Smart Paper Maker — Phase 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2E5AAC;
+    --primary-hover: #244a90;
+    --navy: #16294A;
+    --tint: #EAF1FB;
+    --tint2: #EEF3FC;
+    --ink: #16213A;
+    --ink2: #1B2433;
+    --muted: #5B6678;
+    --muted2: #8A93A4;
+    --border: #E3E8F1;
+    --line: #EDF0F5;
+    --surface: #FFFFFF;
+    --bg: #EEF1F6;
+    --ok-bg: #E6F4EC;   --ok-tx: #2E7D5B;
+    --prog-bg: #E7EEFB; --prog-tx: #2E5AAC;
+    --warn-bg: #FBF1DF; --warn-tx: #B5760E;
+    --err-bg: #FBE9E7;  --err-tx: #C0392B;
+    --easy: #7FC8A0; --medium: #5B8DEF; --hard: #E89B5B;
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --shadow: 0 2px 12px rgba(22,33,58,.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { text-decoration: none; color: inherit; }
+  .urdu, .ur {
+    direction: rtl;
+    font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
+    line-height: 2;
+  }
+
+  /* ---- Shell (Direction A — navy institutional sidebar) ---- */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
+    display: flex; flex-direction: column; padding: 18px 0;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 2px 22px 20px; }
+  .brand .logo {
+    width: 40px; height: 40px; border-radius: 11px; background: var(--primary);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
+  .brand .tag { font-size: 10.5px; color: #9DB0D0; letter-spacing: .04em; }
+  .nav-label {
+    font-size: 10.5px; color: #6E84AD; letter-spacing: .1em;
+    padding: 6px 22px; text-transform: uppercase;
+  }
+  .nav-link {
+    display: flex; align-items: center; gap: 13px; padding: 12px 22px;
+    color: #C6D2E8; font-size: 14.5px; font-weight: 500;
+    border-left: 3px solid transparent; cursor: pointer;
+  }
+  .nav-link svg { flex-shrink: 0; }
+  .nav-link:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .nav-link[data-active="1"] { color: #fff; background: rgba(255,255,255,.08); border-left-color: #5B8DEF; }
+  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; }
+  .sidebar-foot .box {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 11px; padding: 13px; font-size: 12px; color: #C6D2E8; line-height: 1.6;
+  }
+
+  /* ---- Main ---- */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { display: none; }
+  .bottomnav { display: none; }
+  .content { padding: 30px 34px; max-width: 1180px; width: 100%; margin: 0 auto; }
+
+  .screen { display: none; }
+  .screen[data-active="1"] { display: block; }
+
+  .head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; gap: 14px; }
+  .h1 { margin: 0; font-size: 24px; font-weight: 700; }
+  .sub { margin: 5px 0 0; font-size: 14px; color: var(--muted); }
+
+  .twocol { display: grid; grid-template-columns: 1fr 360px; gap: 22px; align-items: start; }
+  /* Generate screen: form (left) + live serif preview (right, wider). */
+  .twocol-gen { display: grid; grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+
+  /* ---- Cards (Direction B — rounded) ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-card); padding: 22px; box-shadow: var(--shadow);
+  }
+  .card-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+
+  label { display: block; margin-top: 14px; font-weight: 600; font-size: 12.5px; color: var(--ink2); }
+  label:first-of-type { margin-top: 0; }
+  input, select {
+    width: 100%; min-height: 48px; padding: 11px 14px; margin-top: 7px;
+    border: 1px solid #D6DEEA; border-radius: 11px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+  input[type="file"] { padding: 11px 12px; }
+  input:focus, select:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint);
+  }
+
+  .field-row { display: flex; gap: 14px; }
+  .field-row > div { flex: 1; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+  /* ---- Hero "Generate" button (Direction B) ---- */
+  .gen-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    background: var(--primary); color: #fff; min-height: 52px; padding: 0 20px;
+    border: none; border-radius: 13px; font-size: 15.5px; font-weight: 700;
+    font-family: inherit; box-shadow: 0 6px 16px rgba(46,90,172,.3); cursor: pointer;
+  }
+  .gen-btn:hover { background: var(--primary-hover); }
+  .gen-btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+  .ghost-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
+    min-height: 48px; padding: 0 16px; border-radius: 12px;
+    font-size: 14.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .ghost-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .ratio-preset {
+    background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
+    padding: 7px 12px; border-radius: 9px; font-size: 13.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .ratio-preset:hover { border-color: var(--primary); color: var(--primary); }
+
+  .tip {
+    background: var(--navy); color: #fff; border-radius: 16px; padding: 18px;
+  }
+  .tip .k { font-size: 11px; color: #9DB0D0; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+  .tip .v { font-size: 13.5px; line-height: 1.5; color: #DCE6F5; }
+  .tip .v b { color: #fff; }
+
+  .summary-row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 5px 0; }
+  .summary-row span { color: var(--muted); }
+
+  .pill { font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 99px; }
+  .bloom-bar { display: flex; gap: 4px; height: 11px; border-radius: 99px; overflow: hidden; margin: 4px 0 10px; }
+
+  /* ---- Question review cards ---- */
+  .question-card {
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px; margin-top: 13px; background: #fff; box-shadow: var(--shadow);
+  }
+  .question-card .ur { font-size: 16px; color: var(--muted); margin-top: 6px; text-align: right; }
+  .question-card ul { margin: 8px 0 0; padding-left: 20px; }
+  .meta { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  #status { margin-top: 4px; font-size: 14px; color: var(--muted); min-height: 20px; }
+
+  /* ---- Live paper preview (Direction C — serif, A4 sheet) ---- */
+  .paper-sheet {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(22,33,58,.1);
+    padding: 34px 38px; font-size: 13.5px; line-height: 1.55;
+  }
+  .paper-sheet .ph-head { text-align: center; border-bottom: 2.5px solid var(--ink); padding-bottom: 14px; margin-bottom: 16px; }
+  .paper-sheet .ph-en { font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; font-weight: 700; }
+  .paper-sheet .ph-ur { font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif; font-size: 17px; margin: 4px 0; direction: rtl; }
+  .paper-sheet .ph-exam { font-size: 12.5px; color: var(--muted); }
+  .paper-sheet .ph-meta {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px;
+    font-size: 12.5px; font-weight: 600; border-bottom: 1px solid #ddd;
+    padding-bottom: 12px; margin-bottom: 14px;
+  }
+  .paper-sheet .ph-sec { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 15px; margin: 16px 0 10px; }
+  .paper-sheet .ph-q { margin-bottom: 14px; }
+  .paper-sheet .ph-q .q-en { font-weight: 500; }
+  .paper-sheet .ph-q .q-ur { text-align: right; font-size: 15px; color: #3A3A3A; direction: rtl; font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif; }
+  .paper-sheet .ph-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 24px; color: #3A3A3A; margin-top: 5px; }
+  .paper-empty { color: var(--muted2); text-align: center; padding: 40px 20px; font-size: 14px; }
+
+  /* ---- Summary tables (Direction A — structured) ---- */
+  .summary-box { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 14px; background: #fff; }
+  .summary-box .t { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+  .summary-box table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .summary-box th { text-align: left; color: var(--muted); font-weight: 600; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .summary-box td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+
+  hr { border: none; border-top: 1px dashed var(--border); margin: 18px 0; }
+
+  details.qdetails { margin-top: 18px; }
+  details.qdetails > summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--primary); }
+
+  /* ---- Analytics (item analysis) ---- */
+  .an-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .an-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: #FBFCFE; }
+  .an-card .v { font-size: 22px; font-weight: 700; color: var(--primary); }
+  .an-card .c { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  table.an { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.an th, table.an td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  table.an th { background: var(--tint2); font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+  table.an td.num, table.an th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.an tr.q-bad td { background: var(--err-bg); }
+  table.an tr.q-review td { background: var(--warn-bg); }
+  table.an tr.q-good td:first-child { box-shadow: inset 4px 0 0 var(--ok-tx); }
+  table.an tr.q-review td:first-child { box-shadow: inset 4px 0 0 var(--warn-tx); }
+  table.an tr.q-bad td:first-child { box-shadow: inset 4px 0 0 var(--err-tx); }
+  .pd { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pd.good { color: var(--ok-tx); }
+  .pd.mid { color: var(--warn-tx); }
+  .pd.weak { color: var(--err-tx); }
+  .pd.unreliable { color: var(--muted2); font-weight: 400; }
+  .bar-wrap { background: var(--line); border-radius: 5px; height: 14px; width: 108px; overflow: hidden; display: inline-block; vertical-align: middle; }
+  .bar { height: 100%; border-radius: 5px; }
+  .bar.good { background: var(--ok-tx); }
+  .bar.mid { background: var(--warn-tx); }
+  .bar.weak { background: var(--err-tx); }
+  .qbadge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+  .qbadge.q-good { background: var(--ok-bg); color: var(--ok-tx); }
+  .qbadge.q-review { background: var(--warn-bg); color: var(--warn-tx); }
+  .qbadge.q-bad { background: var(--err-bg); color: var(--err-tx); }
+  .an-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin: 4px 0 12px; }
+  .an-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+  .an-legend .q-good { background: var(--ok-tx); }
+  .an-legend .q-review { background: var(--warn-tx); }
+  .an-legend .q-bad { background: var(--err-tx); }
+  .flag-reason { font-size: 12px; color: var(--err-tx); }
+  .an-empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+
+  /* Quick-stats empty state (new user, no data yet) */
+  .qs-empty {
+    border: 1px dashed #C6CFDD; background: #FBFCFE; border-radius: 14px;
+    padding: 18px 20px; color: var(--muted); font-size: 14px; line-height: 1.6;
+  }
+  .qs-empty b { color: var(--ink); }
+
+  /* ---- Urdu / RTL ---- */
+  /* Jameel Noori Nastaleeq is NOT bundled — used only if installed on the
+     machine (same assumption the Word export makes); else Noto Nastaliq Urdu. */
+  @font-face {
+    font-family: 'Jameel Noori Nastaleeq';
+    src: local('Jameel Noori Nastaleeq'), local('Jameel Noori Nastalique'), local('JameelNooriNastaleeq');
+    font-display: swap;
+  }
+  .lang-toggle { display: flex; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; overflow: hidden; margin: 0 22px 16px; }
+  .lang-toggle button {
+    flex: 1; background: transparent; color: #9DB0D0; border: none;
+    padding: 6px 0; min-height: 0; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .lang-toggle button[data-active="1"] { background: var(--primary); color: #fff; }
+  .lang-toggle button.urdu { direction: rtl; font-size: 13.5px; }
+
+  /* In Urdu mode the whole UI switches to the Nastaliq stack. */
+  body.lang-ur { font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'IBM Plex Sans', sans-serif; }
+  body.lang-ur .h1 { line-height: 1.7; }
+  body.lang-ur .nav-link, body.lang-ur .nav-i { line-height: 1.9; }
+
+  /* RTL structural fixes for the bits dir=rtl doesn't get right on its own. */
+  [dir="rtl"] .nav-link { border-left: none; border-right: 3px solid transparent; }
+  [dir="rtl"] .nav-link[data-active="1"] { border-right-color: #5B8DEF; }
+  [dir="rtl"] table.an th, [dir="rtl"] table.an td,
+  [dir="rtl"] .summary-box th, [dir="rtl"] .summary-box td { text-align: right; }
+  [dir="rtl"] table.an td.num, [dir="rtl"] table.an th.num { text-align: left; }
+  [dir="rtl"] .an-legend .dot { margin-right: 0; margin-left: 5px; }
+  [dir="rtl"] .question-card ul { padding-left: 0; padding-right: 20px; }
+  /* The exam-paper preview is a fixed document — keep it LTR even in Urdu UI. */
+  [dir="rtl"] .paper-sheet { direction: ltr; }
+
+  /* ---- Manual question selection: per-question "Change" + replace modal ---- */
+  .paper-sheet .ph-change {
+    margin-top: 7px; background: none; border: 1px dashed #C6CFDD; color: var(--primary);
+    font-size: 11.5px; font-weight: 600; font-family: inherit; border-radius: 6px;
+    padding: 3px 10px; min-height: 0; cursor: pointer;
+  }
+  .paper-sheet .ph-change:hover { background: var(--tint); }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(22,33,58,.5); z-index: 100;
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay[data-open="1"] { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 640px;
+    max-height: 86vh; display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 24px; line-height: 1; cursor: pointer; min-height: 0; padding: 0 4px; }
+  .modal-close:hover { background: none; color: var(--ink); }
+  .modal-body { padding: 14px 20px 20px; overflow-y: auto; }
+  .cand { border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .cand:hover { border-color: var(--primary); }
+  .cand .c-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .cand .c-en { font-weight: 500; font-size: 14px; }
+  .cand .c-ur { font-size: 15px; color: var(--muted); text-align: right; margin-top: 4px; }
+  .cand .c-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 11px; }
+  @media (max-width: 760px) { .modal { max-height: 92vh; } }
+
+  /* ---- Responsive: sidebar -> bottom tab bar (Direction A on mobile) ---- */
+  @media (max-width: 1024px) { .twocol, .twocol-gen { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) {
+    body { background: #F4F6FA; }
+    .sidebar { display: none; }
+    .topbar {
+      display: block; background: var(--navy); color: #fff;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar .row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+    .topbar .logo {
+      width: 38px; height: 38px; border-radius: 10px; background: var(--primary);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .topbar .name { font-size: 15.5px; font-weight: 700; line-height: 1.1; }
+    .topbar .tag { font-size: 10.5px; color: #9DB0D0; }
+    .bottomnav {
+      display: flex; position: sticky; bottom: 0; background: #fff;
+      border-top: 1px solid var(--border); align-items: center;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px)); z-index: 10;
+      box-shadow: 0 -2px 10px rgba(22,33,58,.06);
+    }
+    .nav-i {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      flex: 1; font-size: 10.5px; font-weight: 600; color: var(--muted2); cursor: pointer;
+    }
+    .nav-i[data-active="1"] { color: var(--primary); }
+    .content { padding: 16px 14px 26px; }
+    .field-row { flex-direction: column; gap: 14px; }
+    .desktop-only { display: none !important; }
+    .card { padding: 18px; }
+    .h1 { font-size: 20px; }
+    .actions .gen-btn, .actions .ghost-btn { flex: 1 1 100%; }
+    .paper-sheet { padding: 22px 18px; }
+  }
+  @media (min-width: 761px) { .mobile-only { display: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"></path><path d="M19 8v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h8z"></path><path d="M9 13h6M9 17h4"></path></svg></div>
+      <div><div class="name">AII Smart Paper Maker</div><div class="tag" data-i18n="brand.tag">Phase 1 · MVP</div></div>
+    </div>
+    <div class="lang-toggle">
+      <button data-lang-opt="en" data-active="1" onclick="applyLang('en')">EN</button>
+      <button data-lang-opt="ur" data-active="0" class="urdu" onclick="applyLang('ur')">اردو</button>
+    </div>
+    <div class="nav-label" data-i18n="sidebar.workspace">Workspace</div>
+    <nav>
+      <a class="nav-link" data-nav="generate" data-active="1" onclick="showScreen('generate')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg><span data-i18n="nav.generate">Generate paper</span></a>
+      <a class="nav-link" data-nav="syllabus" onclick="showScreen('syllabus')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 20h16"></path></svg><span data-i18n="nav.syllabus">Syllabus upload</span></a>
+      <a class="nav-link" data-nav="adaptive" onclick="showScreen('adaptive')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3.4"></circle></svg><span data-i18n="nav.adaptive">Adaptive paper</span></a>
+      <a class="nav-link" data-nav="results" onclick="showScreen('results')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="20"></line><rect x="6" y="11" width="3" height="7" fill="currentColor" stroke="none"></rect><rect x="11" y="6" width="3" height="12" fill="currentColor" stroke="none"></rect><rect x="16" y="14" width="3" height="4" fill="currentColor" stroke="none"></rect></svg><span data-i18n="nav.results">Results &amp; preview</span></a>
+      <a class="nav-link" data-nav="analytics" onclick="showScreen('analytics')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"></path><path d="M21 3v6h-6"></path><path d="M12 12 21 3"></path></svg><span data-i18n="nav.analytics">Analytics</span></a>
+      <a class="nav-link" data-nav="settings" onclick="showScreen('settings')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 11v8h14v-8"></path><path d="M9 19v-5h6v5"></path></svg><span data-i18n="nav.settings">More / settings</span></a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="box" data-i18n="sidebar.foot">AI · bilingual · Bloom-tagged questions &amp; balanced papers.</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+
+    <!-- mobile top bar -->
+    <div class="topbar">
+      <div style="height:env(safe-area-inset-top,0px);"></div>
+      <div class="row">
+        <div class="logo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"></path><path d="M19 8v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h8z"></path><path d="M9 13h6M9 17h4"></path></svg></div>
+        <div style="flex:1; min-width:0;"><div class="name">AII Smart Paper Maker</div><div class="tag" data-i18n="brand.tag">Phase 1 · MVP</div></div>
+        <div class="lang-toggle" style="margin:0; flex:0 0 auto; width:96px;">
+          <button data-lang-opt="en" data-active="1" onclick="applyLang('en')">EN</button>
+          <button data-lang-opt="ur" data-active="0" class="urdu" onclick="applyLang('ur')">اردو</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== GENERATE ===== -->
+      <section class="screen" data-screen="generate" data-active="1">
+        <!-- Quick stats (home overview) -->
+        <div id="quickStats" class="an-cards" style="margin-bottom:20px"></div>
+
+        <div class="head">
+          <div><h1 class="h1" data-i18n="gen.title">Generate paper</h1><p class="sub desktop-only" data-i18n="gen.sub">AI se bilingual, Bloom-tagged questions banayein, phir balanced paper assemble karein.</p></div>
+        </div>
+        <p class="sub mobile-only" style="margin:2px 0 16px" data-i18n="gen.sub">AI se bilingual, Bloom-tagged questions banayein, phir balanced paper assemble karein.</p>
+
+        <div class="twocol-gen">
+          <!-- LEFT column: form + summary + tip -->
+          <div class="stack">
+          <div class="card">
+            <label data-i18n="form.classGrade">Class/Grade select karen</label>
+            <select id="syllabusGrade" onchange="onGradeChange()">
+              <option value="">-- Loading classes... --</option>
+            </select>
+
+            <label data-i18n="form.syllabusTopic">Ya syllabus se topic select karen</label>
+            <select id="syllabusTopic" onchange="onSyllabusTopicChange()">
+              <option value="">-- Pehle class select karen --</option>
+            </select>
+
+            <div class="field-row">
+              <div>
+                <label data-i18n="form.subject">Subject</label>
+                <input id="subject" placeholder="e.g. Mathematics" value="Mathematics" />
+              </div>
+              <div>
+                <label data-i18n="form.topic">Topic</label>
+                <input id="topic" placeholder="e.g. Fractions" value="Fractions" />
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div>
+                <label data-i18n="form.totalQuestions">Total questions</label>
+                <input id="totalQuestions" type="number" value="10" />
+              </div>
+              <div>
+                <label data-i18n="form.difficulty">Difficulty</label>
+                <select id="difficulty">
+                  <option value="easy" data-i18n="opt.easy">Easy</option>
+                  <option value="medium" selected data-i18n="opt.medium">Medium</option>
+                  <option value="hard" data-i18n="opt.hard">Hard</option>
+                </select>
+              </div>
+            </div>
+
+            <label data-i18n="form.questionTypes">Question types (generate)</label>
+            <div style="display:flex; gap:18px; flex-wrap:wrap; margin-bottom:10px;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="multiple-choice" checked /> <span data-i18n="qtype.mcq">Multiple choice</span></label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="short-answer" /> <span data-i18n="qtype.short">Short answer</span></label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="essay" /> <span data-i18n="qtype.essay">Essay</span></label>
+            </div>
+
+            <label data-i18n="form.bloomDist">Bloom distribution</label>
+            <select id="bloomDist">
+              <option value="balanced" data-i18n="opt.balanced">Balanced</option>
+              <option value="foundational" data-i18n="opt.foundational">Foundational</option>
+              <option value="advanced" data-i18n="opt.advanced">Advanced</option>
+            </select>
+
+            <label data-i18n="form.paperType">Paper type</label>
+            <select id="paperType" onchange="onPaperTypeChange()">
+              <option value="mixed" selected data-i18n="opt.mixed">Mixed (sab types)</option>
+              <option value="mcq" data-i18n="opt.mcq">MCQ-only</option>
+              <option value="subjective" data-i18n="opt.subjective">Subjective</option>
+              <option value="custom-ratio" data-i18n="opt.customRatio">Custom ratio (MCQ vs Subjective)</option>
+            </select>
+
+            <div id="ratioBlock" style="display:none; margin:2px 0 12px;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                <button type="button" class="ratio-preset" onclick="setRatioPreset(20)">20/80</button>
+                <button type="button" class="ratio-preset" onclick="setRatioPreset(30)">30/70</button>
+                <button type="button" class="ratio-preset" onclick="setRatioPreset(50)">50/50</button>
+                <button type="button" class="ratio-preset" onclick="setRatioPreset(70)">70/30</button>
+                <button type="button" class="ratio-preset" onclick="setRatioPreset(80)">80/20</button>
+              </div>
+              <label style="font-weight:normal; margin:0;" data-i18n="form.mcqPercent">MCQ % (baaki subjective)</label>
+              <input id="mcqPercent" type="number" min="0" max="100" value="50" />
+            </div>
+
+            <div class="actions">
+              <button class="gen-btn" onclick="generateQuestions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg><span data-i18n="btn.genQuestions">1. Generate questions (AI)</span></button>
+              <button class="ghost-btn" onclick="buildPaper()" data-i18n="btn.buildPaper">2. Build paper from bank</button>
+            </div>
+          </div>
+
+            <div class="card" style="padding:18px;">
+              <div class="card-title" data-i18n="card.thisPaper">This paper</div>
+              <div class="summary-row"><span data-i18n="sum.subject">Subject</span><b id="sumSubject">Mathematics</b></div>
+              <div class="summary-row"><span data-i18n="sum.topic">Topic</span><b id="sumTopic">Fractions</b></div>
+              <div class="summary-row"><span data-i18n="sum.questions">Questions</span><b id="sumCount">10</b></div>
+              <div class="summary-row"><span data-i18n="sum.language">Language</span><b data-i18n="sum.langValue">Urdu + English</b></div>
+            </div>
+            <div class="tip">
+              <div class="k" data-i18n="tip.label">Tip</div>
+              <div class="v" data-i18n-html="tip.generate">Pehle <b>Syllabus upload</b> karein to topic dropdown khud bhar jayega.</div>
+            </div>
+          </div><!-- /left column -->
+
+          <!-- RIGHT column: live bilingual serif paper preview (Direction C) -->
+          <div>
+            <div id="genStatus" class="js-status" style="font-size:14px; color:var(--muted); min-height:20px; margin-bottom:10px;"></div>
+            <div id="paperPreviewGen" class="paper-sheet js-paper-preview">
+              <div class="paper-empty" data-i18n="preview.empty">Abhi koi paper nahi bana. "Generate paper" screen par ja kar paper build karein — yahan live preview aa jayegi.</div>
+            </div>
+            <div class="actions" style="margin-top:14px">
+              <button class="ghost-btn" id="genExportBtn" style="display:none" onclick="showScreen('results')" data-i18n="btn.toExport">Export &amp; results →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SYLLABUS ===== -->
+      <section class="screen" data-screen="syllabus">
+        <div class="head"><div><h1 class="h1" data-i18n="syl.title">Syllabus upload</h1><p class="sub" data-i18n="syl.sub">PDF/textbook upload karen — AI usme se topics nikaal kar save karega. Phir wo "Class select" dropdown mein aa jayenge.</p></div></div>
+
+        <div class="twocol">
+          <div class="card">
+            <label data-i18n="form.subject">Subject</label>
+            <input id="pdfSubject" placeholder="e.g. Mathematics" />
+
+            <label data-i18n="form.classGrade2">Class/Grade</label>
+            <input id="pdfGrade" placeholder="e.g. Grade 4" />
+
+            <label data-i18n="form.singlePdf">Single PDF (text-based ya scanned)</label>
+            <input type="file" id="pdfFile" accept=".pdf" />
+            <div class="actions">
+              <button class="gen-btn" id="pdfUploadBtn" onclick="uploadSyllabusPdf()" data-i18n="btn.uploadExtract">Upload &amp; extract topics</button>
+            </div>
+            <span id="pdfStatus" style="display:inline-block;margin-top:10px;font-size:13px;color:var(--muted)"></span>
+
+            <hr />
+
+            <label data-i18n="form.zip">Ya ZIP (multiple PDF + images JPG/PNG)</label>
+            <input type="file" id="zipFile" accept=".zip" />
+            <div class="actions">
+              <button class="ghost-btn" id="zipUploadBtn" onclick="uploadSyllabusZip()" data-i18n="btn.uploadZip">Upload ZIP &amp; extract topics</button>
+            </div>
+            <span id="zipStatus" style="display:inline-block;margin-top:10px;font-size:13px;color:var(--muted)"></span>
+            <div id="zipFileResults" style="margin-top:10px"></div>
+          </div>
+
+          <div class="tip">
+            <div class="k" data-i18n="tip.howItWorks">How it works</div>
+            <div class="v" data-i18n="tip.howItWorksBody">AII PDF/images parse karke chapters aur sub-topics nikaalta hai, phir unhe save kar deta hai. Subject + grade dono bharna zaroori hai.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ADAPTIVE ===== -->
+      <section class="screen" data-screen="adaptive">
+        <div class="head"><div><h1 class="h1" data-i18n="adapt.title">Adaptive paper</h1><p class="sub" data-i18n="adapt.sub">Kisi paper ke uploaded results se class ki weak Bloom levels nikaal kar un par focus karta naya paper banayen.</p></div></div>
+
+        <div class="twocol">
+          <div class="card">
+            <label data-i18n="form.learnFrom">Learn from paper ID (jiska result upload hua hai)</label>
+            <input id="adaptiveSourceId" placeholder="e.g. 4a0af91b-..." />
+            <p class="sub" style="margin-top:10px" data-i18n="adapt.note">Total questions aur difficulty upar "Generate paper" screen ke fields se liye jate hain.</p>
+            <div class="actions">
+              <button class="gen-btn" onclick="buildAdaptivePaper()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg><span data-i18n="btn.genAdaptive">Generate adaptive paper</span></button>
+            </div>
+          </div>
+          <div class="tip">
+            <div class="k" data-i18n="tip.aiiSuggests">AII suggests</div>
+            <div class="v" data-i18n="tip.aiiSuggestsBody">Jin Bloom levels par class sab se kam score karti hai, un par zyada questions allocate kiye jate hain — taake practice un kamzoriyon par ho.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== RESULTS & LIVE PREVIEW ===== -->
+      <section class="screen" data-screen="results">
+        <div class="head">
+          <div><h1 class="h1" data-i18n="results.title">Results &amp; preview</h1><p class="sub" data-i18n="results.sub">Final review se pehle live paper dekh lein, phir export ya dashboard kholein.</p></div>
+          <div class="desktop-only"><button class="ghost-btn" onclick="showScreen('generate')" data-i18n="btn.backGenerate">← Back to generate</button></div>
+        </div>
+        <div id="status" class="js-status"></div>
+
+        <div class="twocol" style="margin-top:14px">
+          <div>
+            <!-- Direction C: live bilingual serif paper sheet -->
+            <div id="paperPreview" class="paper-sheet js-paper-preview">
+              <div class="paper-empty" data-i18n="preview.empty">Abhi koi paper nahi bana. "Generate paper" screen par ja kar paper build karein — yahan live preview aa jayegi.</div>
+            </div>
+
+            <details class="qdetails" id="qdetailsWrap" style="display:none">
+              <summary data-i18n="details.summary">Per-question details (Bloom, marks, options)</summary>
+              <div id="adaptiveSummary"></div>
+              <div id="balanceSummary"></div>
+              <div id="results"></div>
+            </details>
+          </div>
+
+          <div class="stack">
+            <div class="card" style="padding:20px;">
+              <div class="card-title" data-i18n="card.exportResults">Export &amp; results</div>
+              <div class="actions" style="flex-direction:column; align-items:stretch;">
+                <button class="gen-btn" id="printBtn" style="display:none" onclick="openPrintView()" data-i18n="btn.print">Print / PDF dekhen</button>
+                <button class="ghost-btn" id="dashboardBtn" style="display:none" onclick="openDashboard()" data-i18n="btn.dashboard">Result dashboard dekhen</button>
+                <button class="ghost-btn" id="csvDownloadBtn" style="display:none" onclick="downloadResultCSV()" data-i18n="btn.csvDownload">📥 Result CSV download karen</button>
+                <button class="ghost-btn" id="csvUploadBtn" style="display:none" onclick="document.getElementById('csvFileInput').click()" data-i18n="btn.csvUpload">📤 Filled CSV upload karen</button>
+                <input type="file" id="csvFileInput" accept=".csv,.xlsx" style="display:none" onchange="uploadResultCSV(this)">
+              </div>
+              <p class="sub" style="margin-top:14px" data-i18n="results.actionsNote">Paper build karne ke baad ye actions enable ho jate hain.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ANALYTICS (item analysis — Phase 2.5) ===== -->
+      <section class="screen" data-screen="analytics">
+        <div class="head">
+          <div><h1 class="h1" data-i18n="an.title">Analytics</h1><p class="sub" data-i18n="an.sub">Har question ka Difficulty Index (P) aur Discrimination Index (D), plus Bloom comparison — uploaded results se. Real data; dummy nahi.</p></div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px">
+          <div class="field-row" style="align-items:flex-end">
+            <div>
+              <label data-i18n="form.paperId">Paper ID</label>
+              <input id="anPaperId" placeholder="paper banane ke baad jo ID milti hai (Results screen)" />
+            </div>
+            <div style="flex:0 0 auto; align-self:flex-end">
+              <button class="gen-btn" onclick="loadAnalytics()" data-i18n="btn.loadAnalytics">Analytics dekhen</button>
+            </div>
+          </div>
+          <div id="anUploadPicker" style="display:none; margin-top:6px">
+            <label data-i18n="an.uploadPick">Kaunsa upload (newest pehle)</label>
+            <select id="anUploadSelect" onchange="onAnUploadChange()"></select>
+          </div>
+          <div id="anStatus" style="margin-top:10px; font-size:14px; color:var(--muted); min-height:20px"></div>
+        </div>
+
+        <div id="anDashboard" style="display:none">
+          <div id="anCards" class="an-cards"></div>
+
+          <div class="card" style="margin-top:18px">
+            <div class="card-title" data-i18n="an.perQuestion">Per-question item analysis</div>
+            <div class="an-legend">
+              <span><i class="dot q-good"></i> <span data-i18n="legend.good">Good question</span></span>
+              <span><i class="dot q-review"></i> <span data-i18n="legend.review">Review</span></span>
+              <span><i class="dot q-bad"></i> <span data-i18n="legend.problematic">Problematic</span></span>
+            </div>
+            <div style="overflow-x:auto"><div id="anQuestionsWrap"></div></div>
+          </div>
+
+          <div class="card" style="margin-top:18px">
+            <div class="card-title" data-i18n="an.bloomCompare">Bloom's Taxonomy comparison</div>
+            <p class="sub" style="margin-top:2px" data-i18n="an.bloomSub">Kaunse cognitive levels kamzor hain — marks-weighted average.</p>
+            <div style="overflow-x:auto"><div id="anBloomWrap"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="screen" data-screen="settings">
+        <div class="head"><div><h1 class="h1" data-i18n="set.title">School settings</h1><p class="sub" data-i18n="set.sub">Letterhead / logo — har paper aur print par istemaal hoga.</p></div></div>
+
+        <div class="twocol">
+          <div class="card">
+            <label data-i18n="form.logo">Logo upload karen</label>
+            <input type="file" id="logoFile" accept="image/*" onchange="onLogoSelected(event)" />
+            <img id="logoPreview" style="display:none;width:60px;height:60px;object-fit:contain;margin-top:8px;border:1px solid var(--border);border-radius:8px" />
+
+            <label data-i18n="form.schoolEn">School/Institute name (English)</label>
+            <input id="schoolNameEn" placeholder="e.g. Ameen Islamic Institute" />
+
+            <label data-i18n="form.schoolUr">School/Institute name (Urdu)</label>
+            <input id="schoolNameUr" class="urdu" placeholder="e.g. امین اسلامک انسٹیٹیوٹ" dir="rtl" style="font-family:'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu',serif" />
+
+            <label data-i18n="form.address">Address</label>
+            <input id="schoolAddress" placeholder="e.g. Swat, Khyber Pakhtunkhwa" />
+
+            <label data-i18n="form.accent">Accent colour (letterhead line)</label>
+            <input id="accentColor" type="color" value="#0e4d3c" style="min-height:48px;cursor:pointer;padding:4px" />
+
+            <div class="actions">
+              <button class="gen-btn" onclick="saveSchoolSettings()" data-i18n="btn.saveSettings">Settings save karen</button>
+            </div>
+            <span id="settingsStatus" style="display:inline-block;margin-top:10px;font-size:13px;color:var(--muted)"></span>
+          </div>
+
+          <div class="card" style="padding:18px;">
+            <div class="card-title" data-i18n="card.headerPreview">Header preview</div>
+            <div style="border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center;">
+              <div id="hpEn" style="font-family:'Source Serif 4',Georgia,serif; font-size:15px; font-weight:700;">Government High School</div>
+              <div id="hpUr" class="urdu" style="font-size:14px; margin:3px 0;"></div>
+              <div style="font-size:11.5px; color:var(--muted);">Examination — 2026</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- bottom nav (mobile) -->
+    <div class="bottomnav">
+      <div class="nav-i" data-nav="generate" data-active="1" onclick="showScreen('generate')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg><span data-i18n="navShort.generate">Generate</span></div>
+      <div class="nav-i" data-nav="syllabus" onclick="showScreen('syllabus')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 20h16"></path></svg><span data-i18n="navShort.syllabus">Syllabus</span></div>
+      <div class="nav-i" data-nav="adaptive" onclick="showScreen('adaptive')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3.4"></circle></svg><span data-i18n="navShort.adaptive">Adaptive</span></div>
+      <div class="nav-i" data-nav="results" onclick="showScreen('results')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="20"></line><rect x="6" y="11" width="3" height="7" fill="currentColor" stroke="none"></rect><rect x="11" y="6" width="3" height="12" fill="currentColor" stroke="none"></rect><rect x="16" y="14" width="3" height="4" fill="currentColor" stroke="none"></rect></svg><span data-i18n="navShort.results">Results</span></div>
+      <div class="nav-i" data-nav="analytics" onclick="showScreen('analytics')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"></path><path d="M21 3v6h-6"></path><path d="M12 12 21 3"></path></svg><span data-i18n="navShort.analytics">Analytics</span></div>
+      <div class="nav-i" data-nav="settings" onclick="showScreen('settings')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg><span data-i18n="navShort.more">More</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Replace-question modal (manual question selection) ===== -->
+<div class="modal-overlay" id="replaceModal" data-open="0" onclick="if(event.target===this)closeReplaceModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" data-i18n="modal.title">Replace question</div>
+        <div class="modal-sub" id="replaceSub"></div>
+      </div>
+      <button class="modal-close" onclick="closeReplaceModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body"><div id="replaceCandidates"></div></div>
+  </div>
+</div>
+
+<script src="/apiClient.js"></script>
+<script>
+let logoBase64 = null;
+let currentPaperId = null;
+let selectedSyllabusTopicId = null;
+let currentLang = 'en';
+let currentPaperData = null;   // last built/updated paper, for manual replace
+let replacingQid = null;       // which question the open modal is replacing
+let quickStatsData = null;     // home-screen quick stats
+
+// Translate a key in the active language (for JS-rendered dynamic content).
+function t(key) {
+  const d = (typeof I18N !== 'undefined' && I18N[currentLang]) ? I18N[currentLang] : (typeof I18N !== 'undefined' ? I18N.en : {});
+  return d[key] != null ? d[key] : key;
+}
+
+// ===== i18n (EN / Urdu) =====
+// `en` values are the app's existing strings verbatim; `ur` are translations.
+// Keys map to data-i18n (textContent), data-i18n-html (innerHTML) attributes.
+const I18N = {
+  en: {
+    'brand.tag': 'Phase 1 · MVP',
+    'sidebar.workspace': 'Workspace',
+    'sidebar.foot': 'AI · bilingual · Bloom-tagged questions & balanced papers.',
+    'nav.generate': 'Generate paper',
+    'nav.syllabus': 'Syllabus upload',
+    'nav.adaptive': 'Adaptive paper',
+    'nav.results': 'Results & preview',
+    'nav.analytics': 'Analytics',
+    'nav.settings': 'More / settings',
+    'gen.title': 'Generate paper',
+    'gen.sub': 'AI se bilingual, Bloom-tagged questions banayein, phir balanced paper assemble karein.',
+    'form.classGrade': 'Class/Grade select karen',
+    'form.syllabusTopic': 'Ya syllabus se topic select karen',
+    'form.subject': 'Subject',
+    'form.topic': 'Topic',
+    'form.totalQuestions': 'Total questions',
+    'form.difficulty': 'Difficulty',
+    'form.bloomDist': 'Bloom distribution',
+    'form.paperType': 'Paper type',
+    'form.questionTypes': 'Question types (generate)',
+    'qtype.mcq': 'Multiple choice', 'qtype.short': 'Short answer', 'qtype.essay': 'Essay',
+    'opt.easy': 'Easy', 'opt.medium': 'Medium', 'opt.hard': 'Hard',
+    'opt.balanced': 'Balanced', 'opt.foundational': 'Foundational', 'opt.advanced': 'Advanced',
+    'opt.mixed': 'Mixed (all types)', 'opt.mcq': 'MCQ-only', 'opt.subjective': 'Subjective',
+    'opt.customRatio': 'Custom ratio (MCQ vs Subjective)',
+    'form.mcqPercent': 'MCQ % (rest subjective)',
+    'btn.genQuestions': '1. Generate questions (AI)',
+    'btn.buildPaper': '2. Build paper from bank',
+    'btn.toExport': 'Export & results →',
+    'btn.change': 'Change',
+    'btn.select': 'Select',
+    'label.marks': 'marks',
+    'modal.title': 'Replace question',
+    'modal.loading': 'Loading questions from bank…',
+    'modal.noCandidates': 'Is topic / Bloom level ke liye bank mein koi aur question nahi mila.',
+    'qs.papers': 'Total papers',
+    'qs.uploads': 'Is mahine results upload',
+    'qs.topSubject': 'Top subject',
+    'qs.questions': 'Question bank mein',
+    'qs.empty': 'Abhi tak koi paper nahi banaya — shuru karne ke liye <b>“Generate paper”</b> par click karein.',
+    'card.thisPaper': 'This paper',
+    'sum.subject': 'Subject', 'sum.topic': 'Topic', 'sum.questions': 'Questions',
+    'sum.language': 'Language', 'sum.langValue': 'Urdu + English',
+    'tip.label': 'Tip',
+    'tip.generate': 'Pehle <b>Syllabus upload</b> karein to topic dropdown khud bhar jayega.',
+    'syl.title': 'Syllabus upload',
+    'syl.sub': 'PDF/textbook upload karen — AI usme se topics nikaal kar save karega. Phir wo "Class select" dropdown mein aa jayenge.',
+    'form.classGrade2': 'Class/Grade',
+    'form.singlePdf': 'Single PDF (text-based ya scanned)',
+    'btn.uploadExtract': 'Upload & extract topics',
+    'form.zip': 'Ya ZIP (multiple PDF + images JPG/PNG)',
+    'btn.uploadZip': 'Upload ZIP & extract topics',
+    'tip.howItWorks': 'How it works',
+    'tip.howItWorksBody': 'AII PDF/images parse karke chapters aur sub-topics nikaalta hai, phir unhe save kar deta hai. Subject + grade dono bharna zaroori hai.',
+    'adapt.title': 'Adaptive paper',
+    'adapt.sub': 'Kisi paper ke uploaded results se class ki weak Bloom levels nikaal kar un par focus karta naya paper banayen.',
+    'form.learnFrom': 'Learn from paper ID (jiska result upload hua hai)',
+    'adapt.note': 'Total questions aur difficulty upar "Generate paper" screen ke fields se liye jate hain.',
+    'btn.genAdaptive': 'Generate adaptive paper',
+    'tip.aiiSuggests': 'AII suggests',
+    'tip.aiiSuggestsBody': 'Jin Bloom levels par class sab se kam score karti hai, un par zyada questions allocate kiye jate hain — taake practice un kamzoriyon par ho.',
+    'results.title': 'Results & preview',
+    'results.sub': 'Final review se pehle live paper dekh lein, phir export ya dashboard kholein.',
+    'btn.backGenerate': '← Back to generate',
+    'preview.empty': 'Abhi koi paper nahi bana. "Generate paper" screen par ja kar paper build karein — yahan live preview aa jayegi.',
+    'details.summary': 'Per-question details (Bloom, marks, options)',
+    'card.exportResults': 'Export & results',
+    'btn.print': 'Print / PDF dekhen',
+    'btn.dashboard': 'Result dashboard dekhen',
+    'btn.csvDownload': '📥 Result CSV download karen',
+    'btn.csvUpload': '📤 Filled CSV upload karen',
+    'results.actionsNote': 'Paper build karne ke baad ye actions enable ho jate hain.',
+    'an.title': 'Analytics',
+    'an.sub': 'Har question ka Difficulty Index (P) aur Discrimination Index (D), plus Bloom comparison — uploaded results se. Real data; dummy nahi.',
+    'form.paperId': 'Paper ID',
+    'btn.loadAnalytics': 'Analytics dekhen',
+    'an.uploadPick': 'Kaunsa upload (newest pehle)',
+    'an.perQuestion': 'Per-question item analysis',
+    'legend.good': 'Good question', 'legend.review': 'Review', 'legend.problematic': 'Problematic',
+    'an.bloomCompare': "Bloom's Taxonomy comparison",
+    'an.bloomSub': 'Kaunse cognitive levels kamzor hain — marks-weighted average.',
+    'set.title': 'School settings',
+    'set.sub': 'Letterhead / logo — har paper aur print par istemaal hoga.',
+    'form.logo': 'Logo upload karen',
+    'form.schoolEn': 'School/Institute name (English)',
+    'form.schoolUr': 'School/Institute name (Urdu)',
+    'form.address': 'Address',
+    'form.accent': 'Accent colour (letterhead line)',
+    'btn.saveSettings': 'Settings save karen',
+    'card.headerPreview': 'Header preview',
+    'navShort.generate': 'Generate', 'navShort.syllabus': 'Syllabus', 'navShort.adaptive': 'Adaptive',
+    'navShort.results': 'Results', 'navShort.analytics': 'Analytics', 'navShort.more': 'More',
+  },
+  ur: {
+    'brand.tag': 'فیز 1 · ایم وی پی',
+    'sidebar.workspace': 'ورک اسپیس',
+    'sidebar.foot': 'اے آئی · دو لسانی · بلوم ٹیگ شدہ سوالات اور متوازن پرچے۔',
+    'nav.generate': 'پرچہ بنائیں',
+    'nav.syllabus': 'نصاب اپ لوڈ',
+    'nav.adaptive': 'اڈاپٹیو پرچہ',
+    'nav.results': 'نتائج اور پیش منظر',
+    'nav.analytics': 'تجزیات',
+    'nav.settings': 'مزید / ترتیبات',
+    'gen.title': 'پرچہ بنائیں',
+    'gen.sub': 'اے آئی سے دو لسانی، بلوم ٹیگ شدہ سوالات بنائیں، پھر متوازن پرچہ ترتیب دیں۔',
+    'form.classGrade': 'کلاس/گریڈ منتخب کریں',
+    'form.syllabusTopic': 'یا نصاب سے ٹاپک منتخب کریں',
+    'form.subject': 'مضمون',
+    'form.topic': 'ٹاپک',
+    'form.totalQuestions': 'کل سوالات',
+    'form.difficulty': 'دشواری',
+    'form.bloomDist': 'بلوم تقسیم',
+    'form.paperType': 'پرچہ کی قسم',
+    'form.questionTypes': 'سوالات کی اقسام (تخلیق)',
+    'qtype.mcq': 'کثیر الانتخابی', 'qtype.short': 'مختصر جواب', 'qtype.essay': 'مضمون',
+    'opt.easy': 'آسان', 'opt.medium': 'درمیانہ', 'opt.hard': 'مشکل',
+    'opt.balanced': 'متوازن', 'opt.foundational': 'بنیادی', 'opt.advanced': 'اعلیٰ',
+    'opt.mixed': 'ملا جلا (تمام اقسام)', 'opt.mcq': 'صرف MCQ', 'opt.subjective': 'موضوعی',
+    'opt.customRatio': 'حسبِ ضرورت تناسب (MCQ بمقابلہ موضوعی)',
+    'form.mcqPercent': 'MCQ فیصد (باقی موضوعی)',
+    'btn.genQuestions': '۱۔ سوالات بنائیں (اے آئی)',
+    'btn.buildPaper': '۲۔ بینک سے پرچہ بنائیں',
+    'btn.toExport': 'ایکسپورٹ اور نتائج ←',
+    'btn.change': 'بدلیں',
+    'btn.select': 'منتخب کریں',
+    'label.marks': 'نمبر',
+    'modal.title': 'سوال بدلیں',
+    'modal.loading': 'بینک سے سوالات لوڈ ہو رہے ہیں…',
+    'modal.noCandidates': 'اس ٹاپک / بلوم لیول کے لیے بینک میں کوئی اور سوال نہیں ملا۔',
+    'qs.papers': 'کل پرچے',
+    'qs.uploads': 'اس ماہ نتائج اپ لوڈ',
+    'qs.topSubject': 'سرفہرست مضمون',
+    'qs.questions': 'سوال بینک میں',
+    'qs.empty': 'ابھی تک کوئی پرچہ نہیں بنایا — شروع کرنے کے لیے <b>”پرچہ بنائیں“</b> پر کلک کریں۔',
+    'card.thisPaper': 'یہ پرچہ',
+    'sum.subject': 'مضمون', 'sum.topic': 'ٹاپک', 'sum.questions': 'سوالات',
+    'sum.language': 'زبان', 'sum.langValue': 'اردو + انگریزی',
+    'tip.label': 'مشورہ',
+    'tip.generate': 'پہلے <b>نصاب اپ لوڈ</b> کریں تو ٹاپک ڈراپ ڈاؤن خود بھر جائے گا۔',
+    'syl.title': 'نصاب اپ لوڈ',
+    'syl.sub': 'پی ڈی ایف/نصابی کتاب اپ لوڈ کریں — اے آئی اس میں سے ٹاپکس نکال کر محفوظ کرے گا۔ پھر وہ "کلاس منتخب کریں" ڈراپ ڈاؤن میں آ جائیں گے۔',
+    'form.classGrade2': 'کلاس/گریڈ',
+    'form.singlePdf': 'واحد پی ڈی ایف (ٹیکسٹ یا اسکین شدہ)',
+    'btn.uploadExtract': 'اپ لوڈ کریں اور ٹاپکس نکالیں',
+    'form.zip': 'یا زپ (متعدد پی ڈی ایف + تصاویر JPG/PNG)',
+    'btn.uploadZip': 'زپ اپ لوڈ کریں اور ٹاپکس نکالیں',
+    'tip.howItWorks': 'یہ کیسے کام کرتا ہے',
+    'tip.howItWorksBody': 'اے آئی پی ڈی ایف/تصاویر کو پارس کر کے ابواب اور ذیلی ٹاپکس نکالتا ہے، پھر انہیں محفوظ کر دیتا ہے۔ مضمون اور گریڈ دونوں بھرنا ضروری ہے۔',
+    'adapt.title': 'اڈاپٹیو پرچہ',
+    'adapt.sub': 'کسی پرچے کے اپ لوڈ شدہ نتائج سے کلاس کے کمزور بلوم لیولز نکال کر ان پر توجہ دینے والا نیا پرچہ بنائیں۔',
+    'form.learnFrom': 'پرچہ آئی ڈی سے سیکھیں (جس کا نتیجہ اپ لوڈ ہوا ہے)',
+    'adapt.note': 'کل سوالات اور دشواری اوپر "پرچہ بنائیں" اسکرین کے فیلڈز سے لیے جاتے ہیں۔',
+    'btn.genAdaptive': 'اڈاپٹیو پرچہ بنائیں',
+    'tip.aiiSuggests': 'اے آئی تجویز',
+    'tip.aiiSuggestsBody': 'جن بلوم لیولز پر کلاس سب سے کم اسکور کرتی ہے، ان پر زیادہ سوالات مختص کیے جاتے ہیں — تاکہ ان کمزوریوں پر مشق ہو۔',
+    'results.title': 'نتائج اور پیش منظر',
+    'results.sub': 'حتمی جائزے سے پہلے لائیو پرچہ دیکھ لیں، پھر ایکسپورٹ یا ڈیش بورڈ کھولیں۔',
+    'btn.backGenerate': '← واپس پرچہ بنائیں',
+    'preview.empty': 'ابھی کوئی پرچہ نہیں بنا۔ "پرچہ بنائیں" اسکرین پر جا کر پرچہ بنائیں — یہاں لائیو پیش منظر آ جائے گا۔',
+    'details.summary': 'فی سوال تفصیلات (بلوم، نمبر، آپشنز)',
+    'card.exportResults': 'ایکسپورٹ اور نتائج',
+    'btn.print': 'پرنٹ / پی ڈی ایف دیکھیں',
+    'btn.dashboard': 'نتائج ڈیش بورڈ دیکھیں',
+    'btn.csvDownload': '📥 نتائج CSV ڈاؤن لوڈ کریں',
+    'btn.csvUpload': '📤 بھرا ہوا CSV اپ لوڈ کریں',
+    'results.actionsNote': 'پرچہ بنانے کے بعد یہ ایکشنز فعال ہو جاتے ہیں۔',
+    'an.title': 'تجزیات',
+    'an.sub': 'ہر سوال کا ڈفیکلٹی انڈیکس (P) اور ڈسکریمینیشن انڈیکس (D)، اور بلوم موازنہ — اپ لوڈ شدہ نتائج سے۔ اصل ڈیٹا؛ ڈمی نہیں۔',
+    'form.paperId': 'پرچہ آئی ڈی',
+    'btn.loadAnalytics': 'تجزیات دیکھیں',
+    'an.uploadPick': 'کون سا اپ لوڈ (نیا پہلے)',
+    'an.perQuestion': 'فی سوال آئٹم تجزیہ',
+    'legend.good': 'اچھا سوال', 'legend.review': 'نظرثانی', 'legend.problematic': 'مسئلہ والا',
+    'an.bloomCompare': 'بلوم ٹیکسانومی موازنہ',
+    'an.bloomSub': 'کون سے کوگنیٹو لیولز کمزور ہیں — نمبروں کے لحاظ سے اوسط۔',
+    'set.title': 'اسکول ترتیبات',
+    'set.sub': 'لیٹر ہیڈ / لوگو — ہر پرچے اور پرنٹ پر استعمال ہوگا۔',
+    'form.logo': 'لوگو اپ لوڈ کریں',
+    'form.schoolEn': 'اسکول/ادارے کا نام (انگریزی)',
+    'form.schoolUr': 'اسکول/ادارے کا نام (اردو)',
+    'form.address': 'پتہ',
+    'form.accent': 'ایکسنٹ رنگ (لیٹر ہیڈ لائن)',
+    'btn.saveSettings': 'ترتیبات محفوظ کریں',
+    'card.headerPreview': 'ہیڈر پیش منظر',
+    'navShort.generate': 'پرچہ', 'navShort.syllabus': 'نصاب', 'navShort.adaptive': 'اڈاپٹیو',
+    'navShort.results': 'نتائج', 'navShort.analytics': 'تجزیات', 'navShort.more': 'مزید',
+  },
+};
+
+function applyLang(lang) {
+  const dict = I18N[lang] || I18N.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const t = dict[el.dataset.i18n];
+    if (t != null) el.textContent = t;
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const t = dict[el.dataset.i18nHtml];
+    if (t != null) el.innerHTML = t;
+  });
+  const rtl = lang === 'ur';
+  document.documentElement.lang = lang;
+  document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+  document.body.classList.toggle('lang-ur', rtl);
+  document.querySelectorAll('[data-lang-opt]').forEach(b => {
+    b.dataset.active = (b.dataset.langOpt === lang) ? '1' : '0';
+  });
+  currentLang = lang;
+  try { localStorage.setItem('pm_lang', lang); } catch (e) { /* private mode — ignore */ }
+  // Re-render the live preview so its dynamic "Change" buttons follow the language.
+  if (currentPaperData) renderPaperPreview(currentPaperData);
+  // Re-render quick stats so their captions follow the language.
+  if (quickStatsData) renderQuickStats(quickStatsData);
+}
+
+function initLang() {
+  let saved = 'en';
+  try { saved = localStorage.getItem('pm_lang') || 'en'; } catch (e) { /* ignore */ }
+  applyLang(saved === 'ur' ? 'ur' : 'en');
+}
+
+// ---- Screen switching (sidebar desktop / bottom tab bar mobile) ----
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.dataset.active = (s.dataset.screen === name) ? '1' : '0';
+  });
+  document.querySelectorAll('[data-nav]').forEach(n => {
+    n.dataset.active = (n.dataset.nav === name) ? '1' : '0';
+  });
+  // Analytics screen: prefill the Paper ID with the paper built this session.
+  if (name === 'analytics') {
+    const inp = document.getElementById('anPaperId');
+    if (inp && !inp.value && currentPaperId) inp.value = currentPaperId;
+  }
+  window.scrollTo(0, 0);
+}
+
+function onLogoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    logoBase64 = reader.result;
+    const img = document.getElementById('logoPreview');
+    img.src = logoBase64;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveSchoolSettings() {
+  const body = {
+    school_name: val('schoolNameEn'),
+    school_name_ur: val('schoolNameUr'),
+    address: val('schoolAddress'),
+    logo_base64: logoBase64,
+    accent_color: val('accentColor'),
+  };
+  try {
+    const res = await apiFetch('/api/school-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('Save failed');
+    document.getElementById('settingsStatus').textContent = '✅ Saved';
+    syncHeaderPreview();
+  } catch (e) {
+    document.getElementById('settingsStatus').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadSchoolSettings() {
+  try {
+    const res = await apiFetch('/api/school-settings');
+    const s = await res.json();
+    document.getElementById('schoolNameEn').value = s.school_name || '';
+    document.getElementById('schoolNameUr').value = s.school_name_ur || '';
+    document.getElementById('schoolAddress').value = s.address || '';
+    document.getElementById('accentColor').value = s.accent_color || '#0e4d3c';
+    if (s.logo_base64) {
+      logoBase64 = s.logo_base64;
+      const img = document.getElementById('logoPreview');
+      img.src = logoBase64;
+      img.style.display = 'block';
+    }
+    syncHeaderPreview();
+  } catch (e) {
+    console.error('Settings load failed:', e);
+  }
+}
+
+// Settings header preview (live).
+function syncHeaderPreview() {
+  const en = val('schoolNameEn') || 'School Name';
+  const ur = val('schoolNameUr') || '';
+  document.getElementById('hpEn').textContent = en;
+  document.getElementById('hpUr').textContent = ur;
+}
+
+function openPrintView() {
+  if (!currentPaperId) return;
+  window.open(`/print.html?paper_id=${currentPaperId}`, '_blank');
+}
+
+function openDashboard() {
+  if (!currentPaperId) return;
+  window.open(`/dashboard.html?paper_id=${currentPaperId}`, '_blank');
+}
+
+loadSchoolSettings();
+
+async function loadSyllabusGrades() {
+  try {
+    const res = await apiFetch('/api/syllabus-grades');
+    const grades = await res.json();
+    const select = document.getElementById('syllabusGrade');
+    select.innerHTML = '<option value="">-- Manual entry (upar wale fields use karen) --</option>';
+    grades.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify({subject: g.subject, grade: g.grade});
+      opt.textContent = `${g.subject} — ${g.grade}`;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('Syllabus grades load failed:', e);
+  }
+}
+
+async function onGradeChange() {
+  const gradeSelect = document.getElementById('syllabusGrade');
+  const topicSelect = document.getElementById('syllabusTopic');
+  topicSelect.innerHTML = '<option value="">-- Loading topics... --</option>';
+  selectedSyllabusTopicId = null;
+
+  if (!gradeSelect.value) {
+    topicSelect.innerHTML = '<option value="">-- Pehle class select karen --</option>';
+    return;
+  }
+
+  const { subject, grade } = JSON.parse(gradeSelect.value);
+  document.getElementById('subject').value = subject;
+  syncPaperSummary();
+
+  const res = await apiFetch(`/api/syllabus-topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+  const topics = await res.json();
+  topicSelect.innerHTML = '<option value="">-- Manual entry (upar wale fields use karen) --</option>';
+  topics.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = `p.${t.page_no} — ${t.subtopic_title} (${t.activity_type})`;
+    opt.dataset.subject = t.subject;
+    opt.dataset.topic = t.subtopic_title;
+    opt.dataset.difficulty = t.suggested_difficulty;
+    topicSelect.appendChild(opt);
+  });
+}
+
+function onSyllabusTopicChange() {
+  const select = document.getElementById('syllabusTopic');
+  const opt = select.options[select.selectedIndex];
+  if (!opt.value) {
+    selectedSyllabusTopicId = null;
+    return;
+  }
+  selectedSyllabusTopicId = opt.value;
+  document.getElementById('subject').value = opt.dataset.subject;
+  document.getElementById('topic').value = opt.dataset.topic;
+  document.getElementById('difficulty').value = opt.dataset.difficulty;
+  syncPaperSummary();
+}
+
+loadSyllabusGrades();
+
+async function uploadSyllabusPdf() {
+  const subject = val('pdfSubject').trim();
+  const grade = val('pdfGrade').trim();
+  const fileInput = document.getElementById('pdfFile');
+  const file = fileInput.files[0];
+  const statusEl = document.getElementById('pdfStatus');
+  const btn = document.getElementById('pdfUploadBtn');
+
+  if (!subject || !grade) { statusEl.textContent = '⚠️ Subject aur grade dono zaroori hain.'; return; }
+  if (!file) { statusEl.textContent = '⚠️ Pehle ek PDF select karen.'; return; }
+
+  btn.disabled = true;
+  statusEl.textContent = '⏳ PDF se topics extract ho rahe hain... (kuch seconds lagenge)';
+  const formData = new FormData();
+  formData.append('subject', subject);
+  formData.append('grade', grade);
+  formData.append('file', file);
+  try {
+    const res = await apiFetch('/api/syllabus/upload-pdf', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail) ? JSON.stringify(data.detail) : (data.detail || 'Error');
+      throw new Error(detail);
+    }
+    statusEl.textContent = `✅ ${data.inserted} topics save (${data.total_found} mile, ${data.skipped} skip).`;
+    fileInput.value = '';
+    // Naye subject+grade ko class dropdown mein le aao taake foran use ho sake.
+    await loadSyllabusGrades();
+  } catch (e) {
+    statusEl.textContent = '⚠️ ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function uploadSyllabusZip() {
+  const subject = val('pdfSubject').trim();
+  const grade = val('pdfGrade').trim();
+  const fileInput = document.getElementById('zipFile');
+  const file = fileInput.files[0];
+  const statusEl = document.getElementById('zipStatus');
+  const resultsEl = document.getElementById('zipFileResults');
+  const btn = document.getElementById('zipUploadBtn');
+
+  resultsEl.innerHTML = '';
+  if (!subject || !grade) { statusEl.textContent = '⚠️ Subject aur grade dono zaroori hain.'; return; }
+  if (!file) { statusEl.textContent = '⚠️ Pehle ek ZIP select karen.'; return; }
+
+  btn.disabled = true;
+  statusEl.textContent = '⏳ ZIP ki files se topics extract ho rahe hain... (har file kuch seconds)';
+  const formData = new FormData();
+  formData.append('subject', subject);
+  formData.append('grade', grade);
+  formData.append('file', file);
+  try {
+    const res = await apiFetch('/api/syllabus/upload-zip', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail) ? JSON.stringify(data.detail) : (data.detail || 'Error');
+      throw new Error(detail);
+    }
+    statusEl.textContent = `✅ ${data.inserted} topics save (${data.total_found} mile, ${data.skipped} skip).`;
+    // Per-file breakdown taake teacher dekhe kaunsi file chali, kaunsi nahi.
+    const icon = s => s === 'ok' ? '✅' : (s === 'error' ? '❌' : '⏭️');
+    resultsEl.innerHTML = data.files.map(f =>
+      `<div style="font-size:13px;color:#555">${icon(f.status)} <strong>${f.name}</strong> (${f.kind}) — ${f.topics_found} topics${f.message ? ' · ' + f.message : ''}</div>`
+    ).join('');
+    fileInput.value = '';
+    await loadSyllabusGrades();
+  } catch (e) {
+    statusEl.textContent = '⚠️ ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function getSelectedQuestionTypes() {
+  const picked = Array.from(document.querySelectorAll('.qtype:checked')).map(c => c.value);
+  // Kuch na chuna ho to MCQ default — generation kabhi khali types se na chale.
+  return picked.length ? picked : ['multiple-choice'];
+}
+
+function onPaperTypeChange() {
+  // Ratio controls sirf "custom-ratio" par dikhein.
+  const isRatio = val('paperType') === 'custom-ratio';
+  document.getElementById('ratioBlock').style.display = isRatio ? 'block' : 'none';
+}
+
+function setRatioPreset(mcqPercent) {
+  document.getElementById('mcqPercent').value = mcqPercent;
+}
+
+async function generateQuestions() {
+  setStatus("AI se questions generate ho rahe hain... (kuch seconds lagenge)");
+  const body = {
+    subject: val('subject'),
+    topic: val('topic'),
+    syllabus_topic_id: selectedSyllabusTopicId,
+    total_questions: parseInt(val('totalQuestions')),
+    bloom_distribution: val('bloomDist'),
+    question_types: getSelectedQuestionTypes(),
+    difficulty: val('difficulty')
+  };
+  try {
+    const res = await apiFetch('/api/generate-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    setStatus(`${data.saved_count} questions question bank mein save ho gaye. Ab "Build paper" dabayen.`);
+    loadQuickStats();
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+  }
+}
+
+async function buildPaper() {
+  setStatus("Paper assemble ho raha hai...");
+  const paperType = val('paperType');
+  const body = {
+    subject: val('subject'),
+    total_questions: parseInt(val('totalQuestions')),
+    bloom_distribution: val('bloomDist'),
+    difficulty: val('difficulty'),
+    paper_type: paperType
+  };
+  if (paperType === 'custom-ratio') {
+    body.mcq_percent = parseInt(val('mcqPercent'));
+  }
+  try {
+    const res = await apiFetch('/api/generate-paper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    currentPaperId = data.paper_id;
+    document.getElementById('printBtn').style.display = 'inline-flex';
+    document.getElementById('dashboardBtn').style.display = 'inline-flex';
+    document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
+    document.getElementById('csvUploadBtn').style.display = 'inline-flex';
+    document.getElementById('genExportBtn').style.display = 'inline-flex';
+    setStatus(`Paper ban gaya — Total marks: ${data.total_marks}`);
+    document.getElementById('adaptiveSummary').innerHTML = '';
+    currentPaperData = data;
+    loadQuickStats();
+    renderBalanceSummary(data.balance_summary);
+    renderQuestions(data.questions);
+    renderPaperPreview(data);
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+  }
+}
+
+async function buildAdaptivePaper() {
+  const sourceId = val('adaptiveSourceId').trim();
+  if (!sourceId) { showScreen('results'); setStatus('Pehle source paper ID daalen (jiska result upload hua ho).'); return; }
+  setStatus('Class ki kamzoriyon se adaptive paper ban raha hai...');
+  showScreen('results');
+  const body = {
+    source_paper_id: sourceId,
+    total_questions: parseInt(val('totalQuestions')),
+    difficulty: val('difficulty'),
+  };
+  try {
+    const res = await apiFetch('/api/generate-adaptive-paper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    currentPaperId = data.paper_id;
+    document.getElementById('printBtn').style.display = 'inline-flex';
+    document.getElementById('dashboardBtn').style.display = 'inline-flex';
+    document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
+    document.getElementById('csvUploadBtn').style.display = 'inline-flex';
+    setStatus(`Adaptive paper ban gaya — Total marks: ${data.total_marks}`);
+    currentPaperData = data;
+    renderAdaptiveSummary(data.adaptive_summary);
+    loadQuickStats();
+    renderBalanceSummary(data.balance_summary);
+    renderQuestions(data.questions);
+    renderPaperPreview(data);
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+  }
+}
+
+// Why the paper looks the way it does: weakest Bloom levels first, with how
+// many questions each earned.
+function renderAdaptiveSummary(summary) {
+  const el = document.getElementById('adaptiveSummary');
+  if (!summary || !summary.length) { el.innerHTML = ''; return; }
+  const rows = summary.map(s => {
+    const weak = s.average_percent < 50;
+    return `<tr>
+      <td>${s.bloom_level}</td>
+      <td style="text-align:right;color:${weak ? '#b3261e' : '#1d6e56'}">${s.average_percent}%</td>
+      <td style="text-align:right"><strong>${s.questions_allocated}</strong></td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="summary-box" style="background:#f4f1fa">
+      <div class="t">Adaptive focus (weakest Bloom levels pehle)</div>
+      <table>
+        <thead><tr>
+          <th>Bloom level</th>
+          <th style="text-align:right">Class avg</th>
+          <th style="text-align:right">Questions</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderQuestions(questions) {
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+  document.getElementById('qdetailsWrap').style.display = (questions && questions.length) ? 'block' : 'none';
+  questions.forEach((q, i) => {
+    const optsEn = JSON.parse(q.options_en || '[]');
+    const optsUr = JSON.parse(q.options_ur || '[]');
+    const visual = (q.visual_emoji && q.visual_count) ? `<div style="font-size:22px;letter-spacing:4px;margin-top:6px">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>` : '';
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.innerHTML = `
+      <div><strong>Q${i + 1}.</strong> ${escapeHtml(q.question_en || '')}</div>
+      <div class="ur">${escapeHtml(q.question_ur || '')}</div>
+      ${visual}
+      <ul>${optsEn.map((o, idx) => `<li>${escapeHtml(o)}${optsUr[idx] ? ' — <span class="ur" style="font-size:15px">' + escapeHtml(optsUr[idx]) + '</span>' : ''}</li>`).join('')}</ul>
+      <div class="meta">Bloom: ${escapeHtml(q.bloom_level)} | Difficulty: ${escapeHtml(q.difficulty)} | Expected: ${expectedBadge(q)} | Marks: ${q.marks}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Direction C — live bilingual paper sheet with serif heading. Reuses the
+// already-fetched paper data; no extra API call.
+function renderPaperPreview(data) {
+  // Render into every live-preview slot (Generate screen + Results screen).
+  const els = document.querySelectorAll('.js-paper-preview');
+  const questions = data.questions || [];
+  if (!questions.length) {
+    els.forEach(el => { el.innerHTML = '<div class="paper-empty">Is paper mein koi question nahi mila.</div>'; });
+    return;
+  }
+  const nameEn = (val('schoolNameEn') || 'School Name').trim();
+  const nameUr = (val('schoolNameUr') || '').trim();
+  const subject = (val('subject') || '').trim();
+  const totalMarks = data.total_marks != null ? data.total_marks : '';
+
+  const qHtml = questions.map((q, i) => {
+    const optsEn = JSON.parse(q.options_en || '[]');
+    const letters = ['(a)', '(b)', '(c)', '(d)', '(e)'];
+    const opts = optsEn.length
+      ? `<div class="ph-opts">${optsEn.map((o, idx) => `<span>${letters[idx] || ''} ${escapeHtml(o)}</span>`).join('')}</div>`
+      : '';
+    const ur = q.question_ur ? `<div class="q-ur">${escapeHtml(q.question_ur)}</div>` : '';
+    const change = q.id ? `<button class="ph-change" onclick="openReplaceModal('${q.id}')">&#8635; ${t('btn.change')}</button>` : '';
+    return `<div class="ph-q">
+      <div class="q-en">Q${i + 1}. ${escapeHtml(q.question_en || '')} <span style="float:right;color:#5B6678;font-weight:400">[${q.marks} mark${q.marks == 1 ? '' : 's'}]</span></div>
+      ${ur}
+      ${opts}
+      ${change}
+    </div>`;
+  }).join('');
+
+  const html = `
+    <div class="ph-head">
+      <div class="ph-en">${escapeHtml(nameEn)}</div>
+      ${nameUr ? `<div class="ph-ur">${escapeHtml(nameUr)}</div>` : ''}
+      <div class="ph-exam">Examination — 2026</div>
+    </div>
+    <div class="ph-meta">
+      <span>Subject: ${escapeHtml(subject) || '—'}</span>
+      <span>Total marks: ${totalMarks || '—'}</span>
+    </div>
+    <div class="ph-sec">Questions</div>
+    ${qHtml}`;
+  els.forEach(el => { el.innerHTML = html; });
+}
+
+// Bloom-derived expected difficulty, with a warning when it disagrees with
+// the difficulty the question was tagged with at generation time.
+function expectedBadge(q) {
+  const exp = q.expected_difficulty || '—';
+  if (q.difficulty_mismatch) {
+    return `<span style="color:#a9722f;font-weight:600">${exp} ⚠️ (tagged ${q.difficulty})</span>`;
+  }
+  return `<span style="color:#1d6e56;font-weight:600">${exp}</span>`;
+}
+
+// Paper-level Easy/Medium/Hard balance, derived from each question's Bloom
+// level — teacher ek nazar mein dekh le ke paper kitna balanced hai.
+function renderBalanceSummary(summary) {
+  const el = document.getElementById('balanceSummary');
+  if (!summary || !summary.total_questions) { el.innerHTML = ''; return; }
+  const band = (label, b, color) =>
+    `<span style="display:inline-block;margin-right:14px"><strong style="color:${color}">${label}:</strong> ${b.count} (${b.percent}%)</span>`;
+  el.innerHTML = `
+    <div class="summary-box" style="background:#f7faf9">
+      <div class="t">Paper balance (Bloom-expected difficulty)</div>
+      ${band('Easy', summary.easy, '#1d6e56')}
+      ${band('Medium', summary.medium, '#a9722f')}
+      ${band('Hard', summary.hard, '#b3261e')}
+    </div>`;
+}
+
+
+async function downloadResultCSV() {
+  if (!currentPaperId) { setStatus('Pehle paper banayein.'); return; }
+  const url = `/api/paper/${currentPaperId}/result-template`;
+  const res = await apiFetch(url);
+  if (!res.ok) { setStatus('CSV download fail hui.'); return; }
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `paper-${currentPaperId}-results.csv`;
+  a.click();
+  setStatus('CSV download ho gayi — marks fill kar ke wapas upload karein.');
+}
+
+async function uploadResultCSV(input) {
+  if (!currentPaperId) { setStatus('Pehle paper banayein.'); return; }
+  const file = input.files[0];
+  if (!file) return;
+  setStatus('Results upload ho rahe hain...');
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await apiFetch(`/api/paper/${currentPaperId}/upload-results`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      let errMsg;
+      if (Array.isArray(data.detail)) {
+        errMsg = data.detail.map(e => {
+          // Server returns {row, issue} format
+          if (e.issue) return `Row ${e.row}: ${e.issue}`;
+          // Fallback for {row, errors:[]} format
+          const errs = Array.isArray(e.errors) ? e.errors.join(', ') : (e.errors || JSON.stringify(e));
+          return e.row ? `Row ${e.row}: ${errs}` : errs;
+        }).join(' | ');
+      } else if (typeof data.detail === 'string') {
+        errMsg = data.detail;
+      } else {
+        errMsg = JSON.stringify(data.detail);
+      }
+      setStatus('⚠️ Upload errors: ' + errMsg);
+      return;
+    }
+    setStatus(`✅ Results upload ho gaye! ${data.rows_saved ?? ''} rows saved. Dashboard khul raha hai...`);
+    // Auto-open dashboard
+    window.open(`/dashboard.html?paper_id=${currentPaperId}`, '_blank');
+  } catch (e) {
+    setStatus('Upload error: ' + e.message);
+  }
+  input.value = '';
+}
+
+// Keep the "This paper" summary card in sync with the form.
+function syncPaperSummary() {
+  document.getElementById('sumSubject').textContent = val('subject') || '—';
+  document.getElementById('sumTopic').textContent = val('topic') || '—';
+  document.getElementById('sumCount').textContent = val('totalQuestions') || '—';
+}
+['subject', 'topic', 'totalQuestions'].forEach(id => {
+  document.getElementById(id).addEventListener('input', syncPaperSummary);
+});
+['schoolNameEn', 'schoolNameUr'].forEach(id => {
+  document.getElementById(id).addEventListener('input', syncHeaderPreview);
+});
+
+// ===== Analytics (item analysis — Phase 2.5) =====
+// Reuses the existing /api/paper/{id}/dashboard endpoint. Functions are
+// namespaced (an*) so they don't collide with the paper-review renderQuestions.
+const BLOOM_ORDER = ['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYZE', 'EVALUATE', 'CREATE'];
+
+async function loadAnalytics() {
+  const paperId = val('anPaperId').trim();
+  if (!paperId) { anStatus('Pehle paper ID daalen.', 'err'); return; }
+  document.getElementById('anDashboard').style.display = 'none';
+  document.getElementById('anUploadPicker').style.display = 'none';
+  anStatus('Analytics load ho rahi hai...');
+  try {
+    const res = await apiFetch(`/api/paper/${encodeURIComponent(paperId)}/dashboard`);
+    if (!res.ok) { anStatus('⚠️ ' + await anReadError(res), 'err'); return; }
+    const data = await res.json();
+    renderAnalytics(data);
+    anStatus('');
+    await anLoadUploadPicker(paperId, data.upload && data.upload.id);
+  } catch (e) {
+    anStatus('Error: ' + e.message, 'err');
+  }
+}
+
+// Show an upload switcher only when a paper has more than one results upload.
+async function anLoadUploadPicker(paperId, currentUploadId) {
+  try {
+    const res = await apiFetch(`/api/paper/${encodeURIComponent(paperId)}/uploads`);
+    if (!res.ok) return;
+    const uploads = (await res.json()).uploads || [];
+    if (uploads.length <= 1) return;
+    const sel = document.getElementById('anUploadSelect');
+    sel.innerHTML = uploads.map(u =>
+      `<option value="${u.id}" ${u.id === currentUploadId ? 'selected' : ''}>${escapeHtml(u.filename)} — ${anFmtDate(u.uploaded_at)}</option>`
+    ).join('');
+    document.getElementById('anUploadPicker').style.display = 'block';
+  } catch (e) {
+    // picker is optional — analytics already rendered from the latest upload
+  }
+}
+
+async function onAnUploadChange() {
+  const uploadId = val('anUploadSelect');
+  if (!uploadId) return;
+  anStatus('Upload load ho raha hai...');
+  try {
+    const res = await apiFetch(`/api/upload/${encodeURIComponent(uploadId)}/dashboard`);
+    if (!res.ok) { anStatus('⚠️ ' + await anReadError(res), 'err'); return; }
+    renderAnalytics(await res.json());
+    anStatus('');
+  } catch (e) {
+    anStatus('Error: ' + e.message, 'err');
+  }
+}
+
+function renderAnalytics(data) {
+  renderAnCards(data.summary);
+  renderAnQuestions(data.questions);
+  renderAnBlooms(data.bloom_breakdown);
+  document.getElementById('anDashboard').style.display = 'block';
+}
+
+function renderAnCards(s) {
+  const cards = [
+    { v: s.student_count, c: 'Students' },
+    { v: anPct(s.class_average_percent), c: `Class average (${s.class_average_marks}/${s.total_marks})` },
+    { v: anPct(s.pass_percent), c: `Pass rate (≥${s.pass_threshold_percent}%)` },
+    { v: anPct(s.highest_percent), c: 'Highest' },
+    { v: anPct(s.lowest_percent), c: 'Lowest' },
+  ];
+  document.getElementById('anCards').innerHTML = cards.map(c =>
+    `<div class="an-card"><div class="v">${c.v}</div><div class="c">${c.c}</div></div>`
+  ).join('');
+}
+
+function renderAnQuestions(questions) {
+  const wrap = document.getElementById('anQuestionsWrap');
+  if (!questions || !questions.length) { wrap.innerHTML = '<p class="an-empty">Koi question data nahi.</p>'; return; }
+  const rows = questions.map(q => {
+    const qual = anQuality(q);
+    return `<tr class="${qual.k}">
+      <td>${q.flag ? '⚠️ ' : ''}Q${q.question_index}</td>
+      <td>${escapeHtml(q.bloom_level)}</td>
+      <td class="num">${q.average_marks}/${q.max_marks}</td>
+      <td>${anBarCell(q.average_percent)}</td>
+      <td class="num">${anPCell(q)}</td>
+      <td class="num">${anDCell(q)}</td>
+      <td><span class="qbadge ${qual.k}">${qual.label}</span></td>
+      <td>${q.flag ? `<span class="flag-reason">${escapeHtml(q.flag)}</span>` : ''}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table class="an">
+    <thead><tr>
+      <th>Question</th><th>Bloom</th><th class="num">Avg marks</th><th>Avg %</th>
+      <th class="num">Difficulty Index (P)</th><th class="num">Discrimination Index (D)</th>
+      <th>Quality</th><th>Flag</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p class="sub" style="margin-top:10px">
+    <strong>P-value</strong> (0–1): &lt;0.30 bahut mushkil, &gt;0.85 bahut aasaan.
+    <strong>D-index</strong> (−1 to 1): ≥0.30 acha, &lt;0.20 kamzor, negative = answer key check karein.
+    Choti class (&lt;10 students) mein D reliable nahi — greyed (*).
+  </p>`;
+}
+
+// Map the backend's flag + bands onto green / yellow / red.
+function anQuality(q) {
+  if (!q.flag) return { k: 'q-good', label: 'Good' };
+  if (q.d_reliable && q.d_band === 'problematic') return { k: 'q-bad', label: 'Problematic' };
+  return { k: 'q-review', label: 'Review' };
+}
+
+// P-value cell, coloured by band (matches dashboard.html).
+function anPCell(q) {
+  const cls = q.p_band === 'good' ? 'good' : 'weak';
+  return `<span class="pd ${cls}">${q.p_value.toFixed(2)}</span>`;
+}
+
+// D-index cell. Greyed + asterisked when the class is too small to trust it.
+function anDCell(q) {
+  if (!q.d_reliable) {
+    return `<span class="pd unreliable" title="Choti class — D-index reliable nahi">${q.d_index.toFixed(2)}*</span>`;
+  }
+  const cls = (q.d_band === 'good' || q.d_band === 'excellent') ? 'good'
+            : q.d_band === 'acceptable' ? 'mid' : 'weak';
+  return `<span class="pd ${cls}">${q.d_index.toFixed(2)}</span>`;
+}
+
+function renderAnBlooms(blooms) {
+  const wrap = document.getElementById('anBloomWrap');
+  if (!blooms || !blooms.length) { wrap.innerHTML = '<p class="an-empty">Koi Bloom data nahi.</p>'; return; }
+  const sorted = [...blooms].sort((a, b) => anBloomRank(a.bloom_level) - anBloomRank(b.bloom_level));
+  const rows = sorted.map(b => `<tr>
+    <td>${escapeHtml(b.bloom_level)}</td>
+    <td class="num">${b.question_count}</td>
+    <td class="num">${b.average_marks}/${b.max_marks}</td>
+    <td>${anBarCell(b.average_percent)}</td>
+  </tr>`).join('');
+  wrap.innerHTML = `<table class="an">
+    <thead><tr><th>Bloom level</th><th class="num">Questions</th><th class="num">Avg marks</th><th>Avg %</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function anBarCell(percent) {
+  const cls = percent >= 60 ? 'good' : percent >= 40 ? 'mid' : 'weak';
+  return `<span class="bar-wrap"><span class="bar ${cls}" style="width:${Math.max(0, Math.min(100, percent))}%"></span></span> ${anPct(percent)}`;
+}
+
+function anBloomRank(level) {
+  const i = BLOOM_ORDER.indexOf((level || '').toUpperCase());
+  return i === -1 ? BLOOM_ORDER.length : i;
+}
+
+function anPct(n) { return `${n}%`; }
+
+function anFmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d) ? iso : d.toLocaleString();
+}
+
+function anStatus(msg, kind) {
+  const el = document.getElementById('anStatus');
+  el.textContent = msg || '';
+  el.style.color = kind === 'err' ? 'var(--err-tx)' : 'var(--muted)';
+}
+
+// API always returns JSON; pull `detail` for the user-facing message.
+async function anReadError(res) {
+  try {
+    const d = await res.json();
+    if (d && d.detail != null) return typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail);
+  } catch (e) { /* not JSON — fall through */ }
+  return `HTTP ${res.status}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ===== Manual question selection (replace a question from the bank) =====
+async function openReplaceModal(qid) {
+  if (!currentPaperData || !currentPaperId) return;
+  const q = currentPaperData.questions.find(x => x.id === qid);
+  if (!q) return;
+  replacingQid = qid;
+  document.getElementById('replaceSub').textContent = `${q.subject} · ${q.topic} · ${q.bloom_level}`;
+  document.getElementById('replaceCandidates').innerHTML = `<div class="an-empty">${t('modal.loading')}</div>`;
+  document.getElementById('replaceModal').dataset.open = '1';
+  try {
+    const url = `/api/questions?subject=${encodeURIComponent(q.subject)}&topic=${encodeURIComponent(q.topic)}&bloom_level=${encodeURIComponent(q.bloom_level)}`;
+    const res = await apiFetch(url);
+    const all = res.ok ? await res.json() : [];
+    // Exclude questions already in this paper.
+    const inPaper = new Set(currentPaperData.questions.map(x => x.id));
+    renderCandidates(all.filter(c => !inPaper.has(c.id)));
+  } catch (e) {
+    document.getElementById('replaceCandidates').innerHTML = `<div class="an-empty">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderCandidates(list) {
+  const wrap = document.getElementById('replaceCandidates');
+  if (!list.length) { wrap.innerHTML = `<div class="an-empty">${t('modal.noCandidates')}</div>`; return; }
+  wrap.innerHTML = list.map(c => {
+    const ur = c.question_ur ? `<div class="c-ur urdu">${escapeHtml(c.question_ur)}</div>` : '';
+    return `<div class="cand">
+      <div class="c-tags">
+        <span class="pill" style="color:#2E5AAC;background:#EAF1FB;">${escapeHtml(c.bloom_level)}</span>
+        <span class="pill" style="color:#5B6678;background:#EEF1F6;">${escapeHtml(c.difficulty)}</span>
+        <span class="pill" style="color:#2E7D5B;background:#E6F4EC;">${c.marks} ${t('label.marks')}</span>
+      </div>
+      <div class="c-en">${escapeHtml(c.question_en || '')}</div>
+      ${ur}
+      <div class="c-foot">
+        <span style="font-size:12px;color:var(--muted)">${escapeHtml(c.topic || '')}</span>
+        <button class="gen-btn" style="min-height:40px;padding:0 16px" onclick="selectReplacement('${c.id}')">${t('btn.select')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function selectReplacement(newId) {
+  if (!currentPaperId || !replacingQid) return;
+  try {
+    const res = await apiFetch(`/api/paper/${currentPaperId}/replace-question`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ old_question_id: replacingQid, new_question_id: newId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    currentPaperData = data;
+    renderPaperPreview(data);
+    renderBalanceSummary(data.balance_summary);
+    renderQuestions(data.questions);
+    setStatus(`Question replace ho gaya — Total marks: ${data.total_marks}`);
+    closeReplaceModal();
+  } catch (e) {
+    document.getElementById('replaceCandidates').innerHTML = `<div class="an-empty">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function closeReplaceModal() {
+  document.getElementById('replaceModal').dataset.open = '0';
+  replacingQid = null;
+}
+
+// ===== Home quick stats =====
+async function loadQuickStats() {
+  try {
+    const res = await apiFetch('/api/stats');
+    if (!res.ok) return;        // stats are non-critical — fail quietly
+    quickStatsData = await res.json();
+    renderQuickStats(quickStatsData);
+  } catch (e) {
+    /* offline / network — leave stats area empty */
+  }
+}
+
+function renderQuickStats(s) {
+  const el = document.getElementById('quickStats');
+  if (!el) return;
+  // New user with nothing yet → friendly empty state.
+  if (!s || ((s.total_papers || 0) === 0 && (s.total_questions || 0) === 0)) {
+    el.classList.remove('an-cards');
+    el.innerHTML = `<div class="qs-empty" data-i18n-html="qs.empty">${t('qs.empty')}</div>`;
+    return;
+  }
+  el.classList.add('an-cards');
+  const cards = [
+    { v: s.total_papers, c: t('qs.papers') },
+    { v: s.uploads_this_month, c: t('qs.uploads') },
+    { v: s.top_subject || '—', c: t('qs.topSubject') },
+    { v: s.total_questions, c: t('qs.questions') },
+  ];
+  el.innerHTML = cards.map(c =>
+    `<div class="an-card"><div class="v">${escapeHtml(String(c.v))}</div><div class="c">${escapeHtml(c.c)}</div></div>`
+  ).join('');
+}
+
+function val(id) { return document.getElementById(id).value; }
+function setStatus(msg) { document.querySelectorAll('.js-status').forEach(el => { el.textContent = msg; }); }
+
+// Apply saved language (or default EN) on load.
+initLang();
+loadQuickStats();
+</script>
+</body>
+</html>

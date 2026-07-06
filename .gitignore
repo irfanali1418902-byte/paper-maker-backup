@@ -1,0 +1,29 @@
+# Secrets — never commit API keys
+.env
+.env.*
+# ...but the placeholder sample is safe and belongs in the repo
+!.env.example
+# Local launcher secrets (school PC keys) — never commit
+env.local.bat
+
+# SQLite database files (runtime state, not source)
+*.db
+
+# Python build/cache
+__pycache__/
+
+# Virtual environment
+.venv/
+.claude/
+
+# Local Claude Code overrides (machine-specific, not source)
+CLAUDE.local.md
+
+# Claude Code setup/onboarding scaffolding (not application code)
+paper-maker-claude-setup/
+
+# Design reference (mockups/tokens, not application code)
+parcha-design/
+
+# Local archives / backups — not source
+*.zip

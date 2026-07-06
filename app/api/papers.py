@@ -1,0 +1,144 @@
+"""HTTP routes for paper assembly and retrieval."""
+
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile
+
+from app.schemas.requests import AdaptivePaperRequest, GeneratePaperRequest, ReplaceQuestionRequest
+from app.schemas.responses import AdaptivePaperResponse, GeneratePaperResponse, PaperResponse
+from app.services import paper_service, result_service
+from app.services.exceptions import QuestionBankEmpty, ResultsValidationError
+
+router = APIRouter()
+
+
+@router.post("/api/generate-paper", response_model=GeneratePaperResponse)
+def generate_paper(req: GeneratePaperRequest):
+    """Question bank se Bloom + difficulty distribution ke hisaab se balanced
+    paper assemble karta hai. Least-used questions ko priority deta hai
+    (taake repetition kam ho)."""
+    try:
+        result = paper_service.assemble_balanced_paper(req)
+    except QuestionBankEmpty as e:
+        # custom-ratio: kisi group (MCQ/Subjective) ke questions bank mein nahi.
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        # e.g. custom-ratio bina mcq_percent ke — well-formed request, bad content.
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Paper assemble fail hui (DB error): {e}"
+        ) from e
+    if result is None:
+        if req.paper_type != "mixed":
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Is subject mein '{req.paper_type}' type ke kaafi questions nahi. "
+                    "Generate karte waqt woh question type chuno, ya 'Mixed' use karo."
+                ),
+            )
+        raise HTTPException(
+            status_code=404,
+            detail="Is subject/Bloom-level ke liye question bank khali hai. Pehle /api/generate-questions se questions banayen.",
+        )
+    return result
+
+
+@router.post("/api/generate-adaptive-paper", response_model=AdaptivePaperResponse)
+def generate_adaptive_paper(req: AdaptivePaperRequest):
+    """Source paper ke latest results se class ki kamzor Bloom levels nikaal kar
+    un par zyada weight wala naya paper banata hai (Phase 3 adaptive)."""
+    try:
+        result = paper_service.assemble_adaptive_paper(req)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Adaptive paper assemble fail hui (DB error): {e}"
+        ) from e
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Adaptive paper nahi ban saka. Source paper ya uske results nahi mile, "
+                "ya in Bloom-levels ke liye question bank khali hai."
+            ),
+        )
+    return result
+
+
+@router.post("/api/paper/{paper_id}/replace-question", response_model=GeneratePaperResponse)
+def replace_question(paper_id: str, req: ReplaceQuestionRequest):
+    """Manual question selection: ek question ko bank ke doosre se replace
+    karta hai, total_marks + balance recompute karke persist karta hai."""
+    try:
+        result = paper_service.replace_question(paper_id, req.old_question_id, req.new_question_id)
+    except ValueError as e:
+        # Bad question ids (old not in paper / new not in bank) — client error.
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Question replace fail hui (DB error): {e}"
+        ) from e
+    if result is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    return result
+
+
+@router.get("/api/paper/{paper_id}", response_model=PaperResponse)
+def get_paper(paper_id: str):
+    try:
+        result = paper_service.get_paper_with_questions(paper_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Paper fetch fail hui (DB error): {e}") from e
+    if result is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    return result
+
+
+@router.get("/api/paper/{paper_id}/result-template")
+def get_result_template(paper_id: str):
+    """Empty CSV template — roll_no, student_name, then one column per
+    question in paper order with max marks in the header. Teacher fills
+    this in offline aur baad mein upload karte hain (Phase 2 analyzer)."""
+    try:
+        csv_bytes = result_service.build_result_template_csv(paper_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Result template generate fail hui (DB error): {e}",
+        ) from e
+    if csv_bytes is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="paper-{paper_id}-results.csv"',
+        },
+    )
+
+
+@router.post("/api/paper/{paper_id}/upload-results")
+def upload_results(paper_id: str, file: UploadFile = File(...)):
+    """Teacher ka filled-in CSV/xlsx (template hi format mein) accept karta
+    hai, validate karta hai, aur result_uploads + student_question_results
+    mein save karta hai. Validation errors saari ek hi response mein wapas
+    aati hain (400) — teacher pura sheet ek hi pass mein fix kare."""
+    contents = file.file.read()
+
+    try:
+        result = result_service.import_results(paper_id, file.filename, contents)
+    except ResultsValidationError as e:
+        # Pass the structured per-row errors straight through so the
+        # frontend can render them inline against the spreadsheet.
+        raise HTTPException(status_code=400, detail=e.errors) from e
+    except ValueError as e:
+        # Unparseable file / wrong extension — well-formed request, bad content.
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Results upload fail hui (DB error): {e}"
+        ) from e
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    return result
