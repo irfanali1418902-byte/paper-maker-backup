@@ -25,6 +25,7 @@ class GeneratePaperRequest(BaseModel):
     # Sirf paper_type == "custom-ratio" par relevant. MCQ group ka %; subjective
     # group = 100 - mcq_percent. Range Pydantic level par enforce (0-100).
     mcq_percent: Optional[int] = Field(default=None, ge=0, le=100)
+    paper_title: Optional[str] = None
 
 
 class AdaptivePaperRequest(BaseModel):

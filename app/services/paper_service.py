@@ -2,6 +2,8 @@
 
 import json
 import uuid
+from datetime import date
+from typing import Optional
 
 from app.repositories import papers_repository, questions_repository
 from app.schemas.requests import AdaptivePaperRequest, GeneratePaperRequest
@@ -41,8 +43,9 @@ def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
     if not selected_questions:
         return None
 
+    title = _resolve_title(req.paper_title, req.subject, req.class_name)
     paper_id, total_marks = _persist_paper(
-        req.subject, req.class_name, selected_ids, selected_questions
+        req.subject, req.class_name, selected_ids, selected_questions, title
     )
     return {
         "paper_id": paper_id,
@@ -74,8 +77,9 @@ def assemble_adaptive_paper(req: AdaptivePaperRequest) -> dict | None:
     if not selected_questions:
         return None
 
+    title = _resolve_title(None, subject, req.class_name)
     paper_id, total_marks = _persist_paper(
-        subject, req.class_name, selected_ids, selected_questions
+        subject, req.class_name, selected_ids, selected_questions, title
     )
     return {
         "paper_id": paper_id,
@@ -84,6 +88,12 @@ def assemble_adaptive_paper(req: AdaptivePaperRequest) -> dict | None:
         "balance_summary": item_analysis_service.summarize_paper_balance(selected_questions),
         "adaptive_summary": adaptive_service.summarize(breakdown, distribution),
     }
+
+
+def list_papers(query: Optional[str] = None) -> dict:
+    """Return all papers (or filtered by query) for the My Papers list."""
+    rows = papers_repository.search(query) if query else papers_repository.list_all()
+    return {"papers": rows, "total": len(rows)}
 
 
 def get_paper_with_questions(paper_id: str) -> dict | None:
@@ -173,8 +183,9 @@ def _assemble_by_ratio(req: GeneratePaperRequest) -> dict | None:
     if not selected_questions:
         return None
 
+    title = _resolve_title(req.paper_title, req.subject, req.class_name)
     paper_id, total_marks = _persist_paper(
-        req.subject, req.class_name, selected_ids, selected_questions
+        req.subject, req.class_name, selected_ids, selected_questions, title
     )
     return {
         "paper_id": paper_id,
@@ -220,8 +231,25 @@ def _pick_questions(
     return selected_ids, selected_questions
 
 
+def _resolve_title(
+    paper_title: Optional[str], subject: str, class_name: Optional[str]
+) -> str:
+    """Return teacher-supplied title, or auto-generate from subject+class+date."""
+    if paper_title and paper_title.strip():
+        return paper_title.strip()
+    parts = [subject]
+    if class_name:
+        parts.append(class_name)
+    parts.append(date.today().strftime("%d %b %Y"))
+    return " – ".join(parts)
+
+
 def _persist_paper(
-    subject: str, class_name: str | None, selected_ids: list[str], selected_questions: list[dict]
+    subject: str,
+    class_name: str | None,
+    selected_ids: list[str],
+    selected_questions: list[dict],
+    paper_title: Optional[str] = None,
 ) -> tuple[str, int]:
     """Annotate expected difficulty, persist the paper row, return (id, marks)."""
     _annotate_expected_difficulty(selected_questions)
@@ -233,6 +261,7 @@ def _persist_paper(
         class_name=class_name,
         total_marks=total_marks,
         question_ids=selected_ids,
+        paper_title=paper_title,
     )
     return paper_id, total_marks
 

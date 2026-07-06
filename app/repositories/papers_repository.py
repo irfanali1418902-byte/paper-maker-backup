@@ -7,13 +7,18 @@ from app.core.database import get_connection
 
 
 def insert(
-    paper_id: str, subject: str, class_name: Optional[str], total_marks: int, question_ids: list
+    paper_id: str,
+    subject: str,
+    class_name: Optional[str],
+    total_marks: int,
+    question_ids: list,
+    paper_title: Optional[str] = None,
 ) -> None:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids) VALUES (?,?,?,?,?)",
-        (paper_id, subject, class_name, total_marks, json.dumps(question_ids)),
+        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids, paper_title) VALUES (?,?,?,?,?,?)",
+        (paper_id, subject, class_name, total_marks, json.dumps(question_ids), paper_title),
     )
     conn.commit()
     conn.close()
@@ -58,3 +63,29 @@ def update_question_ids(paper_id: str, question_ids: list, total_marks: int) -> 
     )
     conn.commit()
     conn.close()
+
+
+def list_all() -> list[dict]:
+    """All papers, newest first. question_ids excluded (heavy, not needed for list view)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    rows = cur.execute(
+        "SELECT id, paper_title, subject, class_name, total_marks, created_at "
+        "FROM papers ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def search(query: str) -> list[dict]:
+    """Filter papers by paper_title or subject (case-insensitive LIKE), newest first."""
+    pattern = f"%{query}%"
+    conn = get_connection()
+    cur = conn.cursor()
+    rows = cur.execute(
+        "SELECT id, paper_title, subject, class_name, total_marks, created_at "
+        "FROM papers WHERE paper_title LIKE ? OR subject LIKE ? ORDER BY created_at DESC",
+        (pattern, pattern),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

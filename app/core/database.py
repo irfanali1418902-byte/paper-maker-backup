@@ -70,9 +70,15 @@ def init_db() -> None:
             class_name TEXT,
             total_marks INTEGER NOT NULL,
             question_ids TEXT NOT NULL,
+            paper_title TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+    # Existing DBs (created before paper_title was added) need in-place migration.
+    papers_cols = {row[1] for row in cur.execute("PRAGMA table_info(papers)").fetchall()}
+    if "paper_title" not in papers_cols:
+        cur.execute("ALTER TABLE papers ADD COLUMN paper_title TEXT")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS syllabus_topics (

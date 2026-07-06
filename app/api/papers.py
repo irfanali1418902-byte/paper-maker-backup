@@ -1,13 +1,29 @@
 """HTTP routes for paper assembly and retrieval."""
 
-from fastapi import APIRouter, File, HTTPException, Response, UploadFile
+from typing import Optional
+
+from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 
 from app.schemas.requests import AdaptivePaperRequest, GeneratePaperRequest, ReplaceQuestionRequest
-from app.schemas.responses import AdaptivePaperResponse, GeneratePaperResponse, PaperResponse
+from app.schemas.responses import (
+    AdaptivePaperResponse,
+    GeneratePaperResponse,
+    PaperResponse,
+    PapersListResponse,
+)
 from app.services import paper_service, result_service
 from app.services.exceptions import QuestionBankEmpty, ResultsValidationError
 
 router = APIRouter()
+
+
+@router.get("/api/papers", response_model=PapersListResponse)
+def list_papers(q: Optional[str] = Query(default=None, description="Search by title or subject")):
+    """My Papers list — all papers newest first, optionally filtered by title/subject."""
+    try:
+        return paper_service.list_papers(q)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Papers list fetch fail hui: {e}") from e
 
 
 @router.post("/api/generate-paper", response_model=GeneratePaperResponse)

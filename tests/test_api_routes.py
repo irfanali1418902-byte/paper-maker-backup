@@ -280,6 +280,52 @@ def test_custom_ratio_percent_out_of_range_422(client):
     assert r.status_code == 422
 
 
+# ---- /api/papers (My Papers list) ------------------------------------------
+
+
+def test_list_papers_empty(client):
+    r = client.get("/api/papers")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 0
+    assert data["papers"] == []
+
+
+def test_list_papers_returns_all(client):
+    _make_paper(client, total=4)
+    _make_paper(client, total=4)
+    r = client.get("/api/papers")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 2
+    assert "question_ids" not in data["papers"][0]
+
+
+def test_list_papers_search_by_subject(client):
+    _seed_bank("Mathematics", "Fractions")
+    _seed_bank("Science", "Plants")
+    client.post("/api/generate-paper", json={"subject": "Mathematics", "total_questions": 4})
+    client.post("/api/generate-paper", json={"subject": "Science", "total_questions": 4})
+    r = client.get("/api/papers", params={"q": "Science"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["total"] == 1
+    assert data["papers"][0]["subject"] == "Science"
+
+
+def test_generate_paper_with_title(client):
+    _seed_bank()
+    r = client.post(
+        "/api/generate-paper",
+        json={"subject": "Mathematics", "total_questions": 4, "paper_title": "Final Exam – Class 5"},
+    )
+    assert r.status_code == 200
+    paper_id = r.json()["paper_id"]
+    papers_r = client.get("/api/papers")
+    papers = papers_r.json()["papers"]
+    assert any(p["id"] == paper_id and p["paper_title"] == "Final Exam – Class 5" for p in papers)
+
+
 # ---- /api/paper/{id} --------------------------------------------------------
 
 

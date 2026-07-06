@@ -366,6 +366,7 @@
       <a class="nav-link" data-nav="adaptive" onclick="showScreen('adaptive')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3.4"></circle></svg><span data-i18n="nav.adaptive">Adaptive paper</span></a>
       <a class="nav-link" data-nav="results" onclick="showScreen('results')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="20"></line><rect x="6" y="11" width="3" height="7" fill="currentColor" stroke="none"></rect><rect x="11" y="6" width="3" height="12" fill="currentColor" stroke="none"></rect><rect x="16" y="14" width="3" height="4" fill="currentColor" stroke="none"></rect></svg><span data-i18n="nav.results">Results &amp; preview</span></a>
       <a class="nav-link" data-nav="analytics" onclick="showScreen('analytics')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"></path><path d="M21 3v6h-6"></path><path d="M12 12 21 3"></path></svg><span data-i18n="nav.analytics">Analytics</span></a>
+      <a class="nav-link" data-nav="mypapers" onclick="showScreen('mypapers')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg><span data-i18n="nav.mypapers">My Papers</span></a>
       <a class="nav-link" data-nav="settings" onclick="showScreen('settings')"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5"></path><path d="M5 11v8h14v-8"></path><path d="M9 19v-5h6v5"></path></svg><span data-i18n="nav.settings">More / settings</span></a>
     </nav>
     <div class="sidebar-foot">
@@ -474,6 +475,9 @@
               <label style="font-weight:normal; margin:0;" data-i18n="form.mcqPercent">MCQ % (baaki subjective)</label>
               <input id="mcqPercent" type="number" min="0" max="100" value="50" />
             </div>
+
+            <label data-i18n="form.paperTitle">Paper title / naam (optional)</label>
+            <input id="paperTitle" placeholder="e.g. First Term – Math – Class 4" />
 
             <div class="actions">
               <button class="gen-btn" onclick="generateQuestions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg><span data-i18n="btn.genQuestions">1. Generate questions (AI)</span></button>
@@ -684,6 +688,24 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- ===== MY PAPERS ===== -->
+      <section class="screen" data-screen="mypapers">
+        <div class="head">
+          <div><h1 class="h1">My Papers</h1><p class="sub desktop-only">Apne banaye hue saare papers — naam, subject, date se dhoondein.</p></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input id="mpSearch" placeholder="Paper naam ya subject se dhoondein…" style="flex:1; margin:0;" oninput="mpOnSearch()" />
+            <button class="ghost-btn" style="white-space:nowrap; margin:0;" onclick="mpLoad()">Refresh</button>
+          </div>
+        </div>
+
+        <div id="mpStatus" class="js-status" style="font-size:14px; color:var(--muted); min-height:20px; margin-bottom:10px;"></div>
+
+        <div id="mpList"></div>
       </section>
 
     </div>
@@ -968,7 +990,105 @@ function showScreen(name) {
     const inp = document.getElementById('anPaperId');
     if (inp && !inp.value && currentPaperId) inp.value = currentPaperId;
   }
+  // My Papers: load list on every visit.
+  if (name === 'mypapers') mpLoad();
   window.scrollTo(0, 0);
+}
+
+// ---- My Papers ----
+let _mpSearchTimer = null;
+
+function mpOnSearch() {
+  clearTimeout(_mpSearchTimer);
+  _mpSearchTimer = setTimeout(mpLoad, 350);
+}
+
+async function mpLoad() {
+  const q = (document.getElementById('mpSearch')?.value || '').trim();
+  const statusEl = document.getElementById('mpStatus');
+  const listEl = document.getElementById('mpList');
+  if (statusEl) statusEl.textContent = 'Loading…';
+  if (listEl) listEl.innerHTML = '';
+  try {
+    const url = q ? `/api/papers?q=${encodeURIComponent(q)}` : '/api/papers';
+    const res = await apiFetch(url);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    if (statusEl) statusEl.textContent = `${data.total} paper${data.total !== 1 ? 's' : ''} mile`;
+    if (listEl) listEl.innerHTML = data.total === 0
+      ? '<div class="card" style="color:var(--muted);text-align:center;padding:32px;">Koi paper nahi mila.</div>'
+      : mpRenderTable(data.papers);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+function mpRenderTable(papers) {
+  const rows = papers.map(p => {
+    const title = p.paper_title || `<span style="color:var(--muted2);font-style:italic;">Untitled</span>`;
+    const cls = p.class_name || '—';
+    const dt = p.created_at ? p.created_at.slice(0, 10) : '—';
+    return `<tr>
+      <td style="font-weight:500;">${title}</td>
+      <td>${p.subject}</td>
+      <td>${cls}</td>
+      <td>${p.total_marks}</td>
+      <td style="color:var(--muted);font-size:12.5px;">${dt}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpOpenPaper('${p.id}')">Open</button>
+          <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpPrintPaper('${p.id}')">Print</button>
+          <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpDashboard('${p.id}')">Dashboard</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  return `<div style="overflow-x:auto;">
+  <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+    <thead>
+      <tr style="background:var(--tint);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;">
+        <th style="text-align:left;padding:10px 12px;">Naam / Title</th>
+        <th style="text-align:left;padding:10px 12px;">Subject</th>
+        <th style="text-align:left;padding:10px 12px;">Class</th>
+        <th style="text-align:left;padding:10px 12px;">Marks</th>
+        <th style="text-align:left;padding:10px 12px;">Date</th>
+        <th style="text-align:left;padding:10px 12px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  </div>`;
+}
+
+async function mpOpenPaper(id) {
+  currentPaperId = id;
+  showScreen('results');
+  try {
+    const res = await apiFetch(`/api/paper/${id}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    currentPaperData = { paper_id: id, questions: data.questions, total_marks: data.paper.total_marks, balance_summary: data.balance_summary };
+    document.getElementById('printBtn').style.display = 'inline-flex';
+    document.getElementById('dashboardBtn').style.display = 'inline-flex';
+    document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
+    document.getElementById('csvUploadBtn').style.display = 'inline-flex';
+    document.getElementById('genExportBtn').style.display = 'inline-flex';
+    renderBalanceSummary(data.balance_summary);
+    renderQuestions(data.questions);
+    renderPaperPreview(currentPaperData);
+  } catch (e) {
+    setStatus('Paper load nahi hua: ' + e.message);
+  }
+}
+
+function mpPrintPaper(id) {
+  window.open(`/print.html?paper=${id}`, '_blank');
+}
+
+function mpDashboard(id) {
+  showScreen('analytics');
+  const inp = document.getElementById('anPaperId');
+  if (inp) { inp.value = id; }
 }
 
 function onLogoSelected(event) {
@@ -1229,12 +1349,14 @@ async function generateQuestions() {
 async function buildPaper() {
   setStatus("Paper assemble ho raha hai...");
   const paperType = val('paperType');
+  const titleVal = val('paperTitle').trim();
   const body = {
     subject: val('subject'),
     total_questions: parseInt(val('totalQuestions')),
     bloom_distribution: val('bloomDist'),
     difficulty: val('difficulty'),
-    paper_type: paperType
+    paper_type: paperType,
+    paper_title: titleVal || null
   };
   if (paperType === 'custom-ratio') {
     body.mcq_percent = parseInt(val('mcqPercent'));

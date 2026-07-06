@@ -49,11 +49,28 @@ class Paper(BaseModel):
     string (matches DB storage)."""
 
     id: str
+    paper_title: Optional[str] = None
     subject: str
     class_name: Optional[str] = None
     total_marks: int
     question_ids: str
     created_at: Optional[str] = None
+
+
+class PaperListItem(BaseModel):
+    """Lightweight paper row for the My Papers list — no question_ids."""
+
+    id: str
+    paper_title: Optional[str] = None
+    subject: str
+    class_name: Optional[str] = None
+    total_marks: int
+    created_at: Optional[str] = None
+
+
+class PapersListResponse(BaseModel):
+    papers: List[PaperListItem]
+    total: int
 
 
 class PaperQuestion(Question):
