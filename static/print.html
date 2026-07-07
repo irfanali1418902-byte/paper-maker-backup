@@ -32,7 +32,7 @@
     min-height: 100vh;
   }
 
-  /* ---- Sidebar (Direction A — screen only, hidden in print) ---- */
+  /* ---- Sidebar (screen only, hidden in print) ---- */
   .app-sidebar {
     width: 248px;
     flex-shrink: 0;
@@ -71,37 +71,94 @@
     box-shadow: 0 8px 24px rgba(0,0,0,.12); border-radius: 6px;
   }
 
-  .letterhead { display: flex; align-items: center; gap: 16px; border-bottom: 3px solid var(--accent, #0e4d3c); padding-bottom: 12px; margin-bottom: 14px; }
+  /* ---- Letterhead ---- */
+  .letterhead {
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 3px solid var(--accent, #0e4d3c);
+    padding-bottom: 12px; margin-bottom: 14px;
+  }
   .letterhead img.logo { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; flex-shrink: 0; }
   .letterhead .names { flex: 1; text-align: center; }
   .letterhead .school-en { font-size: 22px; font-weight: 800; color: var(--accent, #0e4d3c); }
   .letterhead .school-ur { font-size: 19px; font-weight: 700; direction: rtl; font-family: "Noto Nastaliq Urdu", serif; margin-top: 2px; }
   .letterhead .address { font-size: 12px; color: #555; margin-top: 4px; }
 
+  /* ---- Paper title ---- */
   .paper-title { text-align: center; margin: 10px 0 14px; }
   .paper-title h2 { margin: 0; font-size: 17px; text-decoration: underline; }
 
-  .meta-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; flex-wrap: wrap; gap: 6px; }
-  .meta-row div { flex: 1 1 30%; }
-  .fill-line { display: inline-block; border-bottom: 1px solid #888; min-width: 90px; }
+  /* ---- Info grid (Name / Roll / Class / Date / Time / Marks / Obtained) ---- */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px 12px;
+    font-size: 12.5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+  .info-grid .cell { display: flex; gap: 4px; align-items: baseline; }
+  .info-grid .label { white-space: nowrap; font-weight: 600; }
+  .fill-line { flex: 1; border-bottom: 1px solid #888; min-width: 50px; }
 
-  .instructions { font-size: 12px; background: #f7f7f7; border: 1px dashed #bbb; border-radius: 6px; padding: 6px 10px; margin: 10px 0 16px; }
+  .instructions {
+    font-size: 12px; background: #f7f7f7;
+    border: 1px dashed #bbb; border-radius: 6px;
+    padding: 6px 10px; margin: 10px 0 16px;
+  }
 
-  .question { margin-bottom: 16px; page-break-inside: avoid; }
+  /* ---- Section heading ---- */
+  .section-block { margin-bottom: 8px; }
+  .section-heading {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-top: 2px solid var(--accent, #0e4d3c);
+    border-bottom: 1px solid #ccc;
+    padding: 5px 2px 4px;
+    margin-bottom: 12px;
+  }
+  .section-heading .sec-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--accent, #0e4d3c);
+  }
+  .section-heading .sec-marks {
+    font-size: 12px; font-weight: 600; color: #555;
+  }
+
+  /* ---- Questions ---- */
+  .question { margin-bottom: 14px; page-break-inside: avoid; }
   .qhead { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
   .qhead .qnum { font-weight: 700; }
   .qtext-en { margin-top: 2px; font-size: 14px; }
-  .qtext-ur { margin-top: 4px; font-size: 16px; direction: rtl; font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif; line-height: 1.7; }
+  .qtext-ur {
+    margin-top: 4px; font-size: 16px; direction: rtl;
+    font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
+    line-height: 1.7;
+  }
   .marks { font-size: 12px; color: #555; white-space: nowrap; }
 
   .visual-row { margin: 6px 0; font-size: 26px; letter-spacing: 6px; }
 
+  /* ---- Section A: objective ---- */
   .options { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; font-size: 13px; }
   .options .opt { display: flex; gap: 6px; align-items: baseline; }
   .opt .circle { display: inline-block; width: 14px; height: 14px; border: 1px solid #444; border-radius: 50%; flex-shrink: 0; }
 
-  .answer-space { border-bottom: 1px dotted #999; height: 22px; margin-top: 6px; }
+  /* ---- Section B: answer spaces ---- */
+  .ruled-lines { margin-top: 8px; }
+  .ruled-line { border-bottom: 1px solid #bbb; height: 22px; margin-bottom: 2px; }
 
+  .diagram-box {
+    margin-top: 10px;
+    border: 1px solid #999;
+    border-radius: 4px;
+    height: 90px;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 11px; letter-spacing: .05em;
+  }
+
+  /* ---- Footer ---- */
   .footer-note { text-align: center; font-size: 11px; color: #888; margin-top: 24px; border-top: 1px solid #ddd; padding-top: 8px; }
 
   #status { text-align: center; padding: 40px; color: var(--muted); }
@@ -152,20 +209,19 @@
       <h2 id="paperTitle"></h2>
     </div>
 
-    <div class="meta-row">
-      <div>Name / نام: <span class="fill-line">&nbsp;</span></div>
-      <div>Class / جماعت: <span class="fill-line" id="metaClass"></span></div>
-      <div>Date / تاریخ: <span class="fill-line">&nbsp;</span></div>
-    </div>
-    <div class="meta-row">
-      <div>Roll No / رول نمبر: <span class="fill-line">&nbsp;</span></div>
-      <div>Total Marks / کل نمبر: <span class="fill-line" id="metaMarks"></span></div>
-      <div>Time / وقت: <span class="fill-line">&nbsp;</span></div>
+    <div class="info-grid">
+      <div class="cell"><span class="label">Name / نام:</span><span class="fill-line"></span></div>
+      <div class="cell"><span class="label">Class / جماعت:</span><span class="fill-line" id="metaClass"></span></div>
+      <div class="cell"><span class="label">Date / تاریخ:</span><span class="fill-line"></span></div>
+      <div class="cell"><span class="label">Roll No / رول نمبر:</span><span class="fill-line"></span></div>
+      <div class="cell"><span class="label">Total Marks / کل نمبر:</span><span class="fill-line" id="metaMarks"></span></div>
+      <div class="cell"><span class="label">Obtained / حاصل:</span><span class="fill-line"></span></div>
     </div>
 
     <div class="instructions">Attempt all questions. / تمام سوالات کے جواب دیں۔</div>
 
-    <div id="questionsContainer"></div>
+    <div id="sectionA"></div>
+    <div id="sectionB"></div>
 
     <div class="footer-note">Generated with AII Smart Paper Maker</div>
   </div>
@@ -173,6 +229,10 @@
 
 <script src="/apiClient.js"></script>
 <script>
+// question_type classification — mirrors paper_service.py constants.
+const OBJECTIVE_TYPES = new Set(['multiple-choice', 'true-false']);
+// Safety fallback: anything not in OBJECTIVE_TYPES goes to Section B.
+
 function getParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
@@ -181,10 +241,78 @@ function setVar(name, value) {
   document.documentElement.style.setProperty(name, value);
 }
 
-// Question/option text innerHTML mein jaata hai — HTML special chars escape
-// karo taake stored content markup inject na kar sake.
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+function sectionMarks(questions) {
+  return questions.reduce((sum, q) => sum + (q.marks || 0), 0);
+}
+
+function answerSpace(q) {
+  if (q.question_type === 'essay') {
+    // Essay: ruled lines + diagram box for sketches/diagrams.
+    return `
+      <div class="ruled-lines">
+        ${'<div class="ruled-line"></div>'.repeat(5)}
+      </div>
+      <div class="diagram-box">[ Diagram / خاکہ ]</div>`;
+  }
+  // short-answer + unknown fallback: 4 ruled lines.
+  return `
+    <div class="ruled-lines">
+      ${'<div class="ruled-line"></div>'.repeat(4)}
+    </div>`;
+}
+
+function renderQuestion(q, num) {
+  const optsEn = JSON.parse(q.options_en || '[]');
+  const optsUr = JSON.parse(q.options_ur || '[]');
+
+  let visualHtml = '';
+  if (q.visual_emoji && q.visual_count) {
+    visualHtml = `<div class="visual-row">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>`;
+  }
+
+  let bodyHtml = '';
+  if (OBJECTIVE_TYPES.has(q.question_type) && optsEn.length) {
+    bodyHtml = '<div class="options">' + optsEn.map((o, idx) => `
+      <div class="opt"><span class="circle"></span><span>${escapeHtml(o)}${optsUr[idx] ? ' / ' + escapeHtml(optsUr[idx]) : ''}</span></div>
+    `).join('') + '</div>';
+  } else {
+    bodyHtml = answerSpace(q);
+  }
+
+  return `
+    <div class="question">
+      <div class="qhead">
+        <div><span class="qnum">Q${num}.</span> <span class="qtext-en">${escapeHtml(q.question_en || '')}</span></div>
+        <div class="marks">[${q.marks}]</div>
+      </div>
+      <div class="qtext-ur">${escapeHtml(q.question_ur || '')}</div>
+      ${visualHtml}
+      ${bodyHtml}
+    </div>`;
+}
+
+function renderSection(containerId, label, questions, startNum) {
+  const el = document.getElementById(containerId);
+  if (!questions.length) {
+    el.innerHTML = '';
+    return;
+  }
+  const marks = sectionMarks(questions);
+  const questionsHtml = questions.map((q, i) => renderQuestion(q, startNum + i)).join('');
+  el.innerHTML = `
+    <div class="section-block">
+      <div class="section-heading">
+        <span class="sec-title">${escapeHtml(label)}</span>
+        <span class="sec-marks">Total Marks: ${marks}</span>
+      </div>
+      ${questionsHtml}
+    </div>`;
 }
 
 async function loadPaper() {
@@ -219,39 +347,14 @@ async function loadPaper() {
     document.getElementById('metaClass').textContent = paper.class_name || '';
     document.getElementById('metaMarks').textContent = paper.total_marks;
 
-    const container = document.getElementById('questionsContainer');
-    questions.forEach((q, i) => {
-      const optsEn = JSON.parse(q.options_en || '[]');
-      const optsUr = JSON.parse(q.options_ur || '[]');
+    // Split into objective (A) and subjective (B).
+    // Safety fallback: unknown/null question_type -> Section B.
+    const objective = questions.filter(q => OBJECTIVE_TYPES.has(q.question_type));
+    const subjective = questions.filter(q => !OBJECTIVE_TYPES.has(q.question_type));
 
-      const div = document.createElement('div');
-      div.className = 'question';
-
-      let visualHtml = '';
-      if (q.visual_emoji && q.visual_count) {
-        visualHtml = `<div class="visual-row">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>`;
-      }
-
-      let optsHtml = '';
-      if (optsEn.length) {
-        optsHtml = '<div class="options">' + optsEn.map((o, idx) => `
-          <div class="opt"><span class="circle"></span><span>${escapeHtml(o)}${optsUr[idx] ? ' / ' + escapeHtml(optsUr[idx]) : ''}</span></div>
-        `).join('') + '</div>';
-      } else {
-        optsHtml = '<div class="answer-space"></div>';
-      }
-
-      div.innerHTML = `
-        <div class="qhead">
-          <div><span class="qnum">Q${i + 1}.</span> <span class="qtext-en">${escapeHtml(q.question_en || '')}</span></div>
-          <div class="marks">[${q.marks}]</div>
-        </div>
-        <div class="qtext-ur">${escapeHtml(q.question_ur || '')}</div>
-        ${visualHtml}
-        ${optsHtml}
-      `;
-      container.appendChild(div);
-    });
+    // Continuous numbering: Section B starts after Section A ends.
+    renderSection('sectionA', 'Section A — Objective', objective, 1);
+    renderSection('sectionB', 'Section B — Subjective', subjective, objective.length + 1);
 
     document.getElementById('status').style.display = 'none';
     document.getElementById('sheet').style.display = 'block';
