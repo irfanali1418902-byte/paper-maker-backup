@@ -280,6 +280,40 @@ def test_custom_ratio_percent_out_of_range_422(client):
     assert r.status_code == 422
 
 
+# ---- /api/paper/{id} — question_type contract (section-split data foundation) ----
+
+
+def test_get_paper_includes_question_type(client):
+    """Every question in GET /api/paper/{id} must carry a non-empty question_type
+    so the print view can route it to Section A or B without backend changes."""
+    paper = _make_paper(client, total=4)
+    r = client.get(f"/api/paper/{paper['paper_id']}")
+    assert r.status_code == 200
+    for q in r.json()["questions"]:
+        assert "question_type" in q
+        assert q["question_type"]  # non-empty string
+
+
+def test_get_paper_mixed_has_both_sections(client):
+    """A mixed paper (MCQ + subjective) must return both question_type groups
+    so print.html can render a non-empty Section A and Section B."""
+    _seed_bank()       # multiple-choice questions
+    _seed_subjective() # short-answer questions
+    r = client.post(
+        "/api/generate-paper",
+        json={"subject": "Mathematics", "total_questions": 6, "paper_type": "custom-ratio", "mcq_percent": 50},
+    )
+    assert r.status_code == 200
+    paper_id = r.json()["paper_id"]
+    r2 = client.get(f"/api/paper/{paper_id}")
+    questions = r2.json()["questions"]
+    objective_types = {"multiple-choice", "true-false"}
+    has_objective = any(q["question_type"] in objective_types for q in questions)
+    has_subjective = any(q["question_type"] not in objective_types for q in questions)
+    assert has_objective, "Section A (objective) questions missing"
+    assert has_subjective, "Section B (subjective) questions missing"
+
+
 # ---- /api/paper/{id} --------------------------------------------------------
 
 
