@@ -343,7 +343,7 @@ async function loadPaper() {
     document.getElementById('schoolAddress').textContent = settings.address || '';
     if (settings.accent_color) setVar('--accent', settings.accent_color);
 
-    document.getElementById('paperTitle').textContent = `${paper.subject} — Examination Paper`;
+    document.getElementById('paperTitle').textContent = paper.paper_title || `${paper.subject} — Examination Paper`;
     document.getElementById('metaClass').textContent = paper.class_name || '';
     document.getElementById('metaMarks').textContent = paper.total_marks;
 
