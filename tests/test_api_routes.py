@@ -707,3 +707,94 @@ def test_auth_config_require_flag_falsey_is_ok():
 
     assert auth.auth_config_error("", {"PAPER_MAKER_REQUIRE_API_KEY": "0"}) is None
     assert auth.auth_config_error("", {"PAPER_MAKER_REQUIRE_API_KEY": "false"}) is None
+
+
+# ---- /api/topics (hierarchy picker) ----------------------------------------
+
+
+def _insert_syllabus_topic(topic_id="st1", subject="Mathematics", grade="Grade 3"):
+    from app.repositories import syllabus_repository
+
+    syllabus_repository.insert(
+        topic_id=topic_id,
+        subject=subject,
+        grade=grade,
+        unit_no=1,
+        unit_title="Numbers",
+        page_range="1-20",
+        subtopic_title="Fractions",
+        activity_type="Practice",
+        page_no=5,
+        learning_outcome="Understand fractions",
+    )
+
+
+def test_topics_empty_returns_empty_list(client):
+    r = client.get("/api/topics")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_topics_returns_correct_shape(client):
+    _insert_syllabus_topic(topic_id="st1", subject="Mathematics", grade="Grade 3")
+    r = client.get("/api/topics", params={"subject": "Mathematics", "grade": "Grade 3"})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    item = data[0]
+    assert item["id"] == "st1"
+    assert item["subject"] == "Mathematics"
+    assert item["grade"] == "Grade 3"
+    assert item["subtopic_title"] == "Fractions"
+    assert "suggested_difficulty" in item
+    assert "unit_title" in item
+    assert "unit_no" in item
+
+
+def test_topics_filters_by_grade(client):
+    _insert_syllabus_topic(topic_id="st1", subject="Mathematics", grade="Grade 3")
+    _insert_syllabus_topic(topic_id="st2", subject="Mathematics", grade="Grade 4")
+    r = client.get("/api/topics", params={"subject": "Mathematics", "grade": "Grade 3"})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["id"] == "st1"
+
+
+def test_questions_filter_by_syllabus_topic_id(client):
+    _insert_syllabus_topic(topic_id="st1")
+    qid = str(__import__("uuid").uuid4())
+    import json
+
+    from app.repositories import questions_repository
+
+    questions_repository.insert(
+        {
+            "id": qid,
+            "subject": "Mathematics",
+            "topic": "Fractions",
+            "bloom_level": "REMEMBER",
+            "difficulty": "easy",
+            "question_type": "multiple-choice",
+            "marks": 1,
+            "question_en": "Test?",
+            "question_ur": "ٹیسٹ؟",
+            "options_en": json.dumps(["a", "b"]),
+            "options_ur": json.dumps(["ا", "ب"]),
+            "correct_answer_en": "a",
+            "correct_answer_ur": "ا",
+            "explanation_en": "",
+            "explanation_ur": "",
+            "visual_emoji": None,
+            "visual_count": None,
+            "syllabus_topic_id": "st1",
+        }
+    )
+    _insert_question()  # unlinked question
+
+    r = client.get("/api/questions", params={"syllabus_topic_id": "st1"})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["id"] == qid
+    assert data[0]["syllabus_topic_id"] == "st1"

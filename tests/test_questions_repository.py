@@ -2,7 +2,7 @@
 
 import json
 
-from app.repositories import questions_repository
+from app.repositories import questions_repository, syllabus_repository
 
 
 def _sample_question(
@@ -114,3 +114,50 @@ def test_find_least_used_with_none_difficulty_matches_all(test_db):
         limit=10,
     )
     assert len(rows) == 2
+
+
+def _insert_syllabus_topic(topic_id="st1", subject="Mathematics", grade="Grade 3"):
+    syllabus_repository.insert(
+        topic_id=topic_id,
+        subject=subject,
+        grade=grade,
+        unit_no=1,
+        unit_title="Numbers",
+        page_range="1-20",
+        subtopic_title="Fractions",
+        activity_type="Practice",
+        page_no=5,
+        learning_outcome="Understand fractions",
+    )
+
+
+def test_syllabus_topic_id_stored_and_retrieved(test_db):
+    _insert_syllabus_topic()
+    q = _sample_question(qid="q1")
+    q["syllabus_topic_id"] = "st1"
+    questions_repository.insert(q)
+    found = questions_repository.find_by_id("q1")
+    assert found["syllabus_topic_id"] == "st1"
+
+
+def test_syllabus_topic_id_defaults_to_none(test_db):
+    questions_repository.insert(_sample_question(qid="q1"))
+    found = questions_repository.find_by_id("q1")
+    assert found["syllabus_topic_id"] is None
+
+
+def test_list_by_filters_syllabus_topic_id(test_db):
+    _insert_syllabus_topic(topic_id="st1")
+    _insert_syllabus_topic(topic_id="st2", grade="Grade 4")
+
+    q1 = _sample_question(qid="q1")
+    q1["syllabus_topic_id"] = "st1"
+    q2 = _sample_question(qid="q2")
+    q2["syllabus_topic_id"] = "st2"
+    questions_repository.insert(q1)
+    questions_repository.insert(q2)
+    questions_repository.insert(_sample_question(qid="q3"))  # unlinked
+
+    result = questions_repository.list_by_filters(syllabus_topic_id="st1")
+    assert len(result) == 1
+    assert result[0]["id"] == "q1"

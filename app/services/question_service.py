@@ -54,6 +54,7 @@ def persist_batch(ai_questions: list[dict], req: GenerateQuestionsRequest) -> li
                 "explanation_ur": q.get("explanation_ur"),
                 "visual_emoji": q.get("visual_emoji"),
                 "visual_count": q.get("visual_count"),
+                "syllabus_topic_id": req.syllabus_topic_id,
             }
         )
         saved_ids.append(qid)
@@ -61,8 +62,11 @@ def persist_batch(ai_questions: list[dict], req: GenerateQuestionsRequest) -> li
 
 
 def list_questions(
-    subject: str | None = None, topic: str | None = None, bloom_level: str | None = None
+    subject: str | None = None,
+    topic: str | None = None,
+    bloom_level: str | None = None,
+    syllabus_topic_id: str | None = None,
 ) -> list:
     return questions_repository.list_by_filters(
-        subject=subject, topic=topic, bloom_level=bloom_level
+        subject=subject, topic=topic, bloom_level=bloom_level, syllabus_topic_id=syllabus_topic_id
     )

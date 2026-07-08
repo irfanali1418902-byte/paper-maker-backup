@@ -50,7 +50,8 @@ def init_db() -> None:
             visual_emoji TEXT,
             visual_count INTEGER,
             usage_count INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            syllabus_topic_id TEXT REFERENCES syllabus_topics(id)
         )
         """)
 
@@ -62,6 +63,8 @@ def init_db() -> None:
         cur.execute("ALTER TABLE questions ADD COLUMN visual_emoji TEXT")
     if "visual_count" not in existing_cols:
         cur.execute("ALTER TABLE questions ADD COLUMN visual_count INTEGER")
+    if "syllabus_topic_id" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN syllabus_topic_id TEXT REFERENCES syllabus_topics(id)")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS papers (

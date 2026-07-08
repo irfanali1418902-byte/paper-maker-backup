@@ -15,8 +15,8 @@ def insert(question_row: dict) -> None:
            (id, subject, topic, bloom_level, difficulty, question_type, marks,
             question_en, question_ur, options_en, options_ur,
             correct_answer_en, correct_answer_ur, explanation_en, explanation_ur,
-            visual_emoji, visual_count)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            visual_emoji, visual_count, syllabus_topic_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             question_row["id"],
             question_row["subject"],
@@ -35,6 +35,7 @@ def insert(question_row: dict) -> None:
             question_row["explanation_ur"],
             question_row["visual_emoji"],
             question_row["visual_count"],
+            question_row.get("syllabus_topic_id"),
         ),
     )
     conn.commit()
@@ -96,6 +97,7 @@ def list_by_filters(
     subject: Optional[str] = None,
     topic: Optional[str] = None,
     bloom_level: Optional[str] = None,
+    syllabus_topic_id: Optional[str] = None,
 ) -> list:
     conn = get_connection()
     cur = conn.cursor()
@@ -110,6 +112,9 @@ def list_by_filters(
     if bloom_level:
         query += " AND bloom_level = ?"
         params.append(bloom_level)
+    if syllabus_topic_id:
+        query += " AND syllabus_topic_id = ?"
+        params.append(syllabus_topic_id)
     rows = cur.execute(query, params).fetchall()
     conn.close()
     return [dict(row) for row in rows]

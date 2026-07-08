@@ -9,6 +9,7 @@ from app.schemas.responses import (
     SyllabusImportResponse,
     SyllabusTopic,
     SyllabusZipImportResponse,
+    TopicItem,
 )
 from app.services import syllabus_service
 from app.services.exceptions import AIGenerationFailed
@@ -86,6 +87,31 @@ def upload_syllabus_zip(
         ) from e
 
     return {"subject": subject.strip(), "grade": grade.strip(), **result}
+
+
+@router.get("/api/topics", response_model=List[TopicItem])
+def list_topics_for_picker(subject: Optional[str] = None, grade: Optional[str] = None):
+    """Subject → Class → Topic hierarchy picker ke liye lightweight topic list.
+    Frontend in topics ka id lekar /api/generate-questions ya /api/questions mein
+    syllabus_topic_id pass karta hai."""
+    try:
+        raw = syllabus_service.list_topics(subject=subject, grade=grade)
+        return [
+            {
+                "id": t["id"],
+                "subject": t["subject"],
+                "grade": t.get("grade"),
+                "unit_no": t["unit_no"],
+                "unit_title": t["unit_title"],
+                "subtopic_title": t["subtopic_title"],
+                "suggested_difficulty": t["suggested_difficulty"],
+            }
+            for t in raw
+        ]
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Topics fetch fail hui (DB error): {e}"
+        ) from e
 
 
 @router.get("/api/syllabus-topics", response_model=List[SyllabusTopic])

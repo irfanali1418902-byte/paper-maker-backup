@@ -53,7 +53,10 @@ def list_questions(
     subject: Optional[str] = None,
     topic: Optional[str] = None,
     bloom_level: Optional[str] = None,
+    syllabus_topic_id: Optional[str] = None,
 ):
-    """Question bank browse karne ke liye. bloom_level filter manual
-    question-replace ke candidate list ke liye use hota hai."""
-    return question_service.list_questions(subject=subject, topic=topic, bloom_level=bloom_level)
+    """Question bank browse karne ke liye. syllabus_topic_id se filter karo to
+    sirf usi topic ke linked questions aayein ge (hierarchy picker ke liye)."""
+    return question_service.list_questions(
+        subject=subject, topic=topic, bloom_level=bloom_level, syllabus_topic_id=syllabus_topic_id
+    )
