@@ -16,6 +16,7 @@ add ki gayi hai.
 import base64
 import json
 import os
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -38,6 +39,12 @@ GEMINI_API_URL = (
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
+
+# Retry config — temporary/busy errors par dobara try karte hain.
+# Tests mein _RETRY_BACKOFF ko [0, 0] monkeypatch karo taake slow na ho.
+_RETRY_ATTEMPTS = 3
+_RETRY_BACKOFF = [2, 4]  # seconds between attempt 1→2 and 2→3
+_RETRYABLE_STATUS = {429, 503, 529}  # busy/rate-limit; permanent errors (401,400) retry NAHI
 
 # Difficulty sirf marks ka multiplier nahi — har level ki cognitive gehraai
 # ko bhi shape karti hai. Distribution counts authoritative rehti hain; ye
@@ -236,6 +243,24 @@ def _extract_json(text: str, key: str = "questions") -> list:
     return parsed.get(key, [])
 
 
+def _with_retry(fn):
+    """Temporary AI errors (busy/rate-limit/network) par exponential backoff ke saath retry karta hai.
+    Permanent errors (galat key, bad request) par seedha raise hota hai — retry bekaar hai."""
+    last_err = None
+    for attempt in range(_RETRY_ATTEMPTS):
+        try:
+            return fn()
+        except AIGenerationFailed as e:
+            status = getattr(getattr(e.__cause__, "response", None), "status_code", None)
+            is_network = isinstance(e.__cause__, (requests.exceptions.ConnectionError, requests.exceptions.Timeout))
+            if status not in _RETRYABLE_STATUS and not is_network:
+                raise  # permanent error — dobara try nahi
+            last_err = e
+            if attempt < len(_RETRY_BACKOFF):
+                time.sleep(_RETRY_BACKOFF[attempt])
+    raise last_err
+
+
 def _call_gemini(prompt: str, image: tuple | None = None) -> str:
     # Key header mein bhejte hain (URL mein nahi) taake kisi error message ya
     # log mein leak na ho — pehle ?key= URL mein tha aur 503 par expose ho raha tha.
@@ -246,19 +271,24 @@ def _call_gemini(prompt: str, image: tuple | None = None) -> str:
             {"inline_data": {"mime_type": mime_type, "data": base64.b64encode(raw).decode()}},
             {"text": prompt},
         ]
-    try:
-        response = requests.post(
-            GEMINI_API_URL,
-            headers={"Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY},
-            json={
-                "contents": [{"parts": parts}],
-                "generationConfig": {"temperature": 0.7, "maxOutputTokens": 16000},
-            },
-            timeout=120,
-        )
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise AIGenerationFailed(_provider_error_message("Gemini", e)) from e
+
+    def _do_request():
+        try:
+            response = requests.post(
+                GEMINI_API_URL,
+                headers={"Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY},
+                json={
+                    "contents": [{"parts": parts}],
+                    "generationConfig": {"temperature": 0.7, "maxOutputTokens": 16000},
+                },
+                timeout=120,
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            raise AIGenerationFailed(_provider_error_message("Gemini", e)) from e
+
+    response = _with_retry(_do_request)
     data = response.json()
 
     # Billing-grade usage log lands here — provider already charged for the
@@ -294,24 +324,29 @@ def _call_claude(prompt: str, image: tuple | None = None) -> str:
             },
             {"type": "text", "text": prompt},
         ]
-    try:
-        response = requests.post(
-            ANTHROPIC_API_URL,
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": ANTHROPIC_MODEL,
-                "max_tokens": 8000,
-                "messages": [{"role": "user", "content": content}],
-            },
-            timeout=120,
-        )
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise AIGenerationFailed(_provider_error_message("Claude", e)) from e
+
+    def _do_request():
+        try:
+            response = requests.post(
+                ANTHROPIC_API_URL,
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": ANTHROPIC_MODEL,
+                    "max_tokens": 8000,
+                    "messages": [{"role": "user", "content": content}],
+                },
+                timeout=120,
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            raise AIGenerationFailed(_provider_error_message("Claude", e)) from e
+
+    response = _with_retry(_do_request)
     data = response.json()
 
     # Anthropic returns input + output tokens separately; compute total
