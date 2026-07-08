@@ -65,18 +65,24 @@ DIFFICULTY_GUIDANCE = {
 
 
 def build_prompt(
-    topic: str, subject: str, bloom_distribution: dict, question_types: list, difficulty: str
+    topic: str,
+    subject: str,
+    bloom_distribution: dict,
+    question_types: list,
+    difficulty: str,
+    learning_outcome: str | None = None,
 ) -> str:
     bloom_lines = "\n".join(
         f"- {level}: {count} questions" for level, count in bloom_distribution.items() if count > 0
     )
     types_str = ", ".join(question_types)
     difficulty_guidance = DIFFICULTY_GUIDANCE.get(difficulty, DIFFICULTY_GUIDANCE["medium"])
+    outcome_line = f"\nLEARNING OUTCOME: {learning_outcome}" if learning_outcome else ""
 
     return f"""You are an expert bilingual (English + Urdu) educational content creator for a school in Swat, Pakistan, specializing in Bloom's Taxonomy-based question design.
 
 SUBJECT: {subject}
-TOPIC: {topic}
+TOPIC: {topic}{outcome_line}
 DIFFICULTY: {difficulty}
 QUESTION TYPES TO USE: {types_str}
 
@@ -344,9 +350,14 @@ def _call_ai(prompt: str, image: tuple | None = None) -> str:
 
 
 def generate_questions_from_ai(
-    topic: str, subject: str, bloom_distribution: dict, question_types: list, difficulty: str
+    topic: str,
+    subject: str,
+    bloom_distribution: dict,
+    question_types: list,
+    difficulty: str,
+    learning_outcome: str | None = None,
 ) -> list:
-    prompt = build_prompt(topic, subject, bloom_distribution, question_types, difficulty)
+    prompt = build_prompt(topic, subject, bloom_distribution, question_types, difficulty, learning_outcome)
     return _extract_json(_call_ai(prompt), key="questions")
 
 

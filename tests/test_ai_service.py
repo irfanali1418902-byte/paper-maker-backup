@@ -45,6 +45,25 @@ def test_build_prompt_omits_zero_count_levels():
     assert "CREATE" not in bloom_section
 
 
+# ---- learning_outcome in build_prompt ----------------------------------------
+
+
+def test_build_prompt_includes_learning_outcome_when_provided():
+    outcome = "Students will be able to add fractions with like denominators."
+    prompt = build_prompt("Fractions", "Mathematics", _DIST, ["multiple-choice"], "medium", learning_outcome=outcome)
+    assert f"LEARNING OUTCOME: {outcome}" in prompt
+
+
+def test_build_prompt_omits_learning_outcome_line_when_none():
+    prompt = build_prompt("Fractions", "Mathematics", _DIST, ["multiple-choice"], "medium", learning_outcome=None)
+    assert "LEARNING OUTCOME" not in prompt
+
+
+def test_build_prompt_omits_learning_outcome_line_when_empty_string():
+    prompt = build_prompt("Fractions", "Mathematics", _DIST, ["multiple-choice"], "medium", learning_outcome="")
+    assert "LEARNING OUTCOME" not in prompt
+
+
 # ---- provider dispatch (_call_ai) — priority selection, not fallback --------
 
 

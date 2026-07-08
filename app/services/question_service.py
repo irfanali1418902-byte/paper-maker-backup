@@ -21,6 +21,7 @@ def generate_for_topic(req: GenerateQuestionsRequest) -> list[dict]:
         bloom_distribution=distribution,
         question_types=req.question_types,
         difficulty=req.difficulty,
+        learning_outcome=req.learning_outcome,
     )
 
 

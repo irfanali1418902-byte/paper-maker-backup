@@ -26,6 +26,7 @@ def generate_questions(req: GenerateQuestionsRequest):
         req.subject = topic["subject"]
         req.topic = topic["subtopic_title"]
         req.difficulty = topic["suggested_difficulty"]
+        req.learning_outcome = topic.get("learning_outcome")
 
     if not req.subject or not req.topic:
         raise HTTPException(

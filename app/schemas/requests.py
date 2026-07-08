@@ -13,6 +13,7 @@ class GenerateQuestionsRequest(BaseModel):
     bloom_distribution: str = "balanced"  # balanced | foundational | advanced
     question_types: List[str] = ["multiple-choice"]
     difficulty: str = "medium"
+    learning_outcome: Optional[str] = None
 
 
 class GeneratePaperRequest(BaseModel):
