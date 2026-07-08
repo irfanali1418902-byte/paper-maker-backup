@@ -406,14 +406,19 @@
           <!-- LEFT column: form + summary + tip -->
           <div class="stack">
           <div class="card">
-            <label data-i18n="form.classGrade">Class/Grade select karen</label>
-            <select id="syllabusGrade" onchange="onGradeChange()">
-              <option value="">-- Loading classes... --</option>
+            <label data-i18n="form.subject">Subject select karen</label>
+            <select id="subjectSelect" onchange="onSubjectChange()">
+              <option value="">-- Loading subjects... --</option>
             </select>
 
-            <label data-i18n="form.syllabusTopic">Ya syllabus se topic select karen</label>
-            <select id="syllabusTopic" onchange="onSyllabusTopicChange()">
-              <option value="">-- Pehle class select karen --</option>
+            <label data-i18n="form.classGrade">Class/Grade select karen</label>
+            <select id="gradeSelect" onchange="onGradeChange()" disabled>
+              <option value="">-- Pehle subject chunein --</option>
+            </select>
+
+            <label data-i18n="form.syllabusTopic">Topic select karen</label>
+            <select id="syllabusTopic" onchange="onSyllabusTopicChange()" disabled>
+              <option value="">-- Pehle class chunein --</option>
             </select>
 
             <div class="field-row">
@@ -1164,50 +1169,87 @@ function openDashboard() {
 
 loadSchoolSettings();
 
+let _allGrades = [];
+
 async function loadSyllabusGrades() {
   try {
     const res = await apiFetch('/api/syllabus-grades');
-    const grades = await res.json();
-    const select = document.getElementById('syllabusGrade');
-    select.innerHTML = '<option value="">-- Manual entry (upar wale fields use karen) --</option>';
-    grades.forEach(g => {
+    _allGrades = await res.json();
+    const subjectSelect = document.getElementById('subjectSelect');
+    const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
+    subjectSelect.innerHTML = '<option value="">-- Manual entry (neeche wale fields use karen) --</option>';
+    subjects.forEach(s => {
       const opt = document.createElement('option');
-      opt.value = JSON.stringify({subject: g.subject, grade: g.grade});
-      opt.textContent = `${g.subject} — ${g.grade}`;
-      select.appendChild(opt);
+      opt.value = s;
+      opt.textContent = s;
+      subjectSelect.appendChild(opt);
     });
   } catch (e) {
     console.error('Syllabus grades load failed:', e);
   }
 }
 
-async function onGradeChange() {
-  const gradeSelect = document.getElementById('syllabusGrade');
+function onSubjectChange() {
+  const subject = document.getElementById('subjectSelect').value;
+  const gradeSelect = document.getElementById('gradeSelect');
   const topicSelect = document.getElementById('syllabusTopic');
-  topicSelect.innerHTML = '<option value="">-- Loading topics... --</option>';
   selectedSyllabusTopicId = null;
+  topicSelect.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  topicSelect.disabled = true;
 
-  if (!gradeSelect.value) {
-    topicSelect.innerHTML = '<option value="">-- Pehle class select karen --</option>';
+  if (!subject) {
+    gradeSelect.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeSelect.disabled = true;
     return;
   }
 
-  const { subject, grade } = JSON.parse(gradeSelect.value);
   document.getElementById('subject').value = subject;
   syncPaperSummary();
 
-  const res = await apiFetch(`/api/syllabus-topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
-  const topics = await res.json();
-  topicSelect.innerHTML = '<option value="">-- Manual entry (upar wale fields use karen) --</option>';
-  topics.forEach(t => {
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).sort();
+  gradeSelect.innerHTML = '<option value="">-- Class chunein --</option>';
+  grades.forEach(g => {
     const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = `p.${t.page_no} — ${t.subtopic_title} (${t.activity_type})`;
-    opt.dataset.subject = t.subject;
-    opt.dataset.topic = t.subtopic_title;
-    opt.dataset.difficulty = t.suggested_difficulty;
-    topicSelect.appendChild(opt);
+    opt.value = g;
+    opt.textContent = g;
+    gradeSelect.appendChild(opt);
   });
+  gradeSelect.disabled = false;
+}
+
+async function onGradeChange() {
+  const subject = document.getElementById('subjectSelect').value;
+  const grade = document.getElementById('gradeSelect').value;
+  const topicSelect = document.getElementById('syllabusTopic');
+  selectedSyllabusTopicId = null;
+
+  if (!grade) {
+    topicSelect.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+    topicSelect.disabled = true;
+    return;
+  }
+
+  topicSelect.innerHTML = '<option value="">-- Loading topics... --</option>';
+  topicSelect.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicSelect.innerHTML = '<option value="">-- Manual entry (neeche wale fields use karen) --</option>';
+    topics.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      opt.dataset.subject = t.subject;
+      opt.dataset.topic = t.subtopic_title;
+      opt.dataset.difficulty = t.suggested_difficulty;
+      topicSelect.appendChild(opt);
+    });
+    topicSelect.disabled = false;
+  } catch (e) {
+    topicSelect.innerHTML = '<option value="">-- Topics load fail --</option>';
+    console.error('Topics load failed:', e);
+  }
 }
 
 function onSyllabusTopicChange() {
