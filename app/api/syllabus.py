@@ -90,12 +90,18 @@ def upload_syllabus_zip(
 
 
 @router.get("/api/topics", response_model=List[TopicItem])
-def list_topics_for_picker(subject: Optional[str] = None, grade: Optional[str] = None):
+def list_topics_for_picker(
+    subject: Optional[str] = None,
+    grade: Optional[str] = None,
+    from_page: Optional[int] = None,
+    to_page: Optional[int] = None,
+):
     """Subject → Class → Topic hierarchy picker ke liye lightweight topic list.
+    from_page/to_page se page range filter kar sakte hain (syllabus_topics.page_no).
     Frontend in topics ka id lekar /api/generate-questions ya /api/questions mein
     syllabus_topic_id pass karta hai."""
     try:
-        raw = syllabus_service.list_topics(subject=subject, grade=grade)
+        raw = syllabus_service.list_topics(subject=subject, grade=grade, from_page=from_page, to_page=to_page)
         return [
             {
                 "id": t["id"],
@@ -105,6 +111,7 @@ def list_topics_for_picker(subject: Optional[str] = None, grade: Optional[str] =
                 "unit_title": t["unit_title"],
                 "subtopic_title": t["subtopic_title"],
                 "suggested_difficulty": t["suggested_difficulty"],
+                "page_no": t.get("page_no"),
             }
             for t in raw
         ]

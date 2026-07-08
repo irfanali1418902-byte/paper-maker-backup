@@ -94,3 +94,40 @@ def test_insert_duplicate_raises(test_db):
     with pytest.raises(DuplicateSyllabusTopic):
         # Same key tuple, different topic_id — should violate the constraint.
         _insert_topic(topic_id="t2")
+
+
+# ---- page range filter -------------------------------------------------------
+
+
+def test_list_by_filters_from_page_only(test_db):
+    _insert_topic(topic_id="t1", page_no=5, subtopic_title="Topic A")
+    _insert_topic(topic_id="t2", page_no=10, subtopic_title="Topic B")
+    _insert_topic(topic_id="t3", page_no=15, subtopic_title="Topic C")
+
+    result = syllabus_repository.list_by_filters(from_page=10)
+    ids = [r["id"] for r in result]
+    assert "t1" not in ids
+    assert "t2" in ids
+    assert "t3" in ids
+
+
+def test_list_by_filters_to_page_only(test_db):
+    _insert_topic(topic_id="t1", page_no=5, subtopic_title="Topic A")
+    _insert_topic(topic_id="t2", page_no=10, subtopic_title="Topic B")
+    _insert_topic(topic_id="t3", page_no=15, subtopic_title="Topic C")
+
+    result = syllabus_repository.list_by_filters(to_page=10)
+    ids = [r["id"] for r in result]
+    assert "t1" in ids
+    assert "t2" in ids
+    assert "t3" not in ids
+
+
+def test_list_by_filters_page_range(test_db):
+    _insert_topic(topic_id="t1", page_no=3, subtopic_title="Topic A")
+    _insert_topic(topic_id="t2", page_no=7, subtopic_title="Topic B")
+    _insert_topic(topic_id="t3", page_no=12, subtopic_title="Topic C")
+
+    result = syllabus_repository.list_by_filters(from_page=5, to_page=10)
+    ids = [r["id"] for r in result]
+    assert ids == ["t2"]

@@ -132,6 +132,7 @@ class TopicItem(BaseModel):
     unit_title: str
     subtopic_title: str
     suggested_difficulty: str
+    page_no: Optional[int] = None
 
 
 # ---- Endpoint-specific responses --------------------------------------------
