@@ -15,7 +15,12 @@ def find_by_id(topic_id: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
-def list_by_filters(subject: Optional[str] = None, grade: Optional[str] = None) -> list:
+def list_by_filters(
+    subject: Optional[str] = None,
+    grade: Optional[str] = None,
+    from_page: Optional[int] = None,
+    to_page: Optional[int] = None,
+) -> list:
     conn = get_connection()
     cur = conn.cursor()
     query = "SELECT * FROM syllabus_topics WHERE 1=1"
@@ -26,6 +31,12 @@ def list_by_filters(subject: Optional[str] = None, grade: Optional[str] = None) 
     if grade:
         query += " AND grade = ?"
         params.append(grade)
+    if from_page is not None:
+        query += " AND page_no >= ?"
+        params.append(from_page)
+    if to_page is not None:
+        query += " AND page_no <= ?"
+        params.append(to_page)
     query += " ORDER BY unit_no, page_no"
     rows = cur.execute(query, params).fetchall()
     conn.close()

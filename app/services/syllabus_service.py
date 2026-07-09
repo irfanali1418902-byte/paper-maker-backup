@@ -42,11 +42,16 @@ def list_grades() -> list:
     return syllabus_repository.list_distinct_subject_grade()
 
 
-def list_topics(subject: str | None = None, grade: str | None = None) -> list:
+def list_topics(
+    subject: str | None = None,
+    grade: str | None = None,
+    from_page: int | None = None,
+    to_page: int | None = None,
+) -> list:
     """Lists topics with each row annotated with a 'suggested_difficulty'
     derived from the book's own Introduction/Identification/Practice/Review
     tagging."""
-    topics = syllabus_repository.list_by_filters(subject=subject, grade=grade)
+    topics = syllabus_repository.list_by_filters(subject=subject, grade=grade, from_page=from_page, to_page=to_page)
     for topic in topics:
         topic["suggested_difficulty"] = _ACTIVITY_TO_DIFFICULTY.get(
             topic["activity_type"], "medium"

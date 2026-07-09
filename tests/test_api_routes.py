@@ -761,6 +761,29 @@ def test_topics_filters_by_grade(client):
     assert data[0]["id"] == "st1"
 
 
+def test_topics_page_no_in_response(client):
+    _insert_syllabus_topic(topic_id="st1", subject="Mathematics", grade="Grade 3")
+    r = client.get("/api/topics", params={"subject": "Mathematics", "grade": "Grade 3"})
+    assert r.status_code == 200
+    assert r.json()[0]["page_no"] == 5
+
+
+def test_topics_filter_by_page_range(client):
+    from app.repositories import syllabus_repository
+
+    for tid, pno, title in [("p1", 3, "Topic A"), ("p2", 7, "Topic B"), ("p3", 12, "Topic C")]:
+        syllabus_repository.insert(
+            topic_id=tid, subject="Science", grade="Grade 5", unit_no=1,
+            unit_title="Unit", page_range="1-20", subtopic_title=title,
+            activity_type="Practice", page_no=pno, learning_outcome="",
+        )
+    r = client.get("/api/topics", params={"subject": "Science", "grade": "Grade 5", "from_page": 5, "to_page": 10})
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data) == 1
+    assert data[0]["id"] == "p2"
+
+
 def test_questions_filter_by_syllabus_topic_id(client):
     _insert_syllabus_topic(topic_id="st1")
     qid = str(__import__("uuid").uuid4())
