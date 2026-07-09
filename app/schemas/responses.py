@@ -43,6 +43,7 @@ class Question(BaseModel):
     usage_count: int = 0
     created_at: Optional[str] = None
     syllabus_topic_id: Optional[str] = None
+    answer_lines: Optional[int] = None
 
 
 class Paper(BaseModel):

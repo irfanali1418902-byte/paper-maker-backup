@@ -65,6 +65,8 @@ def init_db() -> None:
         cur.execute("ALTER TABLE questions ADD COLUMN visual_count INTEGER")
     if "syllabus_topic_id" not in existing_cols:
         cur.execute("ALTER TABLE questions ADD COLUMN syllabus_topic_id TEXT REFERENCES syllabus_topics(id)")
+    if "answer_lines" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN answer_lines INTEGER")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS papers (

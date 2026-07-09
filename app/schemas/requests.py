@@ -73,6 +73,7 @@ class UpdateQuestionRequest(BaseModel):
     correct_answer_en: Optional[str] = None
     correct_answer_ur: Optional[str] = None
     marks: Optional[int] = Field(default=None, ge=1)
+    answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
 
     @field_validator("question_en", "question_ur")
     @classmethod
@@ -102,7 +103,7 @@ class UpdateQuestionRequest(BaseModel):
                 self.question_en, self.question_ur,
                 self.options_en, self.options_ur,
                 self.correct_answer_en, self.correct_answer_ur,
-                self.marks,
+                self.marks, self.answer_lines,
             )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
