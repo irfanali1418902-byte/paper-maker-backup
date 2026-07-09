@@ -176,6 +176,92 @@
     .sidebar-foot { display: none; }
     .print-main { padding: 16px; }
   }
+
+  /* ---- Edit button (screen only) ---- */
+  .no-print { display: inline-flex; }
+
+  .edit-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 5px; padding: 2px 6px; cursor: pointer;
+    font-size: 13px; color: var(--muted); line-height: 1;
+    flex-shrink: 0; align-self: flex-start;
+  }
+  .edit-btn:hover { background: var(--tint); color: var(--primary); border-color: var(--primary); }
+
+  /* ---- Edit modal ---- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: #fff; border-radius: 10px; padding: 24px 28px;
+    width: min(600px, 94vw); max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,.22);
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px;
+  }
+  .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
+  .modal-close {
+    background: none; border: none; font-size: 20px; cursor: pointer;
+    color: var(--muted); line-height: 1; padding: 2px 6px;
+  }
+  .modal-close:hover { color: var(--ink); }
+
+  .field-group { margin-bottom: 14px; }
+  .field-group label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .field-group textarea, .field-group input[type="text"], .field-group input[type="number"] {
+    width: 100%; border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; font-family: inherit; font-size: 14px;
+    color: var(--ink); resize: vertical;
+  }
+  .field-group textarea:focus, .field-group input:focus {
+    outline: none; border-color: var(--primary);
+  }
+  .field-group .urdu-input {
+    direction: rtl; font-family: "Noto Nastaliq Urdu", serif;
+    font-size: 15px; line-height: 1.8;
+  }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .options-grid input { width: 100%; }
+
+  .modal-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--primary); margin: 16px 0 10px;
+    border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .modal-error {
+    background: #fff0f0; border: 1px solid #ffb3b3; border-radius: 6px;
+    padding: 8px 12px; font-size: 13px; color: #c00; margin-bottom: 12px;
+    display: none;
+  }
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;
+  }
+  .btn-cancel {
+    padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+    background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+  .btn-save {
+    padding: 8px 20px; border: none; border-radius: var(--radius-btn);
+    background: var(--primary); color: #fff; cursor: pointer;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+  }
+  .btn-save:hover { background: var(--primary-hover); }
+  .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+
+  @media print {
+    .no-print { display: none !important; }
+    .modal-backdrop { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -227,10 +313,189 @@
   </div>
 </main>
 
+<!-- Edit modal (screen only — hidden in print via .no-print / @media print) -->
+<div class="modal-backdrop no-print" id="editModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+  <div class="modal" id="editModal">
+    <div class="modal-header">
+      <h3 id="editModalTitle">Question Edit</h3>
+      <button class="modal-close" onclick="closeEditModal()" aria-label="Close">×</button>
+    </div>
+
+    <div class="modal-error" id="editError"></div>
+
+    <div class="field-group">
+      <label>Question (English)</label>
+      <textarea id="ef_question_en" rows="3"></textarea>
+    </div>
+    <div class="field-group">
+      <label>Question (اردو)</label>
+      <textarea id="ef_question_ur" rows="3" class="urdu-input"></textarea>
+    </div>
+
+    <div id="ef_options_section">
+      <div class="modal-section-title">Options</div>
+      <div class="field-group">
+        <label>Options — English</label>
+        <div class="options-grid" id="ef_options_en_grid"></div>
+      </div>
+      <div class="field-group">
+        <label>Options — اردو</label>
+        <div class="options-grid" id="ef_options_ur_grid"></div>
+      </div>
+      <div class="modal-section-title">Correct Answer</div>
+      <div class="field-group">
+        <label>Correct Answer (English)</label>
+        <input type="text" id="ef_correct_en" />
+      </div>
+      <div class="field-group">
+        <label>Correct Answer (اردو)</label>
+        <input type="text" id="ef_correct_ur" class="urdu-input" />
+      </div>
+    </div>
+
+    <div class="modal-section-title">Marks</div>
+    <div class="field-group">
+      <label>Marks</label>
+      <input type="number" id="ef_marks" min="1" style="width:100px" />
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" id="ef_saveBtn" onclick="saveQuestion()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script src="/apiClient.js"></script>
 <script>
 // question_type classification — mirrors paper_service.py constants.
 const OBJECTIVE_TYPES = new Set(['multiple-choice', 'true-false']);
+
+// ---- Edit modal state -------------------------------------------------------
+let _editQuestionId = null;   // which question is being edited
+let _paperQuestions = [];     // full question list kept for re-render after save
+
+function openEditModal(q) {
+  _editQuestionId = q.id;
+  const isObjective = OBJECTIVE_TYPES.has(q.question_type);
+
+  document.getElementById('ef_question_en').value = q.question_en || '';
+  document.getElementById('ef_question_ur').value = q.question_ur || '';
+  document.getElementById('ef_correct_en').value  = q.correct_answer_en || '';
+  document.getElementById('ef_correct_ur').value  = q.correct_answer_ur || '';
+  document.getElementById('ef_marks').value        = q.marks || 1;
+
+  // Options (MCQ only)
+  document.getElementById('ef_options_section').style.display = isObjective ? '' : 'none';
+  if (isObjective) {
+    const optsEn = JSON.parse(q.options_en || '[]');
+    const optsUr = JSON.parse(q.options_ur || '[]');
+    const enGrid = document.getElementById('ef_options_en_grid');
+    const urGrid = document.getElementById('ef_options_ur_grid');
+    enGrid.innerHTML = '';
+    urGrid.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.value = optsEn[i] || '';
+      inp.dataset.idx = i; inp.className = 'opt-en';
+      enGrid.appendChild(inp);
+
+      const inpUr = document.createElement('input');
+      inpUr.type = 'text'; inpUr.value = optsUr[i] || '';
+      inpUr.dataset.idx = i; inpUr.className = 'opt-ur urdu-input';
+      urGrid.appendChild(inpUr);
+    }
+  }
+
+  document.getElementById('editError').style.display = 'none';
+  document.getElementById('editError').textContent = '';
+  document.getElementById('ef_saveBtn').disabled = false;
+  document.getElementById('editModalBackdrop').classList.add('open');
+  document.getElementById('ef_question_en').focus();
+}
+
+function closeEditModal() {
+  document.getElementById('editModalBackdrop').classList.remove('open');
+  _editQuestionId = null;
+}
+
+async function saveQuestion() {
+  const qen = document.getElementById('ef_question_en').value.trim();
+  const marks = parseInt(document.getElementById('ef_marks').value, 10);
+  const errEl = document.getElementById('editError');
+
+  if (!qen) {
+    errEl.textContent = 'Question (English) khali nahi ho sakta.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!marks || marks < 1) {
+    errEl.textContent = 'Marks kam az kam 1 hona chahiye.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const payload = {
+    question_en: qen,
+    question_ur: document.getElementById('ef_question_ur').value,
+    correct_answer_en: document.getElementById('ef_correct_en').value,
+    correct_answer_ur: document.getElementById('ef_correct_ur').value,
+    marks,
+  };
+
+  const optEls = document.querySelectorAll('#ef_options_en_grid .opt-en');
+  if (optEls.length) {
+    payload.options_en = JSON.stringify([...optEls].map(el => el.value));
+    payload.options_ur = JSON.stringify(
+      [...document.querySelectorAll('#ef_options_ur_grid .opt-ur')].map(el => el.value)
+    );
+  }
+
+  const btn = document.getElementById('ef_saveBtn');
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    const res = await apiFetch(`/api/questions/${_editQuestionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const detail = await res.json().then(d => d.detail || 'Save fail hui.').catch(() => 'Save fail hui.');
+      errEl.textContent = typeof detail === 'string' ? detail : 'Save fail hui.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      return;
+    }
+
+    const updated = await res.json();
+    // Patch the in-memory question list and re-render just that one question.
+    const idx = _paperQuestions.findIndex(q => q.id === _editQuestionId);
+    if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], ...updated };
+    _reRenderQuestion(_editQuestionId, _paperQuestions[idx]);
+    closeEditModal();
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+  }
+}
+
+function _reRenderQuestion(qid, updatedQ) {
+  // Find the rendered .question div by its data-qid attribute and swap it.
+  const el = document.querySelector(`.question[data-qid="${CSS.escape(qid)}"]`);
+  if (!el) return;
+  const num = parseInt(el.dataset.num, 10);
+  el.outerHTML = renderQuestion(updatedQ, num);
+}
+
+// Close on backdrop click or Esc key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditModal(); });
+document.getElementById('editModalBackdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModalBackdrop')) closeEditModal();
+});
 // Safety fallback: anything not in OBJECTIVE_TYPES goes to Section B.
 
 function getParam(name) {
@@ -286,10 +551,13 @@ function renderQuestion(q, num) {
   }
 
   return `
-    <div class="question">
+    <div class="question" data-qid="${escapeHtml(q.id)}" data-num="${num}">
       <div class="qhead">
         <div><span class="qnum">Q${num}.</span> <span class="qtext-en">${escapeHtml(q.question_en || '')}</span></div>
-        <div class="marks">[${q.marks}]</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="edit-btn no-print" onclick='openEditModal(${JSON.stringify(q)})' title="Edit question">✏️</button>
+          <span class="marks">[${q.marks}]</span>
+        </div>
       </div>
       <div class="qtext-ur">${escapeHtml(q.question_ur || '')}</div>
       ${visualHtml}
@@ -330,6 +598,7 @@ async function loadPaper() {
 
     if (!paperRes.ok) throw new Error('Paper nahi mila.');
     const { paper, questions } = await paperRes.json();
+    _paperQuestions = questions;
     const settings = await settingsRes.json();
 
     // Letterhead
