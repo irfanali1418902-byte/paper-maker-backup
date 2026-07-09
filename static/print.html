@@ -390,7 +390,8 @@ const OBJECTIVE_TYPES = new Set(['multiple-choice', 'true-false']);
 let _editQuestionId = null;   // which question is being edited
 let _paperQuestions = [];     // full question list kept for re-render after save
 
-function openEditModal(q) {
+function openEditModal(btn) {
+  const q = JSON.parse(btn.dataset.q);
   _editQuestionId = q.id;
   const isObjective = OBJECTIVE_TYPES.has(q.question_type);
 
@@ -571,7 +572,7 @@ function renderQuestion(q, num) {
       <div class="qhead">
         <div><span class="qnum">Q${num}.</span> <span class="qtext-en">${escapeHtml(q.question_en || '')}</span></div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <button class="edit-btn no-print" onclick='openEditModal(${JSON.stringify(q)})' title="Edit question">✏️</button>
+          <button class="edit-btn no-print" data-q="${escapeHtml(JSON.stringify(q))}" onclick="openEditModal(this)" title="Edit question">✏️</button>
           <span class="marks">[${q.marks}]</span>
         </div>
       </div>
