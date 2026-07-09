@@ -359,6 +359,21 @@
       <input type="number" id="ef_marks" min="1" style="width:100px" />
     </div>
 
+    <div id="ef_answer_space_section">
+      <div class="modal-section-title">Answer Space</div>
+      <div class="field-group">
+        <label>Lines</label>
+        <select id="ef_answer_lines" style="width:160px">
+          <option value="">Default</option>
+          <option value="0">None (0)</option>
+          <option value="3">3 lines</option>
+          <option value="5">5 lines</option>
+          <option value="8">8 lines</option>
+          <option value="10">10 lines</option>
+        </select>
+      </div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="ef_saveBtn" onclick="saveQuestion()">Save</button>
@@ -384,9 +399,11 @@ function openEditModal(q) {
   document.getElementById('ef_correct_en').value  = q.correct_answer_en || '';
   document.getElementById('ef_correct_ur').value  = q.correct_answer_ur || '';
   document.getElementById('ef_marks').value        = q.marks || 1;
+  document.getElementById('ef_answer_lines').value = q.answer_lines != null ? String(q.answer_lines) : '';
 
-  // Options (MCQ only)
-  document.getElementById('ef_options_section').style.display = isObjective ? '' : 'none';
+  // Options section (MCQ only); Answer Space section (subjective only)
+  document.getElementById('ef_options_section').style.display      = isObjective ? '' : 'none';
+  document.getElementById('ef_answer_space_section').style.display = isObjective ? 'none' : '';
   if (isObjective) {
     const optsEn = JSON.parse(q.options_en || '[]');
     const optsUr = JSON.parse(q.options_ur || '[]');
@@ -435,6 +452,7 @@ async function saveQuestion() {
     return;
   }
 
+  const answerLinesRaw = document.getElementById('ef_answer_lines').value;
   const payload = {
     question_en: qen,
     question_ur: document.getElementById('ef_question_ur').value,
@@ -442,6 +460,7 @@ async function saveQuestion() {
     correct_answer_ur: document.getElementById('ef_correct_ur').value,
     marks,
   };
+  if (answerLinesRaw !== '') payload.answer_lines = parseInt(answerLinesRaw, 10);
 
   const optEls = document.querySelectorAll('#ef_options_en_grid .opt-en');
   if (optEls.length) {
@@ -517,19 +536,16 @@ function sectionMarks(questions) {
 }
 
 function answerSpace(q) {
-  if (q.question_type === 'essay') {
-    // Essay: ruled lines + diagram box for sketches/diagrams.
-    return `
-      <div class="ruled-lines">
-        ${'<div class="ruled-line"></div>'.repeat(5)}
-      </div>
-      <div class="diagram-box">[ Diagram / خاکہ ]</div>`;
-  }
-  // short-answer + unknown fallback: 4 ruled lines.
-  return `
-    <div class="ruled-lines">
-      ${'<div class="ruled-line"></div>'.repeat(4)}
-    </div>`;
+  // answer_lines=0: teacher ne explicitly "no space" choose kiya
+  if (q.answer_lines === 0) return '';
+
+  const teacherChose = q.answer_lines != null;
+  const n = teacherChose ? q.answer_lines : (q.question_type === 'essay' ? 5 : 4);
+  const lines = '<div class="ruled-line"></div>'.repeat(n);
+  // Diagram box sirf essay default par — teacher ke custom lines par nahi
+  const diagram = (q.question_type === 'essay' && !teacherChose)
+    ? '<div class="diagram-box">[ Diagram / خاکہ ]</div>' : '';
+  return `<div class="ruled-lines">${lines}</div>${diagram}`;
 }
 
 function renderQuestion(q, num) {
