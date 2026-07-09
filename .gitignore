@@ -8,6 +8,7 @@ env.local.bat
 
 # SQLite database files (runtime state, not source)
 *.db
+*.db.*
 
 # Python build/cache
 __pycache__/

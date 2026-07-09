@@ -158,3 +158,78 @@ def test_provider_error_message_maps_status_and_never_leaks():
     assert "network" in network.lower()
     for m in (busy, generic, network):
         assert "googleapis" not in m and "anthropic.com" not in m
+
+
+# ---- _with_retry — temporary errors par retry, permanent par seedha raise ----
+
+
+def _ai_failed_with_status(status):
+    """AIGenerationFailed banata hai jisme cause ka .response.status_code set ho."""
+    cause = requests.exceptions.HTTPError(response=_FakeResponse(status))
+    err = AIGenerationFailed("test error")
+    err.__cause__ = cause
+    return err
+
+
+def _ai_failed_network():
+    """AIGenerationFailed banata hai jisme cause ConnectionError ho (network glitch)."""
+    cause = requests.exceptions.ConnectionError("network down")
+    err = AIGenerationFailed("network error")
+    err.__cause__ = cause
+    return err
+
+
+def test_retry_succeeds_on_second_attempt(monkeypatch):
+    """503 par pehli dafa fail, doosri dafa succeed — caller ko result milta hai."""
+    monkeypatch.setattr(ai_service, "_RETRY_BACKOFF", [0, 0])
+    calls = []
+
+    def flaky():
+        calls.append(1)
+        if len(calls) == 1:
+            raise _ai_failed_with_status(503)
+        return "ok"
+
+    assert ai_service._with_retry(flaky) == "ok"
+    assert len(calls) == 2  # exactly 2 attempts
+
+
+def test_retry_exhausted_raises_last_error(monkeypatch):
+    """Teeno attempts mein 503 — AIGenerationFailed uthti hai."""
+    monkeypatch.setattr(ai_service, "_RETRY_BACKOFF", [0, 0])
+
+    def always_503():
+        raise _ai_failed_with_status(503)
+
+    with pytest.raises(AIGenerationFailed):
+        ai_service._with_retry(always_503)
+
+
+def test_retry_network_error_retried(monkeypatch):
+    """ConnectionError bhi retryable hai — 2nd attempt pe succeed karta hai."""
+    monkeypatch.setattr(ai_service, "_RETRY_BACKOFF", [0, 0])
+    calls = []
+
+    def flaky():
+        calls.append(1)
+        if len(calls) == 1:
+            raise _ai_failed_network()
+        return "ok"
+
+    assert ai_service._with_retry(flaky) == "ok"
+    assert len(calls) == 2
+
+
+def test_permanent_error_not_retried(monkeypatch):
+    """401 (galat key) permanent hai — retry nahi hona chahiye, seedha raise."""
+    monkeypatch.setattr(ai_service, "_RETRY_BACKOFF", [0, 0])
+    calls = []
+
+    def bad_key():
+        calls.append(1)
+        raise _ai_failed_with_status(401)
+
+    with pytest.raises(AIGenerationFailed):
+        ai_service._with_retry(bad_key)
+
+    assert len(calls) == 1  # sirf ek baar try, retry nahi
