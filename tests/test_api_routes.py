@@ -798,3 +798,33 @@ def test_questions_filter_by_syllabus_topic_id(client):
     assert len(data) == 1
     assert data[0]["id"] == qid
     assert data[0]["syllabus_topic_id"] == "st1"
+
+
+# ---- PATCH /api/questions/{id} (question edit) --------------------------------
+
+
+def test_patch_question_happy(client):
+    qid = _insert_question()
+    r = client.patch(f"/api/questions/{qid}", json={"question_en": "Updated text?", "marks": 5})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["question_en"] == "Updated text?"
+    assert body["marks"] == 5
+    assert body["id"] == qid
+
+
+def test_patch_question_blank_question_en_422(client):
+    qid = _insert_question()
+    r = client.patch(f"/api/questions/{qid}", json={"question_en": "   "})
+    assert r.status_code == 422
+
+
+def test_patch_question_marks_zero_422(client):
+    qid = _insert_question()
+    r = client.patch(f"/api/questions/{qid}", json={"marks": 0})
+    assert r.status_code == 422
+
+
+def test_patch_question_not_found_404(client):
+    r = client.patch("/api/questions/nonexistent-id", json={"marks": 3})
+    assert r.status_code == 404

@@ -4,7 +4,7 @@ import json
 import uuid
 
 from app.repositories import questions_repository
-from app.schemas.requests import GenerateQuestionsRequest
+from app.schemas.requests import GenerateQuestionsRequest, UpdateQuestionRequest
 from app.services import ai_service, bloom_service
 
 
@@ -60,6 +60,12 @@ def persist_batch(ai_questions: list[dict], req: GenerateQuestionsRequest) -> li
         )
         saved_ids.append(qid)
     return saved_ids
+
+
+def update_question(question_id: str, req: UpdateQuestionRequest) -> bool:
+    """Sirf diye gaye fields DB mein update karta hai. False = question nahi mila."""
+    fields = req.model_dump(exclude_none=True)
+    return questions_repository.update(question_id, fields)
 
 
 def list_questions(

@@ -4,7 +4,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.requests import GenerateQuestionsRequest
+from app.repositories import questions_repository
+from app.schemas.requests import GenerateQuestionsRequest, UpdateQuestionRequest
 from app.schemas.responses import GenerateQuestionsResponse, Question
 from app.services import question_service, syllabus_service
 
@@ -47,6 +48,15 @@ def generate_questions(req: GenerateQuestionsRequest):
         ) from e
 
     return {"saved_count": len(saved_ids), "question_ids": saved_ids}
+
+
+@router.patch("/api/questions/{question_id}", response_model=Question)
+def update_question(question_id: str, req: UpdateQuestionRequest):
+    """Teacher ek existing question ka text, options, correct answer ya marks fix kar sakta hai."""
+    found = question_service.update_question(question_id, req)
+    if not found:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+    return questions_repository.find_by_id(question_id)
 
 
 @router.get("/api/questions", response_model=List[Question])

@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class GenerateQuestionsRequest(BaseModel):
@@ -61,6 +61,52 @@ class ReplaceQuestionRequest(BaseModel):
 
     old_question_id: str
     new_question_id: str
+
+
+class UpdateQuestionRequest(BaseModel):
+    """PATCH /api/questions/{id} — saare fields optional, jo diya jaye wahi update ho."""
+
+    question_en: Optional[str] = None
+    question_ur: Optional[str] = None
+    options_en: Optional[str] = None   # JSON-encoded list, e.g. '["a","b","c","d"]'
+    options_ur: Optional[str] = None
+    correct_answer_en: Optional[str] = None
+    correct_answer_ur: Optional[str] = None
+    marks: Optional[int] = Field(default=None, ge=1)
+
+    @field_validator("question_en", "question_ur")
+    @classmethod
+    def _not_blank(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("Sawal khali nahi ho sakta.")
+        return v
+
+    @field_validator("options_en", "options_ur")
+    @classmethod
+    def _valid_json_list(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        try:
+            parsed = __import__("json").loads(v)
+        except Exception as exc:
+            raise ValueError("options valid JSON list honi chahiye.") from exc
+        if not isinstance(parsed, list):
+            raise ValueError("options JSON array hona chahiye.")
+        return v
+
+    @model_validator(mode="after")
+    def _at_least_one_field(self) -> "UpdateQuestionRequest":
+        if all(
+            v is None
+            for v in (
+                self.question_en, self.question_ur,
+                self.options_en, self.options_ur,
+                self.correct_answer_en, self.correct_answer_ur,
+                self.marks,
+            )
+        ):
+            raise ValueError("Kam az kam ek field dena zaroori hai.")
+        return self
 
 
 class SchoolSettings(BaseModel):

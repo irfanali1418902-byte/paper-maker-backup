@@ -77,6 +77,22 @@ def increment_usage_count(question_id: str) -> None:
     conn.close()
 
 
+def update(question_id: str, fields: dict) -> bool:
+    """Updates only the provided fields on a question. Returns True if the row
+    existed, False if question_id was not found."""
+    if not fields:
+        return find_by_id(question_id) is not None
+    cols = ", ".join(f"{k} = ?" for k in fields)
+    params = list(fields.values()) + [question_id]
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"UPDATE questions SET {cols} WHERE id = ?", params)  # noqa: S608
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
+
+
 def find_by_id(question_id: str) -> Optional[dict]:
     conn = get_connection()
     cur = conn.cursor()

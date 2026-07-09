@@ -146,6 +146,21 @@ def test_syllabus_topic_id_defaults_to_none(test_db):
     assert found["syllabus_topic_id"] is None
 
 
+def test_update_changes_specified_fields(test_db):
+    questions_repository.insert(_sample_question(qid="q1"))
+    result = questions_repository.update("q1", {"question_en": "Updated question?", "marks": 5})
+    assert result is True
+    row = questions_repository.find_by_id("q1")
+    assert row["question_en"] == "Updated question?"
+    assert row["marks"] == 5
+    assert row["question_ur"] == "دو جمع دو کتنا ہے؟"  # untouched
+
+
+def test_update_returns_false_for_missing_id(test_db):
+    result = questions_repository.update("nonexistent", {"marks": 3})
+    assert result is False
+
+
 def test_list_by_filters_syllabus_topic_id(test_db):
     _insert_syllabus_topic(topic_id="st1")
     _insert_syllabus_topic(topic_id="st2", grade="Grade 4")
