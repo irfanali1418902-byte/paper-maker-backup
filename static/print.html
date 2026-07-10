@@ -260,7 +260,10 @@
 
   /* ---- Question image ---- */
   .q-image { margin: 8px 0 6px; }
-  .q-image img { max-width: 100%; max-height: 180px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; display: block; }
+  .q-image img { max-width: 100%; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; display: block; }
+  .q-image.img-sm img { max-height: 80px; }
+  .q-image.img-md img { max-height: 180px; }
+  .q-image.img-lg img { max-height: 300px; }
 
   /* ---- Modal image upload section ---- */
   .btn-file-label {
@@ -282,7 +285,9 @@
   @media print {
     .no-print { display: none !important; }
     .modal-backdrop { display: none !important; }
-    .q-image img { max-height: 160px; }
+    .q-image.img-sm img { max-height: 70px; }
+    .q-image.img-md img { max-height: 160px; }
+    .q-image.img-lg img { max-height: 260px; }
   }
 </style>
 </head>
@@ -396,6 +401,18 @@
       </div>
     </div>
 
+    <div id="ef_image_size_section" style="display:none">
+      <div class="modal-section-title">Image Size</div>
+      <div class="field-group">
+        <label>Size</label>
+        <select id="ef_image_size" style="width:160px">
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+    </div>
+
     <div class="modal-section-title">Image (Optional)</div>
     <div class="field-group">
       <div class="img-thumb-wrap" id="ef_img_preview_wrap">
@@ -471,10 +488,13 @@ function openEditModal(btn) {
     preview.src = '/' + imgPath;
     previewWrap.style.display = 'block';
     removeBtn.style.display = 'inline-block';
+    document.getElementById('ef_image_size_section').style.display = '';
+    document.getElementById('ef_image_size').value = q.image_size || 'medium';
   } else {
     preview.src = '';
     previewWrap.style.display = 'none';
     removeBtn.style.display = 'none';
+    document.getElementById('ef_image_size_section').style.display = 'none';
   }
 
   document.getElementById('editError').style.display = 'none';
@@ -514,6 +534,11 @@ async function saveQuestion() {
     marks,
   };
   if (answerLinesRaw !== '') payload.answer_lines = parseInt(answerLinesRaw, 10);
+
+  const imageSizeSection = document.getElementById('ef_image_size_section');
+  if (imageSizeSection.style.display !== 'none') {
+    payload.image_size = document.getElementById('ef_image_size').value;
+  }
 
   const optEls = document.querySelectorAll('#ef_options_en_grid .opt-en');
   if (optEls.length) {
@@ -610,8 +635,11 @@ function renderQuestion(q, num) {
     visualHtml = `<div class="visual-row">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>`;
   }
 
+  const imgSizeClass = q.image_size === 'small' ? 'img-sm'
+                     : q.image_size === 'large'  ? 'img-lg'
+                     : 'img-md';
   const imageHtml = q.image_path
-    ? `<div class="q-image"><img src="/${escapeHtml(q.image_path)}" alt="" /></div>`
+    ? `<div class="q-image ${imgSizeClass}"><img src="/${escapeHtml(q.image_path)}" alt="" /></div>`
     : '';
 
   let bodyHtml = '';
@@ -718,6 +746,9 @@ async function uploadQuestionImage(file) {
     if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], ...updated };
     _reRenderQuestion(_editQuestionId, _paperQuestions[idx]);
     removeBtn.style.display = 'inline-block';
+    const sizeSec = document.getElementById('ef_image_size_section');
+    sizeSec.style.display = '';
+    document.getElementById('ef_image_size').value = updated.image_size || 'medium';
   } catch (e) {
     warnEl.textContent = 'Network error: ' + e.message;
     warnEl.style.display = 'block';
@@ -744,6 +775,7 @@ async function deleteQuestionImage() {
     document.getElementById('ef_img_preview_wrap').style.display = 'none';
     document.getElementById('ef_image_file').value = '';
     document.getElementById('ef_img_remove_btn').style.display = 'none';
+    document.getElementById('ef_image_size_section').style.display = 'none';
   } catch (e) {
     warnEl.textContent = 'Network error: ' + e.message;
     warnEl.style.display = 'block';

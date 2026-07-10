@@ -45,6 +45,7 @@ class Question(BaseModel):
     syllabus_topic_id: Optional[str] = None
     answer_lines: Optional[int] = None
     image_path: Optional[str] = None
+    image_size: Optional[str] = None
 
 
 class Paper(BaseModel):

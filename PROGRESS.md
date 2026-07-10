@@ -1,5 +1,15 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-10 — feature/image-size (Hissa 3)
+
+- `app/core/database.py` — `image_size TEXT` nullable migration
+- `app/schemas/responses.py` — `image_size: Optional[str]` in `Question`
+- `app/schemas/requests.py` — `image_size` in `UpdateQuestionRequest` + validator (small/medium/large only)
+- `app/repositories/questions_repository.py` — `image_size` in `insert()`
+- `static/print.html` — CSS size classes (img-sm/md/lg), modal dropdown (sirf image wale questions par), renderQuestion() size class
+- `tests/test_image_size.py` — 9 nayi tests (valid sizes, invalid reject 422, null field)
+- **Total: 315 tests pass, ruff clean**
+
 ## 2026-07-10 — feature/question-image Hissa 1 (Backend)
 
 **Kya kiya:**
