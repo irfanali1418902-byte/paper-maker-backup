@@ -1,13 +1,20 @@
 """HTTP routes for question generation and listing."""
 
+from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.repositories import questions_repository
 from app.schemas.requests import GenerateQuestionsRequest, UpdateQuestionRequest
-from app.schemas.responses import GenerateQuestionsResponse, Question
+from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
 from app.services import question_service, syllabus_service
+
+_UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
+_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+_ALLOWED_MIME = {"image/jpeg": "jpg", "image/png": "png"}
+_MAX_BYTES = 2 * 1024 * 1024  # 2 MB
 
 router = APIRouter()
 
@@ -57,6 +64,59 @@ def update_question(question_id: str, req: UpdateQuestionRequest):
     if not found:
         raise HTTPException(status_code=404, detail="Question nahi mila.")
     return questions_repository.find_by_id(question_id)
+
+
+@router.post("/api/questions/{question_id}/image", response_model=Question)
+def upload_question_image(question_id: str, file: UploadFile = File(...)):
+    """Teacher question ke saath ek image upload karta hai (JPG/PNG, max 2 MB).
+    Pehle us question ki koi bhi purani image (kisi bhi ext mein) delete hoti hai,
+    phir nayi file {question_id}.{ext} naam se static/uploads/ mein save hoti hai."""
+    if questions_repository.find_by_id(question_id) is None:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+
+    content_type = file.content_type or ""
+    ext = _ALLOWED_MIME.get(content_type)
+    if ext is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Sirf JPG aur PNG images allowed hain. / Only JPG and PNG images are allowed.",
+        )
+
+    contents = file.file.read()
+    if len(contents) > _MAX_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail="Image ka size 2 MB se zyada nahi hona chahiye. / Image must be under 2 MB.",
+        )
+
+    # Purani image (kisi bhi extension mein) delete karo
+    for old_ext in _ALLOWED_MIME.values():
+        old_file = _UPLOADS_DIR / f"{question_id}.{old_ext}"
+        if old_file.exists():
+            old_file.unlink()
+
+    dest = _UPLOADS_DIR / f"{question_id}.{ext}"
+    dest.write_bytes(contents)
+
+    image_path = f"uploads/{question_id}.{ext}"
+    questions_repository.update(question_id, {"image_path": image_path})
+    return questions_repository.find_by_id(question_id)
+
+
+@router.delete("/api/questions/{question_id}/image", response_model=StatusResponse)
+def delete_question_image(question_id: str):
+    """Question se image hata deta hai — DB mein NULL, file disk se delete."""
+    q = questions_repository.find_by_id(question_id)
+    if q is None:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+
+    if q.get("image_path"):
+        file_path = _UPLOADS_DIR / Path(q["image_path"]).name
+        if file_path.exists():
+            file_path.unlink()
+
+    questions_repository.update(question_id, {"image_path": None})
+    return {"status": "ok"}
 
 
 @router.get("/api/questions", response_model=List[Question])
