@@ -366,6 +366,7 @@
   <nav class="app-nav">
     <a href="/">← Generator</a>
     <a href="/library.html">Image Library</a>
+    <a href="/bank.html">Question Bank</a>
   </nav>
   <div class="side-actions">
     <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
@@ -761,10 +762,10 @@ function renderQuestion(q, num) {
       `<div class="opt"><span class="circle"></span><span>${escapeHtml(o)}${optsUr[idx] ? ' / ' + escapeHtml(optsUr[idx]) : ''}</span></div>`
     ).join('') + '</div>';
   } else if (q.question_type === 'true-false') {
-    // Fixed two options — no custom options needed
+    // Fixed two options. Urdu text in RLI..PDI bidi-isolate so it renders correctly in LTR context.
     bodyHtml = `<div class="options">
-      <div class="opt"><span class="circle"></span><span>True / درست</span></div>
-      <div class="opt"><span class="circle"></span><span>False / غلط</span></div>
+      <div class="opt"><span class="circle"></span><span>True &#x2F; &#x2067;صحیح&#x2069;</span></div>
+      <div class="opt"><span class="circle"></span><span>False &#x2F; &#x2067;غلط&#x2069;</span></div>
     </div>`;
   } else if (q.question_type === 'fill-blank') {
     // Blank is inside question text (___); no extra ruled lines needed
