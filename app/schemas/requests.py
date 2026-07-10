@@ -1,6 +1,6 @@
 """Pydantic request shapes used by the API layer."""
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -130,6 +130,65 @@ class CopyFromLibraryRequest(BaseModel):
         if v is not None and v not in ("small", "medium", "large"):
             raise ValueError("image_size sirf 'small', 'medium', ya 'large' ho sakta hai.")
         return v
+
+
+class ManualQuestionRequest(BaseModel):
+    """POST /api/bank/questions — teacher khud question likhta hai."""
+
+    question_text: str
+    is_urdu: bool = False  # True → question_ur field mein save, False → question_en
+    question_type: Literal["multiple-choice", "fill-blank", "true-false", "short-answer"]
+    options: Optional[List[str]] = None  # sirf MCQ ke liye, 2-4 items
+    correct_answer: Optional[str] = None
+    marks: int = Field(default=1, ge=1)
+    difficulty: str = "medium"
+    bloom_level: str = "REMEMBER"
+    syllabus_topic_id: Optional[str] = None
+    subject: Optional[str] = None
+    topic: Optional[str] = None
+    answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
+
+    @model_validator(mode="after")
+    def _validate(self) -> "ManualQuestionRequest":
+        if not self.question_text.strip():
+            raise ValueError("Question khali nahi ho sakta.")
+        if self.question_type == "multiple-choice":
+            if not self.options or len(self.options) < 2:
+                raise ValueError("MCQ ke liye kam az kam 2 options zaroori hain.")
+            if len(self.options) > 4:
+                raise ValueError("MCQ mein zyada se zyada 4 options ho sakte hain.")
+            if self.correct_answer and self.correct_answer not in self.options:
+                raise ValueError("correct_answer options mein se hona chahiye.")
+        if not self.syllabus_topic_id and not (self.subject and self.topic):
+            raise ValueError("syllabus_topic_id ya phir subject aur topic dono dene zaroori hain.")
+        return self
+
+
+class ManualQuestionUpdateRequest(BaseModel):
+    """PATCH /api/bank/questions/{id} — sirf manual questions ke liye."""
+
+    question_text: Optional[str] = None
+    is_urdu: Optional[bool] = None  # explicitly dena zaroori nahi — existing row se infer hoga
+    options: Optional[List[str]] = None
+    correct_answer: Optional[str] = None
+    marks: Optional[int] = Field(default=None, ge=1)
+    answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
+
+    @field_validator("options")
+    @classmethod
+    def _validate_options(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is not None and (len(v) < 2 or len(v) > 4):
+            raise ValueError("Options 2 se 4 ke beech hone chahiye.")
+        return v
+
+    @model_validator(mode="after")
+    def _at_least_one(self) -> "ManualQuestionUpdateRequest":
+        if all(
+            v is None
+            for v in (self.question_text, self.is_urdu, self.options, self.correct_answer, self.marks, self.answer_lines)
+        ):
+            raise ValueError("Kam az kam ek field dena zaroori hai.")
+        return self
 
 
 class SchoolSettings(BaseModel):

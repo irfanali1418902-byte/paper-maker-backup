@@ -15,7 +15,7 @@ from app.services.exceptions import QuestionBankEmpty
 # vocabulary controlled rahe; naye subjective type aayein to yahan add karo.
 _PAPER_TYPE_FILTERS: dict[str, list[str] | None] = {
     "mcq": ["multiple-choice"],
-    "subjective": ["short-answer", "essay"],
+    "subjective": ["short-answer", "essay", "fill-blank"],
     "mixed": None,
 }
 
@@ -23,7 +23,7 @@ _PAPER_TYPE_FILTERS: dict[str, list[str] | None] = {
 # true-false ko bhi shamil karta hai (objective questions) — ye _PAPER_TYPE_FILTERS
 # ke "mcq" (sirf multiple-choice) se alag hai, aur ye jaan-boojh kar hai.
 _RATIO_MCQ_GROUP = ["multiple-choice", "true-false"]
-_RATIO_SUBJECTIVE_GROUP = ["short-answer", "essay"]
+_RATIO_SUBJECTIVE_GROUP = ["short-answer", "essay", "fill-blank"]
 
 
 def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:

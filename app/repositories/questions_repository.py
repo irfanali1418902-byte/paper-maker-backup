@@ -15,8 +15,9 @@ def insert(question_row: dict) -> None:
            (id, subject, topic, bloom_level, difficulty, question_type, marks,
             question_en, question_ur, options_en, options_ur,
             correct_answer_en, correct_answer_ur, explanation_en, explanation_ur,
-            visual_emoji, visual_count, syllabus_topic_id, image_path, image_size)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            visual_emoji, visual_count, syllabus_topic_id, image_path, image_size,
+            source)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             question_row["id"],
             question_row["subject"],
@@ -38,6 +39,7 @@ def insert(question_row: dict) -> None:
             question_row.get("syllabus_topic_id"),
             question_row.get("image_path"),
             question_row.get("image_size"),
+            question_row.get("source", "gemini"),
         ),
     )
     conn.commit()
@@ -101,6 +103,17 @@ def find_by_id(question_id: str) -> Optional[dict]:
     row = cur.execute("SELECT * FROM questions WHERE id = ?", (question_id,)).fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def delete(question_id: str) -> bool:
+    """Sirf source='manual' wale delete honge. Returns True if deleted."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM questions WHERE id = ? AND source = 'manual'", (question_id,))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
 
 
 def count_all() -> int:
