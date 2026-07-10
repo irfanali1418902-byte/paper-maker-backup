@@ -69,6 +69,8 @@ def init_db() -> None:
         cur.execute("ALTER TABLE questions ADD COLUMN answer_lines INTEGER")
     if "image_path" not in existing_cols:
         cur.execute("ALTER TABLE questions ADD COLUMN image_path TEXT")
+    if "image_size" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN image_size TEXT")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS papers (

@@ -74,6 +74,14 @@ class UpdateQuestionRequest(BaseModel):
     correct_answer_ur: Optional[str] = None
     marks: Optional[int] = Field(default=None, ge=1)
     answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
+    image_size: Optional[str] = None
+
+    @field_validator("image_size")
+    @classmethod
+    def _valid_image_size(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("small", "medium", "large"):
+            raise ValueError("image_size sirf 'small', 'medium', ya 'large' ho sakta hai.")
+        return v
 
     @field_validator("question_en", "question_ur")
     @classmethod
@@ -103,7 +111,7 @@ class UpdateQuestionRequest(BaseModel):
                 self.question_en, self.question_ur,
                 self.options_en, self.options_ur,
                 self.correct_answer_en, self.correct_answer_ur,
-                self.marks, self.answer_lines,
+                self.marks, self.answer_lines, self.image_size,
             )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
