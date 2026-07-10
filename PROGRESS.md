@@ -1,5 +1,12 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-10 — feature/image-library Hissa 2 (Library Manager page)
+
+- `static/library.html` — nayi page: upload form (cascade Subject→Class→Topic dropdown), client-side file pre-check (type + size), image grid (filter: subject/grade/naam), delete with confirm
+- `static/index.html` — "Image Library" nav link added (sidebar)
+- `static/print.html` — "Image Library" nav link added (sidebar)
+- **Total: 327 tests pass, ruff clean**
+
 ## 2026-07-10 — feature/image-library Hissa 1 (DB + API + backup)
 
 - `app/core/database.py` — `image_library` table added in `init_db()`
