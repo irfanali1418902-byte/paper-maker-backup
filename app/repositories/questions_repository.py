@@ -124,6 +124,37 @@ def count_all() -> int:
     return n
 
 
+def find_for_bank_paper(
+    subject: Optional[str] = None,
+    syllabus_topic_id: Optional[str] = None,
+    question_types: Optional[list] = None,
+    source: Optional[str] = None,
+) -> list:
+    """Bloom distribution ke bina direct query — bank-paper assembly ke liye.
+    source=None means sab, source='manual' means sirf teacher-written."""
+    conn = get_connection()
+    cur = conn.cursor()
+    query = "SELECT * FROM questions WHERE 1=1"
+    params: list = []
+    if subject:
+        query += " AND subject = ?"
+        params.append(subject)
+    if syllabus_topic_id:
+        query += " AND syllabus_topic_id = ?"
+        params.append(syllabus_topic_id)
+    if question_types:
+        placeholders = ",".join("?" for _ in question_types)
+        query += f" AND question_type IN ({placeholders})"
+        params.extend(question_types)
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+    query += " ORDER BY usage_count ASC"
+    rows = cur.execute(query, params).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def list_by_filters(
     subject: Optional[str] = None,
     topic: Optional[str] = None,

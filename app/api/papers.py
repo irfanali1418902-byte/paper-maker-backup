@@ -4,7 +4,12 @@ from typing import Optional
 
 from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 
-from app.schemas.requests import AdaptivePaperRequest, GeneratePaperRequest, ReplaceQuestionRequest
+from app.schemas.requests import (
+    AdaptivePaperRequest,
+    BankPaperRequest,
+    GeneratePaperRequest,
+    ReplaceQuestionRequest,
+)
 from app.schemas.responses import (
     AdaptivePaperResponse,
     GeneratePaperResponse,
@@ -24,6 +29,26 @@ def list_papers(q: Optional[str] = Query(default=None, description="Search by ti
         return paper_service.list_papers(q)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Papers list fetch fail hui: {e}") from e
+
+
+@router.post("/api/bank-paper", response_model=GeneratePaperResponse)
+def generate_bank_paper(req: BankPaperRequest):
+    """Teacher ke manual questions se paper banao — bina Gemini, bina API.
+    syllabus_topic_id diya jaye to sirf us topic ke questions; source_filter='manual'
+    (default) matlab sirf teacher-written, 'all' matlab manual + gemini dono."""
+    try:
+        result = paper_service.assemble_bank_paper(req)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bank paper assemble fail: {e}") from e
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Is topic/subject mein koi manual question nahi mila. "
+                "Pehle Question Bank mein questions add karo (/bank.html)."
+            ),
+        )
+    return result
 
 
 @router.post("/api/generate-paper", response_model=GeneratePaperResponse)

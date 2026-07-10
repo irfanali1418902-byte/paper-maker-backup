@@ -132,6 +132,33 @@ class CopyFromLibraryRequest(BaseModel):
         return v
 
 
+class BankPaperRequest(BaseModel):
+    """POST /api/bank-paper — teacher ke manual questions se paper banao, bina Gemini.
+    syllabus_topic_id diya jaye to sirf us topic ke questions; warna subject ke sab."""
+
+    subject: Optional[str] = None
+    syllabus_topic_id: Optional[str] = None
+    question_types: Optional[List[str]] = None
+    total_questions: Optional[int] = Field(default=None, ge=1)
+    class_name: Optional[str] = None
+    paper_title: Optional[str] = None
+    # 'manual' = sirf teacher-written (bina Gemini); 'all' = manual + gemini dono
+    source_filter: str = "manual"
+
+    @field_validator("source_filter")
+    @classmethod
+    def _valid_source(cls, v: str) -> str:
+        if v not in ("manual", "all"):
+            raise ValueError("source_filter sirf 'manual' ya 'all' ho sakta hai.")
+        return v
+
+    @model_validator(mode="after")
+    def _subject_or_topic(self) -> "BankPaperRequest":
+        if not self.subject and not self.syllabus_topic_id:
+            raise ValueError("subject ya syllabus_topic_id mein se ek zaroori hai.")
+        return self
+
+
 class ManualQuestionRequest(BaseModel):
     """POST /api/bank/questions — teacher khud question likhta hai."""
 
