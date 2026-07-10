@@ -1,5 +1,16 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-10 — feature/image-library Hissa 4 (Auto-Suggest)
+
+- `app/repositories/library_repository.py` — `topic_image_counts(ids)` added (returns {topic_id: count})
+- `app/api/library.py` — `topics-with-images` response changed: `{"topics": {"id": count}}` (breaking change, test updated)
+- `app/schemas/requests.py` — `CopyFromLibraryRequest` added (image_id + image_size validator)
+- `app/api/questions.py` — `_LIBRARY_DIR` constant + `POST /api/questions/{id}/image-from-library` route (copy file from library to uploads, update DB)
+- `static/print.html` — auto-suggest badges (📚 N image(s) — Dekho/Nahi), library picker modal (grid thumbnails, size selector), localStorage dismiss per paper, batch API call on paper load
+- `tests/test_library_api.py` — topics-with-images tests updated for new shape + `test_topics_with_images_returns_counts` added
+- `tests/test_copy_from_library.py` — 7 nayi tests (PNG/JPG copy, default size, replace old upload, 404s)
+- **Total: 335 tests pass, ruff clean**
+
 ## 2026-07-10 — feature/image-library Hissa 2 (Library Manager page)
 
 - `static/library.html` — nayi page: upload form (cascade Subject→Class→Topic dropdown), client-side file pre-check (type + size), image grid (filter: subject/grade/naam), delete with confirm

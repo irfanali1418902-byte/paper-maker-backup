@@ -85,3 +85,20 @@ def topic_ids_with_images(ids: list) -> set:
     ).fetchall()
     conn.close()
     return {row[0] for row in rows}
+
+
+def topic_image_counts(ids: list) -> dict:
+    """Given a list of syllabus_topic_ids, return {topic_id: count} for those with >= 1 image."""
+    if not ids:
+        return {}
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in ids)
+    rows = cur.execute(
+        f"SELECT syllabus_topic_id, COUNT(*) FROM image_library"  # noqa: S608
+        f" WHERE syllabus_topic_id IN ({placeholders})"
+        f" GROUP BY syllabus_topic_id",
+        ids,
+    ).fetchall()
+    conn.close()
+    return {row[0]: row[1] for row in rows}

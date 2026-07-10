@@ -226,10 +226,32 @@ def test_topics_with_images_returns_matched_ids(test_db, tmp_path, monkeypatch):
 
     resp = client.get("/api/library/topics-with-images?ids=topic-1,topic-3")
     assert resp.status_code == 200
-    result = resp.json()["topic_ids"]
-    assert "topic-1" in result
-    assert "topic-3" not in result
-    assert "topic-2" not in result
+    topics = resp.json()["topics"]
+    assert "topic-1" in topics
+    assert "topic-3" not in topics
+    assert "topic-2" not in topics
+
+
+def test_topics_with_images_returns_counts(test_db, tmp_path, monkeypatch):
+    lib = tmp_path / "library"
+    lib.mkdir()
+    monkeypatch.setattr(library_module, "_LIBRARY_DIR", lib)
+
+    # Upload 2 images for topic-1, 1 for topic-2
+    for name in ("A", "B"):
+        client.post("/api/library",
+                    data={"name": name, "syllabus_topic_id": "topic-1"},
+                    files={"file": (f"{name}.png", io.BytesIO(_PNG), "image/png")})
+    client.post("/api/library",
+                data={"name": "C", "syllabus_topic_id": "topic-2"},
+                files={"file": ("c.png", io.BytesIO(_PNG), "image/png")})
+
+    resp = client.get("/api/library/topics-with-images?ids=topic-1,topic-2,topic-99")
+    assert resp.status_code == 200
+    topics = resp.json()["topics"]
+    assert topics["topic-1"] == 2
+    assert topics["topic-2"] == 1
+    assert "topic-99" not in topics
 
 
 def test_topics_with_images_empty_ids_returns_empty(test_db, tmp_path, monkeypatch):
@@ -239,4 +261,4 @@ def test_topics_with_images_empty_ids_returns_empty(test_db, tmp_path, monkeypat
 
     resp = client.get("/api/library/topics-with-images")
     assert resp.status_code == 200
-    assert resp.json()["topic_ids"] == []
+    assert resp.json()["topics"] == {}

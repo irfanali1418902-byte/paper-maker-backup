@@ -93,10 +93,11 @@ def delete_library_image(image_id: str):
 
 @router.get("/api/library/topics-with-images")
 def topics_with_images(ids: str = ""):
-    """Comma-separated syllabus_topic_ids mein se jo images rakhte hain unka set wapas karta hai.
-    Auto-suggest ke liye: frontend ek batch call mein saare topic IDs check karta hai."""
+    """Comma-separated syllabus_topic_ids mein se har topic ka image count wapas karta hai.
+    Auto-suggest ke liye: frontend ek batch call mein saare topic IDs check karta hai.
+    Response: {"topics": {"topic-id-1": 2, "topic-id-2": 1}} — sirf jinke images hain."""
     if not ids.strip():
-        return {"topic_ids": []}
+        return {"topics": {}}
     id_list = [i.strip() for i in ids.split(",") if i.strip()]
-    found = library_repository.topic_ids_with_images(id_list)
-    return {"topic_ids": list(found)}
+    counts = library_repository.topic_image_counts(id_list)
+    return {"topics": counts}
