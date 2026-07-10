@@ -119,6 +119,18 @@
   .radio-row label { margin: 0; font-size: 14px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 7px; cursor: pointer; }
   .radio-row input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--primary); }
 
+  /* ---- Bank-paper section ---- */
+  .bp-card { border: 2px solid #c7d8f7; }   /* subtle blue border — distinguishes from add form */
+  .bp-card .card-title { color: var(--primary); }
+  .type-checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .type-checks label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13.5px; font-weight: 500; color: var(--ink); cursor: pointer; margin: 0;
+  }
+  .type-checks input[type="checkbox"] {
+    width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--primary); cursor: pointer;
+  }
+
   /* ---- Buttons ---- */
   .btn-primary {
     display: inline-flex; align-items: center; gap: 8px;
@@ -408,6 +420,71 @@
     <div class="status-bar" id="addStatus"></div>
   </div>
 
+  <!-- ===== BANK PAPER GENERATOR ===== -->
+  <div class="card bp-card">
+    <div class="card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Mere questions se paper banao <span style="font-size:11.5px;font-weight:400;color:var(--muted);margin-left:6px">— bina Gemini, bina API</span>
+    </div>
+
+    <!-- Cascade -->
+    <div class="field-row">
+      <div>
+        <label>Subject <span style="color:var(--err-tx)">*</span></label>
+        <select id="bpSubject" onchange="onBpSubjectChange()">
+          <option value="">-- Subject chunein --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade</label>
+        <select id="bpGrade" disabled onchange="onBpGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — ek topic ke saare manual questions)</span></label>
+    <select id="bpTopic" disabled>
+      <option value="">-- Sab topics (subject ke) --</option>
+    </select>
+
+    <!-- Type filter -->
+    <label style="margin-top:16px;">Question types <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi select na karo = sab types)</span></label>
+    <div class="type-checks">
+      <label><input type="checkbox" value="multiple-choice" class="bp-type-check" /> MCQ</label>
+      <label><input type="checkbox" value="fill-blank"      class="bp-type-check" /> Fill-blank</label>
+      <label><input type="checkbox" value="true-false"      class="bp-type-check" /> True/False</label>
+      <label><input type="checkbox" value="short-answer"    class="bp-type-check" /> Short-answer</label>
+    </div>
+
+    <!-- Paper details -->
+    <div class="field-row" style="margin-top:16px;">
+      <div>
+        <label>Paper title <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="bpTitle" placeholder="e.g. Chapter 5 Test" />
+      </div>
+      <div>
+        <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="bpClass" placeholder="e.g. Class 7A" />
+      </div>
+    </div>
+
+    <div class="field-row" style="margin-top:4px;">
+      <div style="max-width:180px;">
+        <label>Max questions <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — khali = sab)</span></label>
+        <input type="number" id="bpTotal" min="1" max="100" placeholder="e.g. 10" />
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-primary" id="bpBtn" onclick="generateBankPaper()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Paper banao → Print view
+      </button>
+    </div>
+    <div class="status-bar" id="bpStatus"></div>
+  </div>
+
   <!-- ===== QUESTION LIST ===== -->
   <div class="card">
     <div class="card-title">Bank mein questions</div>
@@ -563,21 +640,20 @@ async function loadSyllabusGrades() {
 function populateSubjectDropdowns() {
   const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
 
+  // Add-form subject
   const fSub = document.getElementById('fSubject');
   fSub.innerHTML = '<option value="">-- Subject chunein --</option>';
-  subjects.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s; o.textContent = s;
-    fSub.appendChild(o);
-  });
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; fSub.appendChild(o); });
 
+  // List filter subject
   const lSub = document.getElementById('lSubject');
   lSub.innerHTML = '<option value="">Sab subjects</option>';
-  subjects.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s; o.textContent = s;
-    lSub.appendChild(o);
-  });
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; lSub.appendChild(o); });
+
+  // Bank-paper subject
+  const bpSub = document.getElementById('bpSubject');
+  bpSub.innerHTML = '<option value="">-- Subject chunein --</option>';
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; bpSub.appendChild(o); });
 }
 
 function onSubjectChange() {
@@ -1021,6 +1097,131 @@ function escHtml(s) {
 }
 function escAttr(s) {
   return String(s).replace(/'/g, "\\'");
+}
+
+// ================================================================
+// Bank-paper cascade: bpSubject → bpGrade → bpTopic
+// ================================================================
+function onBpSubjectChange() {
+  const subject = document.getElementById('bpSubject').value;
+  const gradeEl = document.getElementById('bpGrade');
+  const topicEl = document.getElementById('bpTopic');
+
+  topicEl.innerHTML = '<option value="">-- Sab topics (subject ke) --</option>';
+  topicEl.disabled = true;
+
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    return;
+  }
+
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein (optional) --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function onBpGradeChange() {
+  const subject = document.getElementById('bpSubject').value;
+  const grade   = document.getElementById('bpGrade').value;
+  const topicEl = document.getElementById('bpTopic');
+
+  if (!grade) {
+    topicEl.innerHTML = '<option value="">-- Sab topics (subject ke) --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Sab topics (is class ke) --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+  } catch {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  }
+}
+
+// ================================================================
+// Generate bank paper — bina Gemini
+// ================================================================
+async function generateBankPaper() {
+  const subject = document.getElementById('bpSubject').value;
+  const topicId = document.getElementById('bpTopic').value;
+  const title   = document.getElementById('bpTitle').value.trim();
+  const cls     = document.getElementById('bpClass').value.trim();
+  const total   = document.getElementById('bpTotal').value;
+
+  const checkedTypes = [...document.querySelectorAll('.bp-type-check:checked')].map(c => c.value);
+
+  setBpStatus('', '');
+
+  if (!subject && !topicId) {
+    setBpStatus('err', '⚠️ Subject ya topic zaroori hai.');
+    return;
+  }
+
+  const body = { source_filter: 'manual' };
+  if (subject)              body.subject = subject;
+  if (topicId)              body.syllabus_topic_id = topicId;
+  if (checkedTypes.length)  body.question_types = checkedTypes;
+  if (title)                body.paper_title = title;
+  if (cls)                  body.class_name = cls;
+  if (total && parseInt(total, 10) > 0) body.total_questions = parseInt(total, 10);
+
+  const btn = document.getElementById('bpBtn');
+  btn.disabled = true;
+  setBpStatus('warn', '⏳ Paper ban raha hai...');
+
+  try {
+    const res = await apiFetch('/api/bank-paper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (res.status === 404) {
+      setBpStatus('err',
+        '❌ Is topic/subject mein koi manual question nahi mila. Pehle upar form se questions add karo.'
+      );
+      return;
+    }
+    if (!res.ok) {
+      const detail = typeof data.detail === 'string' ? data.detail : 'Paper nahi ban saka.';
+      setBpStatus('err', '❌ ' + detail);
+      return;
+    }
+
+    // Success → print view mein jao
+    setBpStatus('ok', `✅ ${data.questions.length} questions, ${data.total_marks} marks — print view khul raha hai...`);
+    setTimeout(() => { window.open(`/print.html?paper_id=${encodeURIComponent(data.paper_id)}`, '_blank'); }, 600);
+  } catch (e) {
+    setBpStatus('err', '❌ Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setBpStatus(type, msg) {
+  const el = document.getElementById('bpStatus');
+  el.className = 'status-bar' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  el.style.display = type ? 'block' : 'none';
 }
 </script>
 </body>
