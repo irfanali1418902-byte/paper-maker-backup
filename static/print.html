@@ -258,9 +258,31 @@
   .btn-save:hover { background: var(--primary-hover); }
   .btn-save:disabled { opacity: .6; cursor: not-allowed; }
 
+  /* ---- Question image ---- */
+  .q-image { margin: 8px 0 6px; }
+  .q-image img { max-width: 100%; max-height: 180px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; display: block; }
+
+  /* ---- Modal image upload section ---- */
+  .btn-file-label {
+    display: inline-block; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-btn);
+    cursor: pointer; font-size: 13px; color: var(--ink); background: var(--bg);
+    font-family: inherit;
+  }
+  .btn-file-label:hover { background: var(--tint); }
+  .btn-img-remove {
+    padding: 6px 14px; border: 1px solid #ffb3b3; border-radius: var(--radius-btn);
+    background: #fff0f0; color: #c00; cursor: pointer; font-size: 13px; font-family: inherit;
+  }
+  .btn-img-remove:hover { background: #ffe0e0; }
+  .img-warning { color: #c00; font-size: 12px; margin-top: 6px; display: none; }
+  .img-thumb-wrap { margin-bottom: 8px; display: none; }
+  .img-thumb-wrap img { max-height: 100px; border: 1px solid #ddd; border-radius: 4px; object-fit: contain; }
+
   @media print {
     .no-print { display: none !important; }
     .modal-backdrop { display: none !important; }
+    .q-image img { max-height: 160px; }
   }
 </style>
 </head>
@@ -272,7 +294,7 @@
     <a href="/">← Generator</a>
   </nav>
   <div class="side-actions">
-    <button onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
     <span id="toolbarInfo"></span>
   </div>
   <div class="sidebar-foot">Sidebar sirf screen par hai —<br/>print/PDF mein sirf paper aata hai.</div>
@@ -374,6 +396,19 @@
       </div>
     </div>
 
+    <div class="modal-section-title">Image (Optional)</div>
+    <div class="field-group">
+      <div class="img-thumb-wrap" id="ef_img_preview_wrap">
+        <img id="ef_img_preview" src="" alt="Current image" />
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label class="btn-file-label" for="ef_image_file">📎 Choose Image (JPG/PNG)</label>
+        <input type="file" id="ef_image_file" accept=".jpg,.jpeg,.png" style="display:none" onchange="onImageFileChange(this)" />
+        <button type="button" class="btn-img-remove" id="ef_img_remove_btn" style="display:none" onclick="deleteQuestionImage()">Remove Image</button>
+      </div>
+      <div class="img-warning" id="ef_img_warning"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="ef_saveBtn" onclick="saveQuestion()">Save</button>
@@ -423,6 +458,23 @@ function openEditModal(btn) {
       inpUr.dataset.idx = i; inpUr.className = 'opt-ur urdu-input';
       urGrid.appendChild(inpUr);
     }
+  }
+
+  // Image section
+  const imgPath = q.image_path || null;
+  const previewWrap = document.getElementById('ef_img_preview_wrap');
+  const preview = document.getElementById('ef_img_preview');
+  const removeBtn = document.getElementById('ef_img_remove_btn');
+  document.getElementById('ef_image_file').value = '';
+  document.getElementById('ef_img_warning').style.display = 'none';
+  if (imgPath) {
+    preview.src = '/' + imgPath;
+    previewWrap.style.display = 'block';
+    removeBtn.style.display = 'inline-block';
+  } else {
+    preview.src = '';
+    previewWrap.style.display = 'none';
+    removeBtn.style.display = 'none';
   }
 
   document.getElementById('editError').style.display = 'none';
@@ -558,6 +610,10 @@ function renderQuestion(q, num) {
     visualHtml = `<div class="visual-row">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>`;
   }
 
+  const imageHtml = q.image_path
+    ? `<div class="q-image"><img src="/${escapeHtml(q.image_path)}" alt="" /></div>`
+    : '';
+
   let bodyHtml = '';
   if (OBJECTIVE_TYPES.has(q.question_type) && optsEn.length) {
     bodyHtml = '<div class="options">' + optsEn.map((o, idx) => `
@@ -578,6 +634,7 @@ function renderQuestion(q, num) {
       </div>
       <div class="qtext-ur">${escapeHtml(q.question_ur || '')}</div>
       ${visualHtml}
+      ${imageHtml}
       ${bodyHtml}
     </div>`;
 }
@@ -598,6 +655,109 @@ function renderSection(containerId, label, questions, startNum) {
       </div>
       ${questionsHtml}
     </div>`;
+}
+
+// ---- Image upload / delete -------------------------------------------------
+
+function onImageFileChange(input) {
+  const warnEl = document.getElementById('ef_img_warning');
+  warnEl.style.display = 'none';
+  const file = input.files[0];
+  if (!file) return;
+
+  // Client-side pre-check (server is final authority)
+  if (!['image/jpeg', 'image/png'].includes(file.type)) {
+    warnEl.textContent = 'Sirf JPG aur PNG allowed hain. / Only JPG and PNG allowed.';
+    warnEl.style.display = 'block';
+    input.value = '';
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    warnEl.textContent = 'Image 2 MB se chhhoti honi chahiye. / Image must be under 2 MB.';
+    warnEl.style.display = 'block';
+    input.value = '';
+    return;
+  }
+
+  // Instant local preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('ef_img_preview');
+    preview.src = e.target.result;
+    document.getElementById('ef_img_preview_wrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+
+  uploadQuestionImage(file);
+}
+
+async function uploadQuestionImage(file) {
+  const warnEl = document.getElementById('ef_img_warning');
+  const removeBtn = document.getElementById('ef_img_remove_btn');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await apiFetch(`/api/questions/${_editQuestionId}/image`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const detail = await res.json().then(d => d.detail || 'Upload fail.').catch(() => 'Upload fail.');
+      warnEl.textContent = typeof detail === 'string' ? detail : 'Upload fail.';
+      warnEl.style.display = 'block';
+      document.getElementById('ef_image_file').value = '';
+      document.getElementById('ef_img_preview_wrap').style.display = 'none';
+      return;
+    }
+
+    const updated = await res.json();
+    const idx = _paperQuestions.findIndex(q => q.id === _editQuestionId);
+    if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], ...updated };
+    _reRenderQuestion(_editQuestionId, _paperQuestions[idx]);
+    removeBtn.style.display = 'inline-block';
+  } catch (e) {
+    warnEl.textContent = 'Network error: ' + e.message;
+    warnEl.style.display = 'block';
+  }
+}
+
+async function deleteQuestionImage() {
+  const warnEl = document.getElementById('ef_img_warning');
+  warnEl.style.display = 'none';
+
+  try {
+    const res = await apiFetch(`/api/questions/${_editQuestionId}/image`, { method: 'DELETE' });
+    if (!res.ok) {
+      warnEl.textContent = 'Image hatane mein masla hua. / Delete failed.';
+      warnEl.style.display = 'block';
+      return;
+    }
+
+    const idx = _paperQuestions.findIndex(q => q.id === _editQuestionId);
+    if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], image_path: null };
+    _reRenderQuestion(_editQuestionId, _paperQuestions[idx]);
+
+    document.getElementById('ef_img_preview').src = '';
+    document.getElementById('ef_img_preview_wrap').style.display = 'none';
+    document.getElementById('ef_image_file').value = '';
+    document.getElementById('ef_img_remove_btn').style.display = 'none';
+  } catch (e) {
+    warnEl.textContent = 'Network error: ' + e.message;
+    warnEl.style.display = 'block';
+  }
+}
+
+// ---- Print with images loaded first ----------------------------------------
+
+async function printWithImagesLoaded() {
+  const imgs = [...document.querySelectorAll('#sheet img')];
+  if (imgs.length) {
+    await Promise.all(imgs.map(img => img.decode().catch(() => {})));
+  }
+  window.print();
 }
 
 async function loadPaper() {
