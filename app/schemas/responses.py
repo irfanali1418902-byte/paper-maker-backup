@@ -226,6 +226,19 @@ class StatusResponse(BaseModel):
     status: str
 
 
+class LibraryImage(BaseModel):
+    """One row of the image_library table."""
+
+    id: str
+    file_path: str
+    name: str
+    subject: Optional[str] = None
+    grade: Optional[str] = None
+    syllabus_topic_id: Optional[str] = None
+    uploaded_by: Optional[str] = None
+    created_at: Optional[str] = None
+
+
 # ---- Result analyzer dashboard (Phase 2) ------------------------------------
 
 

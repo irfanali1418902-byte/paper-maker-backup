@@ -285,9 +285,77 @@
   @media print {
     .no-print { display: none !important; }
     .modal-backdrop { display: none !important; }
+    .lib-picker-overlay { display: none !important; }
     .q-image.img-sm img { max-height: 70px; }
     .q-image.img-md img { max-height: 160px; }
     .q-image.img-lg img { max-height: 260px; }
+  }
+
+  /* ---- Auto-suggest badge ---- */
+  .suggest-badge {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: #FFFBEA; border: 1px solid #F5C640; border-radius: 7px;
+    padding: 7px 12px; margin: 8px 0 2px; font-size: 12.5px; color: #444;
+  }
+  .suggest-badge b { color: #1a4d8a; }
+  .suggest-btn {
+    background: var(--primary); color: #fff; border: none;
+    border-radius: 6px; padding: 4px 11px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .suggest-btn:hover { background: var(--primary-hover); }
+  .suggest-dismiss {
+    background: none; border: 1px solid #ccc; color: var(--muted);
+    border-radius: 6px; padding: 4px 10px; font-size: 12px;
+    font-family: inherit; cursor: pointer;
+  }
+  .suggest-dismiss:hover { background: #f5f5f5; }
+
+  /* ---- Library picker modal ---- */
+  .lib-picker-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+    display: none; align-items: center; justify-content: center; padding: 16px;
+  }
+  .lib-picker-overlay.open { display: flex; }
+  .lib-picker-modal {
+    background: #fff; border-radius: 12px; width: min(700px, 96vw);
+    max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 16px 56px rgba(0,0,0,.3);
+  }
+  .lib-picker-head {
+    padding: 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 700; font-size: 14.5px;
+  }
+  .lib-picker-head button {
+    background: none; border: none; font-size: 22px; line-height: 1;
+    cursor: pointer; color: var(--muted); padding: 2px 6px;
+  }
+  .lib-picker-head button:hover { color: var(--ink); }
+  .lib-picker-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px; padding: 16px 20px; overflow-y: auto; flex: 1;
+  }
+  .picker-card {
+    border: 2px solid var(--border); border-radius: 9px; overflow: hidden;
+    cursor: pointer; transition: border-color .12s;
+  }
+  .picker-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(46,90,172,.15); }
+  .picker-card img {
+    width: 100%; aspect-ratio: 4/3; object-fit: contain;
+    background: #f4f5f7; display: block;
+  }
+  .picker-card-name { font-size: 11.5px; padding: 5px 7px; text-align: center; word-break: break-word; }
+  .lib-picker-foot {
+    padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .lib-picker-foot label {
+    font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; margin: 0;
+  }
+  .lib-picker-foot select {
+    min-height: 34px; padding: 5px 10px; border: 1px solid #ddd;
+    border-radius: 7px; font-size: 13px; font-family: inherit;
   }
 </style>
 </head>
@@ -297,6 +365,7 @@
   <div class="brand">AII Smart Paper Maker<small>Exam paper · print view</small></div>
   <nav class="app-nav">
     <a href="/">← Generator</a>
+    <a href="/library.html">Image Library</a>
   </nav>
   <div class="side-actions">
     <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
@@ -433,6 +502,27 @@
   </div>
 </div>
 
+<!-- Library image picker (auto-suggest) — screen only, no-print -->
+<div class="lib-picker-overlay no-print" id="libPickerOverlay" onclick="if(event.target===this)closeLibraryPicker()">
+  <div class="lib-picker-modal">
+    <div class="lib-picker-head">
+      <span id="libPickerTitle">Library images</span>
+      <button onclick="closeLibraryPicker()" aria-label="Close">×</button>
+    </div>
+    <div id="libPickerGrid" class="lib-picker-grid"></div>
+    <div class="lib-picker-foot">
+      <label>Size:
+        <select id="libPickerSize">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium (default)</option>
+          <option value="large">Large</option>
+        </select>
+      </label>
+      <button class="btn-cancel" onclick="closeLibraryPicker()">Band karo</button>
+    </div>
+  </div>
+</div>
+
 <script src="/apiClient.js"></script>
 <script>
 // question_type classification — mirrors paper_service.py constants.
@@ -441,6 +531,12 @@ const OBJECTIVE_TYPES = new Set(['multiple-choice', 'true-false']);
 // ---- Edit modal state -------------------------------------------------------
 let _editQuestionId = null;   // which question is being edited
 let _paperQuestions = [];     // full question list kept for re-render after save
+
+// ---- Auto-suggest state ----------------------------------------------------
+let _topicCounts = {};        // {topic_id: count} — from batch API, filled after paper loads
+let _currentPaperId = null;   // set in loadPaper()
+let _pickerQid = null;        // which question has the picker open
+let _pickerTopicId = null;
 
 function openEditModal(btn) {
   const q = JSON.parse(btn.dataset.q);
@@ -586,6 +682,8 @@ function _reRenderQuestion(qid, updatedQ) {
   if (!el) return;
   const num = parseInt(el.dataset.num, 10);
   el.outerHTML = renderQuestion(updatedQ, num);
+  // Re-inject suggest badge if question still qualifies (e.g. edit saved but no image added).
+  _maybeInjectBadgeForQ(updatedQ);
 }
 
 // Close on backdrop click or Esc key
@@ -837,12 +935,159 @@ async function loadPaper() {
     document.getElementById('status').style.display = 'none';
     document.getElementById('sheet').style.display = 'block';
     document.getElementById('toolbarInfo').textContent = `${questions.length} questions, ${paper.total_marks} marks`;
+
+    _currentPaperId = paperId;
+    checkAutoSuggest(questions);
   } catch (e) {
     document.getElementById('status').textContent = 'Error: ' + e.message;
   }
 }
 
 loadPaper();
+
+// ============================================================================
+// Auto-suggest: library images ke badges + picker
+// ============================================================================
+
+function _getDismissed() {
+  if (!_currentPaperId) return [];
+  try { return JSON.parse(localStorage.getItem(`suggest_dismissed_${_currentPaperId}`) || '[]'); }
+  catch { return []; }
+}
+
+function _saveDismissed(arr) {
+  try { localStorage.setItem(`suggest_dismissed_${_currentPaperId}`, JSON.stringify(arr)); }
+  catch { /* private mode */ }
+}
+
+function shouldShowBadge(q) {
+  if (!q.syllabus_topic_id) return false;
+  if (q.image_path) return false;
+  if (!_topicCounts[q.syllabus_topic_id]) return false;
+  return !_getDismissed().includes(q.id);
+}
+
+function _makeBadge(q) {
+  const count = _topicCounts[q.syllabus_topic_id];
+  const badge = document.createElement('div');
+  badge.className = 'suggest-badge no-print';
+  badge.id = 'suggest-' + q.id;
+  badge.innerHTML =
+    `📚 Is topic ki <b>${count}</b> library image(s) available — ` +
+    `<button class="suggest-btn" onclick="openLibraryPicker('${q.id}','${q.syllabus_topic_id}')">Dekho</button>` +
+    `<button class="suggest-dismiss" onclick="dismissBadge('${q.id}')">Nahi</button>`;
+  return badge;
+}
+
+function _maybeInjectBadgeForQ(q) {
+  if (!shouldShowBadge(q)) return;
+  const el = document.querySelector(`.question[data-qid="${CSS.escape(q.id)}"]`);
+  if (!el) return;
+  if (el.querySelector('.suggest-badge')) return;  // already injected
+  const qhead = el.querySelector('.qhead');
+  if (qhead) qhead.insertAdjacentElement('afterend', _makeBadge(q));
+}
+
+async function checkAutoSuggest(questions) {
+  const topicIds = [...new Set(
+    questions.filter(q => q.syllabus_topic_id && !q.image_path).map(q => q.syllabus_topic_id)
+  )];
+  if (!topicIds.length) return;
+
+  try {
+    const res = await apiFetch('/api/library/topics-with-images?ids=' + topicIds.join(','));
+    const data = await res.json();
+    _topicCounts = data.topics || {};
+    if (!Object.keys(_topicCounts).length) return;
+
+    questions.forEach(q => _maybeInjectBadgeForQ(q));
+  } catch (e) {
+    console.error('Auto-suggest check failed:', e);
+  }
+}
+
+function dismissBadge(qid) {
+  const dismissed = _getDismissed();
+  if (!dismissed.includes(qid)) {
+    dismissed.push(qid);
+    _saveDismissed(dismissed);
+  }
+  const badge = document.getElementById('suggest-' + qid);
+  if (badge) badge.remove();
+}
+
+// ---- Library picker ----
+
+async function openLibraryPicker(qid, topicId) {
+  _pickerQid = qid;
+  _pickerTopicId = topicId;
+
+  const overlay = document.getElementById('libPickerOverlay');
+  const grid    = document.getElementById('libPickerGrid');
+  const count   = _topicCounts[topicId] || '?';
+  document.getElementById('libPickerTitle').textContent = `Library images — is topic ki (${count})`;
+  grid.innerHTML = '<div style="color:#888;padding:20px;grid-column:1/-1;">Load ho raha hai...</div>';
+  overlay.classList.add('open');
+
+  try {
+    const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
+    const images = await res.json();
+    if (!res.ok || !images.length) {
+      grid.innerHTML = '<div style="color:#888;padding:20px;grid-column:1/-1;">Koi image nahi mili.</div>';
+      return;
+    }
+    grid.innerHTML = images.map(img =>
+      `<div class="picker-card" onclick="applyLibraryImage('${img.id}')">
+         <img src="/${escapeHtml(img.file_path)}" alt="${escapeHtml(img.name)}" loading="lazy" />
+         <div class="picker-card-name">${escapeHtml(img.name)}</div>
+       </div>`
+    ).join('');
+  } catch (e) {
+    grid.innerHTML = `<div style="color:#c00;padding:20px;grid-column:1/-1;">Error: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function closeLibraryPicker() {
+  document.getElementById('libPickerOverlay').classList.remove('open');
+  _pickerQid = null;
+  _pickerTopicId = null;
+}
+
+async function applyLibraryImage(imageId) {
+  const qid  = _pickerQid;
+  const size = document.getElementById('libPickerSize').value;
+
+  try {
+    const res = await apiFetch(`/api/questions/${qid}/image-from-library`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_id: imageId, image_size: size }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert('Image apply nahi ho saki: ' + (data.detail || 'Error'));
+      return;
+    }
+
+    const idx = _paperQuestions.findIndex(q => q.id === qid);
+    if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], ...data };
+    _reRenderQuestion(qid, _paperQuestions[idx]);
+
+    // Badge remove — image set ho gayi, shouldShowBadge false ho ga
+    const badge = document.getElementById('suggest-' + qid);
+    if (badge) badge.remove();
+
+    closeLibraryPicker();
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('libPickerOverlay').classList.contains('open')) {
+    closeLibraryPicker();
+  }
+});
 </script>
 </body>
 </html>

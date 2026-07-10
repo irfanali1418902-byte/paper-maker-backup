@@ -5,13 +5,19 @@ from typing import List, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
-from app.repositories import questions_repository
-from app.schemas.requests import GenerateQuestionsRequest, UpdateQuestionRequest
+from app.repositories import library_repository, questions_repository
+from app.schemas.requests import (
+    CopyFromLibraryRequest,
+    GenerateQuestionsRequest,
+    UpdateQuestionRequest,
+)
 from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
 from app.services import question_service, syllabus_service
 
 _UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
 _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+_LIBRARY_DIR = Path(__file__).parent.parent.parent / "static" / "library"
 
 _ALLOWED_MIME = {"image/jpeg": "jpg", "image/png": "png"}
 _MAX_BYTES = 2 * 1024 * 1024  # 2 MB
@@ -117,6 +123,40 @@ def delete_question_image(question_id: str):
 
     questions_repository.update(question_id, {"image_path": None})
     return {"status": "ok"}
+
+
+@router.post("/api/questions/{question_id}/image-from-library", response_model=Question)
+def copy_library_image_to_question(question_id: str, body: CopyFromLibraryRequest):
+    """Library se ek image chunkar us question ke saath attach karta hai.
+    File static/library/ se static/uploads/{question_id}.{ext} mein copy hoti hai.
+    (Option B: uploads mein copy — library image delete hone par paper safe rehta hai.)"""
+    if questions_repository.find_by_id(question_id) is None:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+
+    img = library_repository.find_by_id(body.image_id)
+    if img is None:
+        raise HTTPException(status_code=404, detail="Library image nahi mili.")
+
+    src = _LIBRARY_DIR / Path(img["file_path"]).name
+    if not src.exists():
+        raise HTTPException(status_code=404, detail="Library image file disk par nahi mili.")
+
+    ext = Path(img["file_path"]).suffix.lstrip(".")
+
+    # Delete any existing image for this question (all extensions)
+    for old_ext in _ALLOWED_MIME.values():
+        old = _UPLOADS_DIR / f"{question_id}.{old_ext}"
+        if old.exists():
+            old.unlink()
+
+    dest = _UPLOADS_DIR / f"{question_id}.{ext}"
+    dest.write_bytes(src.read_bytes())
+
+    questions_repository.update(question_id, {
+        "image_path": f"uploads/{question_id}.{ext}",
+        "image_size": body.image_size or "medium",
+    })
+    return questions_repository.find_by_id(question_id)
 
 
 @router.get("/api/questions", response_model=List[Question])

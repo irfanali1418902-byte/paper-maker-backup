@@ -118,6 +118,20 @@ class UpdateQuestionRequest(BaseModel):
         return self
 
 
+class CopyFromLibraryRequest(BaseModel):
+    """POST /api/questions/{id}/image-from-library — library image ko question par apply karo."""
+
+    image_id: str
+    image_size: Optional[str] = "medium"
+
+    @field_validator("image_size")
+    @classmethod
+    def _valid_image_size(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("small", "medium", "large"):
+            raise ValueError("image_size sirf 'small', 'medium', ya 'large' ho sakta hai.")
+        return v
+
+
 class SchoolSettings(BaseModel):
     """Used for both the POST body and the GET response (singleton id=1)."""
 
