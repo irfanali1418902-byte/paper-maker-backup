@@ -160,5 +160,18 @@ def init_db() -> None:
         )
         """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS image_library (
+            id                TEXT PRIMARY KEY,
+            file_path         TEXT NOT NULL,
+            name              TEXT NOT NULL,
+            subject           TEXT,
+            grade             TEXT,
+            syllabus_topic_id TEXT REFERENCES syllabus_topics(id),
+            uploaded_by       TEXT,
+            created_at        TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
     conn.commit()
     conn.close()

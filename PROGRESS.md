@@ -1,5 +1,17 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-10 — feature/image-library Hissa 1 (DB + API + backup)
+
+- `app/core/database.py` — `image_library` table added in `init_db()`
+- `static/library/` — folder created, gitignored
+- `app/repositories/library_repository.py` — insert, find_by_id, list_by_filters, delete, topic_ids_with_images
+- `app/schemas/responses.py` — `LibraryImage` model added
+- `app/api/library.py` — POST /api/library, GET /api/library (filters), DELETE /api/library/{id}, GET /api/library/topics-with-images
+- `app/main.py` — library router imported and included
+- `backup.bat` — [3/3]→[4/4], library-backups step added
+- `tests/test_library_api.py` — 12 nayi tests (upload PNG/JPG, wrong MIME 400, oversized 400, blank name 400, list+filter, delete, topics-with-images)
+- **Total: 327 tests pass, ruff clean**
+
 ## 2026-07-10 — feature/image-size (Hissa 3)
 
 - `app/core/database.py` — `image_size TEXT` nullable migration

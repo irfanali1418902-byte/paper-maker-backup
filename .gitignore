@@ -29,5 +29,6 @@ parcha-design/
 # Local archives / backups — not source
 *.zip
 
-# Question images — private, large, E: drive backup alag se
+# Question images + image library — private, large, E: drive backup alag se
 static/uploads/
+static/library/

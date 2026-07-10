@@ -1,0 +1,87 @@
+"""SQL access for the image_library table. No business logic, no HTTP."""
+
+from typing import Optional
+
+from app.core.database import get_connection
+
+
+def insert(row: dict) -> None:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO image_library
+           (id, file_path, name, subject, grade, syllabus_topic_id, uploaded_by)
+           VALUES (?,?,?,?,?,?,?)""",
+        (
+            row["id"],
+            row["file_path"],
+            row["name"],
+            row.get("subject"),
+            row.get("grade"),
+            row.get("syllabus_topic_id"),
+            row.get("uploaded_by"),
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def find_by_id(image_id: str) -> Optional[dict]:
+    conn = get_connection()
+    cur = conn.cursor()
+    row = cur.execute("SELECT * FROM image_library WHERE id = ?", (image_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def list_by_filters(
+    subject: Optional[str] = None,
+    grade: Optional[str] = None,
+    syllabus_topic_id: Optional[str] = None,
+    q: Optional[str] = None,
+) -> list:
+    conn = get_connection()
+    cur = conn.cursor()
+    query = "SELECT * FROM image_library WHERE 1=1"
+    params: list = []
+    if subject:
+        query += " AND subject = ?"
+        params.append(subject)
+    if grade:
+        query += " AND grade = ?"
+        params.append(grade)
+    if syllabus_topic_id:
+        query += " AND syllabus_topic_id = ?"
+        params.append(syllabus_topic_id)
+    if q:
+        query += " AND name LIKE ?"
+        params.append(f"%{q}%")
+    query += " ORDER BY created_at DESC"
+    rows = cur.execute(query, params).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def delete(image_id: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM image_library WHERE id = ?", (image_id,))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
+
+
+def topic_ids_with_images(ids: list) -> set:
+    """Given a list of syllabus_topic_ids, return the subset that has >= 1 library image."""
+    if not ids:
+        return set()
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in ids)
+    rows = cur.execute(
+        f"SELECT DISTINCT syllabus_topic_id FROM image_library WHERE syllabus_topic_id IN ({placeholders})",  # noqa: S608
+        ids,
+    ).fetchall()
+    conn.close()
+    return {row[0] for row in rows}
