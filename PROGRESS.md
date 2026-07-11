@@ -1,5 +1,45 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — feature/bulk-import merged to master (HISSA 4 — Bulk Upload)
+
+**Kya bana:**
+
+- **Backend — `app/services/bulk_import_service.py`**
+  - pandas se `.xlsx`/`.csv` parse (openpyxl engine)
+  - Per-row validation: type check (mcq/fill/tf/short), blank question, MCQ options, correct letter/tf value
+  - Topic matching: case-insensitive + strip → subject+grade → subject-only → global; match na mile to `topic_id=NULL` + fuzzy suggestion (difflib)
+  - `source='manual'` insert — HISSA 1 ki `questions_repository.insert()` reuse
+  - Return: `{added, skipped, errors: ["row N: wajah"], warnings: ["row N: note"]}`
+  - Marks: blank/zero/invalid → silent default 1
+  - `is_urdu=yes` → `question_ur` mein, warna `question_en`
+
+- **API — `app/api/questions.py`**
+  - `POST /api/questions/bulk-import` route (.xlsx/.xls/.csv accept, ext check at route level)
+
+- **Frontend — `static/bank.html`**
+  - "Bulk Upload — Excel se questions import karo" card (bank-paper card ke baad)
+  - Drag-and-drop zone + file chooser (.xlsx/.csv, max 5 MB client-side check)
+  - Upload button (disabled jab tak file na chune), Clear button
+  - Result box: green (sab add), orange (kuch skip), red (sab skip) — har skip row ka number + wajah, warnings alag list
+  - Question list auto-refresh after successful import
+  - "Template download karo" button → `/bulk_upload_template.xlsx`
+
+- **Template — `static/bulk_upload_template.xlsx`**
+  - 4 sample rows (mcq/tf/fill/short), green styling
+  - `Instructions` sheet mein puri guide
+
+- **Tests — `tests/test_bulk_import.py`** — 39 tests
+  - Happy path (xlsx + csv, sab 4 types), DB mein actually insert check
+  - MCQ correct letter → option text resolve
+  - is_urdu, marks defaults (blank/zero/string)
+  - Per-row validation errors (blank question, invalid type, MCQ options, wrong correct)
+  - Mixed valid+invalid — ek buri row se baaki nahi rukein
+  - Topic matching (unknown → warning + import, blank → no warning)
+  - File format errors (PDF reject, corrupt xlsx, missing column, empty file)
+
+- **Merge:** `feature/bulk-import → master`, clean (koi conflict nahi)
+- **Total: 409 tests pass, ruff clean**
+
 ## 2026-07-11 — feature/question-bank merged to master (HISSA 1–3 + bank.html)
 
 **Kya bana:**
