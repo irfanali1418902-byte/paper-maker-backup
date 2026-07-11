@@ -9,6 +9,8 @@ from app.repositories import library_repository, questions_repository
 from app.schemas.requests import (
     CopyFromLibraryRequest,
     GenerateQuestionsRequest,
+    ManualQuestionRequest,
+    ManualQuestionUpdateRequest,
     UpdateQuestionRequest,
 )
 from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
@@ -157,6 +159,54 @@ def copy_library_image_to_question(question_id: str, body: CopyFromLibraryReques
         "image_size": body.image_size or "medium",
     })
     return questions_repository.find_by_id(question_id)
+
+
+@router.post("/api/bank/questions", response_model=Question, status_code=201)
+def create_manual_question(req: ManualQuestionRequest):
+    """Teacher ka khud likha question bank mein save karta hai (source='manual').
+    syllabus_topic_id diya ho to subject/topic usi se resolve hote hain."""
+    resolved_subject = req.subject or ""
+    resolved_topic = req.topic or ""
+
+    if req.syllabus_topic_id:
+        topic_row = syllabus_service.get_topic(req.syllabus_topic_id)
+        if not topic_row:
+            raise HTTPException(status_code=404, detail="syllabus_topic_id nahi mila.")
+        resolved_subject = topic_row["subject"]
+        resolved_topic = topic_row["subtopic_title"]
+
+    if not resolved_subject or not resolved_topic:
+        raise HTTPException(
+            status_code=400,
+            detail="syllabus_topic_id ya phir subject aur topic dono zaroori hain.",
+        )
+
+    qid = question_service.save_manual_question(req, resolved_subject, resolved_topic)
+    return questions_repository.find_by_id(qid)
+
+
+@router.patch("/api/bank/questions/{question_id}", response_model=Question)
+def update_manual_question(question_id: str, req: ManualQuestionUpdateRequest):
+    """Sirf source='manual' wale question update karta hai — gemini questions is route se nahi badle."""
+    found = question_service.update_manual_question(question_id, req)
+    if not found:
+        raise HTTPException(
+            status_code=404,
+            detail="Manual question nahi mila (ya ye Gemini-generated hai, jo is route se edit nahi hota).",
+        )
+    return questions_repository.find_by_id(question_id)
+
+
+@router.delete("/api/bank/questions/{question_id}", response_model=StatusResponse)
+def delete_manual_question(question_id: str):
+    """Sirf source='manual' wala question delete karta hai — gemini questions protected hain."""
+    deleted = question_service.delete_manual_question(question_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Manual question nahi mila (ya ye Gemini-generated hai, jo delete nahi hota).",
+        )
+    return {"status": "ok"}
 
 
 @router.get("/api/questions", response_model=List[Question])

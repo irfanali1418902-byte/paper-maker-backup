@@ -366,6 +366,7 @@
   <nav class="app-nav">
     <a href="/">← Generator</a>
     <a href="/library.html">Image Library</a>
+    <a href="/bank.html">Question Bank</a>
   </nav>
   <div class="side-actions">
     <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
@@ -526,6 +527,7 @@
 <script src="/apiClient.js"></script>
 <script>
 // question_type classification — mirrors paper_service.py constants.
+// true-false is objective (Section A) but renders its own fixed options, not MCQ grid.
 const OBJECTIVE_TYPES = new Set(['multiple-choice', 'true-false']);
 
 // ---- Edit modal state -------------------------------------------------------
@@ -541,7 +543,9 @@ let _pickerTopicId = null;
 function openEditModal(btn) {
   const q = JSON.parse(btn.dataset.q);
   _editQuestionId = q.id;
-  const isObjective = OBJECTIVE_TYPES.has(q.question_type);
+  const isMCQ = q.question_type === 'multiple-choice';
+  // fill-blank and short-answer get answer space; true-false and MCQ do not
+  const hasAnswerSpace = !OBJECTIVE_TYPES.has(q.question_type) && q.question_type !== 'fill-blank';
 
   document.getElementById('ef_question_en').value = q.question_en || '';
   document.getElementById('ef_question_ur').value = q.question_ur || '';
@@ -550,9 +554,9 @@ function openEditModal(btn) {
   document.getElementById('ef_marks').value        = q.marks || 1;
   document.getElementById('ef_answer_lines').value = q.answer_lines != null ? String(q.answer_lines) : '';
 
-  // Options section (MCQ only); Answer Space section (subjective only)
-  document.getElementById('ef_options_section').style.display      = isObjective ? '' : 'none';
-  document.getElementById('ef_answer_space_section').style.display = isObjective ? 'none' : '';
+  // Options section: sirf MCQ ke liye; Answer Space: short-answer/essay ke liye
+  document.getElementById('ef_options_section').style.display      = isMCQ ? '' : 'none';
+  document.getElementById('ef_answer_space_section').style.display = hasAnswerSpace ? '' : 'none';
   if (isObjective) {
     const optsEn = JSON.parse(q.options_en || '[]');
     const optsUr = JSON.parse(q.options_ur || '[]');
@@ -728,6 +732,9 @@ function renderQuestion(q, num) {
   const optsEn = JSON.parse(q.options_en || '[]');
   const optsUr = JSON.parse(q.options_ur || '[]');
 
+  // Urdu-only: question_ur has text, question_en is empty/null (manual Urdu questions)
+  const isUrduOnly = !q.question_en && !!q.question_ur;
+
   let visualHtml = '';
   if (q.visual_emoji && q.visual_count) {
     visualHtml = `<div class="visual-row">${escapeHtml(q.visual_emoji.repeat(q.visual_count))}</div>`;
@@ -740,25 +747,44 @@ function renderQuestion(q, num) {
     ? `<div class="q-image ${imgSizeClass}"><img src="/${escapeHtml(q.image_path)}" alt="" /></div>`
     : '';
 
+  // Question text — Urdu-only questions show Urdu inline in qhead (RTL, Nastaliq)
+  const qtextInHead = isUrduOnly
+    ? `<span class="qtext-ur" style="margin-top:0;display:inline">${escapeHtml(q.question_ur)}</span>`
+    : `<span class="qtext-en">${escapeHtml(q.question_en || '')}</span>`;
+  // Bilingual: show Urdu below only when English is also present
+  const qtextUrBelow = (!isUrduOnly && q.question_ur)
+    ? `<div class="qtext-ur">${escapeHtml(q.question_ur)}</div>` : '';
+
+  // Body: type-specific rendering
   let bodyHtml = '';
-  if (OBJECTIVE_TYPES.has(q.question_type) && optsEn.length) {
-    bodyHtml = '<div class="options">' + optsEn.map((o, idx) => `
-      <div class="opt"><span class="circle"></span><span>${escapeHtml(o)}${optsUr[idx] ? ' / ' + escapeHtml(optsUr[idx]) : ''}</span></div>
-    `).join('') + '</div>';
+  if (q.question_type === 'multiple-choice' && optsEn.length) {
+    bodyHtml = '<div class="options">' + optsEn.map((o, idx) =>
+      `<div class="opt"><span class="circle"></span><span>${escapeHtml(o)}${optsUr[idx] ? ' / ' + escapeHtml(optsUr[idx]) : ''}</span></div>`
+    ).join('') + '</div>';
+  } else if (q.question_type === 'true-false') {
+    // Fixed two options. Urdu text in RLI..PDI bidi-isolate so it renders correctly in LTR context.
+    bodyHtml = `<div class="options">
+      <div class="opt"><span class="circle"></span><span>True &#x2F; &#x2067;صحیح&#x2069;</span></div>
+      <div class="opt"><span class="circle"></span><span>False &#x2F; &#x2067;غلط&#x2069;</span></div>
+    </div>`;
+  } else if (q.question_type === 'fill-blank') {
+    // Blank is inside question text (___); no extra ruled lines needed
+    bodyHtml = '';
   } else {
+    // short-answer, essay — ruled lines via answerSpace
     bodyHtml = answerSpace(q);
   }
 
   return `
     <div class="question" data-qid="${escapeHtml(q.id)}" data-num="${num}">
       <div class="qhead">
-        <div><span class="qnum">Q${num}.</span> <span class="qtext-en">${escapeHtml(q.question_en || '')}</span></div>
+        <div><span class="qnum">Q${num}.</span> ${qtextInHead}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <button class="edit-btn no-print" data-q="${escapeHtml(JSON.stringify(q))}" onclick="openEditModal(this)" title="Edit question">✏️</button>
           <span class="marks">[${q.marks}]</span>
         </div>
       </div>
-      <div class="qtext-ur">${escapeHtml(q.question_ur || '')}</div>
+      ${qtextUrBelow}
       ${visualHtml}
       ${imageHtml}
       ${bodyHtml}

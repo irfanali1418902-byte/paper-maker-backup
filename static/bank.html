@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Question Bank — AII Paper Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2E5AAC;
+    --primary-hover: #244a90;
+    --navy: #16294A;
+    --tint: #EAF1FB;
+    --ink: #16213A;
+    --ink2: #1B2433;
+    --muted: #5B6678;
+    --muted2: #8A93A4;
+    --border: #E3E8F1;
+    --surface: #FFFFFF;
+    --bg: #EEF1F6;
+    --err-bg: #FBE9E7; --err-tx: #C0392B;
+    --ok-bg: #E6F4EC;  --ok-tx: #2E7D5B;
+    --warn-bg: #FBF1DF; --warn-tx: #B5760E;
+    --radius-btn: 10px;
+    --shadow: 0 2px 12px rgba(22,33,58,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink); background: var(--bg);
+    display: flex; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  /* ---- Sidebar ---- */
+  .app-sidebar {
+    width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
+    padding: 18px 0; position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .brand { padding: 2px 22px 20px; }
+  .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
+  .brand small { font-size: 10.5px; color: #9DB0D0; display: block; margin-top: 3px; }
+  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  .app-nav a {
+    display: flex; align-items: center; gap: 10px;
+    color: #C6D2E8; font-size: 14px; font-weight: 500;
+    padding: 10px 12px; border-radius: 8px;
+    border-left: 3px solid transparent;
+  }
+  .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: #5B8DEF; }
+  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: #8092B0; line-height: 1.6; }
+
+  /* ---- Main ---- */
+  .bank-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  .page-head { margin-bottom: 24px; }
+  .page-head h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  .page-head p  { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+
+  /* ---- Card ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
+
+  /* ---- Form elements ---- */
+  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
+    border: 1px solid #D6DEEA; border-radius: 10px;
+    font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+
+  .field-row { display: flex; gap: 14px; }
+  .field-row > div { flex: 1; }
+
+  /* ---- Urdu textarea toggle ---- */
+  .urdu-mode {
+    direction: rtl; text-align: right;
+    font-family: 'Noto Nastaliq Urdu', serif;
+    font-size: 16px; line-height: 1.9;
+  }
+
+  /* ---- Urdu checkbox row ---- */
+  .urdu-toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 10px; padding: 10px 14px;
+    background: #F5F7FB; border: 1px solid var(--border); border-radius: 9px;
+  }
+  .urdu-toggle-row input[type="checkbox"] {
+    width: 18px; height: 18px; min-height: 0; margin: 0; cursor: pointer;
+    accent-color: var(--primary);
+  }
+  .urdu-toggle-row label {
+    margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+  }
+  .urdu-toggle-row small { font-size: 11.5px; color: var(--muted); font-weight: 400; }
+
+  /* ---- MCQ options grid ---- */
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .opt-input-wrap { display: flex; align-items: center; gap: 8px; }
+  .opt-label { font-size: 12px; font-weight: 700; color: var(--muted); width: 20px; flex-shrink: 0; }
+  .opt-input-wrap input[type="radio"] { width: auto; min-height: 0; margin: 0; cursor: pointer; accent-color: var(--primary); }
+  .opt-input-wrap input[type="text"] { min-height: 38px; font-size: 13.5px; padding: 8px 11px; margin: 0; }
+  .opt-radio-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* ---- Correct answer row for T/F ---- */
+  .radio-row { display: flex; gap: 20px; margin-top: 8px; align-items: center; }
+  .radio-row label { margin: 0; font-size: 14px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .radio-row input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--primary); }
+
+  /* ---- Bank-paper section ---- */
+  .bp-card { border: 2px solid #c7d8f7; }   /* subtle blue border — distinguishes from add form */
+  .bp-card .card-title { color: var(--primary); }
+  .type-checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .type-checks label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13.5px; font-weight: 500; color: var(--ink); cursor: pointer; margin: 0;
+  }
+  .type-checks input[type="checkbox"] {
+    width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--primary); cursor: pointer;
+  }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--primary); color: #fff; border: none;
+    min-height: 44px; padding: 0 20px; border-radius: var(--radius-btn);
+    font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(46,90,172,.25);
+  }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
+    min-height: 36px; padding: 0 14px; border-radius: 9px;
+    font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+  .btn-danger {
+    background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
+    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; min-height: 0;
+  }
+  .btn-danger:hover { background: #fdd; }
+
+  .btn-edit {
+    background: var(--tint); border: 1px solid var(--border); color: var(--primary);
+    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; min-height: 0;
+  }
+  .btn-edit:hover { background: #d5e5ff; }
+
+  /* ---- Status banner ---- */
+  .status-bar {
+    padding: 10px 14px; border-radius: 9px; font-size: 13.5px; font-weight: 500;
+    margin-top: 14px; display: none;
+  }
+  .status-bar.ok   { background: var(--ok-bg);   color: var(--ok-tx);   display: block; }
+  .status-bar.err  { background: var(--err-bg);  color: var(--err-tx);  display: block; }
+  .status-bar.warn { background: var(--warn-bg); color: var(--warn-tx); display: block; }
+
+  /* ---- Filter bar ---- */
+  .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 18px; }
+  .filter-bar > div { display: flex; flex-direction: column; flex: 1; min-width: 130px; }
+  .filter-bar label { margin-top: 0; font-size: 11.5px; }
+  .filter-bar select, .filter-bar input { min-height: 38px; font-size: 13.5px; padding: 8px 11px; }
+
+  /* ---- Question list ---- */
+  .q-list { display: flex; flex-direction: column; gap: 10px; }
+  .q-row {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+    background: #fff;
+  }
+  .q-row:hover { border-color: #b8c9e8; }
+  .type-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  }
+  .badge-mcq   { background: #E3F0FF; color: #1a4d8a; }
+  .badge-fill  { background: #E8F5E9; color: #2E7D32; }
+  .badge-tf    { background: #FFF3E0; color: #E65100; }
+  .badge-short { background: #F3E5F5; color: #6A1B9A; }
+  .q-text { flex: 1; min-width: 0; }
+  .q-text .qt { font-size: 14px; font-weight: 500; word-break: break-word; }
+  .q-text .qt.rtl { direction: rtl; text-align: right; font-family: 'Noto Nastaliq Urdu', serif; font-size: 15px; }
+  .q-text .qmeta { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .q-marks { font-size: 12.5px; font-weight: 700; color: var(--muted); white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
+  .q-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 1px; }
+
+  .list-empty { text-align: center; color: var(--muted2); padding: 40px 20px; font-size: 14px; }
+  #listStatus { font-size: 13px; color: var(--muted); margin-bottom: 10px; min-height: 20px; }
+
+  /* ---- Edit Modal ---- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 999;
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; padding: 24px 28px;
+    width: min(640px, 96vw); max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,.22);
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+  }
+  .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
+  .modal-close {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--muted); line-height: 1; padding: 2px 6px;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-cancel {
+    padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
+    background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+  .btn-save {
+    padding: 8px 20px; border: none; border-radius: var(--radius-btn);
+    background: var(--primary); color: #fff; cursor: pointer;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+  }
+  .btn-save:hover { background: var(--primary-hover); }
+  .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+  .modal-err {
+    background: var(--err-bg); border: 1px solid #ffb3b3; border-radius: 7px;
+    padding: 8px 12px; font-size: 13px; color: var(--err-tx); margin-bottom: 12px; display: none;
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 760px) {
+    body { flex-direction: column; }
+    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
+    .brand { padding: 0; }
+    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
+    .sidebar-foot { display: none; }
+    .bank-main { padding: 16px 14px; }
+    .field-row { flex-direction: column; gap: 10px; }
+    .options-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="app-sidebar">
+  <div class="brand">
+    <div class="name">AII Smart Paper Maker</div>
+    <small>Question Bank</small>
+  </div>
+  <nav class="app-nav">
+    <a href="/">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      Generator
+    </a>
+    <a href="/library.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Image Library
+    </a>
+    <a href="/bank.html" class="active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      Question Bank
+    </a>
+  </nav>
+  <div class="sidebar-foot">Teacher ke likhe questions — Gemini ke bina, apni marzi se.</div>
+</aside>
+
+<main class="bank-main">
+  <div class="page-head">
+    <h1>Question Bank</h1>
+    <p>Apne questions khud likho — subject, class aur topic se link karo, phir paper mein use karo.</p>
+  </div>
+
+  <!-- ===== ADD QUESTION FORM ===== -->
+  <div class="card">
+    <div class="card-title">Naya question add karo</div>
+
+    <!-- Cascade: Subject → Class → Topic -->
+    <div class="field-row">
+      <div>
+        <label>Subject <span style="color:var(--err-tx)">*</span></label>
+        <select id="fSubject" onchange="onSubjectChange()">
+          <option value="">-- Loading... --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade <span style="color:var(--err-tx)">*</span></label>
+        <select id="fGrade" disabled onchange="onGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Syllabus Topic <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(paper filter isi se hoga)</span></label>
+    <select id="fTopic" disabled>
+      <option value="">-- Pehle class chunein --</option>
+    </select>
+
+    <!-- Type -->
+    <label>Question Type <span style="color:var(--err-tx)">*</span></label>
+    <select id="fType" onchange="onTypeChange()">
+      <option value="multiple-choice">MCQ (Multiple Choice)</option>
+      <option value="fill-blank">Fill in the Blank</option>
+      <option value="true-false">True / False</option>
+      <option value="short-answer">Short Answer</option>
+    </select>
+
+    <!-- Urdu toggle -->
+    <div class="urdu-toggle-row">
+      <input type="checkbox" id="isUrdu" onchange="onUrduToggle()" />
+      <label for="isUrdu">یہ سوال اردو میں ہے؟ &nbsp;<small>(checked ho to text RTL ho jata hai — Urdu/Islamiat ke liye)</small></label>
+    </div>
+
+    <!-- ===== Dynamic form sections ===== -->
+
+    <!-- MCQ section -->
+    <div id="sec-mcq">
+      <label>Question <span style="color:var(--err-tx)">*</span></label>
+      <textarea id="q-mcq-text" rows="3" placeholder="Sawal likhein..."></textarea>
+
+      <label style="margin-top:16px;">Options <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(circle select = sahi jawab)</span></label>
+      <div class="options-grid">
+        <div class="opt-input-wrap">
+          <input type="radio" name="mcq-correct" value="0" id="opt-r0" />
+          <span class="opt-label">A</span>
+          <input type="text" id="opt-0" placeholder="Option A" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="mcq-correct" value="1" id="opt-r1" />
+          <span class="opt-label">B</span>
+          <input type="text" id="opt-1" placeholder="Option B" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="mcq-correct" value="2" id="opt-r2" />
+          <span class="opt-label">C</span>
+          <input type="text" id="opt-2" placeholder="Option C (optional)" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="mcq-correct" value="3" id="opt-r3" />
+          <span class="opt-label">D</span>
+          <input type="text" id="opt-3" placeholder="Option D (optional)" />
+        </div>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">Sahi jawab ke saamne wala circle select karo.</div>
+    </div>
+
+    <!-- Fill-blank section -->
+    <div id="sec-fill" style="display:none">
+      <label>Question <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(blank ke liye ___ likhein)</span></label>
+      <textarea id="q-fill-text" rows="2" placeholder="e.g. The capital of Pakistan is ___."></textarea>
+      <label>Answer (optional)</label>
+      <input type="text" id="q-fill-answer" placeholder="e.g. Islamabad" />
+    </div>
+
+    <!-- True/False section -->
+    <div id="sec-tf" style="display:none">
+      <label>Question <span style="color:var(--err-tx)">*</span></label>
+      <textarea id="q-tf-text" rows="2" placeholder="e.g. The Earth revolves around the Moon."></textarea>
+      <label style="margin-top:14px;">Sahi jawab</label>
+      <div class="radio-row">
+        <label><input type="radio" name="tf-answer" value="True" checked /> True (صحیح)</label>
+        <label><input type="radio" name="tf-answer" value="False" /> False (غلط)</label>
+      </div>
+    </div>
+
+    <!-- Short-answer section -->
+    <div id="sec-short" style="display:none">
+      <label>Question <span style="color:var(--err-tx)">*</span></label>
+      <textarea id="q-short-text" rows="3" placeholder="Sawal likhein..."></textarea>
+      <label>Answer lines (print mein kitni lines milein)</label>
+      <select id="q-short-lines">
+        <option value="">Default (4 lines)</option>
+        <option value="0">None (0)</option>
+        <option value="2">2 lines</option>
+        <option value="3">3 lines</option>
+        <option value="4">4 lines</option>
+        <option value="6">6 lines</option>
+        <option value="8">8 lines</option>
+      </select>
+    </div>
+
+    <!-- Marks + Difficulty -->
+    <div class="field-row" style="margin-top:16px;">
+      <div>
+        <label>Marks <span style="color:var(--err-tx)">*</span></label>
+        <input type="number" id="fMarks" value="1" min="1" max="20" />
+      </div>
+      <div>
+        <label>Difficulty</label>
+        <select id="fDifficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-primary" id="addBtn" onclick="submitQuestion()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Question add karo
+      </button>
+    </div>
+    <div class="status-bar" id="addStatus"></div>
+  </div>
+
+  <!-- ===== BANK PAPER GENERATOR ===== -->
+  <div class="card bp-card">
+    <div class="card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Mere questions se paper banao <span style="font-size:11.5px;font-weight:400;color:var(--muted);margin-left:6px">— bina Gemini, bina API</span>
+    </div>
+
+    <!-- Cascade -->
+    <div class="field-row">
+      <div>
+        <label>Subject <span style="color:var(--err-tx)">*</span></label>
+        <select id="bpSubject" onchange="onBpSubjectChange()">
+          <option value="">-- Subject chunein --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade</label>
+        <select id="bpGrade" disabled onchange="onBpGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — ek topic ke saare manual questions)</span></label>
+    <select id="bpTopic" disabled>
+      <option value="">-- Sab topics (subject ke) --</option>
+    </select>
+
+    <!-- Type filter -->
+    <label style="margin-top:16px;">Question types <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi select na karo = sab types)</span></label>
+    <div class="type-checks">
+      <label><input type="checkbox" value="multiple-choice" class="bp-type-check" /> MCQ</label>
+      <label><input type="checkbox" value="fill-blank"      class="bp-type-check" /> Fill-blank</label>
+      <label><input type="checkbox" value="true-false"      class="bp-type-check" /> True/False</label>
+      <label><input type="checkbox" value="short-answer"    class="bp-type-check" /> Short-answer</label>
+    </div>
+
+    <!-- Paper details -->
+    <div class="field-row" style="margin-top:16px;">
+      <div>
+        <label>Paper title <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="bpTitle" placeholder="e.g. Chapter 5 Test" />
+      </div>
+      <div>
+        <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="bpClass" placeholder="e.g. Class 7A" />
+      </div>
+    </div>
+
+    <div class="field-row" style="margin-top:4px;">
+      <div style="max-width:180px;">
+        <label>Max questions <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — khali = sab)</span></label>
+        <input type="number" id="bpTotal" min="1" max="100" placeholder="e.g. 10" />
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-primary" id="bpBtn" onclick="generateBankPaper()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Paper banao → Print view
+      </button>
+    </div>
+    <div class="status-bar" id="bpStatus"></div>
+  </div>
+
+  <!-- ===== QUESTION LIST ===== -->
+  <div class="card">
+    <div class="card-title">Bank mein questions</div>
+
+    <div class="filter-bar">
+      <div>
+        <label>Subject</label>
+        <select id="lSubject" onchange="loadList()">
+          <option value="">Sab subjects</option>
+        </select>
+      </div>
+      <div>
+        <label>Type</label>
+        <select id="lType" onchange="loadList()">
+          <option value="">Sab types</option>
+          <option value="multiple-choice">MCQ</option>
+          <option value="fill-blank">Fill-blank</option>
+          <option value="true-false">True/False</option>
+          <option value="short-answer">Short-answer</option>
+        </select>
+      </div>
+      <div>
+        <label>Matn se dhoondein</label>
+        <input type="text" id="lSearch" placeholder="search..." oninput="scheduleSearch()" style="font-size:13.5px;padding:8px 11px;min-height:38px;" />
+      </div>
+      <button class="btn-ghost" onclick="clearListFilters()">Clear</button>
+    </div>
+
+    <div id="listStatus"></div>
+    <div id="qList" class="q-list"></div>
+  </div>
+</main>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal-backdrop" id="editBackdrop" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Question Edit karo</h3>
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+    </div>
+    <div class="modal-err" id="editErr"></div>
+
+    <!-- Edit: question text -->
+    <label>Question Text <span style="color:var(--err-tx)">*</span></label>
+    <textarea id="ef-text" rows="3"></textarea>
+
+    <!-- Edit: Urdu toggle -->
+    <div class="urdu-toggle-row" style="margin-top:10px;">
+      <input type="checkbox" id="ef-isUrdu" onchange="onEditUrduToggle()" />
+      <label for="ef-isUrdu">یہ سوال اردو میں ہے؟</label>
+    </div>
+
+    <!-- Edit: MCQ options -->
+    <div id="ef-opts-sec" style="display:none;margin-top:14px;">
+      <label>Options (radio = sahi jawab)</label>
+      <div class="options-grid" style="margin-top:8px;">
+        <div class="opt-input-wrap">
+          <input type="radio" name="ef-correct" value="0" id="ef-r0" />
+          <span class="opt-label">A</span>
+          <input type="text" id="ef-opt-0" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="ef-correct" value="1" id="ef-r1" />
+          <span class="opt-label">B</span>
+          <input type="text" id="ef-opt-1" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="ef-correct" value="2" id="ef-r2" />
+          <span class="opt-label">C</span>
+          <input type="text" id="ef-opt-2" />
+        </div>
+        <div class="opt-input-wrap">
+          <input type="radio" name="ef-correct" value="3" id="ef-r3" />
+          <span class="opt-label">D</span>
+          <input type="text" id="ef-opt-3" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit: T/F correct answer -->
+    <div id="ef-tf-sec" style="display:none;margin-top:14px;">
+      <label>Sahi jawab</label>
+      <div class="radio-row" style="margin-top:8px;">
+        <label><input type="radio" name="ef-tf" value="True" /> True (صحیح)</label>
+        <label><input type="radio" name="ef-tf" value="False" /> False (غلط)</label>
+      </div>
+    </div>
+
+    <!-- Edit: fill-blank answer -->
+    <div id="ef-fill-sec" style="display:none;margin-top:14px;">
+      <label>Answer (optional)</label>
+      <input type="text" id="ef-fill-answer" />
+    </div>
+
+    <!-- Edit: answer lines (short-answer) -->
+    <div id="ef-lines-sec" style="display:none;margin-top:14px;">
+      <label>Answer lines</label>
+      <select id="ef-lines">
+        <option value="">Default (4 lines)</option>
+        <option value="0">None</option>
+        <option value="2">2 lines</option>
+        <option value="3">3 lines</option>
+        <option value="4">4 lines</option>
+        <option value="6">6 lines</option>
+        <option value="8">8 lines</option>
+      </select>
+    </div>
+
+    <!-- Edit: marks -->
+    <label style="margin-top:14px;">Marks</label>
+    <input type="number" id="ef-marks" min="1" max="20" style="width:100px;" />
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" id="ef-saveBtn" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="/apiClient.js"></script>
+<script>
+// ---- State ----
+let _allGrades = [];
+let _allQuestions = [];   // all loaded from API
+let _editQid = null;
+let _editQtype = null;
+let _searchTimer = null;
+
+// ---- Init ----
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadSyllabusGrades();
+  await loadList();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeEditModal();
+});
+
+// ================================================================
+// Cascade dropdowns — add form
+// ================================================================
+async function loadSyllabusGrades() {
+  try {
+    const res = await apiFetch('/api/syllabus-grades');
+    _allGrades = await res.json();
+    populateSubjectDropdowns();
+  } catch (e) {
+    console.error('syllabus-grades load failed:', e);
+    document.getElementById('fSubject').innerHTML = '<option value="">-- Load fail --</option>';
+  }
+}
+
+function populateSubjectDropdowns() {
+  const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
+
+  // Add-form subject
+  const fSub = document.getElementById('fSubject');
+  fSub.innerHTML = '<option value="">-- Subject chunein --</option>';
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; fSub.appendChild(o); });
+
+  // List filter subject
+  const lSub = document.getElementById('lSubject');
+  lSub.innerHTML = '<option value="">Sab subjects</option>';
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; lSub.appendChild(o); });
+
+  // Bank-paper subject
+  const bpSub = document.getElementById('bpSubject');
+  bpSub.innerHTML = '<option value="">-- Subject chunein --</option>';
+  subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; bpSub.appendChild(o); });
+}
+
+function onSubjectChange() {
+  const subject = document.getElementById('fSubject').value;
+  const gradeEl = document.getElementById('fGrade');
+  const topicEl = document.getElementById('fTopic');
+
+  topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  topicEl.disabled = true;
+
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    return;
+  }
+
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function onGradeChange() {
+  const subject = document.getElementById('fSubject').value;
+  const grade   = document.getElementById('fGrade').value;
+  const topicEl = document.getElementById('fTopic');
+
+  if (!grade) {
+    topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Topic chunein --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+  } catch {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  }
+}
+
+// ================================================================
+// Type toggle — show/hide form sections
+// ================================================================
+const TYPE_SECTIONS = { 'multiple-choice': 'sec-mcq', 'fill-blank': 'sec-fill', 'true-false': 'sec-tf', 'short-answer': 'sec-short' };
+const TYPE_MARKS    = { 'multiple-choice': 1, 'fill-blank': 1, 'true-false': 1, 'short-answer': 2 };
+
+function onTypeChange() {
+  const type = document.getElementById('fType').value;
+  Object.values(TYPE_SECTIONS).forEach(id => document.getElementById(id).style.display = 'none');
+  if (TYPE_SECTIONS[type]) document.getElementById(TYPE_SECTIONS[type]).style.display = '';
+  document.getElementById('fMarks').value = TYPE_MARKS[type] || 1;
+  // Re-apply Urdu toggle to the newly visible textarea
+  applyUrduMode(document.getElementById('isUrdu').checked);
+}
+
+// ================================================================
+// Urdu toggle
+// ================================================================
+function getActiveTextarea() {
+  const type = document.getElementById('fType').value;
+  const map = {
+    'multiple-choice': 'q-mcq-text',
+    'fill-blank':      'q-fill-text',
+    'true-false':      'q-tf-text',
+    'short-answer':    'q-short-text',
+  };
+  return document.getElementById(map[type] || 'q-mcq-text');
+}
+
+function applyUrduMode(on) {
+  const ta = getActiveTextarea();
+  if (!ta) return;
+  if (on) {
+    ta.classList.add('urdu-mode');
+    ta.dir = 'rtl';
+    ta.setAttribute('placeholder', 'اردو سوال یہاں لکھیں...');
+  } else {
+    ta.classList.remove('urdu-mode');
+    ta.dir = 'ltr';
+    ta.setAttribute('placeholder', 'Sawal likhein...');
+  }
+}
+
+function onUrduToggle() {
+  applyUrduMode(document.getElementById('isUrdu').checked);
+}
+
+function onEditUrduToggle() {
+  const on = document.getElementById('ef-isUrdu').checked;
+  const ta = document.getElementById('ef-text');
+  if (on) { ta.classList.add('urdu-mode'); ta.dir = 'rtl'; }
+  else     { ta.classList.remove('urdu-mode'); ta.dir = 'ltr'; }
+}
+
+// ================================================================
+// Submit — add question
+// ================================================================
+async function submitQuestion() {
+  const topicId  = document.getElementById('fTopic').value;
+  const type     = document.getElementById('fType').value;
+  const isUrdu   = document.getElementById('isUrdu').checked;
+  const marks    = parseInt(document.getElementById('fMarks').value, 10) || 1;
+  const diff     = document.getElementById('fDifficulty').value;
+
+  // Get question text from active section
+  const textMap = { 'multiple-choice': 'q-mcq-text', 'fill-blank': 'q-fill-text', 'true-false': 'q-tf-text', 'short-answer': 'q-short-text' };
+  const qtext = document.getElementById(textMap[type]).value.trim();
+
+  setAddStatus('', '');
+  if (!topicId)  { setAddStatus('err', '⚠️ Syllabus topic zaroori hai.'); return; }
+  if (!qtext)    { setAddStatus('err', '⚠️ Question khali nahi ho sakta.'); return; }
+
+  const body = { question_text: qtext, is_urdu: isUrdu, question_type: type, marks, difficulty: diff, syllabus_topic_id: topicId };
+
+  if (type === 'multiple-choice') {
+    const opts = [0,1,2,3].map(i => document.getElementById(`opt-${i}`).value.trim()).filter(Boolean);
+    if (opts.length < 2) { setAddStatus('err', '⚠️ MCQ ke liye kam az kam 2 options zaroori hain.'); return; }
+    const correctIdx = document.querySelector('input[name="mcq-correct"]:checked')?.value;
+    if (correctIdx === undefined || !document.getElementById(`opt-${correctIdx}`)?.value.trim()) {
+      setAddStatus('err', '⚠️ Sahi jawab (circle) select karo.'); return;
+    }
+    body.options = opts;
+    body.correct_answer = opts[parseInt(correctIdx)];
+  }
+
+  if (type === 'fill-blank') {
+    const ans = document.getElementById('q-fill-answer').value.trim();
+    if (ans) body.correct_answer = ans;
+  }
+
+  if (type === 'true-false') {
+    body.correct_answer = document.querySelector('input[name="tf-answer"]:checked')?.value || 'True';
+  }
+
+  if (type === 'short-answer') {
+    const lines = document.getElementById('q-short-lines').value;
+    if (lines !== '') body.answer_lines = parseInt(lines, 10);
+  }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  setAddStatus('warn', '⏳ Save ho raha hai...');
+
+  try {
+    const res = await apiFetch('/api/bank/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('; ') : (data.detail || 'Error');
+      setAddStatus('err', '❌ ' + detail);
+    } else {
+      setAddStatus('ok', '✅ Question bank mein save ho gaya!');
+      resetAddForm();
+      await loadList();
+    }
+  } catch (e) {
+    setAddStatus('err', '❌ Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setAddStatus(type, msg) {
+  const el = document.getElementById('addStatus');
+  el.className = 'status-bar' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  if (!type) el.style.display = 'none'; else el.style.display = 'block';
+}
+
+function resetAddForm() {
+  ['q-mcq-text','q-fill-text','q-tf-text','q-short-text','q-fill-answer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById(`opt-${i}`);
+    if (el) el.value = '';
+  });
+  document.querySelector('input[name="mcq-correct"]')?.form?.reset?.();
+  document.querySelectorAll('input[name="mcq-correct"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[name="tf-answer"]').forEach((r, i) => r.checked = i === 0);
+  document.getElementById('fMarks').value = '1';
+  document.getElementById('isUrdu').checked = false;
+  applyUrduMode(false);
+}
+
+// ================================================================
+// List
+// ================================================================
+function scheduleSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(loadList, 350);
+}
+
+function clearListFilters() {
+  document.getElementById('lSubject').value = '';
+  document.getElementById('lType').value    = '';
+  document.getElementById('lSearch').value  = '';
+  loadList();
+}
+
+async function loadList() {
+  const subject = document.getElementById('lSubject').value;
+  const type    = document.getElementById('lType').value;
+  const search  = document.getElementById('lSearch').value.trim().toLowerCase();
+  const statusEl = document.getElementById('listStatus');
+  const listEl   = document.getElementById('qList');
+
+  statusEl.textContent = 'Load ho raha hai...';
+  listEl.innerHTML = '';
+
+  const params = new URLSearchParams();
+  if (subject) params.set('subject', subject);
+  if (type)    params.set('topic_type', type);  // we filter client-side anyway
+
+  try {
+    const res = await apiFetch('/api/questions' + (params.toString() ? '?' + params : ''));
+    let qs = await res.json();
+    if (!res.ok) throw new Error(qs.detail || 'Error');
+
+    // Client-side: sirf manual questions
+    qs = qs.filter(q => q.source === 'manual');
+    if (type)   qs = qs.filter(q => q.question_type === type);
+    if (search) qs = qs.filter(q =>
+      (q.question_en || '').toLowerCase().includes(search) ||
+      (q.question_ur || '').toLowerCase().includes(search)
+    );
+
+    _allQuestions = qs;
+    statusEl.textContent = `${qs.length} manual question${qs.length !== 1 ? 's' : ''} mili${qs.length !== 1 ? 'n' : ''}.`;
+
+    if (!qs.length) {
+      listEl.innerHTML = '<div class="list-empty">Koi question nahi mila. Upar form se naya question add karo.</div>';
+      return;
+    }
+
+    listEl.innerHTML = qs.map(q => renderQRow(q)).join('');
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+function typeBadge(t) {
+  const map = {
+    'multiple-choice': ['badge-mcq',  'MCQ'],
+    'fill-blank':      ['badge-fill', 'Fill-blank'],
+    'true-false':      ['badge-tf',   'True/False'],
+    'short-answer':    ['badge-short','Short-ans'],
+  };
+  const [cls, label] = map[t] || ['badge-short', t];
+  return `<span class="type-badge ${cls}">${label}</span>`;
+}
+
+function renderQRow(q) {
+  const text = q.question_ur || q.question_en || '(khali)';
+  const isUrdu = !!q.question_ur && !q.question_en;
+  const textCls = isUrdu ? 'qt rtl' : 'qt';
+  const topic = q.topic || '';
+  const subj  = q.subject || '';
+  return `
+    <div class="q-row">
+      ${typeBadge(q.question_type)}
+      <div class="q-text">
+        <div class="${textCls}">${escHtml(text)}</div>
+        <div class="qmeta">${escHtml(subj)}${topic ? ' · ' + escHtml(topic) : ''}</div>
+      </div>
+      <div class="q-marks">[${q.marks}]</div>
+      <div class="q-actions">
+        <button class="btn-edit" onclick="openEditModal(${escAttr(JSON.stringify(q))})">Edit</button>
+        <button class="btn-danger" onclick="deleteQuestion('${escAttr(q.id)}')">Delete</button>
+      </div>
+    </div>`;
+}
+
+// ================================================================
+// Delete
+// ================================================================
+async function deleteQuestion(id) {
+  const q = _allQuestions.find(q => q.id === id);
+  const text = q ? (q.question_en || q.question_ur || 'ye question') : 'ye question';
+  if (!confirm(`"${text.slice(0, 60)}..." delete karna chahte ho?\n\nYe wapis nahi aayega.`)) return;
+  try {
+    const res = await apiFetch(`/api/bank/questions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const d = await res.json();
+      alert('Delete nahi ho saka: ' + (d.detail || 'Error'));
+      return;
+    }
+    await loadList();
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+// ================================================================
+// Edit modal
+// ================================================================
+function openEditModal(q) {
+  if (typeof q === 'string') q = JSON.parse(q);
+  _editQid   = q.id;
+  _editQtype = q.question_type;
+
+  const isUrdu = !!q.question_ur && !q.question_en;
+  const text   = isUrdu ? (q.question_ur || '') : (q.question_en || '');
+
+  const ta = document.getElementById('ef-text');
+  ta.value = text;
+  if (isUrdu) { ta.classList.add('urdu-mode'); ta.dir = 'rtl'; }
+  else        { ta.classList.remove('urdu-mode'); ta.dir = 'ltr'; }
+  document.getElementById('ef-isUrdu').checked = isUrdu;
+
+  document.getElementById('ef-marks').value = q.marks || 1;
+
+  // Section visibility
+  document.getElementById('ef-opts-sec').style.display  = (_editQtype === 'multiple-choice') ? '' : 'none';
+  document.getElementById('ef-tf-sec').style.display    = (_editQtype === 'true-false')      ? '' : 'none';
+  document.getElementById('ef-fill-sec').style.display  = (_editQtype === 'fill-blank')      ? '' : 'none';
+  document.getElementById('ef-lines-sec').style.display = (_editQtype === 'short-answer')    ? '' : 'none';
+
+  if (_editQtype === 'multiple-choice') {
+    const opts = JSON.parse(isUrdu ? (q.options_ur || '[]') : (q.options_en || '[]'));
+    const correct = isUrdu ? (q.correct_answer_ur || '') : (q.correct_answer_en || '');
+    [0,1,2,3].forEach(i => {
+      document.getElementById(`ef-opt-${i}`).value = opts[i] || '';
+      const r = document.getElementById(`ef-r${i}`);
+      r.checked = opts[i] && opts[i] === correct;
+    });
+  }
+
+  if (_editQtype === 'true-false') {
+    const ans = q.correct_answer_en || q.correct_answer_ur || 'True';
+    document.querySelectorAll('input[name="ef-tf"]').forEach(r => r.checked = r.value === ans);
+  }
+
+  if (_editQtype === 'fill-blank') {
+    document.getElementById('ef-fill-answer').value = q.correct_answer_en || q.correct_answer_ur || '';
+  }
+
+  if (_editQtype === 'short-answer') {
+    document.getElementById('ef-lines').value = q.answer_lines != null ? String(q.answer_lines) : '';
+  }
+
+  document.getElementById('editErr').style.display = 'none';
+  document.getElementById('ef-saveBtn').disabled = false;
+  document.getElementById('editBackdrop').classList.add('open');
+  document.getElementById('ef-text').focus();
+}
+
+function closeEditModal() {
+  document.getElementById('editBackdrop').classList.remove('open');
+  _editQid = null; _editQtype = null;
+}
+
+async function saveEdit() {
+  const text  = document.getElementById('ef-text').value.trim();
+  const isUrd = document.getElementById('ef-isUrdu').checked;
+  const marks = parseInt(document.getElementById('ef-marks').value, 10) || 1;
+  const errEl = document.getElementById('editErr');
+
+  if (!text) { showEditErr('Question khali nahi ho sakta.'); return; }
+
+  const body = { question_text: text, is_urdu: isUrd, marks };
+
+  if (_editQtype === 'multiple-choice') {
+    const opts = [0,1,2,3].map(i => document.getElementById(`ef-opt-${i}`).value.trim()).filter(Boolean);
+    if (opts.length < 2) { showEditErr('MCQ ke liye 2+ options zaroori hain.'); return; }
+    const correctIdx = document.querySelector('input[name="ef-correct"]:checked')?.value;
+    const correct = correctIdx !== undefined ? (document.getElementById(`ef-opt-${correctIdx}`)?.value.trim() || '') : '';
+    if (!correct) { showEditErr('Sahi jawab select karo (circle).'); return; }
+    body.options = opts;
+    body.correct_answer = correct;
+  }
+
+  if (_editQtype === 'fill-blank') {
+    const ans = document.getElementById('ef-fill-answer').value.trim();
+    if (ans) body.correct_answer = ans;
+  }
+
+  if (_editQtype === 'true-false') {
+    body.correct_answer = document.querySelector('input[name="ef-tf"]:checked')?.value || 'True';
+  }
+
+  if (_editQtype === 'short-answer') {
+    const lines = document.getElementById('ef-lines').value;
+    if (lines !== '') body.answer_lines = parseInt(lines, 10);
+  }
+
+  document.getElementById('ef-saveBtn').disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    const res = await apiFetch(`/api/bank/questions/${encodeURIComponent(_editQid)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('; ') : (data.detail || 'Save fail');
+      showEditErr(detail); return;
+    }
+    closeEditModal();
+    await loadList();
+  } catch (e) {
+    showEditErr('Network error: ' + e.message);
+  } finally {
+    document.getElementById('ef-saveBtn').disabled = false;
+  }
+}
+
+function showEditErr(msg) {
+  const el = document.getElementById('editErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ================================================================
+// Helpers
+// ================================================================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/'/g, "\\'");
+}
+
+// ================================================================
+// Bank-paper cascade: bpSubject → bpGrade → bpTopic
+// ================================================================
+function onBpSubjectChange() {
+  const subject = document.getElementById('bpSubject').value;
+  const gradeEl = document.getElementById('bpGrade');
+  const topicEl = document.getElementById('bpTopic');
+
+  topicEl.innerHTML = '<option value="">-- Sab topics (subject ke) --</option>';
+  topicEl.disabled = true;
+
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    return;
+  }
+
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein (optional) --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function onBpGradeChange() {
+  const subject = document.getElementById('bpSubject').value;
+  const grade   = document.getElementById('bpGrade').value;
+  const topicEl = document.getElementById('bpTopic');
+
+  if (!grade) {
+    topicEl.innerHTML = '<option value="">-- Sab topics (subject ke) --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Sab topics (is class ke) --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+  } catch {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  }
+}
+
+// ================================================================
+// Generate bank paper — bina Gemini
+// ================================================================
+async function generateBankPaper() {
+  const subject = document.getElementById('bpSubject').value;
+  const topicId = document.getElementById('bpTopic').value;
+  const title   = document.getElementById('bpTitle').value.trim();
+  const cls     = document.getElementById('bpClass').value.trim();
+  const total   = document.getElementById('bpTotal').value;
+
+  const checkedTypes = [...document.querySelectorAll('.bp-type-check:checked')].map(c => c.value);
+
+  setBpStatus('', '');
+
+  if (!subject && !topicId) {
+    setBpStatus('err', '⚠️ Subject ya topic zaroori hai.');
+    return;
+  }
+
+  const body = { source_filter: 'manual' };
+  if (subject)              body.subject = subject;
+  if (topicId)              body.syllabus_topic_id = topicId;
+  if (checkedTypes.length)  body.question_types = checkedTypes;
+  if (title)                body.paper_title = title;
+  if (cls)                  body.class_name = cls;
+  if (total && parseInt(total, 10) > 0) body.total_questions = parseInt(total, 10);
+
+  const btn = document.getElementById('bpBtn');
+  btn.disabled = true;
+  setBpStatus('warn', '⏳ Paper ban raha hai...');
+
+  try {
+    const res = await apiFetch('/api/bank-paper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (res.status === 404) {
+      setBpStatus('err',
+        '❌ Is topic/subject mein koi manual question nahi mila. Pehle upar form se questions add karo.'
+      );
+      return;
+    }
+    if (!res.ok) {
+      const detail = typeof data.detail === 'string' ? data.detail : 'Paper nahi ban saka.';
+      setBpStatus('err', '❌ ' + detail);
+      return;
+    }
+
+    // Success → print view mein jao
+    setBpStatus('ok', `✅ ${data.questions.length} questions, ${data.total_marks} marks — print view khul raha hai...`);
+    setTimeout(() => { window.open(`/print.html?paper_id=${encodeURIComponent(data.paper_id)}`, '_blank'); }, 600);
+  } catch (e) {
+    setBpStatus('err', '❌ Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setBpStatus(type, msg) {
+  const el = document.getElementById('bpStatus');
+  el.className = 'status-bar' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  el.style.display = type ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

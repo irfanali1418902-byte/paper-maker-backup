@@ -6,7 +6,7 @@ from datetime import date
 from typing import Optional
 
 from app.repositories import papers_repository, questions_repository
-from app.schemas.requests import AdaptivePaperRequest, GeneratePaperRequest
+from app.schemas.requests import AdaptivePaperRequest, BankPaperRequest, GeneratePaperRequest
 from app.services import adaptive_service, bloom_service, dashboard_service, item_analysis_service
 from app.services.exceptions import QuestionBankEmpty
 
@@ -15,7 +15,7 @@ from app.services.exceptions import QuestionBankEmpty
 # vocabulary controlled rahe; naye subjective type aayein to yahan add karo.
 _PAPER_TYPE_FILTERS: dict[str, list[str] | None] = {
     "mcq": ["multiple-choice"],
-    "subjective": ["short-answer", "essay"],
+    "subjective": ["short-answer", "essay", "fill-blank"],
     "mixed": None,
 }
 
@@ -23,7 +23,7 @@ _PAPER_TYPE_FILTERS: dict[str, list[str] | None] = {
 # true-false ko bhi shamil karta hai (objective questions) — ye _PAPER_TYPE_FILTERS
 # ke "mcq" (sirf multiple-choice) se alag hai, aur ye jaan-boojh kar hai.
 _RATIO_MCQ_GROUP = ["multiple-choice", "true-false"]
-_RATIO_SUBJECTIVE_GROUP = ["short-answer", "essay"]
+_RATIO_SUBJECTIVE_GROUP = ["short-answer", "essay", "fill-blank"]
 
 
 def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
@@ -87,6 +87,48 @@ def assemble_adaptive_paper(req: AdaptivePaperRequest) -> dict | None:
         "questions": selected_questions,
         "balance_summary": item_analysis_service.summarize_paper_balance(selected_questions),
         "adaptive_summary": adaptive_service.summarize(breakdown, distribution),
+    }
+
+
+def assemble_bank_paper(req: BankPaperRequest) -> dict | None:
+    """Teacher ke manual questions se paper banao — bina Gemini, bina Bloom distribution.
+    syllabus_topic_id diya jaye to sirf us topic ke, warna subject ke sab questions.
+    Returns None agar koi matching question nahi mila (route 404 bhejta hai)."""
+    # Resolve subject from syllabus_topic_id when subject not provided directly
+    resolved_subject = req.subject or ""
+    if req.syllabus_topic_id and not resolved_subject:
+        from app.services import syllabus_service  # local import — no circular dependency
+        topic_row = syllabus_service.get_topic(req.syllabus_topic_id)
+        if topic_row:
+            resolved_subject = topic_row["subject"]
+
+    source_arg = None if req.source_filter == "all" else req.source_filter
+
+    questions = questions_repository.find_for_bank_paper(
+        subject=resolved_subject or None,
+        syllabus_topic_id=req.syllabus_topic_id,
+        question_types=req.question_types,
+        source=source_arg,
+    )
+
+    if not questions:
+        return None
+
+    if req.total_questions:
+        questions = questions[: req.total_questions]  # already ordered by usage_count ASC
+
+    selected_ids = [q["id"] for q in questions]
+    title = _resolve_title(req.paper_title, resolved_subject, req.class_name)
+    paper_id, total_marks = _persist_paper(resolved_subject, req.class_name, selected_ids, questions, title)
+
+    for qid in selected_ids:
+        questions_repository.increment_usage_count(qid)
+
+    return {
+        "paper_id": paper_id,
+        "total_marks": total_marks,
+        "questions": questions,
+        "balance_summary": item_analysis_service.summarize_paper_balance(questions),
     }
 
 

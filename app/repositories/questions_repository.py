@@ -15,8 +15,9 @@ def insert(question_row: dict) -> None:
            (id, subject, topic, bloom_level, difficulty, question_type, marks,
             question_en, question_ur, options_en, options_ur,
             correct_answer_en, correct_answer_ur, explanation_en, explanation_ur,
-            visual_emoji, visual_count, syllabus_topic_id, image_path, image_size)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            visual_emoji, visual_count, syllabus_topic_id, image_path, image_size,
+            source)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             question_row["id"],
             question_row["subject"],
@@ -38,6 +39,7 @@ def insert(question_row: dict) -> None:
             question_row.get("syllabus_topic_id"),
             question_row.get("image_path"),
             question_row.get("image_size"),
+            question_row.get("source", "gemini"),
         ),
     )
     conn.commit()
@@ -103,12 +105,54 @@ def find_by_id(question_id: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
+def delete(question_id: str) -> bool:
+    """Sirf source='manual' wale delete honge. Returns True if deleted."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM questions WHERE id = ? AND source = 'manual'", (question_id,))
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
+
+
 def count_all() -> int:
     conn = get_connection()
     cur = conn.cursor()
     n = cur.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
     conn.close()
     return n
+
+
+def find_for_bank_paper(
+    subject: Optional[str] = None,
+    syllabus_topic_id: Optional[str] = None,
+    question_types: Optional[list] = None,
+    source: Optional[str] = None,
+) -> list:
+    """Bloom distribution ke bina direct query — bank-paper assembly ke liye.
+    source=None means sab, source='manual' means sirf teacher-written."""
+    conn = get_connection()
+    cur = conn.cursor()
+    query = "SELECT * FROM questions WHERE 1=1"
+    params: list = []
+    if subject:
+        query += " AND subject = ?"
+        params.append(subject)
+    if syllabus_topic_id:
+        query += " AND syllabus_topic_id = ?"
+        params.append(syllabus_topic_id)
+    if question_types:
+        placeholders = ",".join("?" for _ in question_types)
+        query += f" AND question_type IN ({placeholders})"
+        params.extend(question_types)
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+    query += " ORDER BY usage_count ASC"
+    rows = cur.execute(query, params).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 
 def list_by_filters(
