@@ -132,7 +132,7 @@ class TestTopicFilter:
     def test_source_manual_excludes_gemini(self, test_db):
         topic = "topic-shared"
         m_id = _insert_manual(subject="Science", syllabus_topic_id=topic)
-        g_id = _insert_gemini(subject="Science")  # no topic_id, different insert
+        _insert_gemini(subject="Science")  # no topic_id, different insert
         # Insert gemini with same topic_id manually
         g2_id = str(uuid.uuid4())
         questions_repository.insert({
@@ -271,7 +271,7 @@ class TestPrintTypeRendering:
             ),
         })
         assert create.status_code == 201
-        qid = create.json()["id"]
+        create.json()["id"]
 
         # Bank paper route se paper banao aur confirm karo type sahi hai
         _insert_manual(subject="Science", topic="Test Topic", qtype=qtype)
