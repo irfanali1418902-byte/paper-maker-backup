@@ -14,7 +14,7 @@ from app.schemas.requests import (
     UpdateQuestionRequest,
 )
 from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
-from app.services import question_service, syllabus_service
+from app.services import bulk_import_service, question_service, syllabus_service
 
 _UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
 _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -207,6 +207,22 @@ def delete_manual_question(question_id: str):
             detail="Manual question nahi mila (ya ye Gemini-generated hai, jo delete nahi hota).",
         )
     return {"status": "ok"}
+
+
+@router.post("/api/questions/bulk-import")
+def bulk_import_questions(file: UploadFile = File(...)):
+    """Excel (.xlsx) ya CSV file se questions bulk mein import karta hai.
+    Har row ek manual question banta hai. Ek galat row se poori file fail nahi hoti —
+    sirf woh row skip hoti hai aur report mein wajah aati hai."""
+    allowed_ext = {"xlsx", "xls", "csv"}
+    ext = (file.filename or "").rsplit(".", 1)[-1].lower()
+    if ext not in allowed_ext:
+        raise HTTPException(
+            status_code=400,
+            detail="Sirf .xlsx, .xls, ya .csv files allowed hain.",
+        )
+    contents = file.file.read()
+    return bulk_import_service.import_from_bytes(contents, file.filename or "upload.xlsx")
 
 
 @router.get("/api/questions", response_model=List[Question])

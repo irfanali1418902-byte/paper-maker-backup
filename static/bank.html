@@ -244,6 +244,49 @@
     padding: 8px 12px; font-size: 13px; color: var(--err-tx); margin-bottom: 12px; display: none;
   }
 
+  /* ---- Bulk Upload ---- */
+  .bulk-card { border: 2px solid #c7d8f7; }
+  .bulk-card .card-title { color: var(--primary); }
+  .bulk-drop-zone {
+    border: 2px dashed #b8c9e8; border-radius: 10px;
+    padding: 28px 20px; text-align: center; cursor: pointer;
+    transition: background .15s, border-color .15s;
+    background: #f6f9ff;
+    position: relative;
+  }
+  .bulk-drop-zone.drag-over { background: var(--tint); border-color: var(--primary); }
+  .bulk-drop-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; min-height: 0;
+  }
+  .bulk-drop-icon { font-size: 28px; margin-bottom: 6px; }
+  .bulk-drop-label { font-size: 14px; font-weight: 600; color: var(--ink2); }
+  .bulk-drop-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .bulk-file-chosen { font-size: 13px; font-weight: 600; color: var(--primary); margin-top: 8px; min-height: 20px; }
+
+  .bulk-result {
+    margin-top: 16px; display: none;
+    border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+  }
+  .bulk-result.visible { display: block; }
+  .bulk-result-head {
+    padding: 12px 16px; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .bulk-result-head.ok   { background: var(--ok-bg);   color: var(--ok-tx); }
+  .bulk-result-head.err  { background: var(--err-bg);  color: var(--err-tx); }
+  .bulk-result-head.warn { background: var(--warn-bg); color: var(--warn-tx); }
+  .bulk-result-body { padding: 10px 16px 14px; background: #fff; }
+  .bulk-skip-list { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .bulk-skip-list li {
+    font-size: 12.5px; color: var(--err-tx); background: var(--err-bg);
+    padding: 5px 10px; border-radius: 6px; word-break: break-word;
+  }
+  .bulk-warn-list { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .bulk-warn-list li {
+    font-size: 12.5px; color: var(--warn-tx); background: var(--warn-bg);
+    padding: 5px 10px; border-radius: 6px; word-break: break-word;
+  }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -483,6 +526,49 @@
       </button>
     </div>
     <div class="status-bar" id="bpStatus"></div>
+  </div>
+
+  <!-- ===== BULK UPLOAD ===== -->
+  <div class="card bulk-card">
+    <div class="card-title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Bulk Upload — Excel se questions import karo
+    </div>
+
+    <p style="margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.6;">
+      Excel (.xlsx) ya CSV file upload karo — har row ek question banega.
+      Columns: <code style="background:#f0f3f8;padding:1px 5px;border-radius:4px;font-size:12px;">type, question, option_a…d, correct, marks, subject, class, topic, is_urdu</code>
+    </p>
+
+    <div style="margin-bottom:14px;">
+      <a href="/bulk_upload_template.xlsx" download class="btn-ghost" id="templateBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Template download karo (.xlsx)
+      </a>
+    </div>
+
+    <div class="bulk-drop-zone" id="bulkDropZone">
+      <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv"
+             onchange="onBulkFileChosen(this)" />
+      <div class="bulk-drop-icon">📂</div>
+      <div class="bulk-drop-label">File chunein ya yahan drag karein</div>
+      <div class="bulk-drop-sub">.xlsx / .csv — max 5 MB</div>
+    </div>
+    <div class="bulk-file-chosen" id="bulkFileChosen"></div>
+
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+      <button class="btn-primary" id="bulkUploadBtn" onclick="doBulkUpload()" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload karo
+      </button>
+      <button class="btn-ghost" id="bulkClearBtn" onclick="clearBulkForm()" style="display:none;">Clear</button>
+    </div>
+
+    <!-- Result box -->
+    <div class="bulk-result" id="bulkResult">
+      <div class="bulk-result-head" id="bulkResultHead"></div>
+      <div class="bulk-result-body" id="bulkResultBody"></div>
+    </div>
   </div>
 
   <!-- ===== QUESTION LIST ===== -->
@@ -1222,6 +1308,174 @@ function setBpStatus(type, msg) {
   el.className = 'status-bar' + (type ? ' ' + type : '');
   el.textContent = msg;
   el.style.display = type ? 'block' : 'none';
+}
+
+// ================================================================
+// Bulk Upload
+// ================================================================
+const BULK_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const BULK_ALLOWED_EXT = ['xlsx', 'xls', 'csv'];
+let _bulkFile = null;
+
+// Drag-over highlight
+(function () {
+  const zone = document.getElementById('bulkDropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',      e  => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const f = e.dataTransfer?.files?.[0];
+    if (f) _applyBulkFile(f);
+  });
+})();
+
+function onBulkFileChosen(input) {
+  const f = input.files?.[0];
+  if (f) _applyBulkFile(f);
+}
+
+function _applyBulkFile(file) {
+  const chosenEl = document.getElementById('bulkFileChosen');
+  const btn      = document.getElementById('bulkUploadBtn');
+
+  // Extension check
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!BULK_ALLOWED_EXT.includes(ext)) {
+    chosenEl.style.color = 'var(--err-tx)';
+    chosenEl.textContent = `❌ "${file.name}" — sirf .xlsx/.csv allowed hai`;
+    _bulkFile = null;
+    btn.disabled = true;
+    return;
+  }
+
+  // Size check
+  if (file.size > BULK_MAX_BYTES) {
+    chosenEl.style.color = 'var(--err-tx)';
+    chosenEl.textContent = `❌ "${file.name}" — file 5 MB se badi hai (${(file.size/1024/1024).toFixed(1)} MB)`;
+    _bulkFile = null;
+    btn.disabled = true;
+    return;
+  }
+
+  _bulkFile = file;
+  chosenEl.style.color = 'var(--primary)';
+  chosenEl.textContent = `✔ ${file.name}  (${(file.size/1024).toFixed(0)} KB)`;
+  btn.disabled = false;
+  // Hide previous result
+  document.getElementById('bulkResult').classList.remove('visible');
+  document.getElementById('bulkClearBtn').style.display = '';
+}
+
+function clearBulkForm() {
+  _bulkFile = null;
+  const input = document.getElementById('bulkFileInput');
+  input.value = '';
+  document.getElementById('bulkFileChosen').textContent = '';
+  document.getElementById('bulkUploadBtn').disabled = true;
+  document.getElementById('bulkClearBtn').style.display = 'none';
+  document.getElementById('bulkResult').classList.remove('visible');
+}
+
+async function doBulkUpload() {
+  if (!_bulkFile) return;
+
+  const btn      = document.getElementById('bulkUploadBtn');
+  const resultEl = document.getElementById('bulkResult');
+  const headEl   = document.getElementById('bulkResultHead');
+  const bodyEl   = document.getElementById('bulkResultBody');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Upload ho raha hai...';
+
+  const fd = new FormData();
+  fd.append('file', _bulkFile, _bulkFile.name);
+
+  try {
+    const res = await apiFetch('/api/questions/bulk-import', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = typeof data.detail === 'string' ? data.detail : 'Upload fail ho gaya.';
+      _showBulkResult('err', `❌ ${msg}`, [], []);
+      return;
+    }
+
+    _showBulkResult(
+      data.skipped > 0 ? (data.added > 0 ? 'warn' : 'err') : 'ok',
+      null,
+      data,
+      null,
+    );
+
+    // Refresh question list if any were added
+    if (data.added > 0) await loadList();
+
+  } catch (e) {
+    _showBulkResult('err', `❌ Network error: ${e.message}`, [], []);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload karo';
+  }
+}
+
+function _showBulkResult(level, overrideMsg, data) {
+  const headEl = document.getElementById('bulkResultHead');
+  const bodyEl = document.getElementById('bulkResultBody');
+  const resultEl = document.getElementById('bulkResult');
+
+  headEl.className = `bulk-result-head ${level}`;
+
+  if (overrideMsg) {
+    headEl.textContent = overrideMsg;
+    bodyEl.innerHTML = '';
+    resultEl.classList.add('visible');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  const { added, skipped, errors = [], warnings = [] } = data;
+
+  // Headline
+  let headline = '';
+  if (added > 0 && skipped === 0) {
+    headline = `✅ ${added} question${added !== 1 ? 's' : ''} add ho gaye — koi skip nahi`;
+  } else if (added > 0 && skipped > 0) {
+    headline = `⚠️ ${added} add hue, ${skipped} skip`;
+  } else {
+    headline = `❌ Koi question add nahi hua — ${skipped} skip`;
+  }
+  headEl.textContent = headline;
+
+  // Body: skip errors + warnings
+  let html = '';
+
+  if (errors.length) {
+    html += `<div style="font-size:12.5px;font-weight:600;color:var(--err-tx);margin-top:4px;">Skip ki gayi rows (${errors.length}):</div>`;
+    html += '<ul class="bulk-skip-list">';
+    errors.forEach(e => { html += `<li>❌ ${_esc(e)}</li>`; });
+    html += '</ul>';
+  }
+
+  if (warnings.length) {
+    html += `<div style="font-size:12.5px;font-weight:600;color:var(--warn-tx);margin-top:${errors.length ? 12 : 4}px;">Warnings (imported, lekin note karo):</div>`;
+    html += '<ul class="bulk-warn-list">';
+    warnings.forEach(w => { html += `<li>⚠️ ${_esc(w)}</li>`; });
+    html += '</ul>';
+  }
+
+  if (!errors.length && !warnings.length && added > 0) {
+    html = '<div style="font-size:13px;color:var(--ok-tx);margin-top:4px;">Question list neeche refresh ho gayi hai.</div>';
+  }
+
+  bodyEl.innerHTML = html;
+  resultEl.classList.add('visible');
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function _esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 </script>
 </body>
