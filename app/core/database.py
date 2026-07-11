@@ -90,6 +90,19 @@ def init_db() -> None:
     papers_cols = {row[1] for row in cur.execute("PRAGMA table_info(papers)").fetchall()}
     if "paper_title" not in papers_cols:
         cur.execute("ALTER TABLE papers ADD COLUMN paper_title TEXT")
+    if "sections_meta" not in papers_cols:
+        cur.execute("ALTER TABLE papers ADD COLUMN sections_meta TEXT")
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS blueprints (
+            id          TEXT PRIMARY KEY,
+            name        TEXT NOT NULL,
+            subject     TEXT,
+            grade       TEXT,
+            sections    TEXT NOT NULL,
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS syllabus_topics (

@@ -11,7 +11,17 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api import dashboard, export, library, papers, questions, school_settings, stats, syllabus
+from app.api import (
+    blueprints,
+    dashboard,
+    export,
+    library,
+    papers,
+    questions,
+    school_settings,
+    stats,
+    syllabus,
+)
 from app.api.auth import require_api_key
 from app.core.database import init_db
 
@@ -38,6 +48,7 @@ init_db()
 # Har /api router API-key auth ke peeche. Static `/` mount (neeche) khula rehta
 # hai taake frontend HTML/JS bina key ke load ho sake.
 _api_auth = [Depends(require_api_key)]
+app.include_router(blueprints.router, dependencies=_api_auth)
 app.include_router(questions.router, dependencies=_api_auth)
 app.include_router(library.router, dependencies=_api_auth)
 app.include_router(papers.router, dependencies=_api_auth)
