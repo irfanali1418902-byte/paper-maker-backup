@@ -1,5 +1,23 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Blueprint HISSA 3 — print.html blueprint rendering (feature/blueprint)
+
+**Kya bana:**
+
+- **`app/schemas/responses.py`** — `Paper` model mein `sections_meta: Optional[str] = None` add kiya
+  - Pehle FastAPI response_model strip kar deta tha — ab `GET /api/paper/{id}` mein sections_meta aata hai
+- **`static/print.html` (HTML)** — `sectionA` + `sectionB` divs hata ke `sectionsContainer` bana
+- **`static/print.html` (CSS)** — `.shortfall-note` style add kiya (yellow warning box, screen only)
+- **`static/print.html` (JS)** — `loadPaper()` mein sections_meta branch:
+  - `sections_meta` non-null → blueprint rendering: qMap build, har section ka `section-block` dynamically inject
+  - `sections_meta` null → `_renderLegacySections()` call (A/B objective/subjective — bilkul unchanged)
+  - Shortfall notes `.no-print .shortfall-note` — screen par dikhein, print mein nahi
+  - `_renderLegacySections()` new helper: container mein sectionA/sectionB divs create karke purana `renderSection()` call karta hai
+- **Tests:** 58 blueprint tests pass, ruff clean
+- **Branch:** feature/blueprint (commit 3a76257) — merge pending
+
+---
+
 ## 2026-07-11 — feature/bulk-import merged to master (HISSA 4 — Bulk Upload)
 
 **Kya bana:**
