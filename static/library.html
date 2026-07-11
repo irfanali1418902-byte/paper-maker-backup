@@ -152,6 +152,15 @@
 
   #gridStatus { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; min-height: 20px; }
 
+  /* ---- Bulk result list ---- */
+  .bulk-results { margin-top: 14px; display: none; }
+  .bulk-results .summary { font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .bulk-result-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .bulk-result-list li { font-size: 12.5px; padding: 5px 10px; border-radius: 7px; display: flex; gap: 8px; align-items: flex-start; }
+  .bulk-result-list li.ok   { background: var(--ok-bg);   color: var(--ok-tx); }
+  .bulk-result-list li.skip { background: var(--warn-bg);  color: var(--warn-tx); }
+  .bulk-result-list li.err  { background: var(--err-bg);  color: var(--err-tx); }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -245,6 +254,49 @@
     <div class="status-bar" id="uploadStatus"></div>
   </div>
 
+  <!-- ===== BULK UPLOAD CARD ===== -->
+  <div class="card">
+    <div class="card-title">Ek saath kai images upload karen (Bulk)</div>
+    <p style="margin:0 0 14px;font-size:13px;color:var(--muted);">
+      Sab images ek hi subject/class/topic se tag hongi. Duplicate naam automatically skip ho jaayenge.
+    </p>
+
+    <div class="field-row">
+      <div>
+        <label>Subject</label>
+        <select id="bulkSubject" onchange="onBulkSubjectChange()">
+          <option value="">-- Subject chunein (optional) --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade</label>
+        <select id="bulkGrade" disabled onchange="onBulkGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Syllabus Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(auto-suggest ke liye zaroori)</span></label>
+    <select id="bulkTopic" disabled>
+      <option value="">-- Pehle class chunein --</option>
+    </select>
+
+    <label>Images (JPG ya PNG, max 2 MB each) <span style="color:var(--err-tx)">*</span></label>
+    <input type="file" id="bulkFiles" accept="image/jpeg,image/png" multiple />
+
+    <div style="margin-top:18px;">
+      <button class="btn-primary" id="bulkUploadBtn" onclick="bulkUpload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Sab Upload karo
+      </button>
+    </div>
+
+    <div class="bulk-results" id="bulkResults">
+      <div class="summary" id="bulkSummary"></div>
+      <ul class="bulk-result-list" id="bulkResultList"></ul>
+    </div>
+  </div>
+
   <!-- ===== LIBRARY GRID ===== -->
   <div class="card">
     <div class="card-title">Library images</div>
@@ -299,6 +351,7 @@ async function loadSyllabusGrades() {
     const res = await apiFetch('/api/syllabus-grades');
     _allGrades = await res.json();
     populateUpSubject();
+    populateBulkSubject();
     populateFSubject();
   } catch (e) {
     console.error('syllabus-grades load failed:', e);
@@ -308,6 +361,17 @@ async function loadSyllabusGrades() {
 
 function populateUpSubject() {
   const sel = document.getElementById('upSubject');
+  const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
+  sel.innerHTML = '<option value="">-- Subject chunein (optional) --</option>';
+  subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+}
+
+function populateBulkSubject() {
+  const sel = document.getElementById('bulkSubject');
   const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
   sel.innerHTML = '<option value="">-- Subject chunein (optional) --</option>';
   subjects.forEach(s => {
@@ -470,6 +534,109 @@ function resetUploadForm() {
   document.getElementById('upTopic').disabled = true;
   document.getElementById('fileWarning').style.display = 'none';
   document.getElementById('uploadBtn').disabled = true;
+}
+
+// -----------------------------------------------------------------------
+// Bulk upload cascade
+// -----------------------------------------------------------------------
+function onBulkSubjectChange() {
+  const subject = document.getElementById('bulkSubject').value;
+  const gradeEl = document.getElementById('bulkGrade');
+  const topicEl = document.getElementById('bulkTopic');
+  topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  topicEl.disabled = true;
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    return;
+  }
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function onBulkGradeChange() {
+  const subject = document.getElementById('bulkSubject').value;
+  const grade   = document.getElementById('bulkGrade').value;
+  const topicEl = document.getElementById('bulkTopic');
+  if (!grade) {
+    topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Topic chunein --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+  } catch (_e) {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  }
+}
+
+// -----------------------------------------------------------------------
+// Bulk upload submit
+// -----------------------------------------------------------------------
+async function bulkUpload() {
+  const files = document.getElementById('bulkFiles').files;
+  if (!files || files.length === 0) {
+    alert('Pehle koi image file select karen.');
+    return;
+  }
+
+  const subject = document.getElementById('bulkSubject').value;
+  const grade   = document.getElementById('bulkGrade').value;
+  const topicId = document.getElementById('bulkTopic').value;
+  const btn = document.getElementById('bulkUploadBtn');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Upload ho raha hai...';
+
+  const fd = new FormData();
+  if (subject) fd.append('subject', subject);
+  if (grade)   fd.append('grade', grade);
+  if (topicId) fd.append('syllabus_topic_id', topicId);
+  for (const f of files) fd.append('files', f);
+
+  try {
+    const res = await apiFetch('/api/library/bulk', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    const resultsEl = document.getElementById('bulkResults');
+    const summaryEl = document.getElementById('bulkSummary');
+    const listEl    = document.getElementById('bulkResultList');
+
+    resultsEl.style.display = 'block';
+    summaryEl.textContent = `✅ ${data.added} added · ⏭ ${data.skipped} skipped`;
+    summaryEl.style.color = data.skipped > 0 ? 'var(--warn-tx)' : 'var(--ok-tx)';
+
+    listEl.innerHTML = (data.results || []).map(r => {
+      const cls = r.status === 'ok' ? 'ok' : (r.reason ? 'skip' : 'err');
+      const icon = r.status === 'ok' ? '✅' : '⏭';
+      const reason = r.reason ? ` — ${r.reason}` : '';
+      return `<li class="${cls}">${icon} <span>${escHtml(r.name)}${reason}</span></li>`;
+    }).join('');
+
+    if (data.added > 0) await loadGrid();
+  } catch (e) {
+    alert('Bulk upload fail: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Sab Upload karo`;
+  }
 }
 
 // -----------------------------------------------------------------------

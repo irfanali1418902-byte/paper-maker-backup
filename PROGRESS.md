@@ -1,5 +1,81 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Image System HISSA C — In-form image selection UI (feature/image-system)
+
+**Kya bana (frontend only — koi backend change nahi):**
+
+- **`static/print.html`** — Edit modal mein topic thumbnail strip:
+  - Modal khulte hi `loadTopicStrip(topicId, qid)` call hoti hai
+  - `/api/library?syllabus_topic_id=...` se images fetch, strip mein dikhayi
+  - Thumbnail click → `applyLibraryImageInModal()` → image-from-library API → modal ka preview update
+  - Topic na ho ya images na hon → strip hidden (no clutter)
+  - "Choose Image" file upload button barabar maujood hai (dono options)
+
+- **`static/bank.html`** — Add form + Edit modal mein thumbnail grid:
+  - Add form: topic select `onchange="onAddTopicChange()"` → library images strip
+  - Thumbnail click → highlight (selected), dobara click → deselect
+  - Question save hone ke baad agar image select thi → image-from-library API call
+  - Edit modal: `openEditModal()` mein `_loadEditStrip(topicId, qid)` call
+  - Edit thumbnail click → seedha attach + list refresh + modal close
+
+**Test run:** 482 passed (no backend change) — ruff clean
+
+**Browser test checklist (khud check karo):**
+1. print.html: paper mein ✏️ button → modal khule → agar topic hai to library strip dikhe
+2. Strip mein thumbnail click → modal preview update ho, file upload button abhi bhi kaam kare
+3. Topic nahi ya library mein images nahi → strip bilkul nahi dikhi
+4. bank.html: nayi question form → subject → class → topic chunein → library strip dikhe
+5. Thumbnail click → highlighted ho (blue border), dobara click → deselect
+6. "Save" karo → question save + image attach ho (list mein image_path set ho)
+7. Edit button → modal khule → strip dikhe → click karo → modal band, list refresh ho
+8. Purani "Choose Image" file upload dono jagah abhi bhi kaam kare (backward compat)
+
+---
+
+## 2026-07-11 — Image System HISSA B — Excel image column (feature/image-system)
+
+**Kya bana:**
+
+- **`app/services/bulk_import_service.py`** — `image` column support:
+  - `_find_library_image(name, topic_id)` helper: topic-scoped match pehle (`find_by_name_and_topic`), phir global (`find_by_name`), narm (case-insensitive, trim)
+  - `_validate_row()` — `_image_name` internal field pass-through
+  - `import_from_bytes()` — post-insert: library se file `static/uploads/` mein copy, `image_path` set; naam na mile → warning (skip nahi)
+  - `image` column absent (purani files) → `""` → koi action nahi (backward compat)
+- **`static/bulk_upload_template.xlsx`** — `image` column (13th) add kiya
+- **`tests/test_bulk_import_image.py`** — 7 nayi tests
+
+**Test run:** 482 passed, 0 failed — ruff clean
+
+**Browser test (khud check karo):**
+1. Purana template (.xlsx bina image column) import karo → bilkul theek chale
+2. Naye template mein image naam likho (library mein pehle upload karo) → question mein image dikhe
+3. Galat naam likhain → question import ho, warning mein naam aaye
+4. Case mismatch test: "OrangeS5" library mein, "oranges5" Excel mein → match ho
+
+---
+
+## 2026-07-11 — Image System HISSA A — Bulk Image Upload (feature/image-system)
+
+**Kya bana:**
+
+- **`app/core/database.py`** — `image_library` table mein `name_normalized TEXT` column add kiya (CREATE TABLE + safe ALTER TABLE migration existing DBs ke liye + back-fill UPDATE)
+- **`app/repositories/library_repository.py`** — `insert()` updated: `name_normalized = name.strip().lower()` field include hoti hai. Teen nayi helpers: `name_exists(name)` (duplicate check), `find_by_name(name)`, `find_by_name_and_topic(name, topic_id)` (HISSA B ke liye)
+- **`app/api/library.py`** — `POST /api/library/bulk` nayi route: `List[UploadFile]`, per-file MIME + size + duplicate check, skip karo invalid/duplicate, result list wapas karo
+- **`static/library.html`** — "Ek saath kai images upload" card: multi-file input, subject/grade/topic cascade (alag single-upload se), per-file result list (ok/skip/err styled), library grid auto-refresh on success
+- **`tests/test_library_api.py`** — 8 nayi bulk tests: all_added, duplicate_skip, wrong_mime_skip, oversized_skip, name_normalized_stored, topic_tagged, per_file_result_list, case_insensitive_duplicate
+
+**Test run:** 475 passed, 0 failed — ruff clean
+
+**Browser test (khud check karo):**
+1. Library page → "Ek saath kai images" card dikhe
+2. Subject → Grade → Topic cascade kaam kare
+3. Multiple PNG/JPG files select → Upload → result list (ok/skip) dikhe
+4. Duplicate naam dobara upload karo → skip + reason dikhe
+5. GIF file try karo → skip (JPG/PNG only)
+6. Grid refresh ho nayi images ke saath
+
+---
+
 ## 2026-07-11 — Blueprint HISSA 4 — blueprint.html frontend (feature/blueprint)
 
 **Kya bana:**

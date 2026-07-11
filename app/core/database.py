@@ -180,6 +180,7 @@ def init_db() -> None:
             id                TEXT PRIMARY KEY,
             file_path         TEXT NOT NULL,
             name              TEXT NOT NULL,
+            name_normalized   TEXT,
             subject           TEXT,
             grade             TEXT,
             syllabus_topic_id TEXT REFERENCES syllabus_topics(id),
@@ -187,6 +188,15 @@ def init_db() -> None:
             created_at        TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+    # Existing DBs: add name_normalized column and back-fill from name.
+    lib_cols = {row[1] for row in cur.execute("PRAGMA table_info(image_library)").fetchall()}
+    if "name_normalized" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN name_normalized TEXT")
+        cur.execute(
+            "UPDATE image_library SET name_normalized = LOWER(TRIM(name))"
+            " WHERE name_normalized IS NULL"
+        )
 
     conn.commit()
     conn.close()

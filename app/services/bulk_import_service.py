@@ -10,12 +10,17 @@ import io
 import json
 import uuid
 from difflib import get_close_matches
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 
 from app.core.database import get_connection
-from app.repositories import questions_repository
+from app.repositories import library_repository, questions_repository
+
+_LIBRARY_DIR = Path(__file__).parent.parent.parent / "static" / "library"
+_UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
+_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── constants ────────────────────────────────────────────────────────────────
 
@@ -84,6 +89,19 @@ def _suggest_topic(topic_name: str) -> Optional[str]:
     return titles[idx]
 
 
+# ── image lookup helper ───────────────────────────────────────────────────────
+
+def _find_library_image(image_name: str, topic_id: Optional[str]) -> Optional[dict]:
+    """Topic-scoped naam match pehle, phir global. None agar koi nahi mila."""
+    if not image_name:
+        return None
+    if topic_id:
+        hit = library_repository.find_by_name_and_topic(image_name, topic_id)
+        if hit:
+            return hit
+    return library_repository.find_by_name(image_name)
+
+
 # ── per-row validation ────────────────────────────────────────────────────────
 
 def _cell(row: pd.Series, col: str) -> str:
@@ -108,6 +126,7 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
     correct_raw = _cell(row, "correct")
     is_urdu_raw = _cell(row, "is_urdu").lower()
     marks_raw = _cell(row, "marks")
+    image_name = _cell(row, "image")  # optional; empty string if column absent
 
     # ── required field checks ────────────────────────────────────────────────
     if not question:
@@ -207,6 +226,7 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
         "image_path": None,
         "image_size": None,
         "source": "manual",
+        "_image_name": image_name,  # internal — resolved after insert
     }
     return q, topic_warning
 
@@ -283,8 +303,19 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
             # result is a topic warning — still import
             warnings.append(result)
 
+        image_name = q_dict.pop("_image_name", "")
         questions_repository.insert(q_dict)
         added += 1
+
+        if image_name:
+            lib_img = _find_library_image(image_name, q_dict.get("syllabus_topic_id"))
+            if lib_img:
+                _attach_library_image(q_dict["id"], lib_img)
+            else:
+                warnings.append(
+                    f"row {row_num}: image '{image_name}' library mein nahi mili,"
+                    " bina image ke daala"
+                )
 
     return {
         "added": added,
@@ -292,3 +323,16 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
         "errors": errors,
         "warnings": warnings,
     }
+
+
+def _attach_library_image(question_id: str, lib_img: dict) -> None:
+    """Library image ko uploads/ mein copy karo aur question se link karo."""
+    from app.repositories import questions_repository as qr
+
+    src = _LIBRARY_DIR / Path(lib_img["file_path"]).name
+    if not src.exists():
+        return
+    ext = src.suffix.lstrip(".")
+    dest = _UPLOADS_DIR / f"{question_id}.{ext}"
+    dest.write_bytes(src.read_bytes())
+    qr.update(question_id, {"image_path": f"uploads/{question_id}.{ext}"})

@@ -150,6 +150,22 @@
   }
   .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 
+  /* ---- Topic image strip ---- */
+  .topic-img-strip { margin: 10px 0 4px; }
+  .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  .topic-img-thumb {
+    width: 68px; height: 52px; border-radius: 7px; overflow: hidden;
+    border: 2px solid transparent; background: #f0f2f6;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s;
+  }
+  .topic-img-thumb:hover  { border-color: var(--primary); }
+  .topic-img-thumb.sel    { border-color: var(--primary); box-shadow: 0 0 0 2px var(--tint); }
+  .topic-img-thumb img    { width: 100%; height: 100%; object-fit: contain; }
+  .topic-img-name { font-size: 10px; color: var(--muted); text-align: center; width: 68px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
   .btn-danger {
     background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
     padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
@@ -355,9 +371,15 @@
     </div>
 
     <label>Syllabus Topic <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(paper filter isi se hoga)</span></label>
-    <select id="fTopic" disabled>
+    <select id="fTopic" disabled onchange="onAddTopicChange()">
       <option value="">-- Pehle class chunein --</option>
     </select>
+
+    <!-- Add-form topic image strip -->
+    <div id="addTopicStrip" class="topic-img-strip" style="display:none">
+      <div class="topic-img-strip-label">Is topic ki library images — click kar ke select karo (optional):</div>
+      <div class="topic-img-row" id="addTopicImgRow"></div>
+    </div>
 
     <!-- Type -->
     <label>Question Type <span style="color:var(--err-tx)">*</span></label>
@@ -541,7 +563,7 @@
 
     <p style="margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.6;">
       Excel (.xlsx) ya CSV file upload karo — har row ek question banega.
-      Columns: <code style="background:#f0f3f8;padding:1px 5px;border-radius:4px;font-size:12px;">type, question, option_a…d, correct, marks, subject, class, topic, is_urdu</code>
+      Columns: <code style="background:#f0f3f8;padding:1px 5px;border-radius:4px;font-size:12px;">type, question, option_a…d, correct, marks, subject, class, topic, is_urdu, image</code>
     </p>
 
     <div style="margin-bottom:14px;">
@@ -687,6 +709,12 @@
     <label style="margin-top:14px;">Marks</label>
     <input type="number" id="ef-marks" min="1" max="20" style="width:100px;" />
 
+    <!-- Edit modal: topic image strip -->
+    <div id="efTopicStrip" class="topic-img-strip" style="display:none;margin-top:14px;">
+      <div class="topic-img-strip-label">Is topic ki library images — click kar ke seedha attach karo:</div>
+      <div class="topic-img-row" id="efTopicImgRow"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="ef-saveBtn" onclick="saveEdit()">Save</button>
@@ -702,6 +730,7 @@ let _allQuestions = [];   // all loaded from API
 let _editQid = null;
 let _editQtype = null;
 let _searchTimer = null;
+let _selectedAddImageId = null;   // library image chosen in add-form strip
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
@@ -847,6 +876,85 @@ function onUrduToggle() {
   applyUrduMode(document.getElementById('isUrdu').checked);
 }
 
+// ================================================================
+// Topic image strips
+// ================================================================
+async function _loadTopicImages(topicId) {
+  if (!topicId) return [];
+  try {
+    const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (_e) { return []; }
+}
+
+function _renderAddStrip(imgs) {
+  const strip = document.getElementById('addTopicStrip');
+  const row   = document.getElementById('addTopicImgRow');
+  _selectedAddImageId = null;
+  if (!imgs.length) { strip.style.display = 'none'; row.innerHTML = ''; return; }
+  strip.style.display = '';
+  row.innerHTML = imgs.map(img =>
+    `<div class="topic-img-item" id="addImg_${escAttr(img.id)}" onclick="selectAddImage('${escAttr(img.id)}')">
+       <div class="topic-img-thumb" id="addThumb_${escAttr(img.id)}">
+         <img src="/${escAttr(img.file_path)}" alt="${escAttr(img.name)}" loading="lazy" />
+       </div>
+       <div class="topic-img-name">${escHtml(img.name)}</div>
+     </div>`
+  ).join('');
+}
+
+function selectAddImage(imgId) {
+  // Toggle: click again to deselect
+  if (_selectedAddImageId === imgId) {
+    _selectedAddImageId = null;
+    document.querySelectorAll('.topic-img-thumb').forEach(el => el.classList.remove('sel'));
+  } else {
+    _selectedAddImageId = imgId;
+    document.querySelectorAll('.topic-img-thumb').forEach(el => el.classList.remove('sel'));
+    const thumb = document.getElementById('addThumb_' + imgId);
+    if (thumb) thumb.classList.add('sel');
+  }
+}
+
+async function onAddTopicChange() {
+  const topicId = document.getElementById('fTopic').value;
+  const imgs = await _loadTopicImages(topicId);
+  _renderAddStrip(imgs);
+}
+
+async function _loadEditStrip(topicId, qid) {
+  const strip = document.getElementById('efTopicStrip');
+  const row   = document.getElementById('efTopicImgRow');
+  strip.style.display = 'none'; row.innerHTML = '';
+  if (!topicId) return;
+  const imgs = await _loadTopicImages(topicId);
+  if (!imgs.length) return;
+  strip.style.display = '';
+  row.innerHTML = imgs.map(img =>
+    `<div class="topic-img-item" onclick="applyEditLibraryImage('${escAttr(img.id)}','${escAttr(qid)}')">
+       <div class="topic-img-thumb">
+         <img src="/${escAttr(img.file_path)}" alt="${escAttr(img.name)}" loading="lazy" />
+       </div>
+       <div class="topic-img-name">${escHtml(img.name)}</div>
+     </div>`
+  ).join('');
+}
+
+async function applyEditLibraryImage(imageId, qid) {
+  try {
+    const res = await apiFetch(`/api/questions/${qid}/image-from-library`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_id: imageId, image_size: 'medium' }),
+    });
+    if (!res.ok) { const d = await res.json(); alert('Image attach nahi ho saki: ' + (d.detail || 'Error')); return; }
+    // Reload list so the card shows the image
+    await loadList();
+    closeEditModal();
+  } catch (e) { alert('Network error: ' + e.message); }
+}
+
 function onEditUrduToggle() {
   const on = document.getElementById('ef-isUrdu').checked;
   const ta = document.getElementById('ef-text');
@@ -914,6 +1022,16 @@ async function submitQuestion() {
       const detail = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('; ') : (data.detail || 'Error');
       setAddStatus('err', '❌ ' + detail);
     } else {
+      // Agar library image select thi to attach karo
+      if (_selectedAddImageId && data.id) {
+        try {
+          await apiFetch(`/api/questions/${data.id}/image-from-library`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_id: _selectedAddImageId, image_size: 'medium' }),
+          });
+        } catch (_e) { /* silent — question already saved */ }
+      }
       setAddStatus('ok', '✅ Question bank mein save ho gaya!');
       resetAddForm();
       await loadList();
@@ -947,6 +1065,9 @@ function resetAddForm() {
   document.getElementById('fMarks').value = '1';
   document.getElementById('isUrdu').checked = false;
   applyUrduMode(false);
+  _selectedAddImageId = null;
+  document.getElementById('addTopicStrip').style.display = 'none';
+  document.getElementById('addTopicImgRow').innerHTML = '';
 }
 
 // ================================================================
@@ -1109,6 +1230,9 @@ function openEditModal(q) {
   document.getElementById('ef-saveBtn').disabled = false;
   document.getElementById('editBackdrop').classList.add('open');
   document.getElementById('ef-text').focus();
+
+  // Topic image strip — async, non-blocking
+  _loadEditStrip(q.syllabus_topic_id || null, q.id);
 }
 
 function closeEditModal() {

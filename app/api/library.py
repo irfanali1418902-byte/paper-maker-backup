@@ -91,6 +91,69 @@ def delete_library_image(image_id: str):
     return {"status": "ok"}
 
 
+@router.post("/api/library/bulk")
+def bulk_upload_library_images(
+    syllabus_topic_id: Optional[str] = Form(default=None),
+    subject: Optional[str] = Form(default=None),
+    grade: Optional[str] = Form(default=None),
+    uploaded_by: Optional[str] = Form(default=None),
+    files: List[UploadFile] = File(...),
+):
+    """Ek saath kai images library mein add karta hai.
+    Har file alag validate hoti hai — ek fail hone se baaki nahi rukti.
+    Duplicate naam (case-insensitive) skip kiye jaate hain.
+    Returns: {added, skipped, results: [{name, status, reason?}]}"""
+    added = 0
+    skipped = 0
+    results = []
+
+    for upload in files:
+        fname = (upload.filename or "").strip()
+        name = Path(fname).stem if fname else ""
+
+        if not name:
+            skipped += 1
+            results.append({"name": fname or "(unnamed)", "status": "skip", "reason": "naam nahi mila"})
+            continue
+
+        content_type = upload.content_type or ""
+        ext = _ALLOWED_MIME.get(content_type)
+        if ext is None:
+            skipped += 1
+            results.append({"name": fname, "status": "skip", "reason": "sirf JPG/PNG allowed hai"})
+            continue
+
+        contents = upload.file.read()
+        if len(contents) > _MAX_BYTES:
+            skipped += 1
+            results.append({"name": fname, "status": "skip", "reason": "2 MB se bada hai"})
+            continue
+
+        if library_repository.name_exists(name):
+            skipped += 1
+            results.append({"name": fname, "status": "skip", "reason": "is naam ki image pehle se hai"})
+            continue
+
+        image_id = str(uuid.uuid4())
+        dest = _LIBRARY_DIR / f"{image_id}.{ext}"
+        dest.write_bytes(contents)
+
+        row = {
+            "id": image_id,
+            "file_path": f"library/{image_id}.{ext}",
+            "name": name,
+            "subject": subject.strip() if subject else None,
+            "grade": grade.strip() if grade else None,
+            "syllabus_topic_id": syllabus_topic_id or None,
+            "uploaded_by": uploaded_by.strip() if uploaded_by else None,
+        }
+        library_repository.insert(row)
+        added += 1
+        results.append({"name": fname, "status": "ok"})
+
+    return {"added": added, "skipped": skipped, "results": results}
+
+
 @router.get("/api/library/topics-with-images")
 def topics_with_images(ids: str = ""):
     """Comma-separated syllabus_topic_ids mein se har topic ka image count wapas karta hai.

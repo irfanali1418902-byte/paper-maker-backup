@@ -262,3 +262,122 @@ def test_topics_with_images_empty_ids_returns_empty(test_db, tmp_path, monkeypat
     resp = client.get("/api/library/topics-with-images")
     assert resp.status_code == 200
     assert resp.json()["topics"] == {}
+
+
+# ---------------------------------------------------------------------------
+# Bulk upload — /api/library/bulk
+# ---------------------------------------------------------------------------
+
+def _bulk(tmp_path, monkeypatch, files, *, topic_id=None, subject=None, grade=None):
+    lib = tmp_path / "library"
+    lib.mkdir(exist_ok=True)
+    monkeypatch.setattr(library_module, "_LIBRARY_DIR", lib)
+    form = {}
+    if topic_id:
+        form["syllabus_topic_id"] = topic_id
+    if subject:
+        form["subject"] = subject
+    if grade:
+        form["grade"] = grade
+    return client.post("/api/library/bulk", data=form, files=files), lib
+
+
+def test_bulk_upload_all_added(test_db, tmp_path, monkeypatch):
+    files = [
+        ("files", ("alpha.png", io.BytesIO(_PNG), "image/png")),
+        ("files", ("beta.png",  io.BytesIO(_PNG), "image/png")),
+    ]
+    resp, lib = _bulk(tmp_path, monkeypatch, files)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["added"] == 2
+    assert data["skipped"] == 0
+    assert len(list(lib.iterdir())) == 2
+
+
+def test_bulk_upload_skips_duplicate_name(test_db, tmp_path, monkeypatch):
+    # First batch: add alpha
+    files1 = [("files", ("alpha.png", io.BytesIO(_PNG), "image/png"))]
+    resp1, lib = _bulk(tmp_path, monkeypatch, files1)
+    assert resp1.json()["added"] == 1
+
+    # Second batch: alpha again + gamma (new)
+    files2 = [
+        ("files", ("alpha.png", io.BytesIO(_PNG), "image/png")),
+        ("files", ("gamma.png", io.BytesIO(_PNG), "image/png")),
+    ]
+    resp2, _ = _bulk(tmp_path, monkeypatch, files2)
+    data = resp2.json()
+    assert data["added"] == 1
+    assert data["skipped"] == 1
+    skip = [r for r in data["results"] if r["status"] == "skip"]
+    assert len(skip) == 1
+    assert "alpha" in skip[0]["name"]
+
+
+def test_bulk_upload_skips_wrong_mime(test_db, tmp_path, monkeypatch):
+    files = [
+        ("files", ("ok.png",  io.BytesIO(_PNG),           "image/png")),
+        ("files", ("bad.gif", io.BytesIO(b"GIF89a"),      "image/gif")),
+    ]
+    resp, _ = _bulk(tmp_path, monkeypatch, files)
+    data = resp.json()
+    assert data["added"] == 1
+    assert data["skipped"] == 1
+    skip = [r for r in data["results"] if r["status"] == "skip"]
+    assert "JPG/PNG" in skip[0]["reason"]
+
+
+def test_bulk_upload_skips_oversized(test_db, tmp_path, monkeypatch):
+    big = b"x" * (2 * 1024 * 1024 + 1)
+    files = [
+        ("files", ("big.png", io.BytesIO(big), "image/png")),
+        ("files", ("ok.png",  io.BytesIO(_PNG), "image/png")),
+    ]
+    resp, _ = _bulk(tmp_path, monkeypatch, files)
+    data = resp.json()
+    assert data["added"] == 1
+    assert data["skipped"] == 1
+
+
+def test_bulk_upload_name_normalized_stored(test_db, tmp_path, monkeypatch):
+    """Insert via bulk — name_normalized must equal lower(strip(stem))."""
+    files = [("files", ("My Diagram.png", io.BytesIO(_PNG), "image/png"))]
+    resp, _ = _bulk(tmp_path, monkeypatch, files)
+    assert resp.json()["added"] == 1
+
+    rows = library_repository.list_by_filters(q="My Diagram")
+    assert len(rows) == 1
+    assert rows[0]["name_normalized"] == "my diagram"
+
+
+def test_bulk_upload_topic_tagged(test_db, tmp_path, monkeypatch):
+    files = [("files", ("pic.png", io.BytesIO(_PNG), "image/png"))]
+    resp, _ = _bulk(tmp_path, monkeypatch, files, topic_id="topic-xyz")
+    assert resp.json()["added"] == 1
+
+    rows = library_repository.list_by_filters()
+    assert rows[0]["syllabus_topic_id"] == "topic-xyz"
+
+
+def test_bulk_upload_per_file_result_list(test_db, tmp_path, monkeypatch):
+    files = [
+        ("files", ("first.png",  io.BytesIO(_PNG), "image/png")),
+        ("files", ("second.png", io.BytesIO(_PNG), "image/png")),
+    ]
+    resp, _ = _bulk(tmp_path, monkeypatch, files)
+    results = resp.json()["results"]
+    assert len(results) == 2
+    assert all(r["status"] == "ok" for r in results)
+
+
+def test_bulk_upload_case_insensitive_duplicate(test_db, tmp_path, monkeypatch):
+    """'Alpha' and 'alpha' refer to the same image — second must be skipped."""
+    files1 = [("files", ("Alpha.png", io.BytesIO(_PNG), "image/png"))]
+    _bulk(tmp_path, monkeypatch, files1)
+
+    files2 = [("files", ("alpha.png", io.BytesIO(_PNG), "image/png"))]
+    resp, _ = _bulk(tmp_path, monkeypatch, files2)
+    data = resp.json()
+    assert data["added"] == 0
+    assert data["skipped"] == 1
