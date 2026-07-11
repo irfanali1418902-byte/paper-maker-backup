@@ -1,5 +1,34 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — feature/question-bank merged to master (HISSA 1–3 + bank.html)
+
+**Kya bana:**
+
+- **HISSA 1 — Manual Question CRUD** (`source=manual`)
+  - `app/core/database.py` — `source TEXT DEFAULT 'gemini'` column migration; existing rows safe
+  - `app/repositories/questions_repository.py` — `insert()` mein `source` field; `list_by_filters()` mein `source` filter support
+  - `app/schemas/requests.py` — `CreateManualQuestionRequest` + `UpdateQuestionRequest` mein `source` field
+  - `app/api/questions.py` — `POST /api/questions/manual` route (manual question create, no Gemini)
+  - `tests/test_bank.py` — 231 tests (CRUD, source filter, edge cases)
+
+- **HISSA 2 — bank.html (Manage Page)**
+  - `static/bank.html` — nayi page: question list (filter: subject/class/topic/source), add/edit/delete modal, inline form validation
+  - `static/index.html` — "Question Bank" nav link added (sidebar)
+  - `static/library.html` — "Question Bank" nav link added (sidebar)
+
+- **HISSA 3 — bank-paper route (bina Gemini API)**
+  - `app/services/question_service.py` — `get_questions_for_bank_paper()` — DB se manual questions fetch, subject/source filter
+  - `app/services/paper_service.py` — `create_bank_paper()` — paper object banao from bank questions (no API call)
+  - `app/api/papers.py` — `POST /api/bank-paper` route registered
+  - `tests/test_hissa3.py` — 284 tests (bank-paper route, source filter, question types)
+
+- **bank.html UI — "Bank se Paper Banao" section**
+  - `static/bank.html` — subject/class/topic select + "Paper Banao" button → `/api/bank-paper` call → `print.html` redirect
+
+- **Ruff fix:** `tests/test_hissa3.py` — 2 unused variables (`g_id`, `qid`) removed (F841)
+
+- **Total: 370 tests pass, ruff clean**
+
 ## 2026-07-10 — feature/image-library Hissa 4 (Auto-Suggest)
 
 - `app/repositories/library_repository.py` — `topic_image_counts(ids)` added (returns {topic_id: count})
