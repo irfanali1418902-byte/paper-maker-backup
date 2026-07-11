@@ -283,6 +283,21 @@
   .img-thumb-wrap { margin-bottom: 8px; display: none; }
   .img-thumb-wrap img { max-height: 100px; border: 1px solid #ddd; border-radius: 4px; object-fit: contain; }
 
+  /* ---- Topic image strip (inside edit modal) ---- */
+  .topic-strip { margin-bottom: 14px; }
+  .topic-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .topic-strip-thumb {
+    width: 72px; height: 56px; border-radius: 7px; overflow: hidden;
+    border: 2px solid transparent; cursor: pointer; background: #f0f2f6;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s;
+  }
+  .topic-strip-thumb:hover { border-color: var(--primary); }
+  .topic-strip-thumb img { width: 100%; height: 100%; object-fit: contain; }
+  .topic-strip-thumb-name { font-size: 10px; color: var(--muted); text-align: center; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 72px; }
+  .topic-strip-item { display: flex; flex-direction: column; align-items: center; }
+
   @media print {
     .no-print { display: none !important; }
     .modal-backdrop { display: none !important; }
@@ -490,6 +505,12 @@
       </div>
     </div>
 
+    <!-- Topic image strip — sirf tab dikhe jab topic images hon -->
+    <div id="ef_topic_strip" class="topic-strip" style="display:none">
+      <div class="topic-strip-label">Is topic ki library images — click karke attach karo:</div>
+      <div class="topic-strip-row" id="ef_topic_strip_row"></div>
+    </div>
+
     <div class="modal-section-title">Image (Optional)</div>
     <div class="field-group">
       <div class="img-thumb-wrap" id="ef_img_preview_wrap">
@@ -609,6 +630,57 @@ function openEditModal(btn) {
   document.getElementById('ef_saveBtn').disabled = false;
   document.getElementById('editModalBackdrop').classList.add('open');
   document.getElementById('ef_question_en').focus();
+
+  // Topic image strip — async, non-blocking
+  loadTopicStrip(q.syllabus_topic_id || null, q.id);
+}
+
+async function loadTopicStrip(topicId, qid) {
+  const strip = document.getElementById('ef_topic_strip');
+  const row   = document.getElementById('ef_topic_strip_row');
+  strip.style.display = 'none';
+  row.innerHTML = '';
+  if (!topicId) return;
+  try {
+    const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
+    const imgs = await res.json();
+    if (!res.ok || !imgs.length) return;
+    strip.style.display = '';
+    row.innerHTML = imgs.map(img =>
+      `<div class="topic-strip-item">
+         <div class="topic-strip-thumb" onclick="applyLibraryImageInModal('${escapeHtml(img.id)}','${escapeHtml(qid)}')" title="${escapeHtml(img.name)}">
+           <img src="/${escapeHtml(img.file_path)}" alt="${escapeHtml(img.name)}" loading="lazy" />
+         </div>
+         <div class="topic-strip-thumb-name">${escapeHtml(img.name)}</div>
+       </div>`
+    ).join('');
+  } catch (_e) { /* silent — strip optional */ }
+}
+
+async function applyLibraryImageInModal(imageId, qid) {
+  try {
+    const res = await apiFetch(`/api/questions/${qid}/image-from-library`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_id: imageId, image_size: 'medium' }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert('Image attach nahi ho saki: ' + (data.detail || 'Error')); return; }
+
+    // Update preview in modal
+    const preview    = document.getElementById('ef_img_preview');
+    const previewWrap = document.getElementById('ef_img_preview_wrap');
+    const removeBtn  = document.getElementById('ef_img_remove_btn');
+    preview.src = '/' + (data.image_path || '');
+    previewWrap.style.display = 'block';
+    removeBtn.style.display = 'inline-block';
+    document.getElementById('ef_image_size_section').style.display = '';
+    document.getElementById('ef_image_size').value = data.image_size || 'medium';
+
+    // Update in-memory question list so re-render works after Save
+    const idx = _paperQuestions.findIndex(q => q.id === qid);
+    if (idx !== -1) _paperQuestions[idx] = { ..._paperQuestions[idx], ...data };
+  } catch (e) { alert('Network error: ' + e.message); }
 }
 
 function closeEditModal() {

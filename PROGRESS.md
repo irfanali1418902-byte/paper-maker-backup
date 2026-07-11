@@ -1,5 +1,37 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Image System HISSA C — In-form image selection UI (feature/image-system)
+
+**Kya bana (frontend only — koi backend change nahi):**
+
+- **`static/print.html`** — Edit modal mein topic thumbnail strip:
+  - Modal khulte hi `loadTopicStrip(topicId, qid)` call hoti hai
+  - `/api/library?syllabus_topic_id=...` se images fetch, strip mein dikhayi
+  - Thumbnail click → `applyLibraryImageInModal()` → image-from-library API → modal ka preview update
+  - Topic na ho ya images na hon → strip hidden (no clutter)
+  - "Choose Image" file upload button barabar maujood hai (dono options)
+
+- **`static/bank.html`** — Add form + Edit modal mein thumbnail grid:
+  - Add form: topic select `onchange="onAddTopicChange()"` → library images strip
+  - Thumbnail click → highlight (selected), dobara click → deselect
+  - Question save hone ke baad agar image select thi → image-from-library API call
+  - Edit modal: `openEditModal()` mein `_loadEditStrip(topicId, qid)` call
+  - Edit thumbnail click → seedha attach + list refresh + modal close
+
+**Test run:** 482 passed (no backend change) — ruff clean
+
+**Browser test checklist (khud check karo):**
+1. print.html: paper mein ✏️ button → modal khule → agar topic hai to library strip dikhe
+2. Strip mein thumbnail click → modal preview update ho, file upload button abhi bhi kaam kare
+3. Topic nahi ya library mein images nahi → strip bilkul nahi dikhi
+4. bank.html: nayi question form → subject → class → topic chunein → library strip dikhe
+5. Thumbnail click → highlighted ho (blue border), dobara click → deselect
+6. "Save" karo → question save + image attach ho (list mein image_path set ho)
+7. Edit button → modal khule → strip dikhe → click karo → modal band, list refresh ho
+8. Purani "Choose Image" file upload dono jagah abhi bhi kaam kare (backward compat)
+
+---
+
 ## 2026-07-11 — Image System HISSA B — Excel image column (feature/image-system)
 
 **Kya bana:**
