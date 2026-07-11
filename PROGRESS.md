@@ -1,5 +1,27 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Image System HISSA B — Excel image column (feature/image-system)
+
+**Kya bana:**
+
+- **`app/services/bulk_import_service.py`** — `image` column support:
+  - `_find_library_image(name, topic_id)` helper: topic-scoped match pehle (`find_by_name_and_topic`), phir global (`find_by_name`), narm (case-insensitive, trim)
+  - `_validate_row()` — `_image_name` internal field pass-through
+  - `import_from_bytes()` — post-insert: library se file `static/uploads/` mein copy, `image_path` set; naam na mile → warning (skip nahi)
+  - `image` column absent (purani files) → `""` → koi action nahi (backward compat)
+- **`static/bulk_upload_template.xlsx`** — `image` column (13th) add kiya
+- **`tests/test_bulk_import_image.py`** — 7 nayi tests
+
+**Test run:** 482 passed, 0 failed — ruff clean
+
+**Browser test (khud check karo):**
+1. Purana template (.xlsx bina image column) import karo → bilkul theek chale
+2. Naye template mein image naam likho (library mein pehle upload karo) → question mein image dikhe
+3. Galat naam likhain → question import ho, warning mein naam aaye
+4. Case mismatch test: "OrangeS5" library mein, "oranges5" Excel mein → match ho
+
+---
+
 ## 2026-07-11 — Image System HISSA A — Bulk Image Upload (feature/image-system)
 
 **Kya bana:**
