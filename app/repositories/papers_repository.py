@@ -13,12 +13,18 @@ def insert(
     total_marks: int,
     question_ids: list,
     paper_title: Optional[str] = None,
+    sections_meta: Optional[list] = None,
 ) -> None:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids, paper_title) VALUES (?,?,?,?,?,?)",
-        (paper_id, subject, class_name, total_marks, json.dumps(question_ids), paper_title),
+        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids, paper_title, sections_meta) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (
+            paper_id, subject, class_name, total_marks,
+            json.dumps(question_ids), paper_title,
+            json.dumps(sections_meta) if sections_meta is not None else None,
+        ),
     )
     conn.commit()
     conn.close()

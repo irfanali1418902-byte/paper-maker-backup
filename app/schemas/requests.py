@@ -266,6 +266,24 @@ class SaveBlueprintRequest(BaseModel):
         return v
 
 
+class BlueprintPaperRequest(BaseModel):
+    """POST /api/blueprint-paper — blueprint se paper banao.
+    blueprint_id diya jaye to saved blueprint use hoga;
+    warna inline sections_input se paper bane ga (builder preview ke liye)."""
+
+    blueprint_id: Optional[str] = None
+    sections_input: Optional[List[BlueprintSection]] = None
+    subject: Optional[str] = None
+    class_name: Optional[str] = None
+    paper_title: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _blueprint_or_sections(self) -> "BlueprintPaperRequest":
+        if not self.blueprint_id and not self.sections_input:
+            raise ValueError("blueprint_id ya sections_input mein se ek zaroori hai.")
+        return self
+
+
 class SchoolSettings(BaseModel):
     """Used for both the POST body and the GET response (singleton id=1)."""
 
