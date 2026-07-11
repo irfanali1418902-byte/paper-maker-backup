@@ -218,6 +218,72 @@ class ManualQuestionUpdateRequest(BaseModel):
         return self
 
 
+class BlueprintSection(BaseModel):
+    """One section in a blueprint — e.g. 'Section A — MCQ'."""
+
+    heading: str
+    question_types: List[str]
+    topic_ids: List[str] = []
+    count: int = Field(ge=1)
+    marks_each: int = Field(default=1, ge=1)
+    source_filter: str = "manual"
+
+    @field_validator("question_types")
+    @classmethod
+    def _non_empty_types(cls, v: List[str]) -> List[str]:
+        if not v:
+            raise ValueError("question_types khaali nahi ho sakti.")
+        return v
+
+    @field_validator("source_filter")
+    @classmethod
+    def _valid_source(cls, v: str) -> str:
+        if v not in ("manual", "all"):
+            raise ValueError("source_filter sirf 'manual' ya 'all' ho sakta hai.")
+        return v
+
+
+class SaveBlueprintRequest(BaseModel):
+    """POST /api/blueprints — blueprint save karo."""
+
+    name: str
+    subject: Optional[str] = None
+    grade: Optional[str] = None
+    sections: List[BlueprintSection]
+
+    @field_validator("name")
+    @classmethod
+    def _non_empty_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Blueprint name khaali nahi ho sakta.")
+        return v.strip()
+
+    @field_validator("sections")
+    @classmethod
+    def _non_empty_sections(cls, v: List[BlueprintSection]) -> List[BlueprintSection]:
+        if not v:
+            raise ValueError("Blueprint mein kam az kam ek section hona chahiye.")
+        return v
+
+
+class BlueprintPaperRequest(BaseModel):
+    """POST /api/blueprint-paper — blueprint se paper banao.
+    blueprint_id diya jaye to saved blueprint use hoga;
+    warna inline sections_input se paper bane ga (builder preview ke liye)."""
+
+    blueprint_id: Optional[str] = None
+    sections_input: Optional[List[BlueprintSection]] = None
+    subject: Optional[str] = None
+    class_name: Optional[str] = None
+    paper_title: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _blueprint_or_sections(self) -> "BlueprintPaperRequest":
+        if not self.blueprint_id and not self.sections_input:
+            raise ValueError("blueprint_id ya sections_input mein se ek zaroori hai.")
+        return self
+
+
 class SchoolSettings(BaseModel):
     """Used for both the POST body and the GET response (singleton id=1)."""
 

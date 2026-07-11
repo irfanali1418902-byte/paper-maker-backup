@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 from app.schemas.requests import (
     AdaptivePaperRequest,
     BankPaperRequest,
+    BlueprintPaperRequest,
     GeneratePaperRequest,
     ReplaceQuestionRequest,
 )
@@ -16,7 +17,7 @@ from app.schemas.responses import (
     PaperResponse,
     PapersListResponse,
 )
-from app.services import paper_service, result_service
+from app.services import blueprint_paper_service, paper_service, result_service
 from app.services.exceptions import QuestionBankEmpty, ResultsValidationError
 
 router = APIRouter()
@@ -45,6 +46,45 @@ def generate_bank_paper(req: BankPaperRequest):
             status_code=404,
             detail=(
                 "Is topic/subject mein koi manual question nahi mila. "
+                "Pehle Question Bank mein questions add karo (/bank.html)."
+            ),
+        )
+    return result
+
+
+@router.post("/api/blueprint-paper")
+def generate_blueprint_paper(req: BlueprintPaperRequest):
+    """Blueprint se paper banao — section-by-section, partial-friendly.
+    blueprint_id diya jaye to saved blueprint use hota hai;
+    warna inline sections_input list use hoti hai."""
+    # Resolve sections list
+    if req.blueprint_id:
+        from app.repositories import blueprints_repository
+        bp = blueprints_repository.find_by_id(req.blueprint_id)
+        if bp is None:
+            raise HTTPException(status_code=404, detail="Blueprint nahi mila.")
+        sections = bp["sections"]
+        resolved_subject = req.subject or bp.get("subject")
+    else:
+        sections = [s.model_dump() for s in req.sections_input]
+        resolved_subject = req.subject
+
+    try:
+        result = blueprint_paper_service.assemble_blueprint_paper(
+            blueprint_id=req.blueprint_id,
+            sections_input=sections,
+            subject=resolved_subject,
+            class_name=req.class_name,
+            paper_title=req.paper_title,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Blueprint paper assemble fail: {e}") from e
+
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Blueprint ke kisi bhi section mein questions nahi mile. "
                 "Pehle Question Bank mein questions add karo (/bank.html)."
             ),
         )

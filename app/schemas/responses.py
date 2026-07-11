@@ -51,7 +51,8 @@ class Question(BaseModel):
 
 class Paper(BaseModel):
     """One row of the papers table. question_ids stays as JSON-encoded
-    string (matches DB storage)."""
+    string (matches DB storage). sections_meta is a JSON string for
+    blueprint papers (null for legacy A/B papers)."""
 
     id: str
     paper_title: Optional[str] = None
@@ -59,6 +60,7 @@ class Paper(BaseModel):
     class_name: Optional[str] = None
     total_marks: int
     question_ids: str
+    sections_meta: Optional[str] = None
     created_at: Optional[str] = None
 
 
