@@ -8,14 +8,16 @@ from app.core.database import get_connection
 def insert(row: dict) -> None:
     conn = get_connection()
     cur = conn.cursor()
+    name_normalized = row["name"].strip().lower()
     cur.execute(
         """INSERT INTO image_library
-           (id, file_path, name, subject, grade, syllabus_topic_id, uploaded_by)
-           VALUES (?,?,?,?,?,?,?)""",
+           (id, file_path, name, name_normalized, subject, grade, syllabus_topic_id, uploaded_by)
+           VALUES (?,?,?,?,?,?,?,?)""",
         (
             row["id"],
             row["file_path"],
             row["name"],
+            name_normalized,
             row.get("subject"),
             row.get("grade"),
             row.get("syllabus_topic_id"),
@@ -24,6 +26,40 @@ def insert(row: dict) -> None:
     )
     conn.commit()
     conn.close()
+
+
+def name_exists(name: str) -> bool:
+    """True agar is normalized naam ki koi image pehle se library mein ho."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT id FROM image_library WHERE name_normalized = ?",
+        (name.strip().lower(),),
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def find_by_name(name: str) -> "Optional[dict]":
+    """Case-insensitive naam se pehli matching image wapas karo."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM image_library WHERE name_normalized = ? LIMIT 1",
+        (name.strip().lower(),),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def find_by_name_and_topic(name: str, syllabus_topic_id: str) -> "Optional[dict]":
+    """Topic-scoped naam match — bulk import ke liye (topic-first priority)."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM image_library"
+        " WHERE name_normalized = ? AND syllabus_topic_id = ? LIMIT 1",
+        (name.strip().lower(), syllabus_topic_id),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 def find_by_id(image_id: str) -> Optional[dict]:

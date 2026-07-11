@@ -1,5 +1,27 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Image System HISSA A — Bulk Image Upload (feature/image-system)
+
+**Kya bana:**
+
+- **`app/core/database.py`** — `image_library` table mein `name_normalized TEXT` column add kiya (CREATE TABLE + safe ALTER TABLE migration existing DBs ke liye + back-fill UPDATE)
+- **`app/repositories/library_repository.py`** — `insert()` updated: `name_normalized = name.strip().lower()` field include hoti hai. Teen nayi helpers: `name_exists(name)` (duplicate check), `find_by_name(name)`, `find_by_name_and_topic(name, topic_id)` (HISSA B ke liye)
+- **`app/api/library.py`** — `POST /api/library/bulk` nayi route: `List[UploadFile]`, per-file MIME + size + duplicate check, skip karo invalid/duplicate, result list wapas karo
+- **`static/library.html`** — "Ek saath kai images upload" card: multi-file input, subject/grade/topic cascade (alag single-upload se), per-file result list (ok/skip/err styled), library grid auto-refresh on success
+- **`tests/test_library_api.py`** — 8 nayi bulk tests: all_added, duplicate_skip, wrong_mime_skip, oversized_skip, name_normalized_stored, topic_tagged, per_file_result_list, case_insensitive_duplicate
+
+**Test run:** 475 passed, 0 failed — ruff clean
+
+**Browser test (khud check karo):**
+1. Library page → "Ek saath kai images" card dikhe
+2. Subject → Grade → Topic cascade kaam kare
+3. Multiple PNG/JPG files select → Upload → result list (ok/skip) dikhe
+4. Duplicate naam dobara upload karo → skip + reason dikhe
+5. GIF file try karo → skip (JPG/PNG only)
+6. Grid refresh ho nayi images ke saath
+
+---
+
 ## 2026-07-11 — Blueprint HISSA 4 — blueprint.html frontend (feature/blueprint)
 
 **Kya bana:**
