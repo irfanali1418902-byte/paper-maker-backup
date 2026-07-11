@@ -311,6 +311,12 @@
   }
   .suggest-dismiss:hover { background: #f5f5f5; }
 
+  /* ---- Shortfall note (screen only — .no-print hides in @media print) ---- */
+  .shortfall-note {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px;
+    padding: 6px 12px; font-size: 12.5px; color: #7b5c00; margin: 0 0 10px;
+  }
+
   /* ---- Library picker modal ---- */
   .lib-picker-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
@@ -403,8 +409,7 @@
 
     <div class="instructions">Attempt all questions. / تمام سوالات کے جواب دیں۔</div>
 
-    <div id="sectionA"></div>
-    <div id="sectionB"></div>
+    <div id="sectionsContainer"></div>
 
     <div class="footer-note">Generated with AII Smart Paper Maker</div>
   </div>
@@ -809,6 +814,15 @@ function renderSection(containerId, label, questions, startNum) {
     </div>`;
 }
 
+// Legacy A/B split — only called when sections_meta is null.
+function _renderLegacySections(container, questions) {
+  const objective  = questions.filter(q => OBJECTIVE_TYPES.has(q.question_type));
+  const subjective = questions.filter(q => !OBJECTIVE_TYPES.has(q.question_type));
+  container.innerHTML = '<div id="sectionA"></div><div id="sectionB"></div>';
+  renderSection('sectionA', 'Section A — Objective', objective, 1);
+  renderSection('sectionB', 'Section B — Subjective', subjective, objective.length + 1);
+}
+
 // ---- Image upload / delete -------------------------------------------------
 
 function onImageFileChange(input) {
@@ -949,14 +963,47 @@ async function loadPaper() {
     document.getElementById('metaClass').textContent = paper.class_name || '';
     document.getElementById('metaMarks').textContent = paper.total_marks;
 
-    // Split into objective (A) and subjective (B).
-    // Safety fallback: unknown/null question_type -> Section B.
-    const objective = questions.filter(q => OBJECTIVE_TYPES.has(q.question_type));
-    const subjective = questions.filter(q => !OBJECTIVE_TYPES.has(q.question_type));
+    const container = document.getElementById('sectionsContainer');
 
-    // Continuous numbering: Section B starts after Section A ends.
-    renderSection('sectionA', 'Section A — Objective', objective, 1);
-    renderSection('sectionB', 'Section B — Subjective', subjective, objective.length + 1);
+    // Blueprint paper: sections_meta present → dynamic sections per blueprint.
+    // Legacy paper: sections_meta null → classic A/B objective/subjective split.
+    let sectsMeta = null;
+    if (paper.sections_meta) {
+      try { sectsMeta = JSON.parse(paper.sections_meta); } catch { sectsMeta = null; }
+    }
+
+    if (sectsMeta && sectsMeta.length) {
+      // Build id→question lookup for O(1) access
+      const qMap = {};
+      questions.forEach(q => { qMap[q.id] = q; });
+
+      let qNum = 1;
+      sectsMeta.forEach(sec => {
+        const secQs = (sec.question_ids || []).map(id => qMap[id]).filter(Boolean);
+        const marks = sectionMarks(secQs);
+        const questionsHtml = secQs.map((q, i) => renderQuestion(q, qNum + i)).join('');
+        qNum += secQs.length;
+
+        // Shortfall note — screen only, hidden in @media print via .no-print
+        const wanted = (sec.shortfall || 0) + secQs.length;
+        const shortfallHtml = sec.shortfall > 0
+          ? `<div class="shortfall-note no-print">⚠️ ${escapeHtml(sec.heading)}: ${wanted} maange, ${secQs.length} mile</div>`
+          : '';
+
+        container.insertAdjacentHTML('beforeend', `
+          <div class="section-block">
+            <div class="section-heading">
+              <span class="sec-title">${escapeHtml(sec.heading)}</span>
+              <span class="sec-marks">Total Marks: ${marks}</span>
+            </div>
+            ${shortfallHtml}
+            ${questionsHtml}
+          </div>`);
+      });
+    } else {
+      // Legacy paper — classic A/B split
+      _renderLegacySections(container, questions);
+    }
 
     document.getElementById('status').style.display = 'none';
     document.getElementById('sheet').style.display = 'block';
