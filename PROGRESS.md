@@ -1,5 +1,34 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-11 — Blueprint HISSA 4 — blueprint.html frontend (feature/blueprint)
+
+**Kya bana:**
+
+- **`static/blueprint.html`** — nayi file, poora Blueprint Builder UI:
+  - Paper metadata: blueprint name, subject+grade cascade, paper title, class name
+  - Preset loader: `/api/blueprint-presets` se presets — "Load sections" button
+  - Dynamic section cards: heading, topic multi-select (syllabus se checkboxes), question types (MCQ/Fill/T-F/Short), count, marks_each, source filter
+  - Live total marks bar (count × marks_each, real-time update)
+  - "Save Blueprint" → `POST /api/blueprints` — DB mein save
+  - "Paper Banao" → `POST /api/blueprint-paper` → `print.html?paper_id=...` mein redirect
+  - Shortfall warnings: agar section mein maange zyada mile kam — yellow list dikhti hai
+  - Saved Blueprints list: Load / Paper Banao / Delete per blueprint
+- **Sidebars updated** — Blueprint link add kiya: `bank.html`, `library.html`, `print.html`, `index.html`
+- **Branch:** feature/blueprint (commit a16a9fc)
+
+**Test checklist (browser mein khud check karo):**
+1. `/blueprint.html` open ho — sidebar aur page dono sahi dikhein
+2. Subject → Grade change kare → topics load hon section cards mein
+3. Preset load kare → sections replace hon
+4. Section add/remove karo — marks bar update ho
+5. Save Blueprint → success message aur list mein nayi entry dikhe
+6. Paper Banao → print.html khole, paper render ho
+7. Shortfall warning: aisa subject/topics chunein jahan kam questions hain
+8. Saved list mein "Load" → form mein load ho; "Paper Banao" → direct paper
+9. "Delete" → blueprint list se hata de
+
+---
+
 ## 2026-07-11 — Blueprint HISSA 3 — print.html blueprint rendering (feature/blueprint)
 
 **Kya bana:**
