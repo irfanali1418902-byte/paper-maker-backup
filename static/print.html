@@ -166,6 +166,7 @@
   @media print {
     body { background: #fff; display: block; }
     .app-sidebar { display: none !important; }
+    .no-print { display: none !important; }
     .print-main { padding: 0; }
     .sheet { box-shadow: none; margin: 0; max-width: none; border-radius: 0; }
   }
@@ -563,7 +564,7 @@ function openEditModal(btn) {
   // Options section: sirf MCQ ke liye; Answer Space: short-answer/essay ke liye
   document.getElementById('ef_options_section').style.display      = isMCQ ? '' : 'none';
   document.getElementById('ef_answer_space_section').style.display = hasAnswerSpace ? '' : 'none';
-  if (isObjective) {
+  if (isMCQ) {
     const optsEn = JSON.parse(q.options_en || '[]');
     const optsUr = JSON.parse(q.options_ur || '[]');
     const enGrid = document.getElementById('ef_options_en_grid');
