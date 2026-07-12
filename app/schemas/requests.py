@@ -118,6 +118,20 @@ class UpdateQuestionRequest(BaseModel):
         return self
 
 
+class BulkUpdateTopicRequest(BaseModel):
+    """PATCH /api/library/bulk-topic — kai images ka topic ek saath badlo."""
+
+    image_ids: List[str]
+    syllabus_topic_id: Optional[str] = None  # None = sab unlink
+
+    @field_validator("image_ids")
+    @classmethod
+    def _non_empty_ids(cls, v: List[str]) -> List[str]:
+        if not v:
+            raise ValueError("image_ids khaali nahi ho sakti.")
+        return v
+
+
 class UpdateLibraryImageRequest(BaseModel):
     """PATCH /api/library/{id} — image ka naam ya topic (ya dono) badlo."""
 

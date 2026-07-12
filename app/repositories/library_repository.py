@@ -65,6 +65,30 @@ def update_image(image_id: str, updates: dict) -> bool:
     return affected > 0
 
 
+def bulk_update_topic(
+    image_ids: list,
+    syllabus_topic_id: "Optional[str]",
+    subject: "Optional[str]",
+    grade: "Optional[str]",
+) -> int:
+    """Kai images ka topic (aur subject/grade) ek saath update karo. Updated count wapas."""
+    if not image_ids:
+        return 0
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in image_ids)
+    values = [syllabus_topic_id, subject, grade] + image_ids
+    cur.execute(
+        f"UPDATE image_library SET syllabus_topic_id = ?, subject = ?, grade = ?"  # noqa: S608
+        f" WHERE id IN ({placeholders})",
+        values,
+    )
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected
+
+
 def find_by_name(name: str) -> "Optional[dict]":
     """Case-insensitive naam se pehli matching image wapas karo."""
     conn = get_connection()

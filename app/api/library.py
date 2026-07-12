@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.repositories import library_repository, syllabus_repository
-from app.schemas.requests import UpdateLibraryImageRequest
+from app.schemas.requests import BulkUpdateTopicRequest, UpdateLibraryImageRequest
 from app.schemas.responses import LibraryImage, StatusResponse
 
 router = APIRouter()
@@ -90,6 +90,24 @@ def delete_library_image(image_id: str):
 
     library_repository.delete(image_id)
     return {"status": "ok"}
+
+
+@router.patch("/api/library/bulk-topic")
+def bulk_update_library_topic(body: BulkUpdateTopicRequest):
+    """Kai library images ka topic (aur subject/grade) ek saath update karo."""
+    if body.syllabus_topic_id is None:
+        updated = library_repository.bulk_update_topic(body.image_ids, None, None, None)
+    else:
+        topic = syllabus_repository.find_by_id(body.syllabus_topic_id)
+        if topic is None:
+            raise HTTPException(status_code=400, detail="Topic nahi mila.")
+        updated = library_repository.bulk_update_topic(
+            body.image_ids,
+            body.syllabus_topic_id,
+            topic["subject"],
+            topic.get("grade"),
+        )
+    return {"updated": updated}
 
 
 @router.patch("/api/library/{image_id}", response_model=LibraryImage)
