@@ -161,6 +161,31 @@
   .bulk-result-list li.skip { background: var(--warn-bg);  color: var(--warn-tx); }
   .bulk-result-list li.err  { background: var(--err-bg);  color: var(--err-tx); }
 
+  .btn-edit {
+    background: var(--tint); border: 1px solid #c0d0ea; color: var(--primary);
+    padding: 5px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 600;
+    font-family: inherit; cursor: pointer; min-height: 0;
+  }
+  .btn-edit:hover { background: var(--primary); color: #fff; }
+
+  /* ---- Edit Modal ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(22,33,58,.45);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff; border-radius: 14px; padding: 24px 26px;
+    width: 100%; max-width: 460px; box-shadow: 0 8px 40px rgba(22,33,58,.18);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-title { font-weight: 700; font-size: 16px; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 2px 8px; line-height: 1; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; align-items: flex-start; flex-wrap: wrap; }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -327,6 +352,46 @@
   </div>
 </main>
 
+<!-- ===== EDIT MODAL ===== -->
+<div id="editModal" class="modal-overlay" onclick="closeEditModalOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Image Edit karo</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+
+    <label>Naam <span style="color:var(--err-tx)">*</span></label>
+    <input type="text" id="editName" placeholder="e.g. oranges5" />
+
+    <div class="field-row" style="margin-top:14px;">
+      <div>
+        <label>Subject</label>
+        <select id="editSubject" onchange="onEditSubjectChange()">
+          <option value="">-- Subject chunein --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade</label>
+        <select id="editGrade" disabled onchange="onEditGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Syllabus Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(khaali chhod sakte hain)</span></label>
+    <select id="editTopic" disabled>
+      <option value="">-- Pehle class chunein --</option>
+    </select>
+
+    <div id="editError" class="status-bar" style="margin-top:14px;margin-bottom:0;"></div>
+
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" id="editSaveBtn" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script src="/apiClient.js"></script>
 <script>
 // -----------------------------------------------------------------------
@@ -334,6 +399,9 @@
 // -----------------------------------------------------------------------
 let _allGrades = [];   // [{subject, grade}]  from /api/syllabus-grades
 let _searchTimer = null;
+let _editImg = null;        // currently open edit modal image
+let _imgCache = {};         // id → img object (populated on grid load)
+let _editTopicLoading = false;
 
 // -----------------------------------------------------------------------
 // Init
@@ -341,6 +409,10 @@ let _searchTimer = null;
 window.addEventListener('DOMContentLoaded', async () => {
   await loadSyllabusGrades();
   await loadGrid();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeEditModal();
 });
 
 // -----------------------------------------------------------------------
@@ -681,6 +753,8 @@ async function loadGrid() {
       return;
     }
 
+    _imgCache = {};
+    images.forEach(img => { _imgCache[img.id] = img; });
     gridEl.innerHTML = images.map(img => renderCard(img)).join('');
   } catch (e) {
     statusEl.textContent = 'Error: ' + e.message;
@@ -701,10 +775,180 @@ function renderCard(img) {
         <div class="img-name">${escHtml(img.name)}</div>
         <div class="img-tags">${tagParts ? escHtml(tagParts) + '<br/>' : ''}${topicLine}</div>
       </div>
-      <div class="img-foot">
+      <div class="img-foot" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-edit" onclick="openEditModal('${escAttr(img.id)}')">Edit</button>
         <button class="btn-danger" onclick="deleteImage('${escAttr(img.id)}', '${escAttr(img.name)}')">Delete</button>
       </div>
     </div>`;
+}
+
+// -----------------------------------------------------------------------
+// Edit Modal
+// -----------------------------------------------------------------------
+function openEditModal(imgId) {
+  const img = _imgCache[imgId];
+  if (!img) return;
+  _editImg = img;
+  clearEditError();
+
+  document.getElementById('editName').value = img.name;
+
+  // Subject dropdown
+  const subjectEl = document.getElementById('editSubject');
+  const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
+  subjectEl.innerHTML = '<option value="">-- Subject chunein --</option>';
+  subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    subjectEl.appendChild(o);
+  });
+  subjectEl.value = img.subject || '';
+
+  // Grade dropdown
+  _populateEditGrade(img.subject || '');
+  document.getElementById('editGrade').value = img.grade || '';
+
+  // Topics (async) — pre-select current topic after load
+  if (img.subject && img.grade) {
+    _loadEditTopics(img.subject, img.grade, img.syllabus_topic_id || '');
+  } else {
+    const topicEl = document.getElementById('editTopic');
+    topicEl.innerHTML = '<option value="">-- Pehle subject aur class chunein --</option>';
+    topicEl.disabled = true;
+  }
+
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('open');
+  _editImg = null;
+}
+
+function closeEditModalOnBackdrop(e) {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+}
+
+function _populateEditGrade(subject) {
+  const gradeEl = document.getElementById('editGrade');
+  const topicEl = document.getElementById('editTopic');
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    topicEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function _loadEditTopics(subject, grade, selectId) {
+  const topicEl = document.getElementById('editTopic');
+  const saveBtn = document.getElementById('editSaveBtn');
+  _editTopicLoading = true;
+  saveBtn.disabled = true;
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Topic chunein (ya khaali chhod dein) --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+    if (selectId) topicEl.value = selectId;
+  } catch (_e) {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  } finally {
+    _editTopicLoading = false;
+    saveBtn.disabled = false;
+  }
+}
+
+function onEditSubjectChange() {
+  const subject = document.getElementById('editSubject').value;
+  _populateEditGrade(subject);
+  document.getElementById('editTopic').innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  document.getElementById('editTopic').disabled = true;
+}
+
+async function onEditGradeChange() {
+  const subject = document.getElementById('editSubject').value;
+  const grade   = document.getElementById('editGrade').value;
+  if (!grade) {
+    document.getElementById('editTopic').innerHTML = '<option value="">-- Pehle class chunein --</option>';
+    document.getElementById('editTopic').disabled = true;
+    return;
+  }
+  await _loadEditTopics(subject, grade, '');
+}
+
+async function saveEdit() {
+  if (!_editImg || _editTopicLoading) return;
+
+  const newName = document.getElementById('editName').value.trim();
+  if (!newName) { showEditError('Naam khaali nahi ho sakta.'); return; }
+
+  const topicEl = document.getElementById('editTopic');
+  // Agar topic disabled (grade nahi chuna) → topic null bhejna chahiye
+  const syllabus_topic_id = topicEl.disabled ? null : (topicEl.value || null);
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Save ho raha hai...';
+  clearEditError();
+
+  try {
+    const res = await apiFetch(`/api/library/${encodeURIComponent(_editImg.id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName, syllabus_topic_id }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        showEditError('Ye naam pehle se maujood hai. Doosra naam likhein.');
+      } else if (res.status === 400) {
+        showEditError(data.detail || 'Topic nahi mila.');
+      } else {
+        const msg = Array.isArray(data.detail) ? data.detail[0]?.msg : data.detail;
+        showEditError(msg || 'Save nahi ho saka.');
+      }
+      return;
+    }
+
+    closeEditModal();
+    await loadGrid();
+  } catch (e) {
+    showEditError('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+function showEditError(msg) {
+  const el = document.getElementById('editError');
+  el.className = 'status-bar err';
+  el.textContent = msg;
+}
+
+function clearEditError() {
+  const el = document.getElementById('editError');
+  el.className = 'status-bar';
+  el.textContent = '';
 }
 
 // -----------------------------------------------------------------------
