@@ -168,6 +168,38 @@
   }
   .btn-edit:hover { background: var(--primary); color: #fff; }
 
+  /* ---- Card checkbox + selected state ---- */
+  .lib-card .img-wrap { position: relative; }
+  .card-check {
+    position: absolute; top: 7px; left: 7px;
+    width: 17px; height: 17px; accent-color: var(--primary);
+    cursor: pointer; z-index: 2;
+  }
+  .lib-card.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(46,90,172,.18), var(--shadow); }
+
+  /* ---- Floating selection bar ---- */
+  .bulk-action-bar {
+    position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: #fff; border-radius: 40px;
+    padding: 11px 20px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 24px rgba(22,33,58,.35); z-index: 99;
+    transition: bottom .2s ease; white-space: nowrap;
+  }
+  .bulk-action-bar.visible { bottom: 28px; }
+  .sel-count { font-size: 13.5px; font-weight: 600; }
+  .btn-bar-action {
+    background: #fff; color: var(--primary); border: none;
+    padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-bar-action:hover { background: var(--tint); }
+  .btn-bar-cancel {
+    background: transparent; color: #9DB0D0; border: none;
+    padding: 7px 10px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-bar-cancel:hover { color: #fff; }
+
   /* ---- Edit Modal ---- */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(22,33,58,.45);
@@ -345,12 +377,58 @@
         <input type="text" id="fSearch" placeholder="search..." oninput="scheduleSearch()" style="min-height:38px;font-size:13.5px;padding:8px 11px;" />
       </div>
       <button class="btn-ghost" onclick="clearFilters()">Clear</button>
+      <button class="btn-ghost" onclick="selectAll()">Sab Chunein</button>
     </div>
 
     <div id="gridStatus"></div>
     <div id="libGrid" class="lib-grid"></div>
   </div>
 </main>
+
+<!-- ===== FLOATING SELECTION BAR ===== -->
+<div id="selectionBar" class="bulk-action-bar">
+  <span id="selectionCount" class="sel-count"></span>
+  <button class="btn-bar-action" onclick="openBulkTopicModal()">Topic Badlo</button>
+  <button class="btn-bar-cancel" onclick="clearSelection()">✕ Cancel</button>
+</div>
+
+<!-- ===== BULK TOPIC MODAL ===== -->
+<div id="bulkTopicModal" class="modal-overlay" onclick="closeBulkTopicModalOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Kai Images ka Topic Badlo</div>
+      <button class="modal-close" onclick="closeBulkTopicModal()">✕</button>
+    </div>
+    <p id="bulkTopicCount" style="margin:0 0 16px;font-size:13px;color:var(--muted);"></p>
+
+    <div class="field-row">
+      <div>
+        <label>Subject</label>
+        <select id="btSubject" onchange="onBtSubjectChange()">
+          <option value="">-- Subject chunein --</option>
+        </select>
+      </div>
+      <div>
+        <label>Class / Grade</label>
+        <select id="btGrade" disabled onchange="onBtGradeChange()">
+          <option value="">-- Pehle subject chunein --</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Syllabus Topic <span style="color:var(--err-tx)">*</span></label>
+    <select id="btTopic" disabled>
+      <option value="">-- Pehle class chunein --</option>
+    </select>
+
+    <div id="bulkTopicError" class="status-bar" style="margin-top:14px;margin-bottom:0;"></div>
+
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeBulkTopicModal()">Cancel</button>
+      <button class="btn-primary" id="btSaveBtn" onclick="saveBulkTopic()">Sab Update karo</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== EDIT MODAL ===== -->
 <div id="editModal" class="modal-overlay" onclick="closeEditModalOnBackdrop(event)">
@@ -402,6 +480,8 @@ let _searchTimer = null;
 let _editImg = null;        // currently open edit modal image
 let _imgCache = {};         // id → img object (populated on grid load)
 let _editTopicLoading = false;
+let _selectedIds = new Set();
+let _btTopicLoading = false;
 
 // -----------------------------------------------------------------------
 // Init
@@ -412,7 +492,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeEditModal();
+  if (e.key === 'Escape') { closeEditModal(); closeBulkTopicModal(); }
 });
 
 // -----------------------------------------------------------------------
@@ -735,6 +815,8 @@ async function loadGrid() {
 
   statusEl.textContent = 'Load ho raha hai...';
   gridEl.innerHTML = '';
+  _selectedIds.clear();
+  updateSelectionBar();
 
   const params = new URLSearchParams();
   if (subject) params.set('subject', subject);
@@ -766,10 +848,12 @@ function renderCard(img) {
   const topicLine = img.syllabus_topic_id
     ? `<span style="color:var(--ok-tx);font-size:11px;">✓ topic linked</span>`
     : `<span style="color:var(--warn-tx);font-size:11px;">⚠ topic nahi</span>`;
+  const checked = _selectedIds.has(img.id) ? 'checked' : '';
   return `
-    <div class="lib-card">
+    <div class="lib-card" data-id="${escAttr(img.id)}">
       <div class="img-wrap">
         <img src="/${img.file_path}" alt="${escHtml(img.name)}" loading="lazy" />
+        <input type="checkbox" class="card-check" ${checked} onchange="toggleSelect('${escAttr(img.id)}')" title="Select" />
       </div>
       <div class="img-info">
         <div class="img-name">${escHtml(img.name)}</div>
@@ -947,6 +1031,185 @@ function showEditError(msg) {
 
 function clearEditError() {
   const el = document.getElementById('editError');
+  el.className = 'status-bar';
+  el.textContent = '';
+}
+
+// -----------------------------------------------------------------------
+// Bulk select
+// -----------------------------------------------------------------------
+function toggleSelect(id) {
+  if (_selectedIds.has(id)) {
+    _selectedIds.delete(id);
+  } else {
+    _selectedIds.add(id);
+  }
+  const card = document.querySelector(`.lib-card[data-id="${id}"]`);
+  if (card) {
+    card.classList.toggle('selected', _selectedIds.has(id));
+  }
+  updateSelectionBar();
+}
+
+function selectAll() {
+  Object.keys(_imgCache).forEach(id => _selectedIds.add(id));
+  document.querySelectorAll('.lib-card').forEach(card => {
+    card.classList.add('selected');
+    const cb = card.querySelector('.card-check');
+    if (cb) cb.checked = true;
+  });
+  updateSelectionBar();
+}
+
+function clearSelection() {
+  _selectedIds.clear();
+  document.querySelectorAll('.lib-card').forEach(card => {
+    card.classList.remove('selected');
+    const cb = card.querySelector('.card-check');
+    if (cb) cb.checked = false;
+  });
+  updateSelectionBar();
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selectionBar');
+  const n = _selectedIds.size;
+  if (n === 0) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  document.getElementById('selectionCount').textContent =
+    `${n} image${n !== 1 ? 's' : ''} selected`;
+}
+
+// -----------------------------------------------------------------------
+// Bulk Topic Modal
+// -----------------------------------------------------------------------
+function openBulkTopicModal() {
+  if (_selectedIds.size === 0) return;
+  const n = _selectedIds.size;
+  document.getElementById('bulkTopicCount').textContent =
+    `${n} image${n !== 1 ? 's' : ''} ka topic badla jayega.`;
+
+  const subjects = [...new Set(_allGrades.map(g => g.subject))].sort();
+  const subjectEl = document.getElementById('btSubject');
+  subjectEl.innerHTML = '<option value="">-- Subject chunein --</option>';
+  subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    subjectEl.appendChild(o);
+  });
+  document.getElementById('btGrade').innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+  document.getElementById('btGrade').disabled = true;
+  document.getElementById('btTopic').innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  document.getElementById('btTopic').disabled = true;
+  document.getElementById('btSaveBtn').disabled = false;
+  clearBulkTopicError();
+
+  document.getElementById('bulkTopicModal').classList.add('open');
+}
+
+function closeBulkTopicModal() {
+  document.getElementById('bulkTopicModal').classList.remove('open');
+}
+
+function closeBulkTopicModalOnBackdrop(e) {
+  if (e.target === document.getElementById('bulkTopicModal')) closeBulkTopicModal();
+}
+
+function onBtSubjectChange() {
+  const subject = document.getElementById('btSubject').value;
+  const gradeEl = document.getElementById('btGrade');
+  const topicEl = document.getElementById('btTopic');
+  topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+  topicEl.disabled = true;
+  if (!subject) {
+    gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
+    gradeEl.disabled = true;
+    return;
+  }
+  const grades = _allGrades.filter(g => g.subject === subject).map(g => g.grade).filter(Boolean).sort();
+  gradeEl.innerHTML = '<option value="">-- Class chunein --</option>';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    gradeEl.appendChild(o);
+  });
+  gradeEl.disabled = false;
+}
+
+async function onBtGradeChange() {
+  const subject = document.getElementById('btSubject').value;
+  const grade   = document.getElementById('btGrade').value;
+  const topicEl = document.getElementById('btTopic');
+  const saveBtn = document.getElementById('btSaveBtn');
+  if (!grade) {
+    topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
+    topicEl.disabled = true;
+    return;
+  }
+  _btTopicLoading = true;
+  saveBtn.disabled = true;
+  topicEl.innerHTML = '<option value="">-- Topics load ho rahe hain... --</option>';
+  topicEl.disabled = true;
+  try {
+    const res = await apiFetch(`/api/topics?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
+    const topics = await res.json();
+    topicEl.innerHTML = '<option value="">-- Topic chunein --</option>';
+    topics.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = `${t.unit_title} — ${t.subtopic_title}`;
+      topicEl.appendChild(o);
+    });
+    topicEl.disabled = false;
+  } catch (_e) {
+    topicEl.innerHTML = '<option value="">-- Load fail --</option>';
+  } finally {
+    _btTopicLoading = false;
+    saveBtn.disabled = false;
+  }
+}
+
+async function saveBulkTopic() {
+  if (_btTopicLoading) return;
+  const topicId = document.getElementById('btTopic').value;
+  if (!topicId) { showBulkTopicError('Pehle topic chunein.'); return; }
+
+  const btn = document.getElementById('btSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Update ho raha hai...';
+  clearBulkTopicError();
+
+  try {
+    const res = await apiFetch('/api/library/bulk-topic', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_ids: [..._selectedIds], syllabus_topic_id: topicId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = Array.isArray(data.detail) ? data.detail[0]?.msg : data.detail;
+      showBulkTopicError(msg || 'Update nahi ho saka.');
+      return;
+    }
+    closeBulkTopicModal();
+    clearSelection();
+    await loadGrid();
+  } catch (e) {
+    showBulkTopicError('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sab Update karo';
+  }
+}
+
+function showBulkTopicError(msg) {
+  const el = document.getElementById('bulkTopicError');
+  el.className = 'status-bar err';
+  el.textContent = msg;
+}
+
+function clearBulkTopicError() {
+  const el = document.getElementById('bulkTopicError');
   el.className = 'status-bar';
   el.textContent = '';
 }
