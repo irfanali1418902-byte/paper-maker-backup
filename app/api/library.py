@@ -6,7 +6,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from app.repositories import library_repository
+from app.repositories import library_repository, syllabus_repository
+from app.schemas.requests import UpdateLibraryImageRequest
 from app.schemas.responses import LibraryImage, StatusResponse
 
 router = APIRouter()
@@ -89,6 +90,42 @@ def delete_library_image(image_id: str):
 
     library_repository.delete(image_id)
     return {"status": "ok"}
+
+
+@router.patch("/api/library/{image_id}", response_model=LibraryImage)
+def update_library_image(image_id: str, body: UpdateLibraryImageRequest):
+    """Library image ka naam ya topic update karo (ya dono ek saath)."""
+    img = library_repository.find_by_id(image_id)
+    if img is None:
+        raise HTTPException(status_code=404, detail="Library image nahi mili.")
+
+    updates: dict = {}
+
+    if "name" in body.model_fields_set:
+        new_name = (body.name or "").strip()
+        if not new_name:
+            raise HTTPException(status_code=422, detail="Naam khaali nahi ho sakta.")
+        if library_repository.name_exists_excluding(new_name, image_id):
+            raise HTTPException(status_code=409, detail="Is naam ki image pehle se maujood hai.")
+        updates["name"] = new_name
+        updates["name_normalized"] = new_name.lower()
+
+    if "syllabus_topic_id" in body.model_fields_set:
+        new_topic_id = body.syllabus_topic_id
+        if new_topic_id is None:
+            updates["syllabus_topic_id"] = None
+            updates["subject"] = None
+            updates["grade"] = None
+        else:
+            topic = syllabus_repository.find_by_id(new_topic_id)
+            if topic is None:
+                raise HTTPException(status_code=400, detail="Topic nahi mila.")
+            updates["syllabus_topic_id"] = new_topic_id
+            updates["subject"] = topic["subject"]
+            updates["grade"] = topic.get("grade")
+
+    library_repository.update_image(image_id, updates)
+    return library_repository.find_by_id(image_id)
 
 
 @router.post("/api/library/bulk")

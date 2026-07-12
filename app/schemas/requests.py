@@ -118,6 +118,26 @@ class UpdateQuestionRequest(BaseModel):
         return self
 
 
+class UpdateLibraryImageRequest(BaseModel):
+    """PATCH /api/library/{id} — image ka naam ya topic (ya dono) badlo."""
+
+    name: Optional[str] = None
+    syllabus_topic_id: Optional[str] = None  # None = topic unlink; absent = koi tabdeeli nahi
+
+    @field_validator("name")
+    @classmethod
+    def _name_not_blank(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("Naam khaali nahi ho sakta.")
+        return v
+
+    @model_validator(mode="after")
+    def _at_least_one(self) -> "UpdateLibraryImageRequest":
+        if "name" not in self.model_fields_set and "syllabus_topic_id" not in self.model_fields_set:
+            raise ValueError("Kam az kam naam ya topic dena zaroori hai.")
+        return self
+
+
 class CopyFromLibraryRequest(BaseModel):
     """POST /api/questions/{id}/image-from-library — library image ko question par apply karo."""
 

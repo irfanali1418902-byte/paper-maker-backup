@@ -39,6 +39,32 @@ def name_exists(name: str) -> bool:
     return row is not None
 
 
+def name_exists_excluding(name: str, exclude_id: str) -> bool:
+    """True agar is naam ki koi DOOSRI image (exclude_id ke ilawa) library mein ho."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT id FROM image_library WHERE name_normalized = ? AND id != ?",
+        (name.strip().lower(), exclude_id),
+    ).fetchone()
+    conn.close()
+    return row is not None
+
+
+def update_image(image_id: str, updates: dict) -> bool:
+    """image_library row mein sirf diye gaye fields update karo."""
+    if not updates:
+        return False
+    conn = get_connection()
+    cur = conn.cursor()
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    values = list(updates.values()) + [image_id]
+    cur.execute(f"UPDATE image_library SET {set_clause} WHERE id = ?", values)  # noqa: S608
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
+
+
 def find_by_name(name: str) -> "Optional[dict]":
     """Case-insensitive naam se pehli matching image wapas karo."""
     conn = get_connection()
