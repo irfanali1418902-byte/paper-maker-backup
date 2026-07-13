@@ -5,6 +5,7 @@ import uuid
 
 from app.repositories import questions_repository
 from app.schemas.requests import (
+    BulkUpdateQuestionMetaRequest,
     GenerateQuestionsRequest,
     ManualQuestionRequest,
     ManualQuestionUpdateRequest,
@@ -101,6 +102,12 @@ def save_manual_question(req: ManualQuestionRequest, resolved_subject: str, reso
             "image_path": None,
             "image_size": None,
             "source": "manual",
+            "learning_outcome": req.learning_outcome,
+            "estimated_time": req.estimated_time,
+            "keywords": req.keywords,
+            "source_book": req.source_book,
+            "page_number": req.page_number,
+            "status": req.status,
         }
     )
     return qid
@@ -147,6 +154,18 @@ def update_manual_question(question_id: str, req: ManualQuestionUpdateRequest) -
         fields["marks"] = req.marks
     if req.answer_lines is not None:
         fields["answer_lines"] = req.answer_lines
+    if req.learning_outcome is not None:
+        fields["learning_outcome"] = req.learning_outcome
+    if req.estimated_time is not None:
+        fields["estimated_time"] = req.estimated_time
+    if req.keywords is not None:
+        fields["keywords"] = req.keywords
+    if req.source_book is not None:
+        fields["source_book"] = req.source_book
+    if req.page_number is not None:
+        fields["page_number"] = req.page_number
+    if req.status is not None:
+        fields["status"] = req.status
 
     if fields:
         questions_repository.update(question_id, fields)
@@ -163,7 +182,18 @@ def list_questions(
     topic: str | None = None,
     bloom_level: str | None = None,
     syllabus_topic_id: str | None = None,
+    q: str | None = None,
+    status: str | None = None,
 ) -> list:
     return questions_repository.list_by_filters(
-        subject=subject, topic=topic, bloom_level=bloom_level, syllabus_topic_id=syllabus_topic_id
+        subject=subject, topic=topic, bloom_level=bloom_level,
+        syllabus_topic_id=syllabus_topic_id, q=q, status=status,
     )
+
+
+def bulk_update_question_meta(req: BulkUpdateQuestionMetaRequest) -> int:
+    fields = req.model_dump(
+        include={"keywords", "source_book", "page_number", "status", "learning_outcome", "estimated_time"},
+        exclude_none=True,
+    )
+    return questions_repository.bulk_update_meta(req.question_ids, fields, req.keywords_mode)
