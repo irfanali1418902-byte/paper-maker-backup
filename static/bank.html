@@ -312,6 +312,43 @@
     padding: 5px 10px; border-radius: 6px; word-break: break-word;
   }
 
+  /* ---- Smart Details (collapsible) ---- */
+  .smart-details-toggle {
+    display: flex; align-items: center; gap: 8px; margin-top: 18px; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; color: var(--muted); user-select: none;
+    border-top: 1px solid var(--border); padding-top: 14px;
+  }
+  .smart-details-toggle:hover { color: var(--primary); }
+  .smart-details-arrow { font-size: 10px; transition: transform .2s; display: inline-block; }
+  .smart-details-arrow.open { transform: rotate(90deg); }
+  .smart-details-body { display: none; }
+  .smart-details-body.open { display: block; }
+
+  /* ---- Floating bulk bar ---- */
+  .float-bar {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: #fff; border-radius: 14px;
+    padding: 12px 18px; display: none; align-items: center; gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.28); z-index: 500; flex-wrap: wrap;
+  }
+  .float-bar.visible { display: flex; }
+  .float-bar select, .float-bar input[type="text"] {
+    min-height: 34px; padding: 5px 10px; font-size: 12.5px;
+    border: 1px solid rgba(255,255,255,.25); border-radius: 8px;
+    background: rgba(255,255,255,.1); color: #fff; font-family: inherit;
+  }
+  .float-bar select option { color: var(--ink); background: #fff; }
+  .float-bar input[type="text"]::placeholder { color: rgba(255,255,255,.45); }
+  .float-bar input[type="text"]:focus, .float-bar select:focus { outline: none; border-color: #5B8DEF; }
+  .fb-count { font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .btn-fb-save { padding: 6px 16px; border: none; border-radius: 8px; background: #5B8DEF; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .btn-fb-save:hover { background: #3a6cdf; }
+  .btn-fb-cancel { padding: 6px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; background: transparent; color: rgba(255,255,255,.8); font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .btn-fb-cancel:hover { background: rgba(255,255,255,.1); }
+
+  /* ---- Bulk checkbox ---- */
+  .q-checkbox { width: 16px; height: 16px; min-height: 0; margin: 3px 0 0; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -501,6 +538,52 @@
       </div>
     </div>
 
+    <!-- Smart Details collapsible -->
+    <div class="smart-details-toggle" onclick="toggleSmartDetails('addSmart', this)">
+      <span class="smart-details-arrow">▶</span>
+      Smart details — Bloom, Keywords, Source, Status
+    </div>
+    <div class="smart-details-body" id="addSmart">
+      <div class="field-row" style="margin-top:12px;">
+        <div>
+          <label>Bloom Level</label>
+          <select id="fBloom">
+            <option value="REMEMBER">Remember</option>
+            <option value="UNDERSTAND" selected>Understand</option>
+            <option value="APPLY">Apply</option>
+            <option value="ANALYZE">Analyze</option>
+            <option value="EVALUATE">Evaluate</option>
+            <option value="CREATE">Create</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="fStatus">
+            <option value="published" selected>Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+      </div>
+      <label>Learning Outcome</label>
+      <input type="text" id="fLearningOutcome" placeholder="e.g. Students will understand Newton's laws." />
+      <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">(comma-separated)</span></label>
+      <input type="text" id="fKeywords" placeholder="e.g. gravity, newton, force" />
+      <div class="field-row" style="margin-top:4px;">
+        <div>
+          <label>Estimated Time <span style="font-size:11px;font-weight:400;color:var(--muted)">(minutes)</span></label>
+          <input type="number" id="fEstTime" min="1" placeholder="e.g. 3" />
+        </div>
+        <div>
+          <label>Source Book</label>
+          <input type="text" id="fSourceBook" placeholder="e.g. NCERT Physics 8" />
+        </div>
+        <div>
+          <label>Page No.</label>
+          <input type="number" id="fPageNo" min="1" placeholder="e.g. 45" />
+        </div>
+      </div>
+    </div>
+
     <div style="margin-top:20px;">
       <button class="btn-primary" id="addBtn" onclick="submitQuestion()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -641,8 +724,38 @@
         </select>
       </div>
       <div>
-        <label>Matn se dhoondein</label>
-        <input type="text" id="lSearch" placeholder="search..." oninput="scheduleSearch()" style="font-size:13.5px;padding:8px 11px;min-height:38px;" />
+        <label>Difficulty</label>
+        <select id="lDiff" onchange="loadList()">
+          <option value="">Sab</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div>
+        <label>Bloom Level</label>
+        <select id="lBloom" onchange="loadList()">
+          <option value="">Sab</option>
+          <option value="REMEMBER">Remember</option>
+          <option value="UNDERSTAND">Understand</option>
+          <option value="APPLY">Apply</option>
+          <option value="ANALYZE">Analyze</option>
+          <option value="EVALUATE">Evaluate</option>
+          <option value="CREATE">Create</option>
+        </select>
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="lStatus" onchange="loadList()">
+          <option value="">Sab</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      <div>
+        <label>Search</label>
+        <input type="text" id="lSearch" placeholder="text ya keyword..." oninput="scheduleSearch()" style="font-size:13.5px;padding:8px 11px;min-height:38px;" />
       </div>
       <button class="btn-ghost" onclick="clearListFilters()">Clear</button>
     </div>
@@ -651,6 +764,20 @@
     <div id="qList" class="q-list"></div>
   </div>
 </main>
+
+<!-- ===== FLOATING BULK BAR ===== -->
+<div class="float-bar" id="floatBar">
+  <span class="fb-count" id="floatCount">0 chuney</span>
+  <select id="fbStatus" style="width:130px;">
+    <option value="">Status...</option>
+    <option value="published">Published</option>
+    <option value="draft">Draft</option>
+    <option value="archived">Archived</option>
+  </select>
+  <input type="text" id="fbKeywords" placeholder="Keywords (comma-separated)..." style="width:210px;" />
+  <button class="btn-fb-save" onclick="saveBulkMeta()">Meta Badlo</button>
+  <button class="btn-fb-cancel" onclick="clearBulkSel()">Cancel</button>
+</div>
 
 <!-- ===== EDIT MODAL ===== -->
 <div class="modal-backdrop" id="editBackdrop" onclick="if(event.target===this)closeEditModal()">
@@ -731,6 +858,53 @@
     <label style="margin-top:14px;">Marks</label>
     <input type="number" id="ef-marks" min="1" max="20" style="width:100px;" />
 
+    <!-- Edit: Smart Details collapsible -->
+    <div class="smart-details-toggle" onclick="toggleSmartDetails('efSmart', this)" style="margin-top:14px;">
+      <span class="smart-details-arrow">▶</span>
+      Smart details — Bloom, Keywords, Source, Status
+    </div>
+    <div class="smart-details-body" id="efSmart">
+      <div class="field-row" style="margin-top:12px;">
+        <div>
+          <label>Bloom Level</label>
+          <select id="ef-bloom">
+            <option value="REMEMBER">Remember</option>
+            <option value="UNDERSTAND">Understand</option>
+            <option value="APPLY">Apply</option>
+            <option value="ANALYZE">Analyze</option>
+            <option value="EVALUATE">Evaluate</option>
+            <option value="CREATE">Create</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="ef-status">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <label>Learning Outcome</label>
+      <input type="text" id="ef-learning-outcome" placeholder="e.g. Students will understand Newton's laws." />
+      <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">(comma-separated)</span></label>
+      <input type="text" id="ef-keywords" placeholder="e.g. gravity, newton, force" />
+      <div class="field-row" style="margin-top:4px;">
+        <div>
+          <label>Estimated Time <span style="font-size:11px;font-weight:400;color:var(--muted)">(min)</span></label>
+          <input type="number" id="ef-est-time" min="1" placeholder="e.g. 3" />
+        </div>
+        <div>
+          <label>Source Book</label>
+          <input type="text" id="ef-source-book" placeholder="e.g. NCERT Physics 8" />
+        </div>
+        <div>
+          <label>Page No.</label>
+          <input type="number" id="ef-page-no" min="1" placeholder="e.g. 45" />
+        </div>
+      </div>
+    </div>
+
     <!-- Edit modal: topic image strip -->
     <div id="efTopicStrip" class="topic-img-strip" style="display:none;margin-top:14px;">
       <div class="topic-img-strip-label">Is topic ki library images — click kar ke seedha attach karo:</div>
@@ -770,6 +944,7 @@ let _addStripTimer     = null;
 let _editStripTopicId  = null;   // topic currently loaded in edit-modal strip
 let _editStripQid      = null;   // question id for edit-modal strip attach
 let _editStripTimer    = null;
+let _selectedQids      = new Set();  // bulk selection
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
@@ -866,6 +1041,16 @@ async function onGradeChange() {
   } catch {
     topicEl.innerHTML = '<option value="">-- Load fail --</option>';
   }
+}
+
+// ================================================================
+// Smart Details toggle
+// ================================================================
+function toggleSmartDetails(id, toggleEl) {
+  const body = document.getElementById(id);
+  const arrow = toggleEl ? toggleEl.querySelector('.smart-details-arrow') : null;
+  const isOpen = body.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open', isOpen);
 }
 
 // ================================================================
@@ -1069,7 +1254,20 @@ async function submitQuestion() {
   if (!topicId)  { setAddStatus('err', '⚠️ Syllabus topic zaroori hai.'); return; }
   if (!qtext)    { setAddStatus('err', '⚠️ Question khali nahi ho sakta.'); return; }
 
-  const body = { question_text: qtext, is_urdu: isUrdu, question_type: type, marks, difficulty: diff, syllabus_topic_id: topicId };
+  const body = { question_text: qtext, is_urdu: isUrdu, question_type: type, marks, difficulty: diff, syllabus_topic_id: topicId,
+    bloom_level: document.getElementById('fBloom').value || 'UNDERSTAND',
+    status: document.getElementById('fStatus').value || 'published',
+  };
+  const lo = document.getElementById('fLearningOutcome').value.trim();
+  if (lo) body.learning_outcome = lo;
+  const kw = document.getElementById('fKeywords').value.trim();
+  if (kw) body.keywords = kw;
+  const et = parseInt(document.getElementById('fEstTime').value, 10);
+  if (!isNaN(et) && et >= 1) body.estimated_time = et;
+  const sb = document.getElementById('fSourceBook').value.trim();
+  if (sb) body.source_book = sb;
+  const pn = parseInt(document.getElementById('fPageNo').value, 10);
+  if (!isNaN(pn) && pn >= 1) body.page_number = pn;
 
   if (type === 'multiple-choice') {
     const opts = [0,1,2,3].map(i => document.getElementById(`opt-${i}`).value.trim()).filter(Boolean);
@@ -1154,6 +1352,12 @@ function resetAddForm() {
   document.getElementById('fMarks').value = '1';
   document.getElementById('isUrdu').checked = false;
   applyUrduMode(false);
+  // Reset smart details fields
+  document.getElementById('fBloom').value = 'UNDERSTAND';
+  document.getElementById('fStatus').value = 'published';
+  ['fLearningOutcome','fKeywords','fEstTime','fSourceBook','fPageNo'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   _selectedAddImageId = null;
   document.getElementById('addTopicStrip').style.display = 'none';
   document.getElementById('addTopicImgRow').innerHTML = '';
@@ -1170,6 +1374,9 @@ function scheduleSearch() {
 function clearListFilters() {
   document.getElementById('lSubject').value = '';
   document.getElementById('lType').value    = '';
+  document.getElementById('lDiff').value    = '';
+  document.getElementById('lBloom').value   = '';
+  document.getElementById('lStatus').value  = '';
   document.getElementById('lSearch').value  = '';
   loadList();
 }
@@ -1177,29 +1384,33 @@ function clearListFilters() {
 async function loadList() {
   const subject = document.getElementById('lSubject').value;
   const type    = document.getElementById('lType').value;
-  const search  = document.getElementById('lSearch').value.trim().toLowerCase();
+  const diff    = document.getElementById('lDiff').value;
+  const bloom   = document.getElementById('lBloom').value;
+  const status  = document.getElementById('lStatus').value;
+  const q       = document.getElementById('lSearch').value.trim();
   const statusEl = document.getElementById('listStatus');
   const listEl   = document.getElementById('qList');
 
   statusEl.textContent = 'Load ho raha hai...';
   listEl.innerHTML = '';
+  _selectedQids.clear();
+  updateFloatBar();
 
   const params = new URLSearchParams();
   if (subject) params.set('subject', subject);
-  if (type)    params.set('topic_type', type);  // we filter client-side anyway
+  if (q)       params.set('q', q);
+  if (status)  params.set('status', status);
+  if (bloom)   params.set('bloom_level', bloom);
 
   try {
     const res = await apiFetch('/api/questions' + (params.toString() ? '?' + params : ''));
     let qs = await res.json();
     if (!res.ok) throw new Error(qs.detail || 'Error');
 
-    // Client-side: sirf manual questions
+    // Client-side: sirf manual questions, type + difficulty filter
     qs = qs.filter(q => q.source === 'manual');
-    if (type)   qs = qs.filter(q => q.question_type === type);
-    if (search) qs = qs.filter(q =>
-      (q.question_en || '').toLowerCase().includes(search) ||
-      (q.question_ur || '').toLowerCase().includes(search)
-    );
+    if (type) qs = qs.filter(q => q.question_type === type);
+    if (diff) qs = qs.filter(q => q.difficulty === diff);
 
     _allQuestions = qs;
     statusEl.textContent = `${qs.length} manual question${qs.length !== 1 ? 's' : ''} mili${qs.length !== 1 ? 'n' : ''}.`;
@@ -1232,12 +1443,20 @@ function renderQRow(q) {
   const textCls = isUrdu ? 'qt rtl' : 'qt';
   const topic = q.topic || '';
   const subj  = q.subject || '';
+  const statusBadge = (q.status && q.status !== 'published')
+    ? ` <span style="font-size:10px;background:#FFF3E0;color:#E65100;padding:1px 7px;border-radius:12px;font-weight:700;">${escHtml(q.status.toUpperCase())}</span>`
+    : '';
+  const kwTag = q.keywords
+    ? `<span style="font-size:10.5px;color:var(--muted2);">[${escHtml(q.keywords)}]</span> `
+    : '';
+  const checked = _selectedQids.has(q.id) ? 'checked' : '';
   return `
-    <div class="q-row">
+    <div class="q-row" id="qrow_${escAttr(q.id)}">
+      <input type="checkbox" class="q-checkbox" data-id="${escAttr(q.id)}" ${checked} onchange="onQCheckChange(this)">
       ${typeBadge(q.question_type)}
       <div class="q-text">
-        <div class="${textCls}">${escHtml(text)}</div>
-        <div class="qmeta">${escHtml(subj)}${topic ? ' · ' + escHtml(topic) : ''}</div>
+        <div class="${textCls}">${escHtml(text)}${statusBadge}</div>
+        <div class="qmeta">${kwTag}${escHtml(subj)}${topic ? ' · ' + escHtml(topic) : ''}</div>
       </div>
       <div class="q-marks">[${q.marks}]</div>
       <div class="q-actions">
@@ -1315,6 +1534,15 @@ function openEditModal(q) {
     document.getElementById('ef-lines').value = q.answer_lines != null ? String(q.answer_lines) : '';
   }
 
+  // Smart fields
+  document.getElementById('ef-bloom').value           = q.bloom_level || 'UNDERSTAND';
+  document.getElementById('ef-status').value          = q.status || 'published';
+  document.getElementById('ef-learning-outcome').value = q.learning_outcome || '';
+  document.getElementById('ef-keywords').value        = q.keywords || '';
+  document.getElementById('ef-est-time').value        = q.estimated_time != null ? String(q.estimated_time) : '';
+  document.getElementById('ef-source-book').value     = q.source_book || '';
+  document.getElementById('ef-page-no').value         = q.page_number != null ? String(q.page_number) : '';
+
   document.getElementById('editErr').style.display = 'none';
   document.getElementById('ef-saveBtn').disabled = false;
   document.getElementById('editBackdrop').classList.add('open');
@@ -1337,7 +1565,20 @@ async function saveEdit() {
 
   if (!text) { showEditErr('Question khali nahi ho sakta.'); return; }
 
-  const body = { question_text: text, is_urdu: isUrd, marks };
+  const body = { question_text: text, is_urdu: isUrd, marks,
+    bloom_level: document.getElementById('ef-bloom').value || undefined,
+    status: document.getElementById('ef-status').value || undefined,
+  };
+  const elo = document.getElementById('ef-learning-outcome').value.trim();
+  if (elo !== '') body.learning_outcome = elo;
+  const ekw = document.getElementById('ef-keywords').value.trim();
+  if (ekw !== '') body.keywords = ekw;
+  const eet = parseInt(document.getElementById('ef-est-time').value, 10);
+  if (!isNaN(eet) && eet >= 1) body.estimated_time = eet;
+  const esb = document.getElementById('ef-source-book').value.trim();
+  if (esb !== '') body.source_book = esb;
+  const epn = parseInt(document.getElementById('ef-page-no').value, 10);
+  if (!isNaN(epn) && epn >= 1) body.page_number = epn;
 
   if (_editQtype === 'multiple-choice') {
     const opts = [0,1,2,3].map(i => document.getElementById(`ef-opt-${i}`).value.trim()).filter(Boolean);
@@ -1693,6 +1934,68 @@ function _showBulkResult(level, overrideMsg, data) {
 
 function _esc(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ================================================================
+// Bulk select + floating bar
+// ================================================================
+function onQCheckChange(cb) {
+  const id = cb.dataset.id;
+  if (cb.checked) _selectedQids.add(id);
+  else            _selectedQids.delete(id);
+  updateFloatBar();
+}
+
+function updateFloatBar() {
+  const bar = document.getElementById('floatBar');
+  const countEl = document.getElementById('floatCount');
+  const n = _selectedQids.size;
+  if (n === 0) {
+    bar.classList.remove('visible');
+  } else {
+    bar.classList.add('visible');
+    countEl.textContent = `${n} sawal chune`;
+  }
+}
+
+function clearBulkSel() {
+  _selectedQids.clear();
+  document.querySelectorAll('.q-checkbox').forEach(cb => cb.checked = false);
+  updateFloatBar();
+}
+
+async function saveBulkMeta() {
+  const ids = [..._selectedQids];
+  if (!ids.length) return;
+
+  const status   = document.getElementById('fbStatus').value;
+  const keywords = document.getElementById('fbKeywords').value.trim();
+
+  if (!status && !keywords) {
+    alert('Status ya Keywords mein se ek zaroori hai.');
+    return;
+  }
+
+  const body = { question_ids: ids, keywords_mode: 'replace' };
+  if (status)   body.status = status;
+  if (keywords) body.keywords = keywords;
+
+  try {
+    const res = await apiFetch('/api/questions/bulk-meta', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) { const d = await res.json(); alert('Bulk update nahi hua: ' + (d.detail || 'Error')); return; }
+    const data = await res.json();
+    document.getElementById('fbStatus').value = '';
+    document.getElementById('fbKeywords').value = '';
+    clearBulkSel();
+    await loadList();
+    alert(`✅ ${data.updated} question${data.updated !== 1 ? 's' : ''} update ho gaye.`);
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
 }
 </script>
 </body>
