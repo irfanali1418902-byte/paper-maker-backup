@@ -218,6 +218,24 @@
   .modal-close:hover { color: var(--ink); }
   .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; align-items: flex-start; flex-wrap: wrap; }
 
+  /* ---- Question-type checkboxes in edit modal ---- */
+  .qt-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; }
+  .qt-checks label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 500; margin: 0; cursor: pointer; color: var(--ink);
+  }
+  .qt-checks input[type="checkbox"] {
+    width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+  }
+  .smart-section-head {
+    font-size: 11.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em; margin: 18px 0 2px;
+  }
+  input[type="number"] { width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
+    border: 1px solid #D6DEEA; border-radius: 10px; font-size: 14.5px; font-family: inherit;
+    background: #fff; color: var(--ink); }
+  input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -373,8 +391,26 @@
         </select>
       </div>
       <div>
-        <label>Naam se dhoondein</label>
-        <input type="text" id="fSearch" placeholder="search..." oninput="scheduleSearch()" style="min-height:38px;font-size:13.5px;padding:8px 11px;" />
+        <label>Naam / Keyword</label>
+        <input type="text" id="fSearch" placeholder="naam ya keyword..." oninput="scheduleSearch()" style="min-height:38px;font-size:13.5px;padding:8px 11px;" />
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="fCategory" onchange="loadGrid()">
+          <option value="">Sab categories</option>
+        </select>
+      </div>
+      <div>
+        <label>Question Type</label>
+        <select id="fQType" onchange="loadGrid()">
+          <option value="">Sab types</option>
+          <option value="count">Count</option>
+          <option value="colour">Colour</option>
+          <option value="match">Match</option>
+          <option value="circle">Circle</option>
+          <option value="identify">Identify</option>
+          <option value="trace">Trace</option>
+        </select>
       </div>
       <button class="btn-ghost" onclick="clearFilters()">Clear</button>
       <button class="btn-ghost" onclick="selectAll()">Sab Chunein</button>
@@ -461,6 +497,37 @@
       <option value="">-- Pehle class chunein --</option>
     </select>
 
+    <!-- Smart Tags section -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 0;" />
+    <div class="smart-section-head">Smart Tags <span style="font-weight:400;text-transform:none;color:var(--muted2)">(optional)</span></div>
+
+    <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">comma se alag — jaise "apple, fruit, red"</span></label>
+    <input type="text" id="editKeywords" placeholder="e.g. apple, fruit, red, counting" />
+
+    <label>Question Types <span style="font-size:11px;font-weight:400;color:var(--muted)">ye image kin sawaal types ke liye theek hai</span></label>
+    <div class="qt-checks" id="editQtChecks">
+      <label><input type="checkbox" value="count" /> Count</label>
+      <label><input type="checkbox" value="colour" /> Colour</label>
+      <label><input type="checkbox" value="match" /> Match</label>
+      <label><input type="checkbox" value="circle" /> Circle</label>
+      <label><input type="checkbox" value="identify" /> Identify</label>
+      <label><input type="checkbox" value="trace" /> Trace</label>
+    </div>
+
+    <label>Category <span style="font-size:11px;font-weight:400;color:var(--muted)">jaise "fruit", "animal", "shape"</span></label>
+    <input type="text" id="editCategory" placeholder="e.g. fruit" />
+
+    <div class="field-row" style="margin-top:14px;">
+      <div>
+        <label>Source Book <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="editSourceBook" placeholder="e.g. Maths Book 3" />
+      </div>
+      <div>
+        <label>Page Number <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="number" id="editPageNumber" placeholder="e.g. 42" min="1" />
+      </div>
+    </div>
+
     <div id="editError" class="status-bar" style="margin-top:14px;margin-bottom:0;"></div>
 
     <div class="modal-foot">
@@ -488,12 +555,33 @@ let _btTopicLoading = false;
 // -----------------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', async () => {
   await loadSyllabusGrades();
+  await loadCategoryOptions();
   await loadGrid();
 });
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeEditModal(); closeBulkTopicModal(); }
 });
+
+// -----------------------------------------------------------------------
+// Category dropdown (filter bar)
+// -----------------------------------------------------------------------
+async function loadCategoryOptions() {
+  try {
+    const res = await apiFetch('/api/library/categories');
+    const data = await res.json();
+    const sel = document.getElementById('fCategory');
+    sel.innerHTML = '<option value="">Sab categories</option>';
+    (data.categories || []).forEach(cat => {
+      const o = document.createElement('option');
+      o.value = cat;
+      o.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+      sel.appendChild(o);
+    });
+  } catch (_e) {
+    // silent — filter dropdown khali rahega
+  }
+}
 
 // -----------------------------------------------------------------------
 // Cascade dropdowns — upload form
@@ -803,13 +891,17 @@ function clearFilters() {
   document.getElementById('fSubject').value = '';
   document.getElementById('fGrade').value = '';
   document.getElementById('fSearch').value = '';
+  document.getElementById('fCategory').value = '';
+  document.getElementById('fQType').value = '';
   loadGrid();
 }
 
 async function loadGrid() {
-  const subject = document.getElementById('fSubject').value;
-  const grade   = document.getElementById('fGrade').value;
-  const q       = document.getElementById('fSearch').value.trim();
+  const subject  = document.getElementById('fSubject').value;
+  const grade    = document.getElementById('fGrade').value;
+  const q        = document.getElementById('fSearch').value.trim();
+  const category = document.getElementById('fCategory').value;
+  const qtype    = document.getElementById('fQType').value;
   const statusEl = document.getElementById('gridStatus');
   const gridEl   = document.getElementById('libGrid');
 
@@ -819,9 +911,11 @@ async function loadGrid() {
   updateSelectionBar();
 
   const params = new URLSearchParams();
-  if (subject) params.set('subject', subject);
-  if (grade)   params.set('grade', grade);
-  if (q)       params.set('q', q);
+  if (subject)  params.set('subject', subject);
+  if (grade)    params.set('grade', grade);
+  if (q)        params.set('q', q);
+  if (category) params.set('category', category);
+  if (qtype)    params.set('question_type', qtype);
 
   try {
     const res = await apiFetch('/api/library?' + params.toString());
@@ -848,6 +942,12 @@ function renderCard(img) {
   const topicLine = img.syllabus_topic_id
     ? `<span style="color:var(--ok-tx);font-size:11px;">✓ topic linked</span>`
     : `<span style="color:var(--warn-tx);font-size:11px;">⚠ topic nahi</span>`;
+  const catBadge = img.category
+    ? `<span style="background:var(--tint);color:var(--primary);font-size:10.5px;padding:1px 7px;border-radius:20px;font-weight:600;">${escHtml(img.category)}</span>`
+    : '';
+  const qtBadge = img.question_types
+    ? `<span style="font-size:10.5px;color:var(--muted);">${escHtml(img.question_types)}</span>`
+    : '';
   const checked = _selectedIds.has(img.id) ? 'checked' : '';
   return `
     <div class="lib-card" data-id="${escAttr(img.id)}">
@@ -858,6 +958,7 @@ function renderCard(img) {
       <div class="img-info">
         <div class="img-name">${escHtml(img.name)}</div>
         <div class="img-tags">${tagParts ? escHtml(tagParts) + '<br/>' : ''}${topicLine}</div>
+        ${catBadge || qtBadge ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${catBadge}${qtBadge}</div>` : ''}
       </div>
       <div class="img-foot" style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn-edit" onclick="openEditModal('${escAttr(img.id)}')">Edit</button>
@@ -876,6 +977,18 @@ function openEditModal(imgId) {
   clearEditError();
 
   document.getElementById('editName').value = img.name;
+
+  // Smart Tag fields
+  document.getElementById('editKeywords').value   = img.keywords   || '';
+  document.getElementById('editCategory').value   = img.category   || '';
+  document.getElementById('editSourceBook').value = img.source_book || '';
+  document.getElementById('editPageNumber').value = img.page_number != null ? img.page_number : '';
+
+  // Question type checkboxes
+  const currentTypes = (img.question_types || '').split(',').map(s => s.trim().toLowerCase());
+  document.querySelectorAll('#editQtChecks input[type="checkbox"]').forEach(cb => {
+    cb.checked = currentTypes.includes(cb.value);
+  });
 
   // Subject dropdown
   const subjectEl = document.getElementById('editSubject');
@@ -988,6 +1101,17 @@ async function saveEdit() {
   // Agar topic disabled (grade nahi chuna) → topic null bhejna chahiye
   const syllabus_topic_id = topicEl.disabled ? null : (topicEl.value || null);
 
+  // Smart tag fields
+  const keywords    = document.getElementById('editKeywords').value.trim() || null;
+  const category    = document.getElementById('editCategory').value.trim() || null;
+  const source_book = document.getElementById('editSourceBook').value.trim() || null;
+  const pageRaw     = document.getElementById('editPageNumber').value.trim();
+  const page_number = pageRaw ? parseInt(pageRaw, 10) : null;
+
+  const checkedTypes = [...document.querySelectorAll('#editQtChecks input[type="checkbox"]:checked')]
+    .map(cb => cb.value);
+  const question_types = checkedTypes.length > 0 ? checkedTypes.join(', ') : null;
+
   const btn = document.getElementById('editSaveBtn');
   btn.disabled = true;
   btn.textContent = 'Save ho raha hai...';
@@ -997,7 +1121,7 @@ async function saveEdit() {
     const res = await apiFetch(`/api/library/${encodeURIComponent(_editImg.id)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName, syllabus_topic_id }),
+      body: JSON.stringify({ name: newName, syllabus_topic_id, keywords, question_types, category, source_book, page_number }),
     });
     const data = await res.json();
 
