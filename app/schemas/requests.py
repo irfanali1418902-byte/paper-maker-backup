@@ -75,6 +75,12 @@ class UpdateQuestionRequest(BaseModel):
     marks: Optional[int] = Field(default=None, ge=1)
     answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
     image_size: Optional[str] = None
+    learning_outcome: Optional[str] = None
+    estimated_time: Optional[int] = Field(default=None, ge=1)
+    keywords: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = Field(default=None, ge=1)
+    status: Optional[Literal["published", "draft", "archived"]] = None
 
     @field_validator("image_size")
     @classmethod
@@ -112,6 +118,8 @@ class UpdateQuestionRequest(BaseModel):
                 self.options_en, self.options_ur,
                 self.correct_answer_en, self.correct_answer_ur,
                 self.marks, self.answer_lines, self.image_size,
+                self.learning_outcome, self.estimated_time, self.keywords,
+                self.source_book, self.page_number, self.status,
             )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
@@ -155,6 +163,35 @@ class BulkUpdateMetaRequest(BaseModel):
     def _at_least_one_meta(self) -> "BulkUpdateMetaRequest":
         if not (self.model_fields_set & _BULK_META_FIELDS):
             raise ValueError("Kam az kam ek field (keywords, category, ya question_types) dena zaroori hai.")
+        return self
+
+
+_BULK_Q_META_FIELDS = {"keywords", "source_book", "page_number", "status", "learning_outcome", "estimated_time"}
+
+
+class BulkUpdateQuestionMetaRequest(BaseModel):
+    """PATCH /api/questions/bulk-meta — kai questions ke smart fields ek saath badlo."""
+
+    question_ids: List[str]
+    keywords: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = Field(default=None, ge=1)
+    status: Optional[Literal["published", "draft", "archived"]] = None
+    learning_outcome: Optional[str] = None
+    estimated_time: Optional[int] = Field(default=None, ge=1)
+    keywords_mode: Literal["append", "replace"] = "replace"
+
+    @field_validator("question_ids")
+    @classmethod
+    def _non_empty_ids(cls, v: List[str]) -> List[str]:
+        if not v:
+            raise ValueError("question_ids khaali nahi ho sakti.")
+        return v
+
+    @model_validator(mode="after")
+    def _at_least_one_meta(self) -> "BulkUpdateQuestionMetaRequest":
+        if not (self.model_fields_set & _BULK_Q_META_FIELDS):
+            raise ValueError("Kam az kam ek field dena zaroori hai.")
         return self
 
 
@@ -242,6 +279,12 @@ class ManualQuestionRequest(BaseModel):
     subject: Optional[str] = None
     topic: Optional[str] = None
     answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
+    learning_outcome: Optional[str] = None
+    estimated_time: Optional[int] = Field(default=None, ge=1)
+    keywords: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = Field(default=None, ge=1)
+    status: Literal["published", "draft", "archived"] = "published"
 
     @model_validator(mode="after")
     def _validate(self) -> "ManualQuestionRequest":
@@ -268,6 +311,12 @@ class ManualQuestionUpdateRequest(BaseModel):
     correct_answer: Optional[str] = None
     marks: Optional[int] = Field(default=None, ge=1)
     answer_lines: Optional[int] = Field(default=None, ge=0, le=20)
+    learning_outcome: Optional[str] = None
+    estimated_time: Optional[int] = Field(default=None, ge=1)
+    keywords: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = Field(default=None, ge=1)
+    status: Optional[Literal["published", "draft", "archived"]] = None
 
     @field_validator("options")
     @classmethod
@@ -280,7 +329,11 @@ class ManualQuestionUpdateRequest(BaseModel):
     def _at_least_one(self) -> "ManualQuestionUpdateRequest":
         if all(
             v is None
-            for v in (self.question_text, self.is_urdu, self.options, self.correct_answer, self.marks, self.answer_lines)
+            for v in (
+                self.question_text, self.is_urdu, self.options, self.correct_answer,
+                self.marks, self.answer_lines, self.learning_outcome, self.estimated_time,
+                self.keywords, self.source_book, self.page_number, self.status,
+            )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
         return self

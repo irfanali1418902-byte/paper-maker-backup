@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.repositories import library_repository, questions_repository
 from app.schemas.requests import (
+    BulkUpdateQuestionMetaRequest,
     CopyFromLibraryRequest,
     GenerateQuestionsRequest,
     ManualQuestionRequest,
@@ -63,6 +64,13 @@ def generate_questions(req: GenerateQuestionsRequest):
         ) from e
 
     return {"saved_count": len(saved_ids), "question_ids": saved_ids}
+
+
+@router.patch("/api/questions/bulk-meta")
+def bulk_update_question_meta(req: BulkUpdateQuestionMetaRequest):
+    """Kai questions ke smart tags ek saath update karo (keywords, status, source_book, etc.)."""
+    count = question_service.bulk_update_question_meta(req)
+    return {"updated": count}
 
 
 @router.patch("/api/questions/{question_id}", response_model=Question)
@@ -231,9 +239,13 @@ def list_questions(
     topic: Optional[str] = None,
     bloom_level: Optional[str] = None,
     syllabus_topic_id: Optional[str] = None,
+    q: Optional[str] = None,
+    status: Optional[str] = None,
 ):
     """Question bank browse karne ke liye. syllabus_topic_id se filter karo to
-    sirf usi topic ke linked questions aayein ge (hierarchy picker ke liye)."""
+    sirf usi topic ke linked questions aayein ge (hierarchy picker ke liye).
+    q se question text/keywords mein search karo; status se published/draft/archived filter karo."""
     return question_service.list_questions(
-        subject=subject, topic=topic, bloom_level=bloom_level, syllabus_topic_id=syllabus_topic_id
+        subject=subject, topic=topic, bloom_level=bloom_level,
+        syllabus_topic_id=syllabus_topic_id, q=q, status=status,
     )

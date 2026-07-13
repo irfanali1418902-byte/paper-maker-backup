@@ -16,8 +16,9 @@ def insert(question_row: dict) -> None:
             question_en, question_ur, options_en, options_ur,
             correct_answer_en, correct_answer_ur, explanation_en, explanation_ur,
             visual_emoji, visual_count, syllabus_topic_id, image_path, image_size,
-            source)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            source, learning_outcome, estimated_time, keywords, source_book,
+            page_number, status)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             question_row["id"],
             question_row["subject"],
@@ -40,6 +41,12 @@ def insert(question_row: dict) -> None:
             question_row.get("image_path"),
             question_row.get("image_size"),
             question_row.get("source", "gemini"),
+            question_row.get("learning_outcome"),
+            question_row.get("estimated_time"),
+            question_row.get("keywords"),
+            question_row.get("source_book"),
+            question_row.get("page_number"),
+            question_row.get("status", "published"),
         ),
     )
     conn.commit()
@@ -160,6 +167,8 @@ def list_by_filters(
     topic: Optional[str] = None,
     bloom_level: Optional[str] = None,
     syllabus_topic_id: Optional[str] = None,
+    q: Optional[str] = None,
+    status: Optional[str] = None,
 ) -> list:
     conn = get_connection()
     cur = conn.cursor()
@@ -177,6 +186,54 @@ def list_by_filters(
     if syllabus_topic_id:
         query += " AND syllabus_topic_id = ?"
         params.append(syllabus_topic_id)
+    if q:
+        like = f"%{q}%"
+        query += " AND (question_en LIKE ? OR question_ur LIKE ? OR keywords LIKE ?)"
+        params.extend([like, like, like])
+    if status:
+        query += " AND status = ?"
+        params.append(status)
     rows = cur.execute(query, params).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def bulk_update_meta(
+    question_ids: list,
+    fields: dict,
+    keywords_mode: str = "replace",
+) -> int:
+    """Kai questions ke smart fields ek saath update karo. Returns count of updated rows."""
+    if not question_ids or not fields:
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+    updated = 0
+
+    if "keywords" in fields and keywords_mode == "append":
+        kw_new_set = {kw.strip() for kw in (fields.get("keywords") or "").split(",") if kw.strip()}
+        other_fields = {k: v for k, v in fields.items() if k != "keywords"}
+        for qid in question_ids:
+            row = cur.execute("SELECT keywords FROM questions WHERE id = ?", (qid,)).fetchone()
+            if row is None:
+                continue
+            existing_set = {kw.strip() for kw in (row[0] or "").split(",") if kw.strip()}
+            merged = existing_set | kw_new_set
+            merged_str = ", ".join(sorted(merged)) if merged else None
+            upd = {"keywords": merged_str, **other_fields}
+            cols = ", ".join(f"{k} = ?" for k in upd)
+            cur.execute(f"UPDATE questions SET {cols} WHERE id = ?", [*upd.values(), qid])  # noqa: S608
+            updated += cur.rowcount
+    else:
+        placeholders = ",".join("?" for _ in question_ids)
+        cols = ", ".join(f"{k} = ?" for k in fields)
+        cur.execute(
+            f"UPDATE questions SET {cols} WHERE id IN ({placeholders})",  # noqa: S608
+            [*fields.values(), *question_ids],
+        )
+        updated = cur.rowcount
+
+    conn.commit()
+    conn.close()
+    return updated

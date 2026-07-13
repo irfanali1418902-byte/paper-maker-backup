@@ -47,6 +47,12 @@ class Question(BaseModel):
     image_path: Optional[str] = None
     image_size: Optional[str] = None
     source: Optional[str] = None
+    learning_outcome: Optional[str] = None
+    estimated_time: Optional[int] = None
+    keywords: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = None
+    status: Optional[str] = None
 
 
 class Paper(BaseModel):

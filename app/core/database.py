@@ -73,6 +73,20 @@ def init_db() -> None:
         cur.execute("ALTER TABLE questions ADD COLUMN image_size TEXT")
     if "source" not in existing_cols:
         cur.execute("ALTER TABLE questions ADD COLUMN source TEXT DEFAULT 'gemini'")
+    # Smart Question Bank columns (HISSA A).
+    if "learning_outcome" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN learning_outcome TEXT")
+    if "estimated_time" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN estimated_time INTEGER")
+    if "keywords" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN keywords TEXT")
+    if "source_book" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN source_book TEXT")
+    if "page_number" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN page_number INTEGER")
+    if "status" not in existing_cols:
+        cur.execute("ALTER TABLE questions ADD COLUMN status TEXT DEFAULT 'published'")
+        cur.execute("UPDATE questions SET status = 'published' WHERE status IS NULL")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS papers (
