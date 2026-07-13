@@ -286,7 +286,28 @@
   /* ---- Topic image strip (inside edit modal) ---- */
   .topic-strip { margin-bottom: 14px; }
   .topic-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .strip-filter input, .strip-filter select {
+    min-height: 30px; padding: 4px 9px; font-size: 12px;
+    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit; background: #fff;
+  }
+  .strip-filter input { flex: 1; min-width: 90px; }
+  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
+  .strip-empty { font-size: 11.5px; color: #999; padding: 4px 0; }
+  .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 160px; overflow-y: auto; }
+  /* ---- Library picker search bar ---- */
+  .lib-picker-search {
+    padding: 10px 20px 0; display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .lib-picker-search input {
+    flex: 1; min-width: 120px; min-height: 34px; padding: 5px 10px;
+    border: 1px solid #ddd; border-radius: 7px; font-size: 13px; font-family: inherit;
+  }
+  .lib-picker-search select {
+    min-height: 34px; padding: 5px 10px; border: 1px solid #ddd;
+    border-radius: 7px; font-size: 13px; font-family: inherit;
+  }
+  .lib-picker-search input:focus, .lib-picker-search select:focus { outline: none; border-color: var(--primary); }
   .topic-strip-thumb {
     width: 72px; height: 56px; border-radius: 7px; overflow: hidden;
     border: 2px solid transparent; cursor: pointer; background: #f0f2f6;
@@ -508,6 +529,18 @@
     <!-- Topic image strip — sirf tab dikhe jab topic images hon -->
     <div id="ef_topic_strip" class="topic-strip" style="display:none">
       <div class="topic-strip-label">Is topic ki library images — click karke attach karo:</div>
+      <div class="strip-filter">
+        <input type="text" id="efStripSearch" placeholder="naam ya keyword..." oninput="_scheduleTopicStripReload()" />
+        <select id="efStripQType" onchange="_reloadTopicStrip()">
+          <option value="">Sab types</option>
+          <option value="count">Count</option>
+          <option value="colour">Colour</option>
+          <option value="match">Match</option>
+          <option value="circle">Circle</option>
+          <option value="identify">Identify</option>
+          <option value="trace">Trace</option>
+        </select>
+      </div>
       <div class="topic-strip-row" id="ef_topic_strip_row"></div>
     </div>
 
@@ -538,6 +571,18 @@
       <span id="libPickerTitle">Library images</span>
       <button onclick="closeLibraryPicker()" aria-label="Close">×</button>
     </div>
+    <div class="lib-picker-search">
+      <input type="text" id="libPickerSearch" placeholder="naam ya keyword..." oninput="_schedulePickerReload()" />
+      <select id="libPickerQType" onchange="_reloadLibraryPicker()">
+        <option value="">Sab types</option>
+        <option value="count">Count</option>
+        <option value="colour">Colour</option>
+        <option value="match">Match</option>
+        <option value="circle">Circle</option>
+        <option value="identify">Identify</option>
+        <option value="trace">Trace</option>
+      </select>
+    </div>
     <div id="libPickerGrid" class="lib-picker-grid"></div>
     <div class="lib-picker-foot">
       <label>Size:
@@ -567,6 +612,10 @@ let _topicCounts = {};        // {topic_id: count} — from batch API, filled af
 let _currentPaperId = null;   // set in loadPaper()
 let _pickerQid = null;        // which question has the picker open
 let _pickerTopicId = null;
+let _topicStripQid     = null;  // for reload
+let _topicStripTopicId = null;
+let _topicStripTimer   = null;
+let _pickerTimer       = null;
 
 function openEditModal(btn) {
   const q = JSON.parse(btn.dataset.q);
@@ -635,26 +684,60 @@ function openEditModal(btn) {
   loadTopicStrip(q.syllabus_topic_id || null, q.id);
 }
 
+function _renderTopicStripImgs(imgs, qid) {
+  const strip = document.getElementById('ef_topic_strip');
+  const row   = document.getElementById('ef_topic_strip_row');
+  strip.style.display = '';
+  if (!imgs.length) {
+    row.innerHTML = '<div class="strip-empty">Filter se koi image nahi mili.</div>';
+    return;
+  }
+  row.innerHTML = imgs.map(img =>
+    `<div class="topic-strip-item">
+       <div class="topic-strip-thumb" onclick="applyLibraryImageInModal('${escapeHtml(img.id)}','${escapeHtml(qid)}')" title="${escapeHtml(img.name)}">
+         <img src="/${escapeHtml(img.file_path)}" alt="${escapeHtml(img.name)}" loading="lazy" />
+       </div>
+       <div class="topic-strip-thumb-name">${escapeHtml(img.name)}</div>
+     </div>`
+  ).join('');
+}
+
 async function loadTopicStrip(topicId, qid) {
   const strip = document.getElementById('ef_topic_strip');
   const row   = document.getElementById('ef_topic_strip_row');
   strip.style.display = 'none';
   row.innerHTML = '';
+  _topicStripTopicId = topicId || null;
+  _topicStripQid = qid;
+  document.getElementById('efStripSearch').value = '';
+  document.getElementById('efStripQType').value = '';
   if (!topicId) return;
   try {
     const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
     const imgs = await res.json();
     if (!res.ok || !imgs.length) return;
-    strip.style.display = '';
-    row.innerHTML = imgs.map(img =>
-      `<div class="topic-strip-item">
-         <div class="topic-strip-thumb" onclick="applyLibraryImageInModal('${escapeHtml(img.id)}','${escapeHtml(qid)}')" title="${escapeHtml(img.name)}">
-           <img src="/${escapeHtml(img.file_path)}" alt="${escapeHtml(img.name)}" loading="lazy" />
-         </div>
-         <div class="topic-strip-thumb-name">${escapeHtml(img.name)}</div>
-       </div>`
-    ).join('');
+    _renderTopicStripImgs(imgs, qid);
   } catch (_e) { /* silent — strip optional */ }
+}
+
+function _scheduleTopicStripReload() {
+  clearTimeout(_topicStripTimer);
+  _topicStripTimer = setTimeout(_reloadTopicStrip, 350);
+}
+
+async function _reloadTopicStrip() {
+  if (!_topicStripTopicId || !_topicStripQid) return;
+  const q  = document.getElementById('efStripSearch').value.trim();
+  const qt = document.getElementById('efStripQType').value;
+  try {
+    const params = new URLSearchParams({ syllabus_topic_id: _topicStripTopicId });
+    if (q)  params.set('q', q);
+    if (qt) params.set('question_type', qt);
+    const res = await apiFetch(`/api/library?${params.toString()}`);
+    const imgs = await res.json();
+    if (!res.ok) return;
+    _renderTopicStripImgs(imgs, _topicStripQid);
+  } catch (_e) { /* silent */ }
 }
 
 async function applyLibraryImageInModal(imageId, qid) {
@@ -1165,26 +1248,21 @@ function dismissBadge(qid) {
 
 // ---- Library picker ----
 
-async function openLibraryPicker(qid, topicId) {
-  _pickerQid = qid;
-  _pickerTopicId = topicId;
-
-  const overlay = document.getElementById('libPickerOverlay');
-  const grid    = document.getElementById('libPickerGrid');
-  const count   = _topicCounts[topicId] || '?';
-  document.getElementById('libPickerTitle').textContent = `Library images — is topic ki (${count})`;
+async function _fetchAndRenderPickerGrid(topicId, q = '', qt = '') {
+  const grid = document.getElementById('libPickerGrid');
   grid.innerHTML = '<div style="color:#888;padding:20px;grid-column:1/-1;">Load ho raha hai...</div>';
-  overlay.classList.add('open');
-
   try {
-    const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
+    const params = new URLSearchParams({ syllabus_topic_id: topicId });
+    if (q)  params.set('q', q);
+    if (qt) params.set('question_type', qt);
+    const res = await apiFetch(`/api/library?${params.toString()}`);
     const images = await res.json();
     if (!res.ok || !images.length) {
       grid.innerHTML = '<div style="color:#888;padding:20px;grid-column:1/-1;">Koi image nahi mili.</div>';
       return;
     }
     grid.innerHTML = images.map(img =>
-      `<div class="picker-card" onclick="applyLibraryImage('${img.id}')">
+      `<div class="picker-card" onclick="applyLibraryImage('${escapeHtml(img.id)}')">
          <img src="/${escapeHtml(img.file_path)}" alt="${escapeHtml(img.name)}" loading="lazy" />
          <div class="picker-card-name">${escapeHtml(img.name)}</div>
        </div>`
@@ -1192,6 +1270,31 @@ async function openLibraryPicker(qid, topicId) {
   } catch (e) {
     grid.innerHTML = `<div style="color:#c00;padding:20px;grid-column:1/-1;">Error: ${escapeHtml(e.message)}</div>`;
   }
+}
+
+async function openLibraryPicker(qid, topicId) {
+  _pickerQid = qid;
+  _pickerTopicId = topicId;
+
+  const overlay = document.getElementById('libPickerOverlay');
+  const count   = _topicCounts[topicId] || '?';
+  document.getElementById('libPickerTitle').textContent = `Library images — is topic ki (${count})`;
+  document.getElementById('libPickerSearch').value = '';
+  document.getElementById('libPickerQType').value = '';
+  overlay.classList.add('open');
+  await _fetchAndRenderPickerGrid(topicId);
+}
+
+function _schedulePickerReload() {
+  clearTimeout(_pickerTimer);
+  _pickerTimer = setTimeout(_reloadLibraryPicker, 350);
+}
+
+async function _reloadLibraryPicker() {
+  if (!_pickerTopicId) return;
+  const q  = document.getElementById('libPickerSearch').value.trim();
+  const qt = document.getElementById('libPickerQType').value;
+  await _fetchAndRenderPickerGrid(_pickerTopicId, q, qt);
 }
 
 function closeLibraryPicker() {

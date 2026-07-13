@@ -153,7 +153,16 @@
   /* ---- Topic image strip ---- */
   .topic-img-strip { margin: 10px 0 4px; }
   .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .strip-filter input, .strip-filter select {
+    min-height: 30px; padding: 4px 9px; font-size: 12px;
+    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit;
+    background: #fff; color: var(--ink);
+  }
+  .strip-filter input { flex: 1; min-width: 90px; }
+  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
+  .strip-empty { font-size: 11.5px; color: var(--muted2); padding: 4px 0; }
+  .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 180px; overflow-y: auto; }
   .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
   .topic-img-thumb {
     width: 68px; height: 52px; border-radius: 7px; overflow: hidden;
@@ -378,6 +387,18 @@
     <!-- Add-form topic image strip -->
     <div id="addTopicStrip" class="topic-img-strip" style="display:none">
       <div class="topic-img-strip-label">Is topic ki library images — click kar ke select karo (optional):</div>
+      <div class="strip-filter">
+        <input type="text" id="addStripSearch" placeholder="naam ya keyword..." oninput="_scheduleAddStripReload()" />
+        <select id="addStripQType" onchange="_reloadAddStrip()">
+          <option value="">Sab types</option>
+          <option value="count">Count</option>
+          <option value="colour">Colour</option>
+          <option value="match">Match</option>
+          <option value="circle">Circle</option>
+          <option value="identify">Identify</option>
+          <option value="trace">Trace</option>
+        </select>
+      </div>
       <div class="topic-img-row" id="addTopicImgRow"></div>
     </div>
 
@@ -712,6 +733,18 @@
     <!-- Edit modal: topic image strip -->
     <div id="efTopicStrip" class="topic-img-strip" style="display:none;margin-top:14px;">
       <div class="topic-img-strip-label">Is topic ki library images — click kar ke seedha attach karo:</div>
+      <div class="strip-filter">
+        <input type="text" id="efStripSearch" placeholder="naam ya keyword..." oninput="_scheduleEditStripReload()" />
+        <select id="efStripQType" onchange="_reloadEditStrip()">
+          <option value="">Sab types</option>
+          <option value="count">Count</option>
+          <option value="colour">Colour</option>
+          <option value="match">Match</option>
+          <option value="circle">Circle</option>
+          <option value="identify">Identify</option>
+          <option value="trace">Trace</option>
+        </select>
+      </div>
       <div class="topic-img-row" id="efTopicImgRow"></div>
     </div>
 
@@ -731,6 +764,11 @@ let _editQid = null;
 let _editQtype = null;
 let _searchTimer = null;
 let _selectedAddImageId = null;   // library image chosen in add-form strip
+let _addStripTopicId   = null;   // topic currently loaded in add-form strip
+let _addStripTimer     = null;
+let _editStripTopicId  = null;   // topic currently loaded in edit-modal strip
+let _editStripQid      = null;   // question id for edit-modal strip attach
+let _editStripTimer    = null;
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
@@ -879,10 +917,13 @@ function onUrduToggle() {
 // ================================================================
 // Topic image strips
 // ================================================================
-async function _loadTopicImages(topicId) {
+async function _loadTopicImages(topicId, q = '', questionType = '') {
   if (!topicId) return [];
   try {
-    const res = await apiFetch(`/api/library?syllabus_topic_id=${encodeURIComponent(topicId)}`);
+    const params = new URLSearchParams({ syllabus_topic_id: topicId });
+    if (q)            params.set('q', q);
+    if (questionType) params.set('question_type', questionType);
+    const res = await apiFetch(`/api/library?${params.toString()}`);
     if (!res.ok) return [];
     return await res.json();
   } catch (_e) { return []; }
@@ -892,8 +933,12 @@ function _renderAddStrip(imgs) {
   const strip = document.getElementById('addTopicStrip');
   const row   = document.getElementById('addTopicImgRow');
   _selectedAddImageId = null;
-  if (!imgs.length) { strip.style.display = 'none'; row.innerHTML = ''; return; }
+  if (!_addStripTopicId) { strip.style.display = 'none'; row.innerHTML = ''; return; }
   strip.style.display = '';
+  if (!imgs.length) {
+    row.innerHTML = '<div class="strip-empty">Filter se koi image nahi mili.</div>';
+    return;
+  }
   row.innerHTML = imgs.map(img =>
     `<div class="topic-img-item" id="addImg_${escAttr(img.id)}" onclick="selectAddImage('${escAttr(img.id)}')">
        <div class="topic-img-thumb" id="addThumb_${escAttr(img.id)}">
@@ -902,6 +947,19 @@ function _renderAddStrip(imgs) {
        <div class="topic-img-name">${escHtml(img.name)}</div>
      </div>`
   ).join('');
+}
+
+function _scheduleAddStripReload() {
+  clearTimeout(_addStripTimer);
+  _addStripTimer = setTimeout(_reloadAddStrip, 350);
+}
+
+async function _reloadAddStrip() {
+  if (!_addStripTopicId) return;
+  const q  = document.getElementById('addStripSearch').value.trim();
+  const qt = document.getElementById('addStripQType').value;
+  const imgs = await _loadTopicImages(_addStripTopicId, q, qt);
+  _renderAddStrip(imgs);
 }
 
 function selectAddImage(imgId) {
@@ -919,18 +977,21 @@ function selectAddImage(imgId) {
 
 async function onAddTopicChange() {
   const topicId = document.getElementById('fTopic').value;
+  _addStripTopicId = topicId || null;
+  document.getElementById('addStripSearch').value = '';
+  document.getElementById('addStripQType').value = '';
   const imgs = await _loadTopicImages(topicId);
   _renderAddStrip(imgs);
 }
 
-async function _loadEditStrip(topicId, qid) {
+function _renderEditStripImgs(imgs, qid) {
   const strip = document.getElementById('efTopicStrip');
   const row   = document.getElementById('efTopicImgRow');
-  strip.style.display = 'none'; row.innerHTML = '';
-  if (!topicId) return;
-  const imgs = await _loadTopicImages(topicId);
-  if (!imgs.length) return;
   strip.style.display = '';
+  if (!imgs.length) {
+    row.innerHTML = '<div class="strip-empty">Filter se koi image nahi mili.</div>';
+    return;
+  }
   row.innerHTML = imgs.map(img =>
     `<div class="topic-img-item" onclick="applyEditLibraryImage('${escAttr(img.id)}','${escAttr(qid)}')">
        <div class="topic-img-thumb">
@@ -939,6 +1000,33 @@ async function _loadEditStrip(topicId, qid) {
        <div class="topic-img-name">${escHtml(img.name)}</div>
      </div>`
   ).join('');
+}
+
+async function _loadEditStrip(topicId, qid) {
+  const strip = document.getElementById('efTopicStrip');
+  const row   = document.getElementById('efTopicImgRow');
+  strip.style.display = 'none'; row.innerHTML = '';
+  _editStripTopicId = topicId || null;
+  _editStripQid = qid;
+  document.getElementById('efStripSearch').value = '';
+  document.getElementById('efStripQType').value = '';
+  if (!topicId) return;
+  const imgs = await _loadTopicImages(topicId);
+  if (!imgs.length) return;
+  _renderEditStripImgs(imgs, qid);
+}
+
+function _scheduleEditStripReload() {
+  clearTimeout(_editStripTimer);
+  _editStripTimer = setTimeout(_reloadEditStrip, 350);
+}
+
+async function _reloadEditStrip() {
+  if (!_editStripTopicId || !_editStripQid) return;
+  const q  = document.getElementById('efStripSearch').value.trim();
+  const qt = document.getElementById('efStripQType').value;
+  const imgs = await _loadTopicImages(_editStripTopicId, q, qt);
+  _renderEditStripImgs(imgs, _editStripQid);
 }
 
 async function applyEditLibraryImage(imageId, qid) {
