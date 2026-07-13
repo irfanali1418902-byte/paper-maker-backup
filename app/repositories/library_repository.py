@@ -65,6 +65,58 @@ def update_image(image_id: str, updates: dict) -> bool:
     return affected > 0
 
 
+def bulk_update_meta(
+    image_ids: list,
+    fields: dict,
+    keywords_mode: str = "replace",
+) -> int:
+    """Kai images ke smart meta fields (keywords, category, question_types) ek saath update karo.
+
+    keywords_mode='append': mojooda keywords mein naye add karo (comma se), replace nahi.
+    Updated count wapas karo.
+    """
+    if not image_ids or not fields:
+        return 0
+
+    conn = get_connection()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in image_ids)
+
+    if keywords_mode == "append" and "keywords" in fields and fields["keywords"]:
+        # Pehle mojooda keywords fetch karo, phir merge karo
+        rows = cur.execute(
+            f"SELECT id, keywords FROM image_library WHERE id IN ({placeholders})",  # noqa: S608
+            image_ids,
+        ).fetchall()
+        new_kw = fields["keywords"]
+        other_fields = {k: v for k, v in fields.items() if k != "keywords"}
+
+        for row in rows:
+            row_id, existing = row[0], row[1] or ""
+            existing_set = {k.strip().lower() for k in existing.split(",") if k.strip()}
+            add_set = {k.strip().lower() for k in new_kw.split(",") if k.strip()}
+            merged = ", ".join(sorted(existing_set | add_set))
+            update_fields = {"keywords": merged, **other_fields}
+            set_clause = ", ".join(f"{k} = ?" for k in update_fields)
+            cur.execute(
+                f"UPDATE image_library SET {set_clause} WHERE id = ?",  # noqa: S608
+                list(update_fields.values()) + [row_id],
+            )
+        affected = len(rows)
+    else:
+        set_clause = ", ".join(f"{k} = ?" for k in fields)
+        values = list(fields.values()) + image_ids
+        cur.execute(
+            f"UPDATE image_library SET {set_clause} WHERE id IN ({placeholders})",  # noqa: S608
+            values,
+        )
+        affected = cur.rowcount
+
+    conn.commit()
+    conn.close()
+    return affected
+
+
 def bulk_update_topic(
     image_ids: list,
     syllabus_topic_id: "Optional[str]",

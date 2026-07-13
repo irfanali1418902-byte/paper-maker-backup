@@ -7,7 +7,11 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.repositories import library_repository, syllabus_repository
-from app.schemas.requests import BulkUpdateTopicRequest, UpdateLibraryImageRequest
+from app.schemas.requests import (
+    BulkUpdateMetaRequest,
+    BulkUpdateTopicRequest,
+    UpdateLibraryImageRequest,
+)
 from app.schemas.responses import LibraryImage, StatusResponse
 
 router = APIRouter()
@@ -114,6 +118,21 @@ def bulk_update_library_topic(body: BulkUpdateTopicRequest):
             topic["subject"],
             topic.get("grade"),
         )
+    return {"updated": updated}
+
+
+@router.patch("/api/library/bulk-meta")
+def bulk_update_library_meta(body: BulkUpdateMetaRequest):
+    """Kai library images ke smart tags (keywords, category, question_types) ek saath update karo."""
+    fields: dict = {}
+    if "keywords" in body.model_fields_set:
+        fields["keywords"] = body.keywords
+    if "category" in body.model_fields_set:
+        fields["category"] = body.category
+    if "question_types" in body.model_fields_set:
+        fields["question_types"] = body.question_types
+
+    updated = library_repository.bulk_update_meta(body.image_ids, fields, body.keywords_mode)
     return {"updated": updated}
 
 

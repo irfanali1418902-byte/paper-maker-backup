@@ -132,6 +132,32 @@ class BulkUpdateTopicRequest(BaseModel):
         return v
 
 
+_BULK_META_FIELDS = {"keywords", "category", "question_types"}
+
+
+class BulkUpdateMetaRequest(BaseModel):
+    """PATCH /api/library/bulk-meta — kai images ke smart tags ek saath badlo."""
+
+    image_ids: List[str]
+    keywords: Optional[str] = None
+    category: Optional[str] = None
+    question_types: Optional[str] = None
+    keywords_mode: Literal["append", "replace"] = "replace"
+
+    @field_validator("image_ids")
+    @classmethod
+    def _non_empty_ids(cls, v: List[str]) -> List[str]:
+        if not v:
+            raise ValueError("image_ids khaali nahi ho sakti.")
+        return v
+
+    @model_validator(mode="after")
+    def _at_least_one_meta(self) -> "BulkUpdateMetaRequest":
+        if not (self.model_fields_set & _BULK_META_FIELDS):
+            raise ValueError("Kam az kam ek field (keywords, category, ya question_types) dena zaroori hai.")
+        return self
+
+
 _SMART_FIELDS = {"name", "syllabus_topic_id", "keywords", "question_types", "category", "source_book", "page_number"}
 
 

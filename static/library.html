@@ -425,6 +425,7 @@
 <div id="selectionBar" class="bulk-action-bar">
   <span id="selectionCount" class="sel-count"></span>
   <button class="btn-bar-action" onclick="openBulkTopicModal()">Topic Badlo</button>
+  <button class="btn-bar-action" onclick="openBulkMetaModal()">Tags Badlo</button>
   <button class="btn-bar-cancel" onclick="clearSelection()">✕ Cancel</button>
 </div>
 
@@ -462,6 +463,48 @@
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeBulkTopicModal()">Cancel</button>
       <button class="btn-primary" id="btSaveBtn" onclick="saveBulkTopic()">Sab Update karo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BULK META MODAL ===== -->
+<div id="bulkMetaModal" class="modal-overlay" onclick="closeBulkMetaModalOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Kai Images ke Tags Badlo</div>
+      <button class="modal-close" onclick="closeBulkMetaModal()">✕</button>
+    </div>
+    <p id="bulkMetaCount" style="margin:0 0 16px;font-size:13px;color:var(--muted);"></p>
+
+    <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">comma se alag — jaise "apple, fruit, red"</span></label>
+    <input type="text" id="bmKeywords" placeholder="e.g. apple, fruit, red" />
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;margin:0;cursor:pointer;">
+        <input type="radio" name="bmMode" value="replace" checked /> Replace (purane hata do)
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;margin:0;cursor:pointer;">
+        <input type="radio" name="bmMode" value="append" /> Append (puranon mein add karo)
+      </label>
+    </div>
+
+    <label style="margin-top:16px;">Category <span style="font-size:11px;font-weight:400;color:var(--muted)">(khaali chhodo = nahi badlega)</span></label>
+    <input type="text" id="bmCategory" placeholder="e.g. fruit" />
+
+    <label style="margin-top:14px;">Question Types <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi check nahi = nahi badlega)</span></label>
+    <div class="qt-checks" id="bmQtChecks">
+      <label><input type="checkbox" value="count" /> Count</label>
+      <label><input type="checkbox" value="colour" /> Colour</label>
+      <label><input type="checkbox" value="match" /> Match</label>
+      <label><input type="checkbox" value="circle" /> Circle</label>
+      <label><input type="checkbox" value="identify" /> Identify</label>
+      <label><input type="checkbox" value="trace" /> Trace</label>
+    </div>
+
+    <div id="bulkMetaError" class="status-bar" style="margin-top:14px;margin-bottom:0;"></div>
+
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeBulkMetaModal()">Cancel</button>
+      <button class="btn-primary" id="bmSaveBtn" onclick="saveBulkMeta()">Sab Update karo</button>
     </div>
   </div>
 </div>
@@ -560,7 +603,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeEditModal(); closeBulkTopicModal(); }
+  if (e.key === 'Escape') { closeEditModal(); closeBulkTopicModal(); closeBulkMetaModal(); }
 });
 
 // -----------------------------------------------------------------------
@@ -1237,6 +1280,93 @@ function closeBulkTopicModal() {
 
 function closeBulkTopicModalOnBackdrop(e) {
   if (e.target === document.getElementById('bulkTopicModal')) closeBulkTopicModal();
+}
+
+// -----------------------------------------------------------------------
+// Bulk Meta Modal
+// -----------------------------------------------------------------------
+function openBulkMetaModal() {
+  if (_selectedIds.size === 0) return;
+  const n = _selectedIds.size;
+  document.getElementById('bulkMetaCount').textContent =
+    `${n} image${n !== 1 ? 's' : ''} ke tags update honge.`;
+
+  // Reset fields
+  document.getElementById('bmKeywords').value = '';
+  document.getElementById('bmCategory').value = '';
+  document.querySelectorAll('#bmQtChecks input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+  document.querySelector('input[name="bmMode"][value="replace"]').checked = true;
+  clearBulkMetaError();
+  document.getElementById('bmSaveBtn').disabled = false;
+  document.getElementById('bulkMetaModal').classList.add('open');
+}
+
+function closeBulkMetaModal() {
+  document.getElementById('bulkMetaModal').classList.remove('open');
+}
+
+function closeBulkMetaModalOnBackdrop(e) {
+  if (e.target === document.getElementById('bulkMetaModal')) closeBulkMetaModal();
+}
+
+async function saveBulkMeta() {
+  const keywords  = document.getElementById('bmKeywords').value.trim() || null;
+  const category  = document.getElementById('bmCategory').value.trim() || null;
+  const checkedTypes = [...document.querySelectorAll('#bmQtChecks input[type="checkbox"]:checked')]
+    .map(cb => cb.value);
+  const question_types = checkedTypes.length > 0 ? checkedTypes.join(', ') : null;
+
+  if (!keywords && !category && !question_types) {
+    showBulkMetaError('Kam az kam ek field bharo (keywords, category, ya question types).');
+    return;
+  }
+
+  const keywords_mode = document.querySelector('input[name="bmMode"]:checked').value;
+
+  const btn = document.getElementById('bmSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Update ho raha hai...';
+  clearBulkMetaError();
+
+  const payload = { image_ids: [..._selectedIds], keywords_mode };
+  if (keywords !== null)       payload.keywords       = keywords;
+  if (category !== null)       payload.category       = category;
+  if (question_types !== null) payload.question_types = question_types;
+
+  try {
+    const res = await apiFetch('/api/library/bulk-meta', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = Array.isArray(data.detail) ? data.detail[0]?.msg : data.detail;
+      showBulkMetaError(msg || 'Update nahi ho saka.');
+      return;
+    }
+    closeBulkMetaModal();
+    clearSelection();
+    await loadGrid();
+    await loadCategoryOptions();
+  } catch (e) {
+    showBulkMetaError('Network error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sab Update karo';
+  }
+}
+
+function showBulkMetaError(msg) {
+  const el = document.getElementById('bulkMetaError');
+  el.className = 'status-bar err';
+  el.textContent = msg;
+}
+
+function clearBulkMetaError() {
+  const el = document.getElementById('bulkMetaError');
+  el.className = 'status-bar';
+  el.textContent = '';
 }
 
 function onBtSubjectChange() {
