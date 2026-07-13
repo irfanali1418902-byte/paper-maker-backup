@@ -197,6 +197,17 @@ def init_db() -> None:
             "UPDATE image_library SET name_normalized = LOWER(TRIM(name))"
             " WHERE name_normalized IS NULL"
         )
+    # Smart Image Library columns (HISSA A).
+    if "keywords" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN keywords TEXT")
+    if "question_types" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN question_types TEXT")
+    if "category" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN category TEXT")
+    if "source_book" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN source_book TEXT")
+    if "page_number" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN page_number INTEGER")
 
     conn.commit()
     conn.close()

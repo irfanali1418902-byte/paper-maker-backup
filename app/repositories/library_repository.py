@@ -125,6 +125,8 @@ def list_by_filters(
     grade: Optional[str] = None,
     syllabus_topic_id: Optional[str] = None,
     q: Optional[str] = None,
+    category: Optional[str] = None,
+    question_type: Optional[str] = None,
 ) -> list:
     conn = get_connection()
     cur = conn.cursor()
@@ -140,12 +142,49 @@ def list_by_filters(
         query += " AND syllabus_topic_id = ?"
         params.append(syllabus_topic_id)
     if q:
-        query += " AND name LIKE ?"
-        params.append(f"%{q}%")
+        like = f"%{q}%"
+        query += " AND (name LIKE ? OR keywords LIKE ? OR category LIKE ?)"
+        params.extend([like, like, like])
+    if category:
+        query += " AND LOWER(category) = LOWER(?)"
+        params.append(category)
+    if question_type:
+        query += " AND question_types LIKE ?"
+        params.append(f"%{question_type}%")
     query += " ORDER BY created_at DESC"
     rows = cur.execute(query, params).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def distinct_categories() -> list:
+    """image_library mein maujood saari unique categories wapas karo (NULL skip)."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT DISTINCT LOWER(TRIM(category)) as cat FROM image_library"
+        " WHERE category IS NOT NULL AND TRIM(category) != ''"
+        " ORDER BY cat"
+    ).fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+
+def distinct_question_types() -> list:
+    """image_library mein question_types field se saare unique types wapas karo."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT question_types FROM image_library WHERE question_types IS NOT NULL AND TRIM(question_types) != ''"
+    ).fetchall()
+    conn.close()
+    seen: set = set()
+    result = []
+    for row in rows:
+        for part in row[0].split(","):
+            val = part.strip().lower()
+            if val and val not in seen:
+                seen.add(val)
+                result.append(val)
+    return sorted(result)
 
 
 def delete(image_id: str) -> bool:

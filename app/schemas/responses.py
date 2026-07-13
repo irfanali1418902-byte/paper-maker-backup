@@ -240,6 +240,11 @@ class LibraryImage(BaseModel):
     syllabus_topic_id: Optional[str] = None
     uploaded_by: Optional[str] = None
     created_at: Optional[str] = None
+    keywords: Optional[str] = None
+    question_types: Optional[str] = None
+    category: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = None
 
 
 # ---- Result analyzer dashboard (Phase 2) ------------------------------------

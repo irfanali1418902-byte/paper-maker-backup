@@ -132,11 +132,19 @@ class BulkUpdateTopicRequest(BaseModel):
         return v
 
 
+_SMART_FIELDS = {"name", "syllabus_topic_id", "keywords", "question_types", "category", "source_book", "page_number"}
+
+
 class UpdateLibraryImageRequest(BaseModel):
-    """PATCH /api/library/{id} — image ka naam ya topic (ya dono) badlo."""
+    """PATCH /api/library/{id} — image ka naam, topic, ya smart fields (ya koi bhi) badlo."""
 
     name: Optional[str] = None
     syllabus_topic_id: Optional[str] = None  # None = topic unlink; absent = koi tabdeeli nahi
+    keywords: Optional[str] = None
+    question_types: Optional[str] = None
+    category: Optional[str] = None
+    source_book: Optional[str] = None
+    page_number: Optional[int] = None
 
     @field_validator("name")
     @classmethod
@@ -147,8 +155,8 @@ class UpdateLibraryImageRequest(BaseModel):
 
     @model_validator(mode="after")
     def _at_least_one(self) -> "UpdateLibraryImageRequest":
-        if "name" not in self.model_fields_set and "syllabus_topic_id" not in self.model_fields_set:
-            raise ValueError("Kam az kam naam ya topic dena zaroori hai.")
+        if not (self.model_fields_set & _SMART_FIELDS):
+            raise ValueError("Kam az kam ek field dena zaroori hai.")
         return self
 
 

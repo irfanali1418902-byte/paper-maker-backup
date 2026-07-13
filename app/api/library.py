@@ -70,10 +70,17 @@ def list_library_images(
     grade: Optional[str] = None,
     syllabus_topic_id: Optional[str] = None,
     q: Optional[str] = None,
+    category: Optional[str] = None,
+    question_type: Optional[str] = None,
 ):
-    """Library images list karta hai — subject/grade/topic filter + naam search."""
+    """Library images list karta hai — subject/grade/topic/category/question_type filter + naam+keywords search."""
     return library_repository.list_by_filters(
-        subject=subject, grade=grade, syllabus_topic_id=syllabus_topic_id, q=q
+        subject=subject,
+        grade=grade,
+        syllabus_topic_id=syllabus_topic_id,
+        q=q,
+        category=category,
+        question_type=question_type,
     )
 
 
@@ -112,7 +119,7 @@ def bulk_update_library_topic(body: BulkUpdateTopicRequest):
 
 @router.patch("/api/library/{image_id}", response_model=LibraryImage)
 def update_library_image(image_id: str, body: UpdateLibraryImageRequest):
-    """Library image ka naam ya topic update karo (ya dono ek saath)."""
+    """Library image ka naam, topic, ya smart fields update karo."""
     img = library_repository.find_by_id(image_id)
     if img is None:
         raise HTTPException(status_code=404, detail="Library image nahi mili.")
@@ -141,6 +148,10 @@ def update_library_image(image_id: str, body: UpdateLibraryImageRequest):
             updates["syllabus_topic_id"] = new_topic_id
             updates["subject"] = topic["subject"]
             updates["grade"] = topic.get("grade")
+
+    for field in ("keywords", "question_types", "category", "source_book", "page_number"):
+        if field in body.model_fields_set:
+            updates[field] = getattr(body, field)
 
     library_repository.update_image(image_id, updates)
     return library_repository.find_by_id(image_id)
@@ -219,3 +230,15 @@ def topics_with_images(ids: str = ""):
     id_list = [i.strip() for i in ids.split(",") if i.strip()]
     counts = library_repository.topic_image_counts(id_list)
     return {"topics": counts}
+
+
+@router.get("/api/library/categories")
+def list_categories():
+    """Library mein maujood saari unique categories wapas karo (filter dropdown ke liye)."""
+    return {"categories": library_repository.distinct_categories()}
+
+
+@router.get("/api/library/question-types")
+def list_question_types():
+    """Library mein maujood saare unique question_types wapas karo (filter ke liye)."""
+    return {"question_types": library_repository.distinct_question_types()}
