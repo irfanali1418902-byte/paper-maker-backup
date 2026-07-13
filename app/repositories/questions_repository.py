@@ -162,6 +162,62 @@ def find_for_bank_paper(
     return [dict(row) for row in rows]
 
 
+def find_for_blueprint_section(
+    subject: Optional[str],
+    topic_ids: list,
+    question_types: list,
+    source: Optional[str],
+    status: str = "published",
+    difficulty: Optional[str] = None,
+    bloom_level: Optional[str] = None,
+) -> list:
+    """Blueprint section ke liye filtered query — difficulty/bloom/status support ke saath.
+
+    status='all' → status filter nahi lagta (draft/archived bhi aate hain).
+    topic_ids=[] → koi topic filter nahi.
+    difficulty=None → koi difficulty filter nahi.
+    bloom_level=None → koi bloom filter nahi.
+    """
+    conn = get_connection()
+    query = "SELECT * FROM questions WHERE 1=1"
+    params: list = []
+
+    if subject:
+        query += " AND subject = ?"
+        params.append(subject)
+
+    if topic_ids:
+        placeholders = ",".join("?" for _ in topic_ids)
+        query += f" AND syllabus_topic_id IN ({placeholders})"
+        params.extend(topic_ids)
+
+    if question_types:
+        type_placeholders = ",".join("?" for _ in question_types)
+        query += f" AND question_type IN ({type_placeholders})"
+        params.extend(question_types)
+
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+
+    if status != "all":
+        query += " AND status = ?"
+        params.append(status)
+
+    if difficulty:
+        query += " AND difficulty = ?"
+        params.append(difficulty)
+
+    if bloom_level:
+        query += " AND bloom_level = ?"
+        params.append(bloom_level)
+
+    query += " ORDER BY usage_count ASC"
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def list_by_filters(
     subject: Optional[str] = None,
     topic: Optional[str] = None,
