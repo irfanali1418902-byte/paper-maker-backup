@@ -27,6 +27,9 @@ _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 VALID_TYPES = {"mcq", "fill", "tf", "short"}
 MCQ_CORRECT = {"a", "b", "c", "d"}
 TF_CORRECT = {"true", "false"}
+VALID_BLOOM = {"REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE"}
+VALID_DIFFICULTIES = {"easy", "medium", "hard"}
+VALID_STATUSES = {"published", "draft", "archived"}
 
 REQUIRED_COLUMNS = {
     "type", "question", "subject",
@@ -112,12 +115,14 @@ def _cell(row: pd.Series, col: str) -> str:
     return str(val).strip()
 
 
-def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optional[str]]:
+def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], list[str]]:
     """Validate one DataFrame row.
 
-    Returns (question_dict, None) on success or (None, error_message) on failure.
+    Returns (question_dict, warnings_list) on success, or (None, [error]) on failure.
     row_num is 1-indexed (header = row 1, first data row = row 2).
     """
+    msgs: list[str] = []
+
     qtype = _cell(row, "type").lower()
     question = _cell(row, "question")
     subject = _cell(row, "subject")
@@ -130,11 +135,11 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
 
     # ── required field checks ────────────────────────────────────────────────
     if not question:
-        return None, f"row {row_num}: question column khaali hai"
+        return None, [f"row {row_num}: question column khaali hai"]
 
     if qtype not in VALID_TYPES:
         label = qtype or "(khaali)"
-        return None, f"row {row_num}: type '{label}' valid nahi (mcq/fill/tf/short hona chahiye)"
+        return None, [f"row {row_num}: type '{label}' valid nahi (mcq/fill/tf/short hona chahiye)"]
 
     # ── MCQ-specific ─────────────────────────────────────────────────────────
     opt_a = _cell(row, "option_a")
@@ -149,20 +154,20 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
             if not val
         ]
         if missing_opts:
-            return None, f"row {row_num}: MCQ mein {', '.join(missing_opts)} missing hai"
+            return None, [f"row {row_num}: MCQ mein {', '.join(missing_opts)} missing hai"]
 
         if correct_raw.lower() not in MCQ_CORRECT:
-            return None, (
+            return None, [
                 f"row {row_num}: MCQ ka correct '{correct_raw}' valid nahi "
                 f"(a/b/c/d hona chahiye)"
-            )
+            ]
 
     # ── TF-specific ──────────────────────────────────────────────────────────
     if qtype == "tf" and correct_raw.lower() not in TF_CORRECT:
-        return None, (
+        return None, [
             f"row {row_num}: true/false ka correct '{correct_raw}' valid nahi "
             f"(true/false hona chahiye)"
-        )
+        ]
 
     # ── marks (silent default = 1) ────────────────────────────────────────────
     try:
@@ -175,18 +180,89 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
     # ── is_urdu ──────────────────────────────────────────────────────────────
     is_urdu = is_urdu_raw in {"yes", "1", "true", "haan"}
 
+    # ── bloom_level (optional, default UNDERSTAND) ────────────────────────────
+    bloom_raw = _cell(row, "bloom_level").upper()
+    if bloom_raw and bloom_raw not in VALID_BLOOM:
+        msgs.append(
+            f"row {row_num}: bloom_level '{bloom_raw}' valid nahi "
+            f"(REMEMBER/UNDERSTAND/APPLY/ANALYZE/EVALUATE/CREATE), 'UNDERSTAND' use kiya"
+        )
+        bloom_level = "UNDERSTAND"
+    else:
+        bloom_level = bloom_raw or "UNDERSTAND"
+
+    # ── difficulty (optional, default medium) ────────────────────────────────
+    difficulty_raw = _cell(row, "difficulty").lower()
+    if difficulty_raw and difficulty_raw not in VALID_DIFFICULTIES:
+        msgs.append(
+            f"row {row_num}: difficulty '{difficulty_raw}' valid nahi "
+            f"(easy/medium/hard), 'medium' use kiya"
+        )
+        difficulty = "medium"
+    else:
+        difficulty = difficulty_raw or "medium"
+
+    # ── status (optional, default published) ─────────────────────────────────
+    status_raw = _cell(row, "status").lower()
+    if status_raw and status_raw not in VALID_STATUSES:
+        msgs.append(
+            f"row {row_num}: status '{status_raw}' valid nahi "
+            f"(published/draft/archived), 'published' use kiya"
+        )
+        status = "published"
+    else:
+        status = status_raw or "published"
+
+    # ── estimated_time (optional, must be int ≥ 1) ───────────────────────────
+    estimated_time: Optional[int] = None
+    et_raw = _cell(row, "estimated_time")
+    if et_raw:
+        try:
+            et = int(float(et_raw))
+            if et >= 1:
+                estimated_time = et
+            else:
+                msgs.append(
+                    f"row {row_num}: estimated_time '{et_raw}' 1 se kam hai, None rakha"
+                )
+        except ValueError:
+            msgs.append(
+                f"row {row_num}: estimated_time '{et_raw}' number nahi hai, None rakha"
+            )
+
+    # ── page_number (optional, must be int ≥ 1) ──────────────────────────────
+    page_number: Optional[int] = None
+    pn_raw = _cell(row, "page_number")
+    if pn_raw:
+        try:
+            pn = int(float(pn_raw))
+            if pn >= 1:
+                page_number = pn
+            else:
+                msgs.append(
+                    f"row {row_num}: page_number '{pn_raw}' 1 se kam hai, None rakha"
+                )
+        except ValueError:
+            msgs.append(
+                f"row {row_num}: page_number '{pn_raw}' number nahi hai, None rakha"
+            )
+
+    # ── plain text optional fields ────────────────────────────────────────────
+    learning_outcome: Optional[str] = _cell(row, "learning_outcome") or None
+    keywords: Optional[str] = _cell(row, "keywords") or None
+    source_book: Optional[str] = _cell(row, "source_book") or None
+
     # ── topic matching ────────────────────────────────────────────────────────
     topic_id = _find_topic_id(topic_name, subject, grade) if topic_name else None
-    topic_warning: Optional[str] = None
     if topic_name and topic_id is None:
         suggestion = _suggest_topic(topic_name)
         if suggestion:
-            topic_warning = (
+            msgs.append(
                 f"row {row_num}: topic '{topic_name}' syllabus mein nahi mila "
                 f"(kya aap ka matlab '{suggestion}' tha?), topic_id=NULL rakha"
             )
         else:
-            topic_warning = (
+            msgs.append(
                 f"row {row_num}: topic '{topic_name}' syllabus mein nahi mila, "
                 f"topic_id=NULL rakha"
             )
@@ -208,8 +284,8 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
         "id": str(uuid.uuid4()),
         "subject": subject,
         "topic": topic_name,
-        "bloom_level": "UNDERSTAND",
-        "difficulty": "medium",
+        "bloom_level": bloom_level,
+        "difficulty": difficulty,
         "question_type": _map_type(qtype),
         "marks": marks,
         "question_en": None if is_urdu else question,
@@ -226,9 +302,15 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], Optiona
         "image_path": None,
         "image_size": None,
         "source": "manual",
+        "learning_outcome": learning_outcome,
+        "estimated_time": estimated_time,
+        "keywords": keywords,
+        "source_book": source_book,
+        "page_number": page_number,
+        "status": status,
         "_image_name": image_name,  # internal — resolved after insert
     }
-    return q, topic_warning
+    return q, msgs
 
 
 def _map_type(qtype: str) -> str:
@@ -292,16 +374,13 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
 
     for idx, row in df.iterrows():
         row_num = int(idx) + 2  # header=1, first data row=2
-        q_dict, result = _validate_row(row, row_num)
+        q_dict, msgs = _validate_row(row, row_num)
 
         if q_dict is None:
-            # result is an error string
-            errors.append(result)
+            errors.extend(msgs)
             continue
 
-        if result is not None:
-            # result is a topic warning — still import
-            warnings.append(result)
+        warnings.extend(msgs)
 
         image_name = q_dict.pop("_image_name", "")
         questions_repository.insert(q_dict)
