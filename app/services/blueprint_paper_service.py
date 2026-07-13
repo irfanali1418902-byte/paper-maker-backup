@@ -6,6 +6,8 @@ Design rules:
 - Error sirf tab jab poore paper mein zero questions mile (sab sections khaali).
 - sections_meta JSON paper row mein store hoti hai (print.html ke liye).
 - Questions ki image_path automatic saath aati hai — koi extra step nahi.
+- Naye filters: status (default published), difficulty, bloom_level.
+- difficulty_distribution: per-difficulty separate fetch, per-difficulty shortfall.
 """
 
 from __future__ import annotations
@@ -14,7 +16,6 @@ import uuid
 from datetime import date
 from typing import Optional
 
-from app.core.database import get_connection
 from app.repositories import papers_repository, questions_repository
 from app.services import item_analysis_service
 
@@ -32,9 +33,11 @@ def assemble_blueprint_paper(
     Returns assembled paper dict, or None if every section yielded zero
     questions (caller maps to 404).
 
-    sections_input element shape:
+    sections_input element shape (all new fields optional for backward compat):
         heading, question_types (list), topic_ids (list), count,
-        marks_each, source_filter
+        marks_each, source_filter,
+        status_filter (default 'published'), difficulty_filter,
+        bloom_filter, difficulty_distribution
     """
     all_question_ids: list[str] = []
     all_questions: list[dict] = []
@@ -50,48 +53,61 @@ def assemble_blueprint_paper(
         source_filter = sec.get("source_filter", "manual")
         source_arg    = None if source_filter == "all" else source_filter
 
-        # Fetch candidates for this section
-        candidates = _fetch_section_candidates(
-            subject=subject,
-            topic_ids=topic_ids,
-            question_types=qtypes,
-            source=source_arg,
-        )
+        # New filter fields — safe defaults for backward compat with old blueprints
+        status_filter = sec.get("status_filter", "published")
+        difficulty_filter = sec.get("difficulty_filter")
+        bloom_filter  = sec.get("bloom_filter")
+        distribution  = sec.get("difficulty_distribution")
 
-        # Slice to wanted count (already ordered by usage_count ASC)
-        picked = candidates[:wanted]
-        found  = len(picked)
-
-        if found < wanted:
-            shortfall_notes.append(
-                f"{heading}: {wanted} maange, {found} mile"
+        if distribution:
+            picked, sec_shortfall_notes = _fetch_with_distribution(
+                subject=subject,
+                topic_ids=topic_ids,
+                question_types=qtypes,
+                source=source_arg,
+                status=status_filter,
+                bloom_level=bloom_filter,
+                distribution=distribution,
+                wanted=wanted,
+                heading=heading,
+            )
+        else:
+            picked, sec_shortfall_notes = _fetch_simple(
+                subject=subject,
+                topic_ids=topic_ids,
+                question_types=qtypes,
+                source=source_arg,
+                status=status_filter,
+                difficulty=difficulty_filter,
+                bloom_level=bloom_filter,
+                wanted=wanted,
+                heading=heading,
             )
 
-        # Bump usage counts
+        shortfall_notes.extend(sec_shortfall_notes)
+
         for q in picked:
             questions_repository.increment_usage_count(q["id"])
 
-        sec_qids = [q["id"] for q in picked]
+        sec_qids  = [q["id"] for q in picked]
         sec_marks = sum(marks_each for _ in picked)
 
         sections_meta.append({
             "heading":      heading,
             "question_ids": sec_qids,
             "marks":        sec_marks,
-            "shortfall":    wanted - found,
+            "shortfall":    wanted - len(picked),
         })
 
         all_question_ids.extend(sec_qids)
         all_questions.extend(picked)
 
-    # If every section is empty — caller sends 404
     if not all_questions:
         return None
 
-    # Annotate difficulty mismatch (same as other paper types)
     _annotate_expected_difficulty(all_questions)
 
-    total_marks = sum(q["marks"] for q in all_questions)
+    total_marks   = sum(q["marks"] for q in all_questions)
     resolved_title = _resolve_title(paper_title, subject or "", class_name)
 
     paper_id = str(uuid.uuid4())
@@ -106,10 +122,10 @@ def assemble_blueprint_paper(
     )
 
     return {
-        "paper_id":       paper_id,
-        "total_marks":    total_marks,
-        "questions":      all_questions,
-        "sections_meta":  sections_meta,
+        "paper_id":        paper_id,
+        "total_marks":     total_marks,
+        "questions":       all_questions,
+        "sections_meta":   sections_meta,
         "shortfall_notes": shortfall_notes,
         "balance_summary": item_analysis_service.summarize_paper_balance(all_questions),
     }
@@ -117,52 +133,98 @@ def assemble_blueprint_paper(
 
 # ── private helpers ───────────────────────────────────────────────────────────
 
-def _fetch_section_candidates(
+def _fetch_simple(
     subject: Optional[str],
-    topic_ids: list[str],
-    question_types: list[str],
+    topic_ids: list,
+    question_types: list,
     source: Optional[str],
-) -> list[dict]:
-    """Fetch questions matching this section's criteria, least-used first.
+    status: str,
+    difficulty: Optional[str],
+    bloom_level: Optional[str],
+    wanted: int,
+    heading: str,
+) -> tuple[list[dict], list[str]]:
+    """Single query fetch — no distribution. Returns (picked, shortfall_notes)."""
+    candidates = questions_repository.find_for_blueprint_section(
+        subject=subject,
+        topic_ids=topic_ids,
+        question_types=question_types,
+        source=source,
+        status=status,
+        difficulty=difficulty,
+        bloom_level=bloom_level,
+    )
+    picked = candidates[:wanted]
+    notes = []
+    if len(picked) < wanted:
+        notes.append(f"{heading}: {wanted} maange, {len(picked)} mile")
+    return picked, notes
 
-    topic_ids=[] means no topic filter (any topic).
-    topic_ids=[id1, id2] uses IN (...) — multiple topics allowed.
+
+def _fetch_with_distribution(
+    subject: Optional[str],
+    topic_ids: list,
+    question_types: list,
+    source: Optional[str],
+    status: str,
+    bloom_level: Optional[str],
+    distribution: dict,
+    wanted: int,
+    heading: str,
+) -> tuple[list[dict], list[str]]:
+    """Per-difficulty fetch. Returns (picked, shortfall_notes).
+
+    distribution = {"easy": 3, "medium": 5, "hard": 2}
+    sum(distribution.values()) <= wanted  (validated by Pydantic already).
+    Remaining slots (wanted - sum) filled from any-difficulty pool,
+    excluding already-picked ids.
     """
-    if not topic_ids:
-        # No topic filter — delegate to existing find_for_bank_paper
-        return questions_repository.find_for_bank_paper(
-            subject=subject or None,
-            syllabus_topic_id=None,
-            question_types=question_types or None,
+    picked: list[dict] = []
+    notes: list[str] = []
+    used_ids: set[str] = set()
+
+    for diff, need in distribution.items():
+        if need <= 0:
+            continue
+        candidates = questions_repository.find_for_blueprint_section(
+            subject=subject,
+            topic_ids=topic_ids,
+            question_types=question_types,
             source=source,
+            status=status,
+            difficulty=diff,
+            bloom_level=bloom_level,
         )
+        # Exclude already-picked ids (shouldn't overlap, but be safe)
+        candidates = [q for q in candidates if q["id"] not in used_ids]
+        slot = candidates[:need]
+        found = len(slot)
+        if found < need:
+            notes.append(f"{heading}: {need} {diff} maange, {found} mile")
+        picked.extend(slot)
+        used_ids.update(q["id"] for q in slot)
 
-    # Multiple topic_ids — build IN query directly
-    conn = get_connection()
-    query = "SELECT * FROM questions WHERE 1=1"
-    params: list = []
+    # Fill remaining slots (unspecified difficulty)
+    distributed_sum = sum(distribution.values())
+    remaining = wanted - distributed_sum
+    if remaining > 0:
+        extra_candidates = questions_repository.find_for_blueprint_section(
+            subject=subject,
+            topic_ids=topic_ids,
+            question_types=question_types,
+            source=source,
+            status=status,
+            difficulty=None,
+            bloom_level=bloom_level,
+        )
+        extra_candidates = [q for q in extra_candidates if q["id"] not in used_ids]
+        extra = extra_candidates[:remaining]
+        if len(extra) < remaining:
+            notes.append(f"{heading}: {remaining} remaining maange, {len(extra)} mile")
+        picked.extend(extra)
+        used_ids.update(q["id"] for q in extra)
 
-    if subject:
-        query += " AND subject = ?"
-        params.append(subject)
-
-    placeholders = ",".join("?" for _ in topic_ids)
-    query += f" AND syllabus_topic_id IN ({placeholders})"
-    params.extend(topic_ids)
-
-    if question_types:
-        type_placeholders = ",".join("?" for _ in question_types)
-        query += f" AND question_type IN ({type_placeholders})"
-        params.extend(question_types)
-
-    if source:
-        query += " AND source = ?"
-        params.append(source)
-
-    query += " ORDER BY usage_count ASC"
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    return picked, notes
 
 
 def _resolve_title(paper_title: Optional[str], subject: str, class_name: Optional[str]) -> str:

@@ -201,6 +201,33 @@
     padding: 5px 10px; border-radius: 6px;
   }
 
+  /* ---- Filter section (new: status/difficulty/bloom/distribution) ---- */
+  .filter-section { margin-top: 14px; border-top: 1px solid #dce5f3; padding-top: 14px; }
+  .filter-section-title {
+    font-size: 11px; font-weight: 700; color: var(--muted2);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+  }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-row > div { flex: 1; min-width: 110px; }
+  .filter-row select { min-height: 38px; font-size: 13px; margin-top: 4px; }
+  .filter-row label { font-size: 12px; margin-top: 0; }
+
+  .dist-toggle-row {
+    display: flex; align-items: center; gap: 9px; margin-top: 12px; cursor: pointer;
+  }
+  .dist-toggle-row input[type="checkbox"] {
+    width: 16px; height: 16px; min-height: 0;
+    accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+  }
+  .dist-toggle-row span { font-size: 13px; font-weight: 600; color: var(--ink2); }
+
+  .dist-inputs { margin-top: 10px; }
+  .dist-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+  .dist-field { flex: 1; min-width: 80px; }
+  .dist-field label { font-size: 12px; margin-top: 0; }
+  .dist-field input { min-height: 36px; font-size: 13px; }
+  .dist-note { font-size: 11.5px; color: var(--muted); margin-top: 7px; font-style: italic; }
+
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
@@ -441,7 +468,14 @@ function loadPreset() {
   if (!id) return;
   const preset = _presets.find(p => p.id === id);
   if (!preset) return;
-  _sections = preset.sections.map(s => ({ ...s, topic_ids: [] }));
+  _sections = preset.sections.map(s => ({
+    status_filter: 'published',
+    difficulty_filter: null,
+    bloom_filter: null,
+    difficulty_distribution: null,
+    ...s,
+    topic_ids: [],
+  }));
   renderSections();
   updateMarksBar();
 }
@@ -457,6 +491,10 @@ function addSection() {
     count: 10,
     marks_each: 1,
     source_filter: 'manual',
+    status_filter: 'published',
+    difficulty_filter: null,
+    bloom_filter: null,
+    difficulty_distribution: null,
   });
   renderSections();
   updateMarksBar();
@@ -498,8 +536,17 @@ function renderSecCard(sec, i) {
       }).join('')
     : '<div class="no-topics-msg">Pehle subject + class chunein topics dekhne ke liye</div>';
 
-  const srcSelected = (v) => sec.source_filter === v ? 'selected' : '';
+  const srcSelected  = (v) => sec.source_filter === v ? 'selected' : '';
   const previewMarks = sec.count * sec.marks_each;
+
+  // --- Filter helpers ---
+  const statusSel = (v) => (sec.status_filter || 'published') === v ? 'selected' : '';
+  const diffSel   = (v) => (sec.difficulty_filter || '') === v ? 'selected' : '';
+  const bloomSel  = (v) => (sec.bloom_filter || '') === v ? 'selected' : '';
+  const distOn    = !!(sec.difficulty_distribution);
+  const distEasy  = distOn ? (sec.difficulty_distribution.easy   || 0) : 0;
+  const distMed   = distOn ? (sec.difficulty_distribution.medium || 0) : 0;
+  const distHard  = distOn ? (sec.difficulty_distribution.hard   || 0) : 0;
 
   return `
   <div class="sec-card">
@@ -544,6 +591,71 @@ function renderSecCard(sec, i) {
         </select>
       </div>
     </div>
+
+    <div class="filter-section">
+      <div class="filter-section-title">Filters</div>
+      <div class="filter-row">
+        <div>
+          <label>Status</label>
+          <select onchange="onStatusFilter(${i}, this.value)">
+            <option value="published" ${statusSel('published')}>Published (default)</option>
+            <option value="draft"     ${statusSel('draft')}>Draft</option>
+            <option value="archived"  ${statusSel('archived')}>Archived</option>
+            <option value="all"       ${statusSel('all')}>All (published + draft + archived)</option>
+          </select>
+        </div>
+        <div>
+          <label>Difficulty</label>
+          <select id="diffSel_${i}" onchange="onDiffFilter(${i}, this.value)" ${distOn ? 'disabled' : ''}>
+            <option value=""       ${diffSel('')}>Any</option>
+            <option value="easy"   ${diffSel('easy')}>Easy</option>
+            <option value="medium" ${diffSel('medium')}>Medium</option>
+            <option value="hard"   ${diffSel('hard')}>Hard</option>
+          </select>
+        </div>
+        <div>
+          <label>Bloom Level</label>
+          <select onchange="onBloomFilter(${i}, this.value)">
+            <option value=""           ${bloomSel('')}>Any</option>
+            <option value="REMEMBER"   ${bloomSel('REMEMBER')}>Remember</option>
+            <option value="UNDERSTAND" ${bloomSel('UNDERSTAND')}>Understand</option>
+            <option value="APPLY"      ${bloomSel('APPLY')}>Apply</option>
+            <option value="ANALYZE"    ${bloomSel('ANALYZE')}>Analyze</option>
+            <option value="EVALUATE"   ${bloomSel('EVALUATE')}>Evaluate</option>
+            <option value="CREATE"     ${bloomSel('CREATE')}>Create</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="dist-toggle-row" style="margin-top:12px;cursor:pointer;">
+        <input type="checkbox" id="distToggle_${i}" ${distOn ? 'checked' : ''}
+          onchange="onDistToggle(${i}, this.checked)" />
+        <span>Difficulty Distribution (per-difficulty counts)</span>
+      </label>
+
+      <div id="distInputs_${i}" style="display:${distOn ? 'block' : 'none'};">
+        <div class="dist-inputs">
+          <div class="dist-fields">
+            <div class="dist-field">
+              <label>Easy</label>
+              <input type="number" value="${distEasy}" min="0" max="200"
+                oninput="onDistInput(${i}, 'easy', parseInt(this.value)||0)" />
+            </div>
+            <div class="dist-field">
+              <label>Medium</label>
+              <input type="number" value="${distMed}" min="0" max="200"
+                oninput="onDistInput(${i}, 'medium', parseInt(this.value)||0)" />
+            </div>
+            <div class="dist-field">
+              <label>Hard</label>
+              <input type="number" value="${distHard}" min="0" max="200"
+                oninput="onDistInput(${i}, 'hard', parseInt(this.value)||0)" />
+            </div>
+          </div>
+          <div class="dist-note">Sum ≤ Section Count. Remaining slots any-difficulty se bharain ge. Difficulty Filter disable ho jata hai jab distribution on ho.</div>
+        </div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -577,6 +689,43 @@ function onTopicChange(idx, cb) {
   }
 }
 
+// ================================================================
+// Filter handlers (new)
+// ================================================================
+function onStatusFilter(idx, val) {
+  _sections[idx].status_filter = val;
+}
+
+function onDiffFilter(idx, val) {
+  _sections[idx].difficulty_filter = val || null;
+}
+
+function onBloomFilter(idx, val) {
+  _sections[idx].bloom_filter = val || null;
+}
+
+function onDistToggle(idx, on) {
+  if (on) {
+    _sections[idx].difficulty_distribution = { easy: 0, medium: 0, hard: 0 };
+    _sections[idx].difficulty_filter = null;
+    const ds = document.getElementById(`diffSel_${idx}`);
+    if (ds) { ds.value = ''; ds.disabled = true; }
+  } else {
+    _sections[idx].difficulty_distribution = null;
+    const ds = document.getElementById(`diffSel_${idx}`);
+    if (ds) ds.disabled = false;
+  }
+  const inp = document.getElementById(`distInputs_${idx}`);
+  if (inp) inp.style.display = on ? 'block' : 'none';
+}
+
+function onDistInput(idx, diff, val) {
+  if (!_sections[idx].difficulty_distribution) {
+    _sections[idx].difficulty_distribution = { easy: 0, medium: 0, hard: 0 };
+  }
+  _sections[idx].difficulty_distribution[diff] = val;
+}
+
 function renderTopicsInSections() {
   // Refresh topic lists in all existing rendered sections without full re-render
   renderSections();
@@ -602,6 +751,13 @@ function collectSections() {
     if (!sec) return;
     const headingEl = card.querySelector('input[type="text"]');
     sec.heading = headingEl ? headingEl.value.trim() : sec.heading;
+
+    // Clean distribution: all-zero means no distribution intent
+    if (sec.difficulty_distribution) {
+      const sum = Object.values(sec.difficulty_distribution).reduce((a, b) => a + b, 0);
+      if (sum === 0) sec.difficulty_distribution = null;
+    }
+
     out.push(sec);
   });
   return out;
@@ -620,6 +776,13 @@ function validate() {
     if (!s.question_types.length) { setStatus('err', `⚠️ Section ${i+1} mein kam az kam ek question type chunein.`); return null; }
     if (!s.count || s.count < 1) { setStatus('err', `⚠️ Section ${i+1}: count zaroori hai (min 1).`); return null; }
     if (!s.marks_each || s.marks_each < 1) { setStatus('err', `⚠️ Section ${i+1}: marks each zaroori hai (min 1).`); return null; }
+    if (s.difficulty_distribution) {
+      const distSum = Object.values(s.difficulty_distribution).reduce((a, b) => a + b, 0);
+      if (distSum > s.count) {
+        setStatus('err', `⚠️ Section ${i+1}: difficulty distribution ka sum (${distSum}) section count (${s.count}) se zyada hai.`);
+        return null;
+      }
+    }
   }
 
   return { name, sections };
@@ -803,7 +966,13 @@ function loadBpIntoForm(bp) {
     }
   }
 
-  _sections = (bp.sections || []).map(s => ({ ...s }));
+  _sections = (bp.sections || []).map(s => ({
+    status_filter: 'published',
+    difficulty_filter: null,
+    bloom_filter: null,
+    difficulty_distribution: null,
+    ...s,
+  }));
   renderSections();
   updateMarksBar();
   setStatus('ok', `✅ Blueprint "${escHtml(bp.name)}" load ho gaya — edit karke Paper Banao.`);

@@ -339,6 +339,12 @@ class ManualQuestionUpdateRequest(BaseModel):
         return self
 
 
+_VALID_DIFFICULTIES = {"easy", "medium", "hard"}
+_VALID_BLOOM_LEVELS = {
+    "REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE",
+}
+
+
 class BlueprintSection(BaseModel):
     """One section in a blueprint — e.g. 'Section A — MCQ'."""
 
@@ -348,6 +354,14 @@ class BlueprintSection(BaseModel):
     count: int = Field(ge=1)
     marks_each: int = Field(default=1, ge=1)
     source_filter: str = "manual"
+
+    # --- New filter fields (all optional; absent = no filter / safe default) ---
+    status_filter: Literal["published", "draft", "archived", "all"] = "published"
+    difficulty_filter: Optional[Literal["easy", "medium", "hard"]] = None
+    bloom_filter: Optional[str] = None
+    # difficulty_distribution: {"easy": 3, "medium": 5, "hard": 2}
+    # Sum must be ≤ count. Mutually exclusive with difficulty_filter.
+    difficulty_distribution: Optional[dict] = None
 
     @field_validator("question_types")
     @classmethod
@@ -362,6 +376,45 @@ class BlueprintSection(BaseModel):
         if v not in ("manual", "all"):
             raise ValueError("source_filter sirf 'manual' ya 'all' ho sakta hai.")
         return v
+
+    @field_validator("bloom_filter")
+    @classmethod
+    def _valid_bloom(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v.upper() not in _VALID_BLOOM_LEVELS:
+            raise ValueError(
+                f"bloom_filter sirf {sorted(_VALID_BLOOM_LEVELS)} mein se ek ho sakta hai."
+            )
+        return v.upper() if v else v
+
+    @field_validator("difficulty_distribution")
+    @classmethod
+    def _valid_distribution(cls, v: Optional[dict]) -> Optional[dict]:
+        if v is None:
+            return v
+        for key, val in v.items():
+            if key not in _VALID_DIFFICULTIES:
+                raise ValueError(
+                    f"difficulty_distribution key '{key}' galat hai — sirf easy/medium/hard."
+                )
+            if not isinstance(val, int) or val < 0:
+                raise ValueError(
+                    f"difficulty_distribution['{key}'] ek non-negative integer hona chahiye."
+                )
+        return v
+
+    @model_validator(mode="after")
+    def _distribution_vs_filter(self) -> "BlueprintSection":
+        if self.difficulty_filter is not None and self.difficulty_distribution is not None:
+            raise ValueError(
+                "difficulty_filter aur difficulty_distribution dono ek saath nahi diye ja sakte."
+            )
+        if self.difficulty_distribution is not None:
+            total = sum(self.difficulty_distribution.values())
+            if total > self.count:
+                raise ValueError(
+                    f"difficulty_distribution ka sum ({total}) section count ({self.count}) se zyada hai."
+                )
+        return self
 
 
 class SaveBlueprintRequest(BaseModel):
