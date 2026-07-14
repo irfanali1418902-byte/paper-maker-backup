@@ -372,6 +372,37 @@
     </div>
   </div>
 
+  <!-- ===== EXCEL META IMPORT CARD ===== -->
+  <div class="card">
+    <div class="card-title">Excel se Image Meta Import</div>
+    <p style="margin:0 0 14px;font-size:13px;color:var(--muted);">
+      Excel mein image_name likho — topic, keywords, category, question_types ek saath update ho jaayenge.
+      Khali column = purana data rahe. Na mili image = skip (warning ke saath).
+    </p>
+
+    <div style="margin-bottom:14px;">
+      <a href="/api/library/excel-meta-import/template" download class="btn-ghost" id="metaTemplateBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Template download karo (.xlsx)
+      </a>
+    </div>
+
+    <label>Excel file chuniye (.xlsx) <span style="color:var(--err-tx)">*</span></label>
+    <input type="file" id="metaImportFile" accept=".xlsx,.xls,.csv" />
+
+    <div style="margin-top:18px;">
+      <button class="btn-primary" id="metaImportBtn" onclick="importMetaExcel()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import karo
+      </button>
+    </div>
+
+    <div class="bulk-results" id="metaImportResults">
+      <div class="summary" id="metaImportSummary"></div>
+      <ul class="bulk-result-list" id="metaImportResultList"></ul>
+    </div>
+  </div>
+
   <!-- ===== LIBRARY GRID ===== -->
   <div class="card">
     <div class="card-title">Library images</div>
@@ -919,6 +950,59 @@ async function bulkUpload() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Sab Upload karo`;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Excel Meta Import
+// -----------------------------------------------------------------------
+async function importMetaExcel() {
+  const fileInput = document.getElementById('metaImportFile');
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) {
+    alert('Pehle Excel file select karen.');
+    return;
+  }
+
+  const btn = document.getElementById('metaImportBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Import ho raha hai...';
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const res = await apiFetch('/api/library/excel-meta-import', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert('Error: ' + (data.detail || 'Import fail ho gaya.'));
+      return;
+    }
+
+    const resultsEl = document.getElementById('metaImportResults');
+    const summaryEl = document.getElementById('metaImportSummary');
+    const listEl    = document.getElementById('metaImportResultList');
+
+    resultsEl.style.display = 'block';
+    summaryEl.textContent = `✅ ${data.updated} updated · ⏭ ${data.skipped} skip`;
+    summaryEl.style.color = data.skipped > 0 ? 'var(--warn-tx)' : 'var(--ok-tx)';
+
+    listEl.innerHTML = (data.results || []).map(r => {
+      const cls  = r.status === 'ok' ? 'ok' : 'skip';
+      const icon = r.status === 'ok' ? '✅' : '⏭';
+      let text   = `Row ${r.row}: ${escHtml(r.image_name)}`;
+      if (r.reason)   text += ` — ${escHtml(r.reason)}`;
+      if (r.warnings) text += ` ⚠️ ${r.warnings.map(escHtml).join('; ')}`;
+      return `<li class="${cls}">${icon} <span>${text}</span></li>`;
+    }).join('');
+
+    if (data.updated > 0) await loadGrid();
+  } catch (e) {
+    alert('Import fail: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import karo`;
   }
 }
 
