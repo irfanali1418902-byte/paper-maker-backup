@@ -1,5 +1,33 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-14 — Image Library — Excel se Meta Import (feature/image-meta-import → master)
+
+**Kya bana:**
+
+- **`app/services/library_meta_import_service.py`** (naya) — Core service:
+  - `import_meta_from_excel(file_bytes)`: pandas se Excel parse, har row par `image_name` se DB match
+  - Topic resolution: `subject + class` hint ke saath priority — subject+grade > subject-only > global first
+  - Partial update: khali cell = us field ko chhua nahi (purana data rahe)
+  - Return: `{updated, skipped, results: [{row, image_name, status, reason?, warnings?}]}`
+
+- **`app/api/library.py`** — 2 naye routes:
+  - `POST /api/library/excel-meta-import` — Excel upload, service call, JSON summary
+  - `GET /api/library/excel-meta-import/template` — template .xlsx download
+
+- **`static/library_meta_import_template.xlsx`** (naya) — 7-column template (image_name zaroori, baaki optional), colored headers, 2 example rows
+
+- **`static/library.html`** — Bulk Upload card ke baad naya card:
+  - Template download button, xlsx file input, Import button
+  - `importMetaExcel()` JS: POST → results render (row number + status + warnings) → grid reload
+  - Same `.bulk-results` CSS — Bulk Upload se consistent UI
+
+**Tests:** 17 naye tests (11 service + 6 API) — 579 total pass, ruff clean
+
+**Excel columns:**
+`image_name` (zaroori) | `topic` | `subject` | `class` | `keywords` | `category` | `question_types`
+
+---
+
 ## 2026-07-11 — Image System HISSA C — In-form image selection UI (feature/image-system)
 
 **Kya bana (frontend only — koi backend change nahi):**
