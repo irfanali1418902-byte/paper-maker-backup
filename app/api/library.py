@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app.repositories import library_repository, syllabus_repository
 from app.schemas.requests import (
@@ -13,6 +14,7 @@ from app.schemas.requests import (
     UpdateLibraryImageRequest,
 )
 from app.schemas.responses import LibraryImage, StatusResponse
+from app.services import library_meta_import_service
 
 router = APIRouter()
 
@@ -261,3 +263,40 @@ def list_categories():
 def list_question_types():
     """Library mein maujood saare unique question_types wapas karo (filter ke liye)."""
     return {"question_types": library_repository.distinct_question_types()}
+
+
+_META_TEMPLATE = Path(__file__).parent.parent.parent / "static" / "library_meta_import_template.xlsx"
+
+
+@router.get("/api/library/excel-meta-import/template")
+def download_meta_import_template():
+    """Excel meta import ka template file download karo (.xlsx)."""
+    if not _META_TEMPLATE.exists():
+        raise HTTPException(status_code=404, detail="Template file nahi mili.")
+    return FileResponse(
+        path=str(_META_TEMPLATE),
+        filename="library_meta_import_template.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@router.post("/api/library/excel-meta-import")
+def excel_meta_import(file: UploadFile = File(...)):
+    """Excel file se image library ka meta (topic/keywords/category/question_types) bulk update karo.
+
+    Returns: {updated, skipped, results: [{row, image_name, status, reason?, warnings?}]}
+    """
+    fname = (file.filename or "").lower()
+    if not (fname.endswith(".xlsx") or fname.endswith(".xls") or fname.endswith(".csv")):
+        raise HTTPException(
+            status_code=400,
+            detail="Sirf .xlsx / .xls / .csv file allowed hai.",
+        )
+
+    contents = file.file.read()
+    try:
+        result = library_meta_import_service.import_meta_from_excel(contents)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return result
