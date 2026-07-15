@@ -112,6 +112,7 @@ def list_topics_for_picker(
                 "subtopic_title": t["subtopic_title"],
                 "suggested_difficulty": t["suggested_difficulty"],
                 "page_no": t.get("page_no"),
+                "unit": t.get("unit"),
             }
             for t in raw
         ]

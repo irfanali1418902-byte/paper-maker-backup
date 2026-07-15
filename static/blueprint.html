@@ -533,21 +533,20 @@ function renderSecCard(sec, i) {
     </label>`;
   }).join('');
 
-  // Unit dropdown — sirf tab dikhao jab 2+ alag units hon
+  // Unit dropdown — sirf tab dikhao jab koi topic ka unit field non-null ho
   const unitFilter = sec.unit_filter ?? null;
   const distinctUnits = _topics.length
-    ? [...new Map(_topics.map(t => [t.unit_no, { unit_no: t.unit_no, unit_title: t.unit_title }])).values()]
-        .sort((a, b) => a.unit_no - b.unit_no)
+    ? [...new Set(_topics.map(t => t.unit).filter(Boolean))].sort()
     : [];
-  const unitDropdownHtml = (distinctUnits.length > 1) ? `
+  const unitDropdownHtml = distinctUnits.length ? `
     <label style="margin-top:10px;margin-bottom:4px;font-size:12.5px;">Unit filter</label>
     <select style="margin-bottom:8px;" onchange="onUnitFilter(${i}, this.value)">
       <option value="" ${unitFilter === null ? 'selected' : ''}>-- Sab units --</option>
-      ${distinctUnits.map(u => `<option value="${u.unit_no}" ${unitFilter === u.unit_no ? 'selected' : ''}>${escHtml(u.unit_title)}</option>`).join('')}
+      ${distinctUnits.map(u => `<option value="${escAttr(u)}" ${unitFilter === u ? 'selected' : ''}>${escHtml(u)}</option>`).join('')}
     </select>` : '';
 
   const visibleTopics = (unitFilter !== null)
-    ? _topics.filter(t => t.unit_no === unitFilter)
+    ? _topics.filter(t => t.unit === unitFilter)
     : _topics;
 
   const topicsHtml = _topics.length
@@ -708,7 +707,7 @@ function onTypeChange(idx, cb) {
 }
 
 function onUnitFilter(idx, val) {
-  _sections[idx].unit_filter = val ? parseInt(val, 10) : null;
+  _sections[idx].unit_filter = val || null;
   renderSections();
 }
 
