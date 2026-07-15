@@ -555,6 +555,35 @@
             <div class="v" data-i18n="tip.howItWorksBody">AII PDF/images parse karke chapters aur sub-topics nikaalta hai, phir unhe save kar deta hai. Subject + grade dono bharna zaroori hai.</div>
           </div>
         </div>
+
+        <!-- Unit bulk assign card -->
+        <div class="card" style="margin-top:24px;">
+          <div class="card-title">Excel se Topics ka Unit Assign karo</div>
+          <p style="margin:0 0 14px;font-size:13px;color:var(--muted);">
+            Topic ka naam likho, unit assign karo — ek saath saikron topics update ho jaayenge.
+            Columns: <b>topic</b> (zaroori), subject, class, <b>unit</b> (zaroori).
+          </p>
+
+          <div style="margin-bottom:14px;">
+            <a href="/api/syllabus/excel-unit-import/template" download class="ghost-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Template download karo (.xlsx)
+            </a>
+          </div>
+
+          <label style="font-size:13px;">Excel file (.xlsx) <span style="color:#c00">*</span></label>
+          <input type="file" id="unitImportFile" accept=".xlsx,.xls,.csv" style="margin-bottom:12px;" />
+
+          <div class="actions">
+            <button class="gen-btn" id="unitImportBtn" onclick="importUnitExcel()" style="font-size:13px;padding:8px 18px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Units Import karo
+            </button>
+          </div>
+
+          <div id="unitImportStatus" style="margin-top:12px;font-size:13px;display:none;"></div>
+          <ul id="unitImportList" style="margin-top:8px;padding:0;list-style:none;display:none;font-size:12.5px;"></ul>
+        </div>
       </section>
 
       <!-- ===== ADAPTIVE ===== -->
@@ -1343,6 +1372,49 @@ async function uploadSyllabusZip() {
     await loadSyllabusGrades();
   } catch (e) {
     statusEl.textContent = '⚠️ ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function importUnitExcel() {
+  const fileInput = document.getElementById('unitImportFile');
+  const file = fileInput.files && fileInput.files[0];
+  const statusEl = document.getElementById('unitImportStatus');
+  const listEl   = document.getElementById('unitImportList');
+  const btn      = document.getElementById('unitImportBtn');
+
+  if (!file) { alert('Pehle Excel file select karen.'); return; }
+
+  btn.disabled = true;
+  statusEl.style.display = 'block';
+  listEl.style.display   = 'none';
+  statusEl.textContent   = '⏳ Import ho raha hai...';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res  = await apiFetch('/api/syllabus/excel-unit-import', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) { throw new Error(data.detail || 'Import fail ho gaya.'); }
+
+    statusEl.textContent = `✅ ${data.updated} updated · ⏭ ${data.skipped} skip`;
+    statusEl.style.color = data.skipped > 0 ? '#b45309' : '#166534';
+
+    const rows = (data.results || []).filter(r => r.status !== 'ok' || data.updated <= 10);
+    if (rows.length) {
+      listEl.style.display = 'block';
+      listEl.innerHTML = rows.map(r => {
+        const icon = r.status === 'ok' ? '✅' : '⏭';
+        const txt  = r.reason ? ` — ${r.reason}` : '';
+        return `<li style="padding:3px 0;color:${r.status==='ok'?'#166534':'#92400e'}">
+          ${icon} Row ${r.row}: ${r.subtopic_title || r.topic || ''}${txt}</li>`;
+      }).join('');
+    }
+    fileInput.value = '';
+  } catch (e) {
+    statusEl.textContent = '⚠️ ' + e.message;
+    statusEl.style.color = '#c00';
   } finally {
     btn.disabled = false;
   }

@@ -59,9 +59,9 @@ def test_happy_path_all_fields(test_db):
 
 # ── 2. Missing subtopic_title column → ValueError ─────────────────────────────
 
-def test_missing_subtopic_title_column_raises(test_db):
-    xlsx = _make_xlsx([["Fractions", 1]], header=["topic", "unit_no"])
-    with pytest.raises(ValueError, match="subtopic_title"):
+def test_missing_topic_column_raises(test_db):
+    xlsx = _make_xlsx([["Fractions", 1]], header=["subject", "unit_no"])
+    with pytest.raises(ValueError, match="topic"):
         svc.import_units_from_excel(xlsx)
 
 

@@ -86,9 +86,11 @@ def import_units_from_excel(file_bytes: bytes) -> dict:
 
     df.columns = [str(c).strip().lower() for c in df.columns]
 
-    if "subtopic_title" not in df.columns:
+    # Accept 'topic' (user-friendly) OR 'subtopic_title' (internal/backward-compat)
+    has_topic_col = "topic" in df.columns or "subtopic_title" in df.columns
+    if not has_topic_col:
         raise ValueError(
-            "Excel mein 'subtopic_title' column zaroori hai lekin mila nahi."
+            "Excel mein 'topic' column zaroori hai lekin mila nahi."
         )
 
     updated = 0
@@ -98,7 +100,7 @@ def import_units_from_excel(file_bytes: bytes) -> dict:
     for idx, row in df.iterrows():
         row_num = int(idx) + 2
 
-        subtopic = _cell(row, "subtopic_title")
+        subtopic = _cell(row, "topic") or _cell(row, "subtopic_title")
         if not subtopic:
             skipped += 1
             results.append({
@@ -110,7 +112,7 @@ def import_units_from_excel(file_bytes: bytes) -> dict:
             continue
 
         subject = _cell(row, "subject")
-        grade = _cell(row, "grade")
+        grade = _cell(row, "class") or _cell(row, "grade")
 
         topic_id = _resolve_topic_id(subtopic, subject, grade)
         if topic_id is None:
