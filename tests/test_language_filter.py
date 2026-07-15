@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: E402
 
 from app.repositories import questions_repository
-
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
 
