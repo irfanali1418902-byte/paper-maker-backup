@@ -495,6 +495,7 @@ function addSection() {
     difficulty_filter: null,
     bloom_filter: null,
     difficulty_distribution: null,
+    unit_filter: null,
   });
   renderSections();
   updateMarksBar();
@@ -532,8 +533,25 @@ function renderSecCard(sec, i) {
     </label>`;
   }).join('');
 
+  // Unit dropdown — sirf tab dikhao jab 2+ alag units hon
+  const unitFilter = sec.unit_filter ?? null;
+  const distinctUnits = _topics.length
+    ? [...new Map(_topics.map(t => [t.unit_no, { unit_no: t.unit_no, unit_title: t.unit_title }])).values()]
+        .sort((a, b) => a.unit_no - b.unit_no)
+    : [];
+  const unitDropdownHtml = (distinctUnits.length > 1) ? `
+    <label style="margin-top:10px;margin-bottom:4px;font-size:12.5px;">Unit filter</label>
+    <select style="margin-bottom:8px;" onchange="onUnitFilter(${i}, this.value)">
+      <option value="" ${unitFilter === null ? 'selected' : ''}>-- Sab units --</option>
+      ${distinctUnits.map(u => `<option value="${u.unit_no}" ${unitFilter === u.unit_no ? 'selected' : ''}>${escHtml(u.unit_title)}</option>`).join('')}
+    </select>` : '';
+
+  const visibleTopics = (unitFilter !== null)
+    ? _topics.filter(t => t.unit_no === unitFilter)
+    : _topics;
+
   const topicsHtml = _topics.length
-    ? _topics.map(t => {
+    ? visibleTopics.map(t => {
         const checked = sec.topic_ids.includes(t.id) ? 'checked' : '';
         const label = `${escHtml(t.unit_title)} — ${escHtml(t.subtopic_title)}`;
         return `<label class="topic-check-row">
@@ -575,6 +593,7 @@ function renderSecCard(sec, i) {
     </div>
 
     <label style="margin-top:14px;">Topics <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi select na karo = is subject ke sab topics)</span></label>
+    ${unitDropdownHtml}
     <div class="topic-checks-wrap">
       ${topicsHtml}
     </div>
@@ -686,6 +705,11 @@ function onTypeChange(idx, cb) {
     _sections[idx].question_types = _sections[idx].question_types.filter(t => t !== v);
   }
   renderSections(); // lock state baaki sections mein update karo
+}
+
+function onUnitFilter(idx, val) {
+  _sections[idx].unit_filter = val ? parseInt(val, 10) : null;
+  renderSections();
 }
 
 function onTopicChange(idx, cb) {
