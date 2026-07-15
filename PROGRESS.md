@@ -1,5 +1,26 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-15 — feature/language-filter HISSA 2+3 (commit de7b95b)
+
+**Kya kiya:**
+- `app/services/blueprint_paper_service.py` — `language_filter` har section se read karke `_fetch_simple` + `_fetch_with_distribution` ko pass. Shortfall notes mein `(English only)`/`(Urdu only)` label.
+- `app/services/paper_service.py` — `_pick_questions()` ko `language_filter` param mila; `assemble_balanced_paper` aur `_assemble_by_ratio` `req.language_filter` pass karte hain (adaptive paper mein nahi — `AdaptivePaperRequest` mein field nahi).
+- `static/blueprint.html` — FILTERS row mein Language dropdown (Sab / English only / Urdu only); `onLangFilter()` handler; `addSection`/`loadPreset`/`loadBlueprintToUI` mein `language_filter: null` default.
+- `static/index.html` — Generate paper form mein Language filter dropdown; `buildPaper()` POST body mein `language_filter: langVal || null`.
+
+**Tests:** 635 pass (pehle wali 3 adaptive failures fix ho gayi — `AdaptivePaperRequest` mein field nahi thi).
+
+---
+
+## 2026-07-15 — feature/language-filter HISSA 1 (commit 6fcc19f)
+
+**Kya kiya:**
+- `app/repositories/questions_repository.py` — `_apply_language_filter()` helper; `find_for_blueprint_section`, `find_least_used`, `find_for_bank_paper` mein `language_filter` param.
+- `app/schemas/requests.py` — `GeneratePaperRequest` mein `language_filter: Optional[Literal["en","ur"]] = None`.
+- `tests/test_language_filter.py` — 11 nayi tests (repository + schema validation).
+
+---
+
 ## 2026-07-15 — fix/bad-file-crash → master (Bulk upload crash guard)
 
 **Kya fix kiya:**
