@@ -1,5 +1,50 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-15 — fix/bad-file-crash → master (Bulk upload crash guard)
+
+**Kya fix kiya:**
+- `app/services/bulk_import_service.py` — 0-bytes upfront check; corrupt file pe user-friendly message (raw Python exception expose nahi hota); header-only xlsx pe explicit error; DB insert per-row try/except
+- `app/api/questions.py` — `file.file.read()` try/except mein wrap kiya (pehle unguarded 500 tha)
+- `tests/test_bulk_import.py` — 5 nayi `TestBadFileCrash` tests: jpg ext, 0 bytes, corrupt message quality, header-only, server survives 3 bad uploads
+- `start.bat` — naya launcher: `.env` load, venv check, browser auto-open 2s baad
+
+**Tests:** 624 pass, ruff clean
+
+---
+
+## 2026-07-15 — fix/edit-modal-save → master (print.html answer_lines save bug)
+
+**Root cause:** `saveQuestion()` mein `question_ur`, `correct_answer_en`, `correct_answer_ur` hamesha payload mein jaate the (empty string `""`). `_not_blank` Pydantic validator 422 raise karta tha → answer_lines kabhi DB tak nahi pahunchti thi.
+
+**Kya fix kiya:**
+- `static/print.html` — `saveQuestion()`: optional text fields sirf tab payload mein jayen agar non-empty (empty string → omit)
+- `static/print.html` — `ef_answer_lines` dropdown options fix: `0, 2, 3, 4, 6, 8` (bank.html se match; pehle `5, 10` the jo invalid hain)
+- `tests/test_print_edit_modal.py` — 8 naye tests: valid values, zero, bilingual, empty-string-422, DB persistence
+
+**Tests:** 619 pass, ruff clean
+
+---
+
+## 2026-07-15 — feature/bulk-answer-lines → master (Bulk Excel mein answer_lines column)
+
+**Kya bana:**
+- `app/services/bulk_import_service.py` — `answer_lines` column parse karo (valid: `0,2,3,4,6,8`; invalid/blank = NULL + warning)
+- `app/repositories/questions_repository.py` — `insert()` mein `answer_lines` column add
+- `static/bulk_upload_template.xlsx` — `answer_lines` column (22nd, green/optional) add kiya
+- `tests/test_bulk_import.py` — 11 naye tests (valid values, zero, blank, invalid, non-numeric, backward compat, parametrize)
+
+**Tests:** 590 pass, ruff clean
+
+---
+
+## 2026-07-15 — Pre Year 1 questions delete (197 sawal)
+
+- Backup: `paper_maker_backup_pyr1_20260715_104351.db`
+- DELETE: 197 Pre Year 1 sawal (syllabus_topics JOIN, grade='Pre Year 1')
+- Baad mein Pre Year 1 count = 0 ✓, baaki classes (70 sawal) safe
+
+---
+
 ## 2026-07-14 — Image Library — Excel se Meta Import (feature/image-meta-import → master)
 
 **Kya bana:**
