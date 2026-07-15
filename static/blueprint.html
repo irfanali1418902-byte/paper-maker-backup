@@ -495,6 +495,7 @@ function addSection() {
     difficulty_filter: null,
     bloom_filter: null,
     difficulty_distribution: null,
+    unit_filter: null,
   });
   renderSections();
   updateMarksBar();
@@ -516,17 +517,40 @@ function renderSections() {
 }
 
 function renderSecCard(sec, i) {
+  const lockedByOthers = new Set(
+    _sections.filter((_, j) => j !== i).flatMap(s => s.question_types)
+  );
   const typesHtml = ['multiple-choice','fill-blank','true-false','short-answer'].map(t => {
     const labels = { 'multiple-choice': 'MCQ', 'fill-blank': 'Fill-blank', 'true-false': 'True/False', 'short-answer': 'Short-answer' };
-    const checked = sec.question_types.includes(t) ? 'checked' : '';
-    return `<label class="topic-check-row" style="flex-direction:row;">
-      <input type="checkbox" value="${t}" ${checked} onchange="onTypeChange(${i}, this)" />
+    const checked  = sec.question_types.includes(t) ? 'checked' : '';
+    const locked   = lockedByOthers.has(t) && !sec.question_types.includes(t);
+    const dis      = locked ? 'disabled' : '';
+    const lblStyle = locked ? 'flex-direction:row;opacity:0.4;cursor:not-allowed;' : 'flex-direction:row;';
+    const tip      = locked ? ' title="Doosre section mein use ho rahi hai"' : '';
+    return `<label class="topic-check-row" style="${lblStyle}"${tip}>
+      <input type="checkbox" value="${t}" ${checked} ${dis} onchange="onTypeChange(${i}, this)" />
       ${labels[t]}
     </label>`;
   }).join('');
 
+  // Unit dropdown — sirf tab dikhao jab koi topic ka unit field non-null ho
+  const unitFilter = sec.unit_filter ?? null;
+  const distinctUnits = _topics.length
+    ? [...new Set(_topics.map(t => t.unit).filter(Boolean))].sort()
+    : [];
+  const unitDropdownHtml = distinctUnits.length ? `
+    <label style="margin-top:10px;margin-bottom:4px;font-size:12.5px;">Unit filter</label>
+    <select style="margin-bottom:8px;" onchange="onUnitFilter(${i}, this.value)">
+      <option value="" ${unitFilter === null ? 'selected' : ''}>-- Sab units --</option>
+      ${distinctUnits.map(u => `<option value="${escAttr(u)}" ${unitFilter === u ? 'selected' : ''}>${escHtml(u)}</option>`).join('')}
+    </select>` : '';
+
+  const visibleTopics = (unitFilter !== null)
+    ? _topics.filter(t => t.unit === unitFilter)
+    : _topics;
+
   const topicsHtml = _topics.length
-    ? _topics.map(t => {
+    ? visibleTopics.map(t => {
         const checked = sec.topic_ids.includes(t.id) ? 'checked' : '';
         const label = `${escHtml(t.unit_title)} — ${escHtml(t.subtopic_title)}`;
         return `<label class="topic-check-row">
@@ -568,6 +592,7 @@ function renderSecCard(sec, i) {
     </div>
 
     <label style="margin-top:14px;">Topics <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi select na karo = is subject ke sab topics)</span></label>
+    ${unitDropdownHtml}
     <div class="topic-checks-wrap">
       ${topicsHtml}
     </div>
@@ -678,6 +703,12 @@ function onTypeChange(idx, cb) {
   } else {
     _sections[idx].question_types = _sections[idx].question_types.filter(t => t !== v);
   }
+  renderSections(); // lock state baaki sections mein update karo
+}
+
+function onUnitFilter(idx, val) {
+  _sections[idx].unit_filter = val || null;
+  renderSections();
 }
 
 function onTopicChange(idx, cb) {

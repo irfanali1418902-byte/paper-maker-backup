@@ -1,8 +1,10 @@
 """HTTP routes for syllabus topic listing + PDF import."""
 
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app.schemas.responses import (
     SubjectGrade,
@@ -11,8 +13,10 @@ from app.schemas.responses import (
     SyllabusZipImportResponse,
     TopicItem,
 )
-from app.services import syllabus_service
+from app.services import syllabus_service, syllabus_unit_import_service
 from app.services.exceptions import AIGenerationFailed
+
+_UNIT_TEMPLATE = Path(__file__).parent.parent.parent / "static" / "syllabus_unit_import_template.xlsx"
 
 router = APIRouter()
 
@@ -112,6 +116,7 @@ def list_topics_for_picker(
                 "subtopic_title": t["subtopic_title"],
                 "suggested_difficulty": t["suggested_difficulty"],
                 "page_no": t.get("page_no"),
+                "unit": t.get("unit"),
             }
             for t in raw
         ]
@@ -132,3 +137,35 @@ def list_syllabus_topics(subject: Optional[str] = None, grade: Optional[str] = N
         raise HTTPException(
             status_code=500, detail=f"Syllabus topics fetch fail hui (DB error): {e}"
         ) from e
+
+
+@router.get("/api/syllabus/excel-unit-import/template")
+def download_unit_import_template():
+    """Excel unit import ka template file download karo (.xlsx)."""
+    if not _UNIT_TEMPLATE.exists():
+        raise HTTPException(status_code=404, detail="Template file nahi mili.")
+    return FileResponse(
+        path=str(_UNIT_TEMPLATE),
+        filename="syllabus_unit_import_template.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@router.post("/api/syllabus/excel-unit-import")
+def excel_unit_import(file: UploadFile = File(...)):
+    """Excel se topics ka unit field bulk update karo.
+
+    Columns: topic (zaroori), subject (optional), class (optional), unit (zaroori).
+    Returns: {updated, skipped, results: [{row, subtopic_title, status, reason?}]}
+    """
+    fname = (file.filename or "").lower()
+    if not (fname.endswith(".xlsx") or fname.endswith(".xls") or fname.endswith(".csv")):
+        raise HTTPException(status_code=400, detail="Sirf .xlsx / .xls / .csv file allowed hai.")
+
+    contents = file.file.read()
+    try:
+        result = syllabus_unit_import_service.import_units_from_excel(contents)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return result

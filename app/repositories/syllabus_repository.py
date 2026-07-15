@@ -64,6 +64,7 @@ def insert(
     activity_type: str,
     page_no: Optional[int],
     learning_outcome: str,
+    unit: Optional[str] = None,
 ) -> None:
     """Used by the CSV/PDF importers. Raises DuplicateSyllabusTopic on a
     UNIQUE-constraint violation so the caller never has to know we're on
@@ -76,8 +77,8 @@ def insert(
         cur.execute(
             """INSERT INTO syllabus_topics
                (id, subject, grade, unit_no, unit_title, page_range,
-                subtopic_title, activity_type, page_no, learning_outcome)
-               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                subtopic_title, activity_type, page_no, learning_outcome, unit)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 topic_id,
                 subject,
@@ -89,6 +90,7 @@ def insert(
                 activity_type,
                 page_no,
                 learning_outcome,
+                unit,
             ),
         )
         conn.commit()
@@ -96,3 +98,27 @@ def insert(
         raise DuplicateSyllabusTopic(subtopic_title) from e
     finally:
         conn.close()
+
+
+def update_unit(topic_id: str, unit_no: Optional[int], unit_title: Optional[str], unit: Optional[str]) -> bool:
+    """Topic ka unit_no, unit_title, aur unit (label) update karo. True agar row mili."""
+    updates: dict = {}
+    if unit_no is not None:
+        updates["unit_no"] = unit_no
+    if unit_title is not None:
+        updates["unit_title"] = unit_title
+    if unit is not None:
+        updates["unit"] = unit
+    if not updates:
+        return False
+    conn = get_connection()
+    cur = conn.cursor()
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    cur.execute(
+        f"UPDATE syllabus_topics SET {set_clause} WHERE id = ?",  # noqa: S608
+        list(updates.values()) + [topic_id],
+    )
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0

@@ -130,9 +130,15 @@ def init_db() -> None:
             activity_type TEXT NOT NULL,
             page_no INTEGER,
             learning_outcome TEXT,
+            unit TEXT,
             UNIQUE(subject, grade, unit_no, subtopic_title, page_no)
         )
         """)
+
+    # Existing DBs: add unit column (nullable, no default — NULL means unassigned).
+    syllabus_cols = {row[1] for row in cur.execute("PRAGMA table_info(syllabus_topics)").fetchall()}
+    if "unit" not in syllabus_cols:
+        cur.execute("ALTER TABLE syllabus_topics ADD COLUMN unit TEXT")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS school_settings (
