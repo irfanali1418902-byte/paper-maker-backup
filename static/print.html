@@ -504,12 +504,13 @@
       <div class="field-group">
         <label>Lines</label>
         <select id="ef_answer_lines" style="width:160px">
-          <option value="">Default</option>
+          <option value="">Default (4 lines)</option>
           <option value="0">None (0)</option>
+          <option value="2">2 lines</option>
           <option value="3">3 lines</option>
-          <option value="5">5 lines</option>
+          <option value="4">4 lines</option>
+          <option value="6">6 lines</option>
           <option value="8">8 lines</option>
-          <option value="10">10 lines</option>
         </select>
       </div>
     </div>
@@ -788,14 +789,15 @@ async function saveQuestion() {
   }
 
   const answerLinesRaw = document.getElementById('ef_answer_lines').value;
-  const payload = {
-    question_en: qen,
-    question_ur: document.getElementById('ef_question_ur').value,
-    correct_answer_en: document.getElementById('ef_correct_en').value,
-    correct_answer_ur: document.getElementById('ef_correct_ur').value,
-    marks,
-  };
-  if (answerLinesRaw !== '') payload.answer_lines = parseInt(answerLinesRaw, 10);
+  const question_ur    = document.getElementById('ef_question_ur').value.trim();
+  const correct_en     = document.getElementById('ef_correct_en').value.trim();
+  const correct_ur     = document.getElementById('ef_correct_ur').value.trim();
+
+  const payload = { question_en: qen, marks };
+  if (question_ur)     payload.question_ur        = question_ur;
+  if (correct_en)      payload.correct_answer_en  = correct_en;
+  if (correct_ur)      payload.correct_answer_ur  = correct_ur;
+  if (answerLinesRaw !== '') payload.answer_lines  = parseInt(answerLinesRaw, 10);
 
   const imageSizeSection = document.getElementById('ef_image_size_section');
   if (imageSizeSection.style.display !== 'none') {
