@@ -363,6 +363,7 @@ class BlueprintSection(BaseModel):
     # difficulty_distribution: {"easy": 3, "medium": 5, "hard": 2}
     # Sum must be ≤ count. Mutually exclusive with difficulty_filter.
     difficulty_distribution: Optional[dict] = None
+    language_filter: Optional[Literal["en", "ur"]] = None
 
     @field_validator("question_types")
     @classmethod
