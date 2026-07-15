@@ -516,11 +516,18 @@ function renderSections() {
 }
 
 function renderSecCard(sec, i) {
+  const lockedByOthers = new Set(
+    _sections.filter((_, j) => j !== i).flatMap(s => s.question_types)
+  );
   const typesHtml = ['multiple-choice','fill-blank','true-false','short-answer'].map(t => {
     const labels = { 'multiple-choice': 'MCQ', 'fill-blank': 'Fill-blank', 'true-false': 'True/False', 'short-answer': 'Short-answer' };
-    const checked = sec.question_types.includes(t) ? 'checked' : '';
-    return `<label class="topic-check-row" style="flex-direction:row;">
-      <input type="checkbox" value="${t}" ${checked} onchange="onTypeChange(${i}, this)" />
+    const checked  = sec.question_types.includes(t) ? 'checked' : '';
+    const locked   = lockedByOthers.has(t) && !sec.question_types.includes(t);
+    const dis      = locked ? 'disabled' : '';
+    const lblStyle = locked ? 'flex-direction:row;opacity:0.4;cursor:not-allowed;' : 'flex-direction:row;';
+    const tip      = locked ? ' title="Doosre section mein use ho rahi hai"' : '';
+    return `<label class="topic-check-row" style="${lblStyle}"${tip}>
+      <input type="checkbox" value="${t}" ${checked} ${dis} onchange="onTypeChange(${i}, this)" />
       ${labels[t]}
     </label>`;
   }).join('');
@@ -678,6 +685,7 @@ function onTypeChange(idx, cb) {
   } else {
     _sections[idx].question_types = _sections[idx].question_types.filter(t => t !== v);
   }
+  renderSections(); // lock state baaki sections mein update karo
 }
 
 function onTopicChange(idx, cb) {
