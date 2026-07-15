@@ -109,26 +109,28 @@
   }
 
   /* ---- Section heading ---- */
-  .section-block { margin-bottom: 8px; }
+  .section-block { margin-bottom: 20px; }
   .section-heading {
     display: flex; justify-content: space-between; align-items: baseline;
+    background: #f0f4f8;
     border-top: 2px solid var(--accent, #0e4d3c);
-    border-bottom: 1px solid #ccc;
-    padding: 5px 2px 4px;
-    margin-bottom: 12px;
+    border-bottom: 1px solid #c8d0da;
+    padding: 6px 8px 5px;
+    margin-bottom: 14px;
+    border-radius: 0 0 3px 3px;
   }
   .section-heading .sec-title {
-    font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .06em; color: var(--accent, #0e4d3c);
+    font-size: 13.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--accent, #0e4d3c);
   }
   .section-heading .sec-marks {
-    font-size: 12px; font-weight: 600; color: #555;
+    font-size: 12px; font-weight: 600; color: #444;
   }
 
   /* ---- Questions ---- */
   .question { margin-bottom: 14px; page-break-inside: avoid; }
   .qhead { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
-  .qhead .qnum { font-weight: 700; }
+  .qhead .qnum { font-weight: 800; font-size: 15px; color: #111; min-width: 28px; }
   .qtext-en { margin-top: 2px; font-size: 14px; }
   .qtext-ur {
     margin-top: 4px; font-size: 16px; direction: rtl;
@@ -260,8 +262,12 @@
   .btn-save:disabled { opacity: .6; cursor: not-allowed; }
 
   /* ---- Question image ---- */
-  .q-image { margin: 8px 0 6px; }
-  .q-image img { max-width: 100%; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; display: block; }
+  .q-image { margin: 10px 0 8px; }
+  .q-image img {
+    max-width: 100%; object-fit: contain; display: block;
+    border: 1px solid #c0c8d4; border-radius: 5px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10);
+  }
   .q-image.img-sm img { max-height: 80px; }
   .q-image.img-md img { max-height: 180px; }
   .q-image.img-lg img { max-height: 300px; }
@@ -323,9 +329,9 @@
     .no-print { display: none !important; }
     .modal-backdrop { display: none !important; }
     .lib-picker-overlay { display: none !important; }
-    .q-image.img-sm img { max-height: 70px; }
-    .q-image.img-md img { max-height: 160px; }
-    .q-image.img-lg img { max-height: 260px; }
+    .q-image.img-sm img { max-height: 70px; box-shadow: none; }
+    .q-image.img-md img { max-height: 160px; box-shadow: none; }
+    .q-image.img-lg img { max-height: 260px; box-shadow: none; }
   }
 
   /* ---- Auto-suggest badge ---- */
