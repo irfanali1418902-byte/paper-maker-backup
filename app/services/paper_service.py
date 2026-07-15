@@ -38,7 +38,7 @@ def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
     )
     question_types = _PAPER_TYPE_FILTERS.get(req.paper_type)
     selected_ids, selected_questions = _pick_questions(
-        req.subject, distribution, req.difficulty, question_types
+        req.subject, distribution, req.difficulty, question_types, req.language_filter
     )
     if not selected_questions:
         return None
@@ -213,7 +213,7 @@ def _assemble_by_ratio(req: GeneratePaperRequest) -> dict | None:
         distribution = bloom_service.calculate_bloom_distribution(
             req.bloom_distribution, group_count
         )
-        ids, questions = _pick_questions(req.subject, distribution, req.difficulty, group_types)
+        ids, questions = _pick_questions(req.subject, distribution, req.difficulty, group_types, req.language_filter)
         if not questions:
             raise QuestionBankEmpty(
                 f"Is subject mein {group_label} questions kaafi nahi (chahiye the {group_count}). "
@@ -250,6 +250,7 @@ def _pick_questions(
     distribution: dict,
     difficulty: str | None,
     question_types: list[str] | None = None,
+    language_filter: str | None = None,
 ) -> tuple[list[str], list[dict]]:
     """Pick least-used questions per Bloom level for the given distribution,
     bumping each picked question's usage_count. Shared by balanced + adaptive.
@@ -265,6 +266,7 @@ def _pick_questions(
             difficulty=difficulty,
             limit=count,
             question_types=question_types,
+            language_filter=language_filter,
         )
         for row in rows:
             selected_ids.append(row["id"])

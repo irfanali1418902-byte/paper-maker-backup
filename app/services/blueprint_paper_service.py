@@ -58,6 +58,7 @@ def assemble_blueprint_paper(
         difficulty_filter = sec.get("difficulty_filter")
         bloom_filter  = sec.get("bloom_filter")
         distribution  = sec.get("difficulty_distribution")
+        language_filter = sec.get("language_filter")
 
         if distribution:
             picked, sec_shortfall_notes = _fetch_with_distribution(
@@ -70,6 +71,7 @@ def assemble_blueprint_paper(
                 distribution=distribution,
                 wanted=wanted,
                 heading=heading,
+                language_filter=language_filter,
             )
         else:
             picked, sec_shortfall_notes = _fetch_simple(
@@ -82,6 +84,7 @@ def assemble_blueprint_paper(
                 bloom_level=bloom_filter,
                 wanted=wanted,
                 heading=heading,
+                language_filter=language_filter,
             )
 
         shortfall_notes.extend(sec_shortfall_notes)
@@ -143,6 +146,7 @@ def _fetch_simple(
     bloom_level: Optional[str],
     wanted: int,
     heading: str,
+    language_filter: Optional[str] = None,
 ) -> tuple[list[dict], list[str]]:
     """Single query fetch — no distribution. Returns (picked, shortfall_notes)."""
     candidates = questions_repository.find_for_blueprint_section(
@@ -153,11 +157,13 @@ def _fetch_simple(
         status=status,
         difficulty=difficulty,
         bloom_level=bloom_level,
+        language_filter=language_filter,
     )
     picked = candidates[:wanted]
     notes = []
     if len(picked) < wanted:
-        notes.append(f"{heading}: {wanted} maange, {len(picked)} mile")
+        lang_label = {"en": " (English only)", "ur": " (Urdu only)"}.get(language_filter or "", "")
+        notes.append(f"{heading}: {wanted} maange{lang_label}, {len(picked)} mile")
     return picked, notes
 
 
@@ -171,6 +177,7 @@ def _fetch_with_distribution(
     distribution: dict,
     wanted: int,
     heading: str,
+    language_filter: Optional[str] = None,
 ) -> tuple[list[dict], list[str]]:
     """Per-difficulty fetch. Returns (picked, shortfall_notes).
 
@@ -182,6 +189,7 @@ def _fetch_with_distribution(
     picked: list[dict] = []
     notes: list[str] = []
     used_ids: set[str] = set()
+    lang_label = {"en": " (English only)", "ur": " (Urdu only)"}.get(language_filter or "", "")
 
     for diff, need in distribution.items():
         if need <= 0:
@@ -194,13 +202,14 @@ def _fetch_with_distribution(
             status=status,
             difficulty=diff,
             bloom_level=bloom_level,
+            language_filter=language_filter,
         )
         # Exclude already-picked ids (shouldn't overlap, but be safe)
         candidates = [q for q in candidates if q["id"] not in used_ids]
         slot = candidates[:need]
         found = len(slot)
         if found < need:
-            notes.append(f"{heading}: {need} {diff} maange, {found} mile")
+            notes.append(f"{heading}: {need} {diff} maange{lang_label}, {found} mile")
         picked.extend(slot)
         used_ids.update(q["id"] for q in slot)
 
@@ -216,11 +225,12 @@ def _fetch_with_distribution(
             status=status,
             difficulty=None,
             bloom_level=bloom_level,
+            language_filter=language_filter,
         )
         extra_candidates = [q for q in extra_candidates if q["id"] not in used_ids]
         extra = extra_candidates[:remaining]
         if len(extra) < remaining:
-            notes.append(f"{heading}: {remaining} remaining maange, {len(extra)} mile")
+            notes.append(f"{heading}: {remaining} remaining maange{lang_label}, {len(extra)} mile")
         picked.extend(extra)
         used_ids.update(q["id"] for q in extra)
 

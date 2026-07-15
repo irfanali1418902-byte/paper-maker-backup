@@ -473,6 +473,7 @@ function loadPreset() {
     difficulty_filter: null,
     bloom_filter: null,
     difficulty_distribution: null,
+    language_filter: null,
     ...s,
     topic_ids: [],
   }));
@@ -495,6 +496,7 @@ function addSection() {
     difficulty_filter: null,
     bloom_filter: null,
     difficulty_distribution: null,
+    language_filter: null,
     unit_filter: null,
   });
   renderSections();
@@ -567,6 +569,7 @@ function renderSecCard(sec, i) {
   const statusSel = (v) => (sec.status_filter || 'published') === v ? 'selected' : '';
   const diffSel   = (v) => (sec.difficulty_filter || '') === v ? 'selected' : '';
   const bloomSel  = (v) => (sec.bloom_filter || '') === v ? 'selected' : '';
+  const langSel   = (v) => (sec.language_filter || '') === v ? 'selected' : '';
   const distOn    = !!(sec.difficulty_distribution);
   const distEasy  = distOn ? (sec.difficulty_distribution.easy   || 0) : 0;
   const distMed   = distOn ? (sec.difficulty_distribution.medium || 0) : 0;
@@ -648,6 +651,14 @@ function renderSecCard(sec, i) {
             <option value="ANALYZE"    ${bloomSel('ANALYZE')}>Analyze</option>
             <option value="EVALUATE"   ${bloomSel('EVALUATE')}>Evaluate</option>
             <option value="CREATE"     ${bloomSel('CREATE')}>Create</option>
+          </select>
+        </div>
+        <div>
+          <label>Language</label>
+          <select onchange="onLangFilter(${i}, this.value)">
+            <option value=""   ${langSel('')}>Sab</option>
+            <option value="en" ${langSel('en')}>English only</option>
+            <option value="ur" ${langSel('ur')}>Urdu only</option>
           </select>
         </div>
       </div>
@@ -733,6 +744,10 @@ function onDiffFilter(idx, val) {
 
 function onBloomFilter(idx, val) {
   _sections[idx].bloom_filter = val || null;
+}
+
+function onLangFilter(idx, val) {
+  _sections[idx].language_filter = val || null;
 }
 
 function onDistToggle(idx, on) {
@@ -1002,6 +1017,7 @@ function loadBpIntoForm(bp) {
     difficulty_filter: null,
     bloom_filter: null,
     difficulty_distribution: null,
+    language_filter: null,
     ...s,
   }));
   renderSections();
