@@ -383,3 +383,87 @@ class TestQuestionTypeMapping:
         qs = questions_repository.list_by_filters(subject="Pakistan Studies")
         latest = max(qs, key=lambda q: q["id"])
         assert latest["question_type"] == "fill-in-the-blank"
+
+
+# ── answer_lines ──────────────────────────────────────────────────────────────
+
+HEADER_WITH_AL = HEADER + ["answer_lines"]
+
+
+def _make_xlsx_al(rows: list[list]) -> bytes:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(HEADER_WITH_AL)
+    for row in rows:
+        ws.append(row)
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def _upload_xlsx_al(client, rows):
+    data = _make_xlsx_al(rows)
+    return client.post(
+        "/api/questions/bulk-import",
+        files={"file": ("questions.xlsx", data,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+
+
+class TestAnswerLines:
+    def test_valid_value_stored(self, client):
+        row = _mcq_row() + [6]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] == 6
+
+    def test_zero_is_valid(self, client):
+        row = _mcq_row() + [0]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] == 0
+
+    def test_blank_cell_stores_null(self, client):
+        row = _mcq_row() + [""]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] is None
+
+    def test_invalid_value_stores_null_with_warning(self, client):
+        row = _mcq_row() + [5]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        assert any("answer_lines" in w for w in res.json()["warnings"])
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] is None
+
+    def test_non_numeric_stores_null_with_warning(self, client):
+        row = _mcq_row() + ["abc"]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        assert any("answer_lines" in w for w in res.json()["warnings"])
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] is None
+
+    def test_column_absent_backward_compat(self, client):
+        """Purani Excel (bina answer_lines column) normal import ho — koi answer_lines warning nahi."""
+        res = _upload_xlsx(client, [_mcq_row()])
+        assert res.json()["added"] == 1
+        assert not any("answer_lines" in w for w in res.json()["warnings"])
+
+    @pytest.mark.parametrize("val", [2, 3, 4, 6, 8])
+    def test_all_valid_values(self, client, val):
+        row = _mcq_row() + [val]
+        res = _upload_xlsx_al(client, [row])
+        assert res.json()["added"] == 1
+        qs = questions_repository.list_by_filters(subject="Science")
+        latest = max(qs, key=lambda q: q["id"])
+        assert latest["answer_lines"] == val

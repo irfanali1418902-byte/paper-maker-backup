@@ -17,8 +17,8 @@ def insert(question_row: dict) -> None:
             correct_answer_en, correct_answer_ur, explanation_en, explanation_ur,
             visual_emoji, visual_count, syllabus_topic_id, image_path, image_size,
             source, learning_outcome, estimated_time, keywords, source_book,
-            page_number, status)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            page_number, status, answer_lines)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             question_row["id"],
             question_row["subject"],
@@ -47,6 +47,7 @@ def insert(question_row: dict) -> None:
             question_row.get("source_book"),
             question_row.get("page_number"),
             question_row.get("status", "published"),
+            question_row.get("answer_lines"),
         ),
     )
     conn.commit()

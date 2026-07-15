@@ -247,6 +247,25 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], list[st
                 f"row {row_num}: page_number '{pn_raw}' number nahi hai, None rakha"
             )
 
+    # ── answer_lines (optional; valid: 0,2,3,4,6,8 — anything else → NULL) ──────
+    VALID_ANSWER_LINES = {0, 2, 3, 4, 6, 8}
+    answer_lines: Optional[int] = None
+    al_raw = _cell(row, "answer_lines")
+    if al_raw:
+        try:
+            al_int = int(float(al_raw))
+            if al_int in VALID_ANSWER_LINES:
+                answer_lines = al_int
+            else:
+                msgs.append(
+                    f"row {row_num}: answer_lines '{al_raw}' valid nahi "
+                    f"(0/2/3/4/6/8 hona chahiye), NULL rakha"
+                )
+        except ValueError:
+            msgs.append(
+                f"row {row_num}: answer_lines '{al_raw}' number nahi hai, NULL rakha"
+            )
+
     # ── plain text optional fields ────────────────────────────────────────────
     learning_outcome: Optional[str] = _cell(row, "learning_outcome") or None
     keywords: Optional[str] = _cell(row, "keywords") or None
@@ -308,6 +327,7 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], list[st
         "source_book": source_book,
         "page_number": page_number,
         "status": status,
+        "answer_lines": answer_lines,
         "_image_name": image_name,  # internal — resolved after insert
     }
     return q, msgs
