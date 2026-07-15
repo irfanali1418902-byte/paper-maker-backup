@@ -229,7 +229,13 @@ def bulk_import_questions(file: UploadFile = File(...)):
             status_code=400,
             detail="Sirf .xlsx, .xls, ya .csv files allowed hain.",
         )
-    contents = file.file.read()
+    try:
+        contents = file.file.read()
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail="File padhne mein masla aaya — dobara try karein.",
+        ) from e
     return bulk_import_service.import_from_bytes(contents, file.filename or "upload.xlsx")
 
 

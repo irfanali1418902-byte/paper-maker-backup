@@ -357,6 +357,64 @@ class TestFileFormat:
         assert res.json()["added"] == 2
 
 
+# ── bad-file crash guard ──────────────────────────────────────────────────────
+
+class TestBadFileCrash:
+    """Corrupt / wrong / empty files: server stays alive, user-friendly messages."""
+
+    def test_jpg_extension_rejected_with_400(self, client):
+        res = client.post(
+            "/api/questions/bulk-import",
+            files={"file": ("photo.jpg", b"\xff\xd8\xff fake jpg", "image/jpeg")},
+        )
+        assert res.status_code == 400
+        detail = res.json()["detail"].lower()
+        assert "xlsx" in detail or "csv" in detail
+
+    def test_zero_bytes_returns_friendly_error(self, client):
+        res = client.post(
+            "/api/questions/bulk-import",
+            files={"file": ("empty.xlsx", b"",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
+        assert res.status_code == 200
+        body = res.json()
+        assert body["added"] == 0
+        assert len(body["errors"]) == 1
+        assert "khali" in body["errors"][0] or "0 bytes" in body["errors"][0]
+
+    def test_corrupt_xlsx_message_is_user_friendly(self, client):
+        res = client.post(
+            "/api/questions/bulk-import",
+            files={"file": ("bad.xlsx", b"THIS IS NOT EXCEL GARBAGE DATA",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
+        body = res.json()
+        assert body["added"] == 0
+        error_text = " ".join(body["errors"]).lower()
+        assert "badzip" not in error_text
+        assert "traceback" not in error_text
+        assert "theek nahi" in error_text or "dobara" in error_text
+
+    def test_header_only_xlsx_reports_no_data(self, client):
+        res = _upload_xlsx(client, [])  # no data rows — header only
+        body = res.json()
+        assert body["added"] == 0
+        all_msgs = body["errors"] + body["warnings"]
+        assert any("data nahi" in m or "koi data" in m for m in all_msgs)
+
+    def test_server_stays_up_after_bad_uploads(self, client):
+        for _ in range(3):
+            client.post(
+                "/api/questions/bulk-import",
+                files={"file": ("bad.xlsx", b"GARBAGE_BYTES_HERE",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+            )
+        res = _upload_xlsx(client, [_mcq_row()])
+        assert res.status_code == 200
+        assert res.json()["added"] == 1
+
+
 # ── question type mapping ─────────────────────────────────────────────────────
 
 class TestQuestionTypeMapping:

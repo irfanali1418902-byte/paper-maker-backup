@@ -358,6 +358,13 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
     """
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
+    if not file_bytes:
+        return {
+            "added": 0, "skipped": 0,
+            "errors": ["File khali hai (0 bytes) — sahi Excel file dobara upload karein."],
+            "warnings": [],
+        }
+
     try:
         if ext == "csv":
             df = pd.read_csv(io.BytesIO(file_bytes), dtype=str, keep_default_na=False)
@@ -369,10 +376,13 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
                 "errors": [f"File format '{ext}' support nahi hai (xlsx/csv chahiye)"],
                 "warnings": [],
             }
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         return {
             "added": 0, "skipped": 0,
-            "errors": [f"File parse nahi hua: {e}"],
+            "errors": [
+                "File theek nahi hai — corrupt ya invalid format. "
+                "Sahi Excel template dobara try karein."
+            ],
             "warnings": [],
         }
 
@@ -385,6 +395,16 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
         return {
             "added": 0, "skipped": 0,
             "errors": [f"Zaroori columns missing hain: {', '.join(sorted(missing_cols))}"],
+            "warnings": [],
+        }
+
+    if df.empty:
+        return {
+            "added": 0, "skipped": 0,
+            "errors": [
+                "File mein koi data nahi mila — sirf header row thi. "
+                "Questions wali rows add karke dobara upload karein."
+            ],
             "warnings": [],
         }
 
@@ -403,7 +423,11 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
         warnings.extend(msgs)
 
         image_name = q_dict.pop("_image_name", "")
-        questions_repository.insert(q_dict)
+        try:
+            questions_repository.insert(q_dict)
+        except Exception as db_err:  # noqa: BLE001
+            errors.append(f"row {row_num}: save nahi hua (DB error) — {db_err}")
+            continue
         added += 1
 
         if image_name:
