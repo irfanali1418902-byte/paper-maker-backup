@@ -27,6 +27,7 @@ class GeneratePaperRequest(BaseModel):
     # group = 100 - mcq_percent. Range Pydantic level par enforce (0-100).
     mcq_percent: Optional[int] = Field(default=None, ge=0, le=100)
     paper_title: Optional[str] = None
+    language_filter: Optional[Literal["en", "ur"]] = None
 
 
 class AdaptivePaperRequest(BaseModel):

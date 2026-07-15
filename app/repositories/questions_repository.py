@@ -54,12 +54,22 @@ def insert(question_row: dict) -> None:
     conn.close()
 
 
+def _apply_language_filter(query: str, params: list, language_filter: Optional[str]) -> tuple[str, list]:
+    """language_filter='en' → sirf English questions; 'ur' → sirf Urdu; None → sab."""
+    if language_filter == "en":
+        query += " AND question_en IS NOT NULL AND question_en != ''"
+    elif language_filter == "ur":
+        query += " AND question_ur IS NOT NULL AND question_ur != ''"
+    return query, params
+
+
 def find_least_used(
     subject: str,
     bloom_level: str,
     difficulty: Optional[str],
     limit: int,
     question_types: Optional[list] = None,
+    language_filter: Optional[str] = None,
 ) -> list:
     """Returns N matching questions ordered by usage_count ASC (least-used first).
     question_types diya jaye to sirf un types ke questions (IN filter)."""
@@ -74,6 +84,7 @@ def find_least_used(
         placeholders = ",".join("?" for _ in question_types)
         query += f" AND question_type IN ({placeholders})"
         params.extend(question_types)
+    query, params = _apply_language_filter(query, params, language_filter)
     query += " ORDER BY usage_count ASC LIMIT ?"
     params.append(limit)
     rows = cur.execute(query, params).fetchall()
@@ -137,6 +148,7 @@ def find_for_bank_paper(
     syllabus_topic_id: Optional[str] = None,
     question_types: Optional[list] = None,
     source: Optional[str] = None,
+    language_filter: Optional[str] = None,
 ) -> list:
     """Bloom distribution ke bina direct query — bank-paper assembly ke liye.
     source=None means sab, source='manual' means sirf teacher-written."""
@@ -157,6 +169,7 @@ def find_for_bank_paper(
     if source:
         query += " AND source = ?"
         params.append(source)
+    query, params = _apply_language_filter(query, params, language_filter)
     query += " ORDER BY usage_count ASC"
     rows = cur.execute(query, params).fetchall()
     conn.close()
@@ -171,13 +184,15 @@ def find_for_blueprint_section(
     status: str = "published",
     difficulty: Optional[str] = None,
     bloom_level: Optional[str] = None,
+    language_filter: Optional[str] = None,
 ) -> list:
-    """Blueprint section ke liye filtered query — difficulty/bloom/status support ke saath.
+    """Blueprint section ke liye filtered query — difficulty/bloom/status/language support.
 
     status='all' → status filter nahi lagta (draft/archived bhi aate hain).
     topic_ids=[] → koi topic filter nahi.
     difficulty=None → koi difficulty filter nahi.
     bloom_level=None → koi bloom filter nahi.
+    language_filter='en' → sirf English; 'ur' → sirf Urdu; None → sab.
     """
     conn = get_connection()
     query = "SELECT * FROM questions WHERE 1=1"
@@ -212,6 +227,8 @@ def find_for_blueprint_section(
     if bloom_level:
         query += " AND bloom_level = ?"
         params.append(bloom_level)
+
+    query, params = _apply_language_filter(query, params, language_filter)
 
     query += " ORDER BY usage_count ASC"
     rows = conn.execute(query, params).fetchall()
