@@ -229,9 +229,11 @@
 
       <section class="panel">
         <div class="row">
-          <div>
-            <label for="paperId" data-i18n="form.paperId">Paper ID</label>
-            <input id="paperId" placeholder="paper assemble karne ke baad jo ID milti hai" />
+          <div style="flex:1">
+            <label>Paper chunen</label>
+            <select id="paperId" onchange="loadLatest()" style="width:100%">
+              <option value="">-- paper chunen --</option>
+            </select>
           </div>
           <div class="narrow">
             <button class="btn" onclick="loadLatest()" data-i18n="btn.view">Dashboard dekhen</button>
@@ -417,7 +419,7 @@ async function readError(res) {
 // so the teacher can switch to older uploads.
 async function loadLatest() {
   const paperId = document.getElementById("paperId").value.trim();
-  if (!paperId) { setStatus("Pehle paper ID daalen.", "error"); return; }
+  if (!paperId) { setStatus("Pehle paper chunen.", "error"); return; }
   currentPaperId = paperId;
   hide("dashboard");
   hide("uploadPicker");
@@ -607,9 +609,25 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// Apply saved language, then pre-fill from ?paper_id=... and auto-load.
+async function initDashboard() {
+  try {
+    const res = await apiFetch('/api/papers');
+    const data = await res.json();
+    const papers = data.papers || data;
+    const sel = document.getElementById('paperId');
+    papers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.paper_title || p.subject || p.id;
+      sel.appendChild(opt);
+    });
+  } catch (e) { /* silent — auth gate handles it */ }
+}
+
+// Apply saved language, then populate dropdown, then pre-fill from ?paper_id=... and auto-load.
 initLang();
-(function init() {
+(async function init() {
+  await initDashboard();
   const params = new URLSearchParams(window.location.search);
   const paperId = params.get("paper_id");
   if (paperId) {
