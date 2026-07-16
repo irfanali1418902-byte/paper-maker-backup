@@ -696,7 +696,6 @@
               <div class="card-title" data-i18n="card.exportResults">Export &amp; results</div>
               <div class="actions" style="flex-direction:column; align-items:stretch;">
                 <button class="gen-btn" id="printBtn" style="display:none" onclick="openPrintView()" data-i18n="btn.print">Print / PDF dekhen</button>
-                <button class="ghost-btn" id="dashboardBtn" style="display:none" onclick="openDashboard()" data-i18n="btn.dashboard">Result dashboard dekhen</button>
                 <button class="ghost-btn" id="csvDownloadBtn" style="display:none" onclick="downloadResultCSV()" data-i18n="btn.csvDownload">📥 Result CSV download karen</button>
                 <button class="ghost-btn" id="csvUploadBtn" style="display:none" onclick="document.getElementById('csvFileInput').click()" data-i18n="btn.csvUpload">📤 Filled CSV upload karen</button>
                 <input type="file" id="csvFileInput" accept=".csv,.xlsx" style="display:none" onchange="uploadResultCSV(this)">
@@ -952,7 +951,6 @@ const I18N = {
     'details.summary': 'Per-question details (Bloom, marks, options)',
     'card.exportResults': 'Export & results',
     'btn.print': 'Print / PDF dekhen',
-    'btn.dashboard': 'Result dashboard dekhen',
     'btn.csvDownload': '📥 Result CSV download karen',
     'btn.csvUpload': '📤 Filled CSV upload karen',
     'results.actionsNote': 'Paper build karne ke baad ye actions enable ho jate hain.',
@@ -1046,7 +1044,6 @@ const I18N = {
     'details.summary': 'فی سوال تفصیلات (بلوم، نمبر، آپشنز)',
     'card.exportResults': 'ایکسپورٹ اور نتائج',
     'btn.print': 'پرنٹ / پی ڈی ایف دیکھیں',
-    'btn.dashboard': 'نتائج ڈیش بورڈ دیکھیں',
     'btn.csvDownload': '📥 نتائج CSV ڈاؤن لوڈ کریں',
     'btn.csvUpload': '📤 بھرا ہوا CSV اپ لوڈ کریں',
     'results.actionsNote': 'پرچہ بنانے کے بعد یہ ایکشنز فعال ہو جاتے ہیں۔',
@@ -1164,7 +1161,6 @@ function mpRenderTable(papers) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpOpenPaper('${p.id}')">Open</button>
           <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpPrintPaper('${p.id}')">Print</button>
-          <button class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="mpDashboard('${p.id}')">Dashboard</button>
         </div>
       </td>
     </tr>`;
@@ -1195,7 +1191,6 @@ async function mpOpenPaper(id) {
     if (!res.ok) throw new Error(data.detail || 'Error');
     currentPaperData = { paper_id: id, questions: data.questions, total_marks: data.paper.total_marks, balance_summary: data.balance_summary };
     document.getElementById('printBtn').style.display = 'inline-flex';
-    document.getElementById('dashboardBtn').style.display = 'inline-flex';
     document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
     document.getElementById('csvUploadBtn').style.display = 'inline-flex';
     document.getElementById('genExportBtn').style.display = 'inline-flex';
@@ -1209,10 +1204,6 @@ async function mpOpenPaper(id) {
 
 function mpPrintPaper(id) {
   window.open(`/print.html?paper_id=${id}`, '_blank');
-}
-
-function mpDashboard(id) {
-  window.open(`/dashboard.html?paper_id=${id}`, '_blank');
 }
 
 function onLogoSelected(event) {
@@ -1281,11 +1272,6 @@ function syncHeaderPreview() {
 function openPrintView() {
   if (!currentPaperId) return;
   window.open(`/print.html?paper_id=${currentPaperId}`, '_blank');
-}
-
-function openDashboard() {
-  if (!currentPaperId) return;
-  window.open(`/dashboard.html?paper_id=${currentPaperId}`, '_blank');
 }
 
 loadSchoolSettings();
@@ -1577,7 +1563,6 @@ async function buildPaper() {
     if (!res.ok) throw new Error(data.detail || 'Error');
     currentPaperId = data.paper_id;
     document.getElementById('printBtn').style.display = 'inline-flex';
-    document.getElementById('dashboardBtn').style.display = 'inline-flex';
     document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
     document.getElementById('csvUploadBtn').style.display = 'inline-flex';
     document.getElementById('genExportBtn').style.display = 'inline-flex';
@@ -1614,7 +1599,6 @@ async function buildAdaptivePaper() {
     if (!res.ok) throw new Error(data.detail || 'Error');
     currentPaperId = data.paper_id;
     document.getElementById('printBtn').style.display = 'inline-flex';
-    document.getElementById('dashboardBtn').style.display = 'inline-flex';
     document.getElementById('csvDownloadBtn').style.display = 'inline-flex';
     document.getElementById('csvUploadBtn').style.display = 'inline-flex';
     setStatus(`Adaptive paper ban gaya — Total marks: ${data.total_marks}`);
@@ -1794,9 +1778,7 @@ async function uploadResultCSV(input) {
       setStatus('⚠️ Upload errors: ' + errMsg);
       return;
     }
-    setStatus(`✅ Results upload ho gaye! ${data.rows_saved ?? ''} rows saved. Dashboard khul raha hai...`);
-    // Auto-open dashboard
-    window.open(`/dashboard.html?paper_id=${currentPaperId}`, '_blank');
+    setStatus(`✅ Results upload ho gaye! ${data.rows_saved ?? ''} rows saved.`);
   } catch (e) {
     setStatus('Upload error: ' + e.message);
   }
@@ -1971,7 +1953,7 @@ function anQuality(q) {
   return { k: 'q-review', label: 'Review' };
 }
 
-// P-value cell, coloured by band (matches dashboard.html).
+// P-value cell, coloured by band.
 function anPCell(q) {
   const cls = q.p_band === 'good' ? 'good' : 'weak';
   return `<span class="pd ${cls}">${q.p_value.toFixed(2)}</span>`;
