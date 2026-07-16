@@ -50,12 +50,16 @@ def upload_results(paper_id: str, filename: str, file_bytes: bytes) -> Optional[
     if paper is None:
         return None
 
-    question_ids = json.loads(paper["question_ids"])
-    questions = [questions_repository.find_by_id(qid) for qid in question_ids]
-    questions = [q for q in questions if q]
+    question_ids: list[str] = json.loads(paper["question_ids"])
+    # Build a map for max-marks validation; missing rows (deleted from bank) are skipped.
+    q_detail: dict[str, dict] = {}
+    for qid in question_ids:
+        q = questions_repository.find_by_id(qid)
+        if q:
+            q_detail[qid] = q
 
     df = _parse_file(filename, file_bytes)
-    _validate(df, questions)
+    _validate(df, question_ids, q_detail)
 
     student_count = len(df)
     settings = settings_service.get_settings()
@@ -75,14 +79,14 @@ def upload_results(paper_id: str, filename: str, file_bytes: bytes) -> Optional[
     upload_id = str(uuid.uuid4())
     result_repository.insert_upload(upload_id=upload_id, paper_id=paper_id, filename=filename)
     for _, row in df.iterrows():
-        for idx, q in enumerate(questions):
+        for idx, qid in enumerate(question_ids):
             marks = int(float(row.iloc[2 + idx]))
             result_repository.insert_student_result(
                 result_id=str(uuid.uuid4()),
                 result_upload_id=upload_id,
                 roll_no=str(row.iloc[0]).strip(),
                 student_name=str(row.iloc[1]).strip(),
-                question_id=q["id"],
+                question_id=qid,
                 marks_obtained=marks,
             )
 
@@ -263,8 +267,8 @@ def _parse_file(filename: str, file_bytes: bytes) -> pd.DataFrame:
     raise ValueError(f"Format support nahi: '{filename}'. .csv ya .xlsx use karen.")
 
 
-def _validate(df: pd.DataFrame, questions: list) -> None:
-    expected = 2 + len(questions)
+def _validate(df: pd.DataFrame, question_ids: list[str], q_detail: dict[str, dict]) -> None:
+    expected = 2 + len(question_ids)
     if len(df.columns) != expected:
         raise ResultsValidationError(
             [{"row": 1, "issue": f"Columns chahiye {expected}, mile {len(df.columns)}."}]
@@ -276,7 +280,7 @@ def _validate(df: pd.DataFrame, questions: list) -> None:
             errors.append({"row": row_no, "issue": "roll_no missing."})
         if pd.isna(row.iloc[1]) or str(row.iloc[1]).strip() == "":
             errors.append({"row": row_no, "issue": "student_name missing."})
-        for q_idx, q in enumerate(questions):
+        for q_idx, qid in enumerate(question_ids):
             val = row.iloc[2 + q_idx]
             if pd.isna(val):
                 errors.append({"row": row_no, "issue": f"Q{q_idx + 1} marks missing."})
@@ -292,8 +296,8 @@ def _validate(df: pd.DataFrame, questions: list) -> None:
             marks = int(fval)
             if marks < 0:
                 errors.append({"row": row_no, "issue": f"Q{q_idx + 1} marks negative nahi ho sakte."})
-            elif marks > q["marks"]:
-                errors.append({"row": row_no, "issue": f"Q{q_idx + 1} marks ({marks}) max ({q['marks']}) se zyada hain."})
+            elif qid in q_detail and marks > q_detail[qid]["marks"]:
+                errors.append({"row": row_no, "issue": f"Q{q_idx + 1} marks ({marks}) max ({q_detail[qid]['marks']}) se zyada hain."})
     if errors:
         raise ResultsValidationError(errors)
 
