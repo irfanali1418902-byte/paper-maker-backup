@@ -611,6 +611,13 @@
             <select id="adaptivePaperSelect" onchange="onAdaptivePaperSelect()" style="width:100%">
               <option value="">-- paper chunen --</option>
             </select>
+            <div id="adHasResultsBox" style="display:none;margin-top:14px;padding:12px 14px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;font-size:13px;color:#1b5e20">
+              <div id="adHasResultsMsg"></div>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="gen-btn" onclick="showAdaptiveStep(3)">Analysis dekho →</button>
+                <button class="ghost-btn" onclick="showAdaptiveStep(2)">Naya Result Upload karo</button>
+              </div>
+            </div>
             <div class="actions" style="margin-top:16px;flex-wrap:wrap;gap:8px">
               <button class="ghost-btn" id="adTemplateBtn" onclick="downloadAdaptiveTemplate()" disabled>Template Download (.xlsx)</button>
               <button class="gen-btn" id="adStep1Next" onclick="showAdaptiveStep(2)" disabled>Upload Results →</button>
@@ -2177,12 +2184,31 @@ async function initAdaptiveScreen() {
   } catch (e) { /* silent — api key gate will handle auth */ }
 }
 
-function onAdaptivePaperSelect() {
+async function onAdaptivePaperSelect() {
   const v = document.getElementById('adaptivePaperSelect').value;
   adaptiveCurrentPaperId = v || null;
   const has = !!adaptiveCurrentPaperId;
   document.getElementById('adTemplateBtn').disabled = !has;
   document.getElementById('adStep1Next').disabled = !has;
+
+  // Reset info box and restore normal button visibility
+  const box = document.getElementById('adHasResultsBox');
+  const nextBtn = document.getElementById('adStep1Next');
+  box.style.display = 'none';
+  nextBtn.style.display = '';
+  if (!has) return;
+
+  try {
+    const res = await apiFetch(`/api/adaptive/has-results/${adaptiveCurrentPaperId}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.has_results) {
+      document.getElementById('adHasResultsMsg').textContent =
+        `Is paper ka result already mojood hai (${data.student_count} students ka data)`;
+      box.style.display = 'block';
+      nextBtn.style.display = 'none';
+    }
+  } catch (e) { /* silent — auth gate handles it */ }
 }
 
 function downloadAdaptiveTemplate() {

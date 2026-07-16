@@ -6,6 +6,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from app.repositories import papers_repository, result_repository
 from app.services import adaptive_results_service
 from app.services.exceptions import ResultsValidationError
 
@@ -19,6 +20,19 @@ _XLSX_CONTENT_TYPE = (
 class GenerateAdaptiveRequest(BaseModel):
     total_questions: int = 20
     language: Optional[str] = None
+
+
+@router.get("/api/adaptive/has-results/{paper_id}")
+def has_results(paper_id: str):
+    """Check whether this paper already has uploaded results."""
+    if papers_repository.find_by_id(paper_id) is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    uploads = result_repository.list_uploads_for_paper(paper_id)
+    if not uploads:
+        return {"has_results": False, "student_count": 0}
+    rows = result_repository.list_results_for_upload(uploads[0]["id"])
+    student_count = len({r["roll_no"] for r in rows})
+    return {"has_results": True, "student_count": student_count}
 
 
 @router.get("/api/adaptive/template/{paper_id}")
