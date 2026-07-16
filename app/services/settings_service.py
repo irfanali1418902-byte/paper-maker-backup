@@ -21,4 +21,7 @@ def save_settings(settings: SchoolSettings) -> None:
         address_ur=settings.address_ur,
         logo_base64=settings.logo_base64,
         accent_color=settings.accent_color,
+        class_size=settings.class_size,
+        min_analysis_percent=settings.min_analysis_percent,
+        weak_topic_threshold=settings.weak_topic_threshold,
     )

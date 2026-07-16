@@ -80,6 +80,21 @@ def insert_student_result(
     conn.close()
 
 
+def delete_uploads_for_paper(paper_id: str) -> None:
+    """Remove all result data for a paper — used before re-upload so old rows
+    don't accumulate. Deletes child rows first (FK order)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM student_question_results WHERE result_upload_id IN "
+        "(SELECT id FROM result_uploads WHERE paper_id = ?)",
+        (paper_id,),
+    )
+    cur.execute("DELETE FROM result_uploads WHERE paper_id = ?", (paper_id,))
+    conn.commit()
+    conn.close()
+
+
 def list_results_for_upload(upload_id: str) -> list:
     """Every per-student per-question row for one upload — service layer
     aggregates these into per-student totals, per-question averages, etc."""

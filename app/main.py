@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api import (
+    adaptive_results,
     blueprints,
     dashboard,
     export,
@@ -48,6 +49,7 @@ init_db()
 # Har /api router API-key auth ke peeche. Static `/` mount (neeche) khula rehta
 # hai taake frontend HTML/JS bina key ke load ho sake.
 _api_auth = [Depends(require_api_key)]
+app.include_router(adaptive_results.router, dependencies=_api_auth)
 app.include_router(blueprints.router, dependencies=_api_auth)
 app.include_router(questions.router, dependencies=_api_auth)
 app.include_router(library.router, dependencies=_api_auth)

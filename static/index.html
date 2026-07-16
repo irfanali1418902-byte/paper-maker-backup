@@ -593,20 +593,69 @@
 
       <!-- ===== ADAPTIVE ===== -->
       <section class="screen" data-screen="adaptive">
-        <div class="head"><div><h1 class="h1" data-i18n="adapt.title">Adaptive paper</h1><p class="sub" data-i18n="adapt.sub">Kisi paper ke uploaded results se class ki weak Bloom levels nikaal kar un par focus karta naya paper banayen.</p></div></div>
+        <div class="head"><div><h1 class="h1">Adaptive Paper</h1><p class="sub">Results se class ki kamzor topics / Bloom levels nikaal kar targeted practice paper banayen.</p></div></div>
 
-        <div class="twocol">
+        <!-- Step indicator -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:13px">
+          <div id="adStepInd1" style="flex:1;padding:9px 6px;text-align:center;background:var(--primary);color:#fff;font-weight:600">1. Paper</div>
+          <div id="adStepInd2" style="flex:1;padding:9px 6px;text-align:center;background:var(--surface);color:var(--muted)">2. Upload</div>
+          <div id="adStepInd3" style="flex:1;padding:9px 6px;text-align:center;background:var(--surface);color:var(--muted)">3. Analysis</div>
+          <div id="adStepInd4" style="flex:1;padding:9px 6px;text-align:center;background:var(--surface);color:var(--muted)">4. Generate</div>
+        </div>
+
+        <!-- Step 1: Paper Select -->
+        <div id="adStep1">
           <div class="card">
-            <label data-i18n="form.learnFrom">Learn from paper ID (jiska result upload hua hai)</label>
-            <input id="adaptiveSourceId" placeholder="e.g. 4a0af91b-..." />
-            <p class="sub" style="margin-top:10px" data-i18n="adapt.note">Total questions aur difficulty upar "Generate paper" screen ke fields se liye jate hain.</p>
-            <div class="actions">
-              <button class="gen-btn" onclick="buildAdaptivePaper()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg><span data-i18n="btn.genAdaptive">Generate adaptive paper</span></button>
+            <label>Paper chunen</label>
+            <select id="adaptivePaperSelect" onchange="onAdaptivePaperSelect()" style="width:100%">
+              <option value="">-- paper chunen --</option>
+            </select>
+            <div class="actions" style="margin-top:16px;flex-wrap:wrap;gap:8px">
+              <button class="ghost-btn" id="adTemplateBtn" onclick="downloadAdaptiveTemplate()" disabled>Template Download (.xlsx)</button>
+              <button class="gen-btn" id="adStep1Next" onclick="showAdaptiveStep(2)" disabled>Upload Results →</button>
             </div>
           </div>
-          <div class="tip">
-            <div class="k" data-i18n="tip.aiiSuggests">AII suggests</div>
-            <div class="v" data-i18n="tip.aiiSuggestsBody">Jin Bloom levels par class sab se kam score karti hai, un par zyada questions allocate kiye jate hain — taake practice un kamzoriyon par ho.</div>
+        </div>
+
+        <!-- Step 2: Upload -->
+        <div id="adStep2" style="display:none">
+          <div class="card">
+            <label>Results file chunen (.xlsx ya .csv)</label>
+            <input type="file" id="adResultsFile" accept=".xlsx,.xls,.csv" style="margin-bottom:10px" />
+            <div class="actions" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+              <button class="ghost-btn" onclick="showAdaptiveStep(1)">← Back</button>
+              <button class="gen-btn" onclick="uploadAdaptiveResults()">Upload Results</button>
+            </div>
+            <div id="adUploadStatus" style="margin-top:10px;font-size:13px;color:var(--muted);min-height:18px"></div>
+            <div id="adUploadWarn" style="display:none;margin-top:10px;padding:10px 12px;background:#fff8e1;border:1px solid #f9a825;border-radius:8px;font-size:13px;color:#7a5c00"></div>
+          </div>
+        </div>
+
+        <!-- Step 3: Analysis -->
+        <div id="adStep3" style="display:none">
+          <div id="adAnalysisWrap"></div>
+          <div class="actions" style="margin-top:16px;flex-wrap:wrap;gap:8px">
+            <button class="ghost-btn" onclick="showAdaptiveStep(2)">← Back</button>
+            <button class="gen-btn" onclick="showAdaptiveStep(4)">Generate Adaptive Paper →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Generate -->
+        <div id="adStep4" style="display:none">
+          <div class="card">
+            <label>Total sawaal</label>
+            <input type="number" id="adTotalQ" value="20" min="1" max="200" style="width:120px" />
+            <label style="margin-top:10px">Language</label>
+            <select id="adLang" style="width:200px">
+              <option value="">Sab (English + Urdu)</option>
+              <option value="en">English only</option>
+              <option value="ur">Urdu only</option>
+            </select>
+            <div class="actions" style="margin-top:16px;flex-wrap:wrap;gap:8px">
+              <button class="ghost-btn" onclick="showAdaptiveStep(3)">← Back</button>
+              <button class="gen-btn" onclick="generateAdaptiveResultsPaper()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg> Generate Adaptive Paper</button>
+            </div>
+            <div id="adGenStatus" style="margin-top:10px;font-size:13px;color:var(--muted);min-height:18px"></div>
           </div>
         </div>
       </section>
@@ -691,6 +740,9 @@
             <p class="sub" style="margin-top:2px" data-i18n="an.bloomSub">Kaunse cognitive levels kamzor hain — marks-weighted average.</p>
             <div style="overflow-x:auto"><div id="anBloomWrap"></div></div>
           </div>
+          <div style="margin-top:18px;text-align:right">
+            <button class="gen-btn" onclick="goToAdaptiveFromAnalytics()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg> Generate Adaptive Paper</button>
+          </div>
         </div>
       </section>
 
@@ -730,6 +782,30 @@
               <div style="font-size:11.5px; color:var(--muted);">Examination — 2026</div>
             </div>
           </div>
+        </div>
+
+        <!-- Class Settings -->
+        <div class="card" style="margin-top:18px">
+          <div class="card-title">Class Settings</div>
+          <p class="sub" style="margin-top:2px">Adaptive paper analysis ke liye class size aur thresholds.</p>
+          <div class="field-row" style="margin-top:14px;flex-wrap:wrap;gap:16px">
+            <div style="flex:1;min-width:160px">
+              <label>Class Size (students)</label>
+              <input type="number" id="classSize" value="25" min="1" max="500" style="width:100%" />
+            </div>
+            <div style="flex:1;min-width:160px">
+              <label>Minimum Analysis % (students present)</label>
+              <input type="number" id="minAnalysisPct" value="60" min="1" max="100" style="width:100%" />
+            </div>
+            <div style="flex:1;min-width:160px">
+              <label>Weak Topic Threshold (%)</label>
+              <input type="number" id="weakTopicThreshold" value="60" min="1" max="100" style="width:100%" />
+            </div>
+          </div>
+          <div class="actions" style="margin-top:14px">
+            <button class="gen-btn" onclick="saveClassSettings()">Save Class Settings</button>
+          </div>
+          <span id="classSettingsStatus" style="display:inline-block;margin-top:8px;font-size:13px;color:var(--muted)"></span>
         </div>
       </section>
 
@@ -1031,6 +1107,8 @@ function showScreen(name) {
     const inp = document.getElementById('anPaperId');
     if (inp && !inp.value && currentPaperId) inp.value = currentPaperId;
   }
+  // Adaptive screen: load papers dropdown (restores selection if pre-set).
+  if (name === 'adaptive') initAdaptiveScreen();
   // My Papers: load list on every visit.
   if (name === 'mypapers') mpLoad();
   window.scrollTo(0, 0);
@@ -2019,6 +2097,222 @@ function setStatus(msg) { document.querySelectorAll('.js-status').forEach(el => 
 // Apply saved language (or default EN) on load.
 initLang();
 loadQuickStats();
+
+// ---- Adaptive Results (4-step wizard) ------------------------------------
+
+let adaptiveCurrentPaperId = null;
+
+function showAdaptiveStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById('adStep' + i);
+    const ind = document.getElementById('adStepInd' + i);
+    if (step) step.style.display = (i === n) ? '' : 'none';
+    if (ind) {
+      ind.style.background = (i === n) ? 'var(--primary)' : 'var(--surface)';
+      ind.style.color = (i === n) ? '#fff' : 'var(--muted)';
+      ind.style.fontWeight = (i === n) ? '600' : 'normal';
+    }
+  }
+  if (n === 3) loadAdaptiveAnalysis();
+}
+
+async function initAdaptiveScreen() {
+  try {
+    const res = await apiFetch('/api/papers');
+    const data = await res.json();
+    const papers = data.papers || data;
+    const sel = document.getElementById('adaptivePaperSelect');
+    const prev = adaptiveCurrentPaperId;
+    sel.innerHTML = '<option value="">-- paper chunen --</option>';
+    papers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.paper_title || p.subject || p.id;
+      sel.appendChild(opt);
+    });
+    if (prev) { sel.value = prev; onAdaptivePaperSelect(); }
+  } catch (e) { /* silent — api key gate will handle auth */ }
+}
+
+function onAdaptivePaperSelect() {
+  const v = document.getElementById('adaptivePaperSelect').value;
+  adaptiveCurrentPaperId = v || null;
+  const has = !!adaptiveCurrentPaperId;
+  document.getElementById('adTemplateBtn').disabled = !has;
+  document.getElementById('adStep1Next').disabled = !has;
+}
+
+function downloadAdaptiveTemplate() {
+  if (!adaptiveCurrentPaperId) return;
+  const key = (typeof pmGetKey === 'function') ? pmGetKey() : '';
+  const url = `/api/adaptive/template/${adaptiveCurrentPaperId}` + (key ? `?key=${encodeURIComponent(key)}` : '');
+  window.open(url, '_blank');
+}
+
+async function uploadAdaptiveResults() {
+  if (!adaptiveCurrentPaperId) return;
+  const fileInput = document.getElementById('adResultsFile');
+  const file = fileInput.files[0];
+  if (!file) { document.getElementById('adUploadStatus').textContent = 'Pehle file chunen.'; return; }
+  const statusEl = document.getElementById('adUploadStatus');
+  const warnEl = document.getElementById('adUploadWarn');
+  statusEl.textContent = 'Upload ho raha hai...';
+  warnEl.style.display = 'none';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await apiFetch(`/api/adaptive/upload/${adaptiveCurrentPaperId}`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail)
+        ? data.detail.map(e => `Row ${e.row}: ${e.issue}`).join(' | ')
+        : (data.detail || 'Upload fail hua');
+      statusEl.textContent = '⚠ ' + detail;
+      return;
+    }
+    statusEl.textContent = `✓ ${data.student_count} students ka data save hua.`;
+    if (data.warning) { warnEl.textContent = '⚠ ' + data.warning; warnEl.style.display = ''; }
+    setTimeout(() => showAdaptiveStep(3), 1000);
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadAdaptiveAnalysis() {
+  if (!adaptiveCurrentPaperId) return;
+  const wrap = document.getElementById('adAnalysisWrap');
+  wrap.innerHTML = '<p style="color:var(--muted);font-size:14px">Analysis load ho rahi hai...</p>';
+  try {
+    const res = await apiFetch(`/api/adaptive/analysis/${adaptiveCurrentPaperId}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    renderAdaptiveAnalysis(data, wrap);
+  } catch (e) {
+    wrap.innerHTML = `<p style="color:#b3261e;font-size:14px">${escapeHtml(e.message)}</p>`;
+  }
+}
+
+function renderAdaptiveAnalysis(data, wrap) {
+  let html = `<div class="an-cards" style="margin-bottom:16px">
+    <div class="an-card"><div class="v">${data.class_avg_percent}%</div><div class="c">Class Average</div></div>
+    <div class="an-card"><div class="v">${data.student_count}</div><div class="c">Students</div></div>
+    <div class="an-card"><div class="v">${data.weak_topics.length}</div><div class="c">Weak Topics</div></div>
+  </div>`;
+
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-title">Topic-wise Performance</div>';
+  data.topic_scores.forEach(t => {
+    const col = t.is_weak ? '#b3261e' : '#1d6e56';
+    html += `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:13px">
+        <span style="color:${col};font-weight:600">${escapeHtml(t.topic)}</span>
+        <span style="color:${col}">${t.avg_percent}%</span>
+      </div>
+      <div style="background:#e5e7eb;border-radius:4px;height:8px">
+        <div style="background:${col};width:${Math.min(t.avg_percent,100)}%;height:8px;border-radius:4px"></div>
+      </div></div>`;
+  });
+  html += '</div>';
+
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-title">Bloom-wise Performance</div>';
+  data.bloom_scores.forEach(b => {
+    const col = b.is_weak ? '#b3261e' : '#1d6e56';
+    html += `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:13px">
+        <span style="color:${col};font-weight:600">${escapeHtml(b.bloom_level)}</span>
+        <span style="color:${col}">${b.avg_percent}%</span>
+      </div>
+      <div style="background:#e5e7eb;border-radius:4px;height:8px">
+        <div style="background:${col};width:${Math.min(b.avg_percent,100)}%;height:8px;border-radius:4px"></div>
+      </div></div>`;
+  });
+  html += '</div>';
+
+  html += `<div class="card"><div class="card-title">Student-wise Results</div>
+    <div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="text-align:left;padding:6px 4px">Student</th>
+      <th style="text-align:right;padding:6px 4px">Marks</th>
+      <th style="text-align:right;padding:6px 4px">%</th>
+    </tr></thead><tbody>`;
+  data.students.forEach(s => {
+    const col = s.percent < 60 ? '#b3261e' : '#1d6e56';
+    html += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:5px 4px">${escapeHtml(s.student_name || s.roll_no)}</td>
+      <td style="text-align:right;padding:5px 4px">${s.marks_obtained}/${s.total_marks}</td>
+      <td style="text-align:right;padding:5px 4px;color:${col};font-weight:600">${s.percent}%</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  wrap.innerHTML = html;
+}
+
+async function generateAdaptiveResultsPaper() {
+  if (!adaptiveCurrentPaperId) return;
+  const statusEl = document.getElementById('adGenStatus');
+  statusEl.textContent = 'Adaptive paper ban raha hai...';
+  statusEl.style.color = 'var(--muted)';
+  try {
+    const res = await apiFetch(`/api/adaptive/generate/${adaptiveCurrentPaperId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        total_questions: parseInt(document.getElementById('adTotalQ').value) || 20,
+        language: document.getElementById('adLang').value || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
+    statusEl.textContent = '✓ Paper ban gaya! My Papers mein ja rahe hain...';
+    statusEl.style.color = '#1d6e56';
+    setTimeout(() => { showScreen('mypapers'); }, 1200);
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.color = '#b3261e';
+  }
+}
+
+function goToAdaptiveFromAnalytics() {
+  const paperId = (document.getElementById('anPaperId')?.value || '').trim();
+  if (paperId) adaptiveCurrentPaperId = paperId;
+  showScreen('adaptive');
+  showAdaptiveStep(1);
+}
+
+// ---- Class Settings -------------------------------------------------------
+
+async function saveClassSettings() {
+  const statusEl = document.getElementById('classSettingsStatus');
+  const existing = await (await apiFetch('/api/school-settings')).json();
+  const body = Object.assign({}, existing, {
+    class_size: parseInt(document.getElementById('classSize').value) || 25,
+    min_analysis_percent: parseInt(document.getElementById('minAnalysisPct').value) || 60,
+    weak_topic_threshold: parseInt(document.getElementById('weakTopicThreshold').value) || 60,
+  });
+  try {
+    const res = await apiFetch('/api/school-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('Save failed');
+    statusEl.textContent = '✅ Saved';
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// Populate class settings fields from server on settings load.
+const _origLoadSchoolSettings = loadSchoolSettings;
+loadSchoolSettings = async function() {
+  await _origLoadSchoolSettings();
+  try {
+    const res = await apiFetch('/api/school-settings');
+    const s = await res.json();
+    if (s.class_size != null) document.getElementById('classSize').value = s.class_size;
+    if (s.min_analysis_percent != null) document.getElementById('minAnalysisPct').value = s.min_analysis_percent;
+    if (s.weak_topic_threshold != null) document.getElementById('weakTopicThreshold').value = s.weak_topic_threshold;
+  } catch (e) { /* silent */ }
+};
 </script>
 </body>
 </html>
