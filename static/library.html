@@ -519,7 +519,8 @@
     </div>
 
     <label style="margin-top:16px;">Category <span style="font-size:11px;font-weight:400;color:var(--muted)">(khaali chhodo = nahi badlega)</span></label>
-    <input type="text" id="bmCategory" placeholder="e.g. fruit" />
+    <select id="bmCategory" onchange="onBmCategoryChange()"></select>
+    <input type="text" id="bmCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
 
     <label style="margin-top:14px;">Question Types <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi check nahi = nahi badlega)</span></label>
     <div class="qt-checks" id="bmQtChecks">
@@ -589,7 +590,8 @@
     </div>
 
     <label>Category <span style="font-size:11px;font-weight:400;color:var(--muted)">jaise "fruit", "animal", "shape"</span></label>
-    <input type="text" id="editCategory" placeholder="e.g. fruit" />
+    <select id="editCategory" onchange="onEditCategoryChange()"></select>
+    <input type="text" id="editCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
 
     <div class="field-row" style="margin-top:14px;">
       <div>
@@ -618,6 +620,37 @@
 // -----------------------------------------------------------------------
 let _allGrades = [];   // [{subject, grade}]  from /api/syllabus-grades
 let _searchTimer = null;
+
+const CATEGORY_OPTIONS = [
+  'animal','concept','flower','food','fruit',
+  'furniture','number','object','shape','sports','vegetable','vehicle',
+];
+
+function _buildCategorySelect(elId, currentValue) {
+  const sel = document.getElementById(elId);
+  const isNew = currentValue && !CATEGORY_OPTIONS.includes(currentValue);
+  sel.innerHTML =
+    '<option value="">-- khaali --</option>' +
+    CATEGORY_OPTIONS.map(c =>
+      `<option value="${c}"${currentValue === c ? ' selected' : ''}>${c}</option>`
+    ).join('') +
+    `<option value="__new__"${isNew ? ' selected' : ''}>-- Naya likhein --</option>`;
+  return isNew;
+}
+
+function onBmCategoryChange() {
+  const v = document.getElementById('bmCategory').value;
+  const inp = document.getElementById('bmCategoryNew');
+  inp.style.display = v === '__new__' ? '' : 'none';
+  if (v !== '__new__') inp.value = '';
+}
+
+function onEditCategoryChange() {
+  const v = document.getElementById('editCategory').value;
+  const inp = document.getElementById('editCategoryNew');
+  inp.style.display = v === '__new__' ? '' : 'none';
+  if (v !== '__new__') inp.value = '';
+}
 let _editImg = null;        // currently open edit modal image
 let _imgCache = {};         // id → img object (populated on grid load)
 let _editTopicLoading = false;
@@ -1107,8 +1140,11 @@ function openEditModal(imgId) {
 
   // Smart Tag fields
   document.getElementById('editKeywords').value   = img.keywords   || '';
-  document.getElementById('editCategory').value   = img.category   || '';
   document.getElementById('editSourceBook').value = img.source_book || '';
+  const _catIsNew = _buildCategorySelect('editCategory', img.category || '');
+  const _catNewInp = document.getElementById('editCategoryNew');
+  if (_catIsNew) { _catNewInp.value = img.category; _catNewInp.style.display = ''; }
+  else { _catNewInp.value = ''; _catNewInp.style.display = 'none'; }
   document.getElementById('editPageNumber').value = img.page_number != null ? img.page_number : '';
 
   // Question type checkboxes
@@ -1230,7 +1266,10 @@ async function saveEdit() {
 
   // Smart tag fields
   const keywords    = document.getElementById('editKeywords').value.trim() || null;
-  const category    = document.getElementById('editCategory').value.trim() || null;
+  const _catSel     = document.getElementById('editCategory').value;
+  const category    = _catSel === '__new__'
+    ? (document.getElementById('editCategoryNew').value.trim() || null)
+    : (_catSel || null);
   const source_book = document.getElementById('editSourceBook').value.trim() || null;
   const pageRaw     = document.getElementById('editPageNumber').value.trim();
   const page_number = pageRaw ? parseInt(pageRaw, 10) : null;
@@ -1377,7 +1416,9 @@ function openBulkMetaModal() {
 
   // Reset fields
   document.getElementById('bmKeywords').value = '';
-  document.getElementById('bmCategory').value = '';
+  _buildCategorySelect('bmCategory', '');
+  document.getElementById('bmCategoryNew').style.display = 'none';
+  document.getElementById('bmCategoryNew').value = '';
   document.querySelectorAll('#bmQtChecks input[type="checkbox"]').forEach(cb => { cb.checked = false; });
   document.querySelector('input[name="bmMode"][value="replace"]').checked = true;
   clearBulkMetaError();
@@ -1395,7 +1436,10 @@ function closeBulkMetaModalOnBackdrop(e) {
 
 async function saveBulkMeta() {
   const keywords  = document.getElementById('bmKeywords').value.trim() || null;
-  const category  = document.getElementById('bmCategory').value.trim() || null;
+  const _bmCatSel = document.getElementById('bmCategory').value;
+  const category  = _bmCatSel === '__new__'
+    ? (document.getElementById('bmCategoryNew').value.trim() || null)
+    : (_bmCatSel || null);
   const checkedTypes = [...document.querySelectorAll('#bmQtChecks input[type="checkbox"]:checked')]
     .map(cb => cb.value);
   const question_types = checkedTypes.length > 0 ? checkedTypes.join(', ') : null;
