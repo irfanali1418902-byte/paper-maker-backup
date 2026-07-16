@@ -209,6 +209,15 @@ def init_db() -> None:
         )
         """)
 
+    # school_settings: adaptive class config columns.
+    settings_cols = {row[1] for row in cur.execute("PRAGMA table_info(school_settings)").fetchall()}
+    if "class_size" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN class_size INTEGER DEFAULT 25")
+    if "min_analysis_percent" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN min_analysis_percent INTEGER DEFAULT 60")
+    if "weak_topic_threshold" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN weak_topic_threshold INTEGER DEFAULT 60")
+
     # Existing DBs: add name_normalized column and back-fill from name.
     lib_cols = {row[1] for row in cur.execute("PRAGMA table_info(image_library)").fetchall()}
     if "name_normalized" not in lib_cols:

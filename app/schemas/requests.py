@@ -470,3 +470,6 @@ class SchoolSettings(BaseModel):
     address_ur: str = ""
     logo_base64: Optional[str] = None
     accent_color: str = "#0e4d3c"
+    class_size: int = 25
+    min_analysis_percent: int = 60
+    weak_topic_threshold: int = 60
