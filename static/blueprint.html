@@ -293,6 +293,9 @@
         <select id="bpGrade" disabled onchange="onGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
+        <div id="bloomSuggestionBox" style="display:none;margin-top:8px;padding:10px 14px;background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;font-size:13px;color:#0d47a1;line-height:1.5">
+          <span id="bloomSuggestionText"></span>
+        </div>
       </div>
     </div>
 
@@ -432,6 +435,10 @@ async function onGradeChange() {
   _topics = [];
   renderTopicsInSections();
 
+  // Reset bloom suggestion box
+  const bloomBox = document.getElementById('bloomSuggestionBox');
+  bloomBox.style.display = 'none';
+
   if (!subject || !grade) return;
 
   try {
@@ -441,6 +448,22 @@ async function onGradeChange() {
   } catch (e) {
     console.error('topics load fail:', e);
   }
+
+  // Bloom suggestion (soft display only — no auto-fill, no enforcement)
+  try {
+    const bRes = await apiFetch(`/api/bloom-suggestion/${encodeURIComponent(grade)}`);
+    if (bRes.ok) {
+      const b = await bRes.json();
+      const parts = Object.entries(b.distribution)
+        .filter(([, v]) => v > 0)
+        .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)} ${v}%`)
+        .join(', ');
+      document.getElementById('bloomSuggestionText').innerHTML =
+        `💡 <strong>${b.group}</strong> ke liye tajweez: ${parts}<br>` +
+        `<span style="font-size:11.5px;color:#1565c0">(Yeh sirf mashwara hai — aap apni marzi se badal sakte hain)</span>`;
+      bloomBox.style.display = 'block';
+    }
+  } catch (e) { /* silent — suggestion optional hai */ }
 }
 
 // ================================================================
