@@ -62,17 +62,20 @@ def upload_results(paper_id: str, filename: str, file_bytes: bytes) -> Optional[
     _validate(df, question_ids, q_detail)
 
     student_count = len(df)
-    settings = settings_service.get_settings()
-    class_size = settings.get("class_size", 25)
-    min_pct = settings.get("min_analysis_percent", 60)
-    required = math.ceil(class_size * min_pct / 100)
     warning: Optional[str] = None
-    if student_count < required:
-        warning = (
-            f"Sirf {student_count} students ka data hai; "
-            f"reliable analysis ke liye {required} chahiye "
-            f"({class_size} class size × {min_pct}% minimum)."
-        )
+    try:
+        settings = settings_service.get_settings()
+        class_size = settings.get("class_size") or 25
+        min_pct = settings.get("min_analysis_percent") or 60
+        required = math.ceil(class_size * min_pct / 100)
+        if student_count < required:
+            warning = (
+                f"Sirf {student_count} students ka data hai; "
+                f"reliable analysis ke liye {required} chahiye "
+                f"({class_size} class size × {min_pct}% minimum)."
+            )
+    except Exception:
+        pass  # warning skip, upload jaari rahega
 
     result_repository.delete_uploads_for_paper(paper_id)
 

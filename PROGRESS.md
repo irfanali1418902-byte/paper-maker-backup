@@ -1,5 +1,96 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-16 — feature/fix-warning-null (in progress)
+
+**Bug:** `adaptive_results_service.py` mein `upload_results()` warning calculation fail hoti thi jab `school_settings` table mein `class_size`/`min_analysis_percent` columns `NULL` hote hain (SQLite `ALTER TABLE ADD COLUMN` existing rows ko NULL rakhta hai). `settings.get("class_size", 25)` ka default sirf missing key par kaam karta hai — NULL value par `None` return hota tha, phir `math.ceil(None × pct / 100)` crash.
+
+**Fix (`adaptive_results_service.py` lines 64–78):**
+- `settings.get("class_size") or 25` — `or` None aur 0 dono handle karta hai
+- `settings.get("min_analysis_percent") or 60` — same
+- Poora warning block `try/except Exception: pass` mein — warning crash hone par upload fail nahi hoga
+
+## 2026-07-16 — feature/remove-dashboard → master (dashboard.html delete)
+
+**Kya kiya:**
+- `static/dashboard.html` delete kiya — legacy page tha, Results screen hatayi thi to orphan ho gaya tha;
+  Analytics screen (index.html) same kaam karta hai aur zyada features bhi hain
+- `static/index.html` — saare references clean kiye:
+  - `#dashboardBtn` button Results screen se hata diya
+  - `mpDashboard()` aur `openDashboard()` functions delete
+  - 3 jagah `dashboardBtn.style.display` lines delete (loadPaper, generateQuestions, buildAdaptivePaper)
+  - CSV upload ke baad auto-open dashboard line delete
+  - My Papers table mein "Dashboard" button delete
+  - `btn.dashboard` i18n keys (EN + UR) delete
+- Analytics screen aur Adaptive Analysis untouched
+
+---
+
+## 2026-07-16 — feature/category-dropdown → master (Image Library category dropdown)
+
+**Kya kiya:**
+- `static/library.html` — Category field 2 jagah text box se dropdown bana:
+  - **Bulk Tag modal**: `bmCategory` input → select (12 options) + hidden `bmCategoryNew` text box
+  - **Edit modal**: `editCategory` input → select + hidden `editCategoryNew` text box
+- `_buildCategorySelect()` helper: dono selects consistently populate karta hai;
+  existing value auto-pre-select; unknown DB value → "Naya likhein" select + text box mein value
+- `onBmCategoryChange()` / `onEditCategoryChange()`: "Naya likhein" chunne par text box dikhao
+- `saveBulkMeta()` + `saveEdit()`: `__new__` sentinel resolve karke actual category string bhejte hain
+- 12 categories (DB se): animal, concept, flower, food, fruit, furniture, number, object, shape, sports, vegetable, vehicle
+
+---
+
+## 2026-07-16 — feature/bloom-suggestions → master (Bloom Taxonomy class-wise suggestions)
+
+**Kya kiya:**
+- `app/core/bloom_standards.py` (naya) — 4 class groups (Pre-Primary/Primary/Middle/Matric) with
+  Bloom % distributions; `get_bloom_suggestion()` with flexible matching: case-insensitive,
+  spaces/dashes normalize, `Grade X` aur `Class X` dono variants support
+- `app/api/bloom_suggestions.py` (naya) — `GET /api/bloom-suggestion/{class_name}`;
+  match nahi → 404
+- `app/main.py` — bloom_suggestions router registered
+- `static/blueprint.html` — Grade dropdown ke neeche neela info box (`#bloomSuggestionBox`);
+  `onGradeChange()` mein suggestion fetch + display; sirf mashwara, koi auto-fill/enforcement nahi
+
+**Bug fix (same branch):** DB mein grades `Grade 4`/`Grade 6` etc hain, `Class X` nahi —
+`bloom_standards.py` mein `Grade X` variants add kiye taake matching kaam kare.
+
+**Distributions:**
+- Pre-Primary: Remember 70%, Understand 30%
+- Primary: Remember 30%, Understand 35%, Apply 25%, Analyze 10%
+- Middle: Remember 20%, Understand 30%, Apply 30%, Analyze 20%
+- Matric: Remember 15%, Understand 25%, Apply 30%, Analyze 20%, Evaluate 10%
+
+---
+
+## 2026-07-16 — feature/adaptive-skip-upload → master (Adaptive: skip upload if results exist)
+
+**Kya kiya:**
+- `app/api/adaptive_results.py` — naya route `GET /api/adaptive/has-results/{paper_id}`:
+  paper nahi → 404; uploads nahi → `{has_results: false, student_count: 0}`;
+  upload mila → unique roll_no count → `{has_results: true, student_count: N}`
+- `static/index.html` — Step 1 mein `div#adHasResultsBox` add kiya (green info box, default hidden)
+- `static/index.html` — `onAdaptivePaperSelect()` async ho gayi: paper select hote hi
+  has-results check karta hai; results hain → box dikhao + "Upload Results" button chhupao;
+  2 buttons: "Analysis dekho →" (Step 3) aur "Naya Result Upload karo" (Step 2)
+- Existing upload/analysis/generate logic unchanged
+
+**Verified:** `GET /api/adaptive/has-results/628ccbea-...` → `{has_results: true, student_count: 25}` ✓
+
+---
+
+## 2026-07-16 — feature/analytics-improve → master (Analytics screen improvements)
+
+**Kya kiya:**
+- `static/index.html` — Paper ID text box hata ke dropdown lagaya (GET /api/papers se load hota hai); paper select hote hi auto analytics load; "Analytics dekhen" button backup ke liye rakha
+- `static/index.html` — "Kaisa tha?" column add kiya per-question table mein — Roman Urdu difficulty explanation: >80% "Asaan tha — X% ne sahi kiya", 40–80% "Theek tha", <40% "Mushkil tha — sirf X% ne sahi kiya"
+- `static/index.html` — Row background color ab Difficulty Index (P-value) se: Green (40–80%), Yellow (80–90% ya 30–40%), Red (>90% ya <30%); D-index column aur Quality badge unchanged
+- `static/index.html` — `initAnalyticsScreen()` naya function: showScreen('analytics') hook se call hota hai, `currentPaperId` auto pre-select karta hai
+- Legend text update: difficulty range explain karti hai (P-value based)
+
+**Tests:** sirf frontend — koi backend change nahi, pytest pending
+
+---
+
 ## 2026-07-15 — feature/language-filter HISSA 2+3 (commit de7b95b)
 
 **Kya kiya:**
