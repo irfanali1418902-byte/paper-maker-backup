@@ -232,6 +232,7 @@
   .qbadge.q-bad { background: var(--err-bg); color: var(--err-tx); }
   .an-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin: 4px 0 12px; }
   .an-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+  .an-diff-text { font-size: 12px; color: var(--muted); white-space: nowrap; }
   .an-legend .q-good { background: var(--ok-tx); }
   .an-legend .q-review { background: var(--warn-tx); }
   .an-legend .q-bad { background: var(--err-tx); }
@@ -707,9 +708,11 @@
 
         <div class="card" style="margin-bottom:18px">
           <div class="field-row" style="align-items:flex-end">
-            <div>
-              <label data-i18n="form.paperId">Paper ID</label>
-              <input id="anPaperId" placeholder="paper banane ke baad jo ID milti hai (Results screen)" />
+            <div style="flex:1">
+              <label>Paper chunen</label>
+              <select id="anPaperDropdown" onchange="loadAnalytics()" style="width:100%">
+                <option value="">-- pehle paper chunen --</option>
+              </select>
             </div>
             <div style="flex:0 0 auto; align-self:flex-end">
               <button class="gen-btn" onclick="loadAnalytics()" data-i18n="btn.loadAnalytics">Analytics dekhen</button>
@@ -728,9 +731,9 @@
           <div class="card" style="margin-top:18px">
             <div class="card-title" data-i18n="an.perQuestion">Per-question item analysis</div>
             <div class="an-legend">
-              <span><i class="dot q-good"></i> <span data-i18n="legend.good">Good question</span></span>
-              <span><i class="dot q-review"></i> <span data-i18n="legend.review">Review</span></span>
-              <span><i class="dot q-bad"></i> <span data-i18n="legend.problematic">Problematic</span></span>
+              <span><i class="dot q-good"></i> Theek sawaal (P: 40–80%)</span>
+              <span><i class="dot q-review"></i> Dekhna chahiye (P: 80–90% ya 30–40%)</span>
+              <span><i class="dot q-bad"></i> Masla hai (P: &gt;90% ya &lt;30%)</span>
             </div>
             <div style="overflow-x:auto"><div id="anQuestionsWrap"></div></div>
           </div>
@@ -1102,11 +1105,8 @@ function showScreen(name) {
   document.querySelectorAll('[data-nav]').forEach(n => {
     n.dataset.active = (n.dataset.nav === name) ? '1' : '0';
   });
-  // Analytics screen: prefill the Paper ID with the paper built this session.
-  if (name === 'analytics') {
-    const inp = document.getElementById('anPaperId');
-    if (inp && !inp.value && currentPaperId) inp.value = currentPaperId;
-  }
+  // Analytics screen: load papers dropdown (pre-select currentPaperId if set).
+  if (name === 'analytics') initAnalyticsScreen();
   // Adaptive screen: load papers dropdown (restores selection if pre-set).
   if (name === 'adaptive') initAdaptiveScreen();
   // My Papers: load list on every visit.
@@ -1814,9 +1814,33 @@ function syncPaperSummary() {
 // namespaced (an*) so they don't collide with the paper-review renderQuestions.
 const BLOOM_ORDER = ['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYZE', 'EVALUATE', 'CREATE'];
 
+async function initAnalyticsScreen() {
+  try {
+    const res = await apiFetch('/api/papers');
+    const data = await res.json();
+    const papers = data.papers || data;
+    const sel = document.getElementById('anPaperDropdown');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">-- pehle paper chunen --</option>';
+    papers.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.paper_title || p.subject || p.id;
+      sel.appendChild(opt);
+    });
+    // Restore previous selection or pre-select paper built this session.
+    const target = prev || currentPaperId;
+    if (target) {
+      sel.value = target;
+      if (sel.value) loadAnalytics();
+    }
+  } catch (e) { /* silent — auth gate handles it */ }
+}
+
 async function loadAnalytics() {
-  const paperId = val('anPaperId').trim();
-  if (!paperId) { anStatus('Pehle paper ID daalen.', 'err'); return; }
+  const paperId = (document.getElementById('anPaperDropdown')?.value || '').trim();
+  if (!paperId) { anStatus('Pehle paper chunen.', 'err'); return; }
   document.getElementById('anDashboard').style.display = 'none';
   document.getElementById('anUploadPicker').style.display = 'none';
   anStatus('Analytics load ho rahi hai...');
@@ -1887,14 +1911,16 @@ function renderAnQuestions(questions) {
   const wrap = document.getElementById('anQuestionsWrap');
   if (!questions || !questions.length) { wrap.innerHTML = '<p class="an-empty">Koi question data nahi.</p>'; return; }
   const rows = questions.map(q => {
+    const diffCls = anDifficultyClass(q);
     const qual = anQuality(q);
-    return `<tr class="${qual.k}">
+    return `<tr class="${diffCls}">
       <td>${q.flag ? '⚠️ ' : ''}Q${q.question_index}</td>
       <td>${escapeHtml(q.bloom_level)}</td>
       <td class="num">${q.average_marks}/${q.max_marks}</td>
       <td>${anBarCell(q.average_percent)}</td>
       <td class="num">${anPCell(q)}</td>
       <td class="num">${anDCell(q)}</td>
+      <td><span class="an-diff-text">${anDifficultyText(q.average_percent)}</span></td>
       <td><span class="qbadge ${qual.k}">${qual.label}</span></td>
       <td>${q.flag ? `<span class="flag-reason">${escapeHtml(q.flag)}</span>` : ''}</td>
     </tr>`;
@@ -1903,7 +1929,7 @@ function renderAnQuestions(questions) {
     <thead><tr>
       <th>Question</th><th>Bloom</th><th class="num">Avg marks</th><th>Avg %</th>
       <th class="num">Difficulty Index (P)</th><th class="num">Discrimination Index (D)</th>
-      <th>Quality</th><th>Flag</th>
+      <th>Kaisa tha?</th><th>Quality</th><th>Flag</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>
@@ -1911,10 +1937,27 @@ function renderAnQuestions(questions) {
     <strong>P-value</strong> (0–1): &lt;0.30 bahut mushkil, &gt;0.85 bahut aasaan.
     <strong>D-index</strong> (−1 to 1): ≥0.30 acha, &lt;0.20 kamzor, negative = answer key check karein.
     Choti class (&lt;10 students) mein D reliable nahi — greyed (*).
+    Row ka rang Difficulty Index (P-value) se hai.
   </p>`;
 }
 
-// Map the backend's flag + bands onto green / yellow / red.
+// Row color based purely on Difficulty Index (P-value).
+function anDifficultyClass(q) {
+  const p = q.p_value;
+  if (p > 0.90 || p < 0.30) return 'q-bad';    // red: bohat asaan ya bohat mushkil
+  if (p > 0.80 || p < 0.40) return 'q-review';  // yellow: thoda extreme
+  return 'q-good';                               // green: theek range
+}
+
+// Roman Urdu explanation of difficulty for "Kaisa tha?" column.
+function anDifficultyText(percent) {
+  const p = Math.round(percent);
+  if (p > 80) return `Asaan tha — ${p}% ne sahi kiya`;
+  if (p >= 40) return `Theek tha — ${p}% ne sahi kiya`;
+  return `Mushkil tha — sirf ${p}% ne sahi kiya`;
+}
+
+// Map the backend's flag + bands onto green / yellow / red (Quality badge — D-based).
 function anQuality(q) {
   if (!q.flag) return { k: 'q-good', label: 'Good' };
   if (q.d_reliable && q.d_band === 'problematic') return { k: 'q-bad', label: 'Problematic' };
@@ -2272,7 +2315,7 @@ async function generateAdaptiveResultsPaper() {
 }
 
 function goToAdaptiveFromAnalytics() {
-  const paperId = (document.getElementById('anPaperId')?.value || '').trim();
+  const paperId = (document.getElementById('anPaperDropdown')?.value || '').trim();
   if (paperId) adaptiveCurrentPaperId = paperId;
   showScreen('adaptive');
   showAdaptiveStep(1);
