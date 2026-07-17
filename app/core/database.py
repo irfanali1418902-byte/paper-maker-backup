@@ -199,6 +199,7 @@ def init_db() -> None:
         CREATE TABLE IF NOT EXISTS image_library (
             id                TEXT PRIMARY KEY,
             file_path         TEXT NOT NULL,
+            thumb_path        TEXT,
             name              TEXT NOT NULL,
             name_normalized   TEXT,
             subject           TEXT,
@@ -237,6 +238,9 @@ def init_db() -> None:
         cur.execute("ALTER TABLE image_library ADD COLUMN source_book TEXT")
     if "page_number" not in lib_cols:
         cur.execute("ALTER TABLE image_library ADD COLUMN page_number INTEGER")
+    # HISSA 2: WebP thumbnail path (purani rows NULL — grid full par fall back karta hai).
+    if "thumb_path" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN thumb_path TEXT")
 
     conn.commit()
     conn.close()

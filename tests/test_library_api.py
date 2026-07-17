@@ -7,6 +7,7 @@ test_db fixture gives each test a fresh SQLite file.
 import io
 
 from fastapi.testclient import TestClient
+from PIL import Image
 
 import app.api.library as library_module
 from app.main import app
@@ -14,20 +15,15 @@ from app.repositories import library_repository
 
 client = TestClient(app)
 
-_PNG = (
-    b"\x89PNG\r\n\x1a\n"
-    b"\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-    b"\x08\x02\x00\x00\x00\x90wS\xde"
-    b"\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N"
-    b"\x00\x00\x00\x00IEND\xaeB`\x82"
-)
-_JPG = (
-    b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
-    b"\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t"
-    b"\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a"
-    b"\x1f\x1e\x1d\x1a\x1c\x1c $.' \",#\x1c\x1c(7),01444\x1f'9=82<.342\x1eB"
-    b"\xb4\x00\x00\x00\x00\xff\xd9"
-)
+
+def _img_bytes(fmt: str) -> bytes:
+    """Valid decodable 1x1 image — library upload ab WebP mein convert karta hai (HISSA 2)."""
+    buf = io.BytesIO()
+    Image.new("RGB", (1, 1), (255, 255, 255)).save(buf, fmt)
+    return buf.getvalue()
+
+_PNG = _img_bytes("PNG")
+_JPG = _img_bytes("JPEG")
 
 
 def _upload(tmp_path, monkeypatch, *, name="Diagram", subject="Science",
@@ -61,11 +57,14 @@ def test_upload_png_returns_200_and_file_saved(test_db, tmp_path, monkeypatch):
     data = resp.json()
     assert data["name"] == "Cell diagram"
     assert data["subject"] == "Biology"
+    # HISSA 2: upload ab lossless WebP mein convert hota hai + thumbnail banti hai
     assert data["file_path"].startswith("library/")
-    assert data["file_path"].endswith(".png")
+    assert data["file_path"].endswith(".webp")
+    assert data["thumb_path"] == f"library/thumbs/{data['file_path'].split('/')[1]}"
 
     fname = data["file_path"].split("/")[1]
     assert (lib / fname).exists()
+    assert (lib / "thumbs" / fname).exists()
 
 
 def test_upload_jpg_accepted(test_db, tmp_path, monkeypatch):
@@ -79,7 +78,7 @@ def test_upload_jpg_accepted(test_db, tmp_path, monkeypatch):
         files={"file": ("map.jpg", io.BytesIO(_JPG), "image/jpeg")},
     )
     assert resp.status_code == 200
-    assert resp.json()["file_path"].endswith(".jpg")
+    assert resp.json()["file_path"].endswith(".webp")
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +107,7 @@ def test_upload_oversized_returns_400(test_db, tmp_path, monkeypatch):
     resp = client.post(
         "/api/library",
         data={"name": "big"},
-        files={"file": ("big.png", io.BytesIO(b"x" * (2 * 1024 * 1024 + 1)), "image/png")},
+        files={"file": ("big.png", io.BytesIO(b"x" * (10 * 1024 * 1024 + 1)), "image/png")},
     )
     assert resp.status_code == 400
     assert not any(lib.iterdir())
@@ -190,12 +189,15 @@ def test_delete_removes_db_row_and_file(test_db, tmp_path, monkeypatch):
     image_id = up.json()["id"]
     fname = up.json()["file_path"].split("/")[1]
     assert (lib / fname).exists()
+    assert (lib / "thumbs" / fname).exists()
 
     resp = client.delete(f"/api/library/{image_id}")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
 
+    # HISSA 2: full + thumb dono disk se hate (koi orphan nahi)
     assert not (lib / fname).exists()
+    assert not (lib / "thumbs" / fname).exists()
     assert library_repository.find_by_id(image_id) is None
 
 
@@ -292,7 +294,9 @@ def test_bulk_upload_all_added(test_db, tmp_path, monkeypatch):
     data = resp.json()
     assert data["added"] == 2
     assert data["skipped"] == 0
-    assert len(list(lib.iterdir())) == 2
+    # HISSA 2: 2 full WebP lib mein + 2 thumbnails thumbs/ subdir mein
+    assert len(list(lib.glob("*.webp"))) == 2
+    assert len(list((lib / "thumbs").glob("*.webp"))) == 2
 
 
 def test_bulk_upload_skips_duplicate_name(test_db, tmp_path, monkeypatch):
@@ -329,7 +333,7 @@ def test_bulk_upload_skips_wrong_mime(test_db, tmp_path, monkeypatch):
 
 
 def test_bulk_upload_skips_oversized(test_db, tmp_path, monkeypatch):
-    big = b"x" * (2 * 1024 * 1024 + 1)
+    big = b"x" * (10 * 1024 * 1024 + 1)
     files = [
         ("files", ("big.png", io.BytesIO(big), "image/png")),
         ("files", ("ok.png",  io.BytesIO(_PNG), "image/png")),
