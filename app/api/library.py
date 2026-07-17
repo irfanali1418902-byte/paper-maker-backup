@@ -15,7 +15,7 @@ from app.schemas.requests import (
     UpdateLibraryImageRequest,
 )
 from app.schemas.responses import LibraryImage, LibraryPageResponse, StatusResponse
-from app.services import library_meta_import_service
+from app.services import image_processing_service, library_meta_import_service
 
 router = APIRouter()
 
@@ -23,7 +23,9 @@ _LIBRARY_DIR = Path(__file__).parent.parent.parent / "static" / "library"
 _LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
 
 _ALLOWED_MIME = {"image/jpeg": "jpg", "image/png": "png"}
-_MAX_BYTES = 2 * 1024 * 1024  # 2 MB
+# Input guard (storage nahi — woh WebP+resize sambhalta hai). Bade high-res scan allow karo;
+# yeh sirf decode/memory bound hai. Pixel-bomb guard image_processing_service mein alag hai.
+_MAX_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 @router.post("/api/library", response_model=LibraryImage)
@@ -51,16 +53,19 @@ def upload_library_image(
     if len(contents) > _MAX_BYTES:
         raise HTTPException(
             status_code=400,
-            detail="Image 2 MB se chhhoti honi chahiye. / Image must be under 2 MB.",
+            detail="Image 10 MB se chhhoti honi chahiye. / Image must be under 10 MB.",
         )
 
     image_id = str(uuid.uuid4())
-    dest = _LIBRARY_DIR / f"{image_id}.{ext}"
-    dest.write_bytes(contents)
+    try:
+        paths = image_processing_service.process_and_save(contents, image_id, _LIBRARY_DIR)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     row = {
         "id": image_id,
-        "file_path": f"library/{image_id}.{ext}",
+        "file_path": paths["file_path"],
+        "thumb_path": paths["thumb_path"],
         "name": name.strip(),
         "subject": subject.strip() if subject else None,
         "grade": grade.strip() if grade else None,
@@ -116,6 +121,13 @@ def delete_library_image(image_id: str):
     file_path = _LIBRARY_DIR / Path(img["file_path"]).name
     if file_path.exists():
         file_path.unlink()
+
+    # HISSA 2: thumbnail file bhi hatao (warna orphan reh jaati hai)
+    thumb_path = img.get("thumb_path")
+    if thumb_path:
+        thumb_file = _LIBRARY_DIR / "thumbs" / Path(thumb_path).name
+        if thumb_file.exists():
+            thumb_file.unlink()
 
     library_repository.delete(image_id)
     return {"status": "ok"}
@@ -229,7 +241,7 @@ def bulk_upload_library_images(
         contents = upload.file.read()
         if len(contents) > _MAX_BYTES:
             skipped += 1
-            results.append({"name": fname, "status": "skip", "reason": "2 MB se bada hai"})
+            results.append({"name": fname, "status": "skip", "reason": "10 MB se bada hai"})
             continue
 
         if library_repository.name_exists(name):
@@ -238,12 +250,17 @@ def bulk_upload_library_images(
             continue
 
         image_id = str(uuid.uuid4())
-        dest = _LIBRARY_DIR / f"{image_id}.{ext}"
-        dest.write_bytes(contents)
+        try:
+            paths = image_processing_service.process_and_save(contents, image_id, _LIBRARY_DIR)
+        except ValueError as exc:
+            skipped += 1
+            results.append({"name": fname, "status": "skip", "reason": str(exc)})
+            continue
 
         row = {
             "id": image_id,
-            "file_path": f"library/{image_id}.{ext}",
+            "file_path": paths["file_path"],
+            "thumb_path": paths["thumb_path"],
             "name": name,
             "subject": subject.strip() if subject else None,
             "grade": grade.strip() if grade else None,

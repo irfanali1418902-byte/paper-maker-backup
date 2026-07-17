@@ -325,7 +325,7 @@
       ⚠️ Topic select karo — is ID se auto-suggest chal ta hai. Khali tag karne par auto-suggest kaam nahi karega.
     </p>
 
-    <label>Image file (JPG ya PNG, max 2 MB) <span style="color:var(--err-tx)">*</span></label>
+    <label>Image file (JPG ya PNG, max 10 MB) <span style="color:var(--err-tx)">*</span></label>
     <input type="file" id="imgFile" accept="image/jpeg,image/png" onchange="onFileChange()" />
     <div class="file-warning" id="fileWarning"></div>
 
@@ -366,7 +366,7 @@
       <option value="">-- Pehle class chunein --</option>
     </select>
 
-    <label>Images (JPG ya PNG, max 2 MB each) <span style="color:var(--err-tx)">*</span></label>
+    <label>Images (JPG ya PNG, max 10 MB each) <span style="color:var(--err-tx)">*</span></label>
     <input type="file" id="bulkFiles" accept="image/jpeg,image/png" multiple />
 
     <div style="margin-top:18px;">
@@ -826,8 +826,8 @@ function onFileChange() {
     btn.disabled = true;
     return;
   }
-  if (file.size > 2 * 1024 * 1024) {
-    warn.textContent = `❌ File ${(file.size / 1024 / 1024).toFixed(1)} MB hai — 2 MB se chhhoti honi chahiye.`;
+  if (file.size > 10 * 1024 * 1024) {
+    warn.textContent = `❌ File ${(file.size / 1024 / 1024).toFixed(1)} MB hai — 10 MB se chhhoti honi chahiye.`;
     warn.style.display = 'block';
     btn.disabled = true;
     return;
@@ -1169,7 +1169,7 @@ function renderCard(img) {
   return `
     <div class="lib-card" data-id="${escAttr(img.id)}">
       <div class="img-wrap">
-        <img src="/${img.file_path}" alt="${escHtml(img.name)}" loading="lazy" />
+        <img src="/${img.thumb_path || img.file_path}" alt="${escHtml(img.name)}" loading="lazy" />
         <input type="checkbox" class="card-check" ${checked} onchange="toggleSelect('${escAttr(img.id)}')" title="Select" />
       </div>
       <div class="img-info">

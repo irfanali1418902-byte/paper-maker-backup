@@ -1,5 +1,54 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-17 — feature/webp-thumbnails (HISSA 2 — WebP + Thumbnails)
+
+**Kya bana (sirf naye uploads — purani JPG/PNG untouched, woh HISSA 3 Bulk Convert mein):**
+- `app/services/image_processing_service.py` (naya) — `process_and_save(contents, image_id)`:
+  Pillow se open, EXIF orientation fix, palette→RGBA; **2 LOSSLESS WebP** banata hai —
+  Full (max 1200px, upscale nahi) → `static/library/{uuid}.webp`,
+  Thumb (max 300px) → `static/library/thumbs/{uuid}.webp` (dono `lossless=True, method=6` — trace/outline crisp)
+  Corrupt/na-khulne wali image → `ValueError`
+- `app/api/library.py` — single upload (`POST /api/library`) + bulk upload (`POST /api/library/bulk`)
+  ab `dest.write_bytes()` ki jagah service call karte hain; row mein `thumb_path` add;
+  process fail → single 400, bulk us file ko skip (baaki chalti rahein)
+- `app/api/library.py` — DELETE route ab thumb file bhi hataata hai (orphan fix)
+- `app/repositories/library_repository.py` — `insert()` mein `thumb_path` column
+- `app/core/database.py` — `image_library.thumb_path TEXT` (CREATE TABLE + safe ALTER migration; purani rows NULL)
+- `app/schemas/responses.py` — `LibraryImage.thumb_path: Optional[str] = None`
+- `static/library.html` — grid `renderCard()` ab `thumb_path || file_path` (purani images full par fall back)
+
+**Verified (server restart + manual smoke test):**
+- 1600×1000 PNG → full 1200×750, thumb 300×188, dono `WEBP` ✓
+- 500px image upscale nahi hui (500×500 raha) ✓
+- delete → full + thumb dono disk se hatt gaye (koi orphan nahi) ✓
+- DB migration clean, `thumb_path` column present, `thumbs/` dir auto-create ✓
+
+**Test fixture fix (same branch):** upload route ab image ko genuinely decode karta hai (Pillow),
+isliye purane test files ka minimal 1×1 PNG/JPG (jo truncated/broken tha — `load()` par "broken data stream")
+fail karne laga. `test_library_api.py` mein `_img_bytes()` helper (Pillow se valid bytes) + baaki 5 library
+test files mein PNG ki IDAT line valid bytes se replace. Upload tests ab `.webp` ext, `thumb_path`, aur
+thumbnail file existence check karte hain; bulk test `*.webp` count karta hai; delete test thumb removal verify.
+- Service refactor: `process_and_save(contents, id, library_dir)` — dir ab param hai (tests `_LIBRARY_DIR`
+  monkeypatch karte hain, isliye service ko route se dir milna chahiye, apna hardcoded nahi).
+
+**Tests:** 650 pass, ruff clean. Cloud push NAHI.
+
+**Fix (same branch) — upload size limit 2 MB → 10 MB + pixel guard:**
+- **Masla:** 2 MB byte-check upload ke baad par conversion se PEHLE tha. WebP+1200px cap se stored
+  size waise hi chhoti hoti hai, lekin bade high-res PNG (4–8 MB) convert hone se pehle hi reject ho jaate the.
+- **Faisla (Option A):** 2 MB ko *storage guard* ki jagah *input/decode guard* maana. `_MAX_BYTES` 2 → 10 MB
+  (single + bulk dono routes), byte-check ab bhi conversion se pehle (sasta rejection).
+- `app/api/library.py` — `_MAX_BYTES = 10 MB`; error messages ("2 MB" → "10 MB") single + bulk.
+- `app/services/image_processing_service.py` — **pixel guard** `_MAX_PIXELS = 50 MP`: chhoti file bade
+  dimensions (decompression bomb) ko bhaari decode se PEHLE (header ki `img.size` se) reject karta hai.
+- `static/library.html` — 2 labels ("max 2 MB" → "max 10 MB") + client-side pre-check `2*1024*1024` → `10*...`.
+- `tests/test_library_api.py` — oversized tests (single + bulk) ab `10 MB + 1` use karte hain
+  (warna 2 MB payload naye limit ke neeche aa ke corrupt-path test karta, size-path nahi).
+- **Verified (manual):** 7.34 MB real PNG → 200 + 1200×1200 WebP ✓; 64 MP pixel-bomb (0.19 MB file) → 400 guard ✓
+- pytest + ruff: baad mein (user browser test kar raha hai).
+
+---
+
 ## 2026-07-16 — feature/fix-warning-null (in progress)
 
 **Bug:** `adaptive_results_service.py` mein `upload_results()` warning calculation fail hoti thi jab `school_settings` table mein `class_size`/`min_analysis_percent` columns `NULL` hote hain (SQLite `ALTER TABLE ADD COLUMN` existing rows ko NULL rakhta hai). `settings.get("class_size", 25)` ka default sirf missing key par kaam karta hai — NULL value par `None` return hota tha, phir `math.ceil(None × pct / 100)` crash.
