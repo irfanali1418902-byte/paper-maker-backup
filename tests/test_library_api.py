@@ -143,7 +143,7 @@ def test_list_returns_all_images(test_db, tmp_path, monkeypatch):
 
     resp = client.get("/api/library")
     assert resp.status_code == 200
-    assert len(resp.json()) == 2
+    assert len(resp.json()["images"]) == 2
 
 
 def test_list_filters_by_subject(test_db, tmp_path, monkeypatch):
@@ -157,8 +157,8 @@ def test_list_filters_by_subject(test_db, tmp_path, monkeypatch):
                 files={"file": ("b.png", io.BytesIO(_PNG), "image/png")})
 
     resp = client.get("/api/library?subject=Math")
-    assert len(resp.json()) == 1
-    assert resp.json()[0]["name"] == "A"
+    assert len(resp.json()["images"]) == 1
+    assert resp.json()["images"][0]["name"] == "A"
 
 
 def test_list_search_by_name(test_db, tmp_path, monkeypatch):
@@ -172,8 +172,8 @@ def test_list_search_by_name(test_db, tmp_path, monkeypatch):
                 files={"file": ("b.png", io.BytesIO(_PNG), "image/png")})
 
     resp = client.get("/api/library?q=cell")
-    assert len(resp.json()) == 1
-    assert "Cell" in resp.json()[0]["name"]
+    assert len(resp.json()["images"]) == 1
+    assert "Cell" in resp.json()["images"][0]["name"]
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +346,7 @@ def test_bulk_upload_name_normalized_stored(test_db, tmp_path, monkeypatch):
     resp, _ = _bulk(tmp_path, monkeypatch, files)
     assert resp.json()["added"] == 1
 
-    rows = library_repository.list_by_filters(q="My Diagram")
+    rows, _ = library_repository.list_by_filters(q="My Diagram")
     assert len(rows) == 1
     assert rows[0]["name_normalized"] == "my diagram"
 
@@ -356,7 +356,7 @@ def test_bulk_upload_topic_tagged(test_db, tmp_path, monkeypatch):
     resp, _ = _bulk(tmp_path, monkeypatch, files, topic_id="topic-xyz")
     assert resp.json()["added"] == 1
 
-    rows = library_repository.list_by_filters()
+    rows, _ = library_repository.list_by_filters()
     assert rows[0]["syllabus_topic_id"] == "topic-xyz"
 
 

@@ -124,7 +124,7 @@ def test_search_by_name(test_db, tmp_path, monkeypatch):
     _upload(tmp_path, monkeypatch, name="Parrot Bird")
     resp = client.get("/api/library?q=parrot")
     assert resp.status_code == 200
-    names = [i["name"] for i in resp.json()]
+    names = [i["name"] for i in resp.json()["images"]]
     assert "Parrot Bird" in names
 
 
@@ -133,7 +133,7 @@ def test_search_by_keyword(test_db, tmp_path, monkeypatch):
     client.patch(f"/api/library/{img_id}", json={"keywords": "mango, tropical, green"})
     resp = client.get("/api/library?q=tropical")
     assert resp.status_code == 200
-    ids = [i["id"] for i in resp.json()]
+    ids = [i["id"] for i in resp.json()["images"]]
     assert img_id in ids
 
 
@@ -142,7 +142,7 @@ def test_search_by_category_field(test_db, tmp_path, monkeypatch):
     client.patch(f"/api/library/{img_id}", json={"category": "plant"})
     resp = client.get("/api/library?q=plant")
     assert resp.status_code == 200
-    ids = [i["id"] for i in resp.json()]
+    ids = [i["id"] for i in resp.json()["images"]]
     assert img_id in ids
 
 
@@ -151,7 +151,7 @@ def test_search_empty_returns_all(test_db, tmp_path, monkeypatch):
     _upload(tmp_path, monkeypatch, name="ImgB")
     resp = client.get("/api/library")
     assert resp.status_code == 200
-    assert len(resp.json()) >= 2
+    assert len(resp.json()["images"]) >= 2
 
 
 def test_search_null_keywords_not_crash(test_db, tmp_path, monkeypatch):
@@ -173,7 +173,7 @@ def test_filter_by_category(test_db, tmp_path, monkeypatch):
 
     resp = client.get("/api/library?category=animal")
     assert resp.status_code == 200
-    ids = [i["id"] for i in resp.json()]
+    ids = [i["id"] for i in resp.json()["images"]]
     assert id1 in ids
     assert id2 not in ids
 
@@ -186,7 +186,7 @@ def test_filter_by_question_type(test_db, tmp_path, monkeypatch):
 
     resp = client.get("/api/library?question_type=count")
     assert resp.status_code == 200
-    ids = [i["id"] for i in resp.json()]
+    ids = [i["id"] for i in resp.json()["images"]]
     assert id1 in ids
     assert id2 not in ids
 
@@ -196,7 +196,7 @@ def test_filter_question_type_null_images_excluded(test_db, tmp_path, monkeypatc
     img_id = _upload(tmp_path, monkeypatch, name="NoTypeImage")
     resp = client.get("/api/library?question_type=count")
     assert resp.status_code == 200
-    ids = [i["id"] for i in resp.json()]
+    ids = [i["id"] for i in resp.json()["images"]]
     assert img_id not in ids
 
 

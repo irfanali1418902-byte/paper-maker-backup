@@ -33,7 +33,7 @@ def _upload(tmp_path, monkeypatch, name):
 
 def _get(img_id):
     resp = client.get("/api/library")
-    for img in resp.json():
+    for img in resp.json()["images"]:
         if img["id"] == img_id:
             return img
     return None
