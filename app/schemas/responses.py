@@ -254,6 +254,16 @@ class LibraryImage(BaseModel):
     page_number: Optional[int] = None
 
 
+class LibraryPageResponse(BaseModel):
+    """Paginated response for GET /api/library."""
+
+    images: List[LibraryImage]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+
+
 # ---- Result analyzer dashboard (Phase 2) ------------------------------------
 
 

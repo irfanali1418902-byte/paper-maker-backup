@@ -237,6 +237,16 @@
   input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
 
   /* ---- Responsive ---- */
+  /* ---- Pagination ---- */
+  .pg-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; min-width: 36px;
+  }
+  .pg-btn:hover:not(:disabled) { background: var(--tint); color: var(--primary); border-color: var(--primary); }
+  .pg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; cursor: default; }
+  .pg-btn:disabled { opacity: 0.4; cursor: default; }
+  .pg-info { font-size: 12.5px; color: var(--muted); padding: 0 4px; }
+
   @media (max-width: 760px) {
     body { flex-direction: column; }
     .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
@@ -411,13 +421,13 @@
     <div class="filter-bar">
       <div>
         <label>Subject se filter</label>
-        <select id="fSubject" onchange="loadGrid()">
+        <select id="fSubject" onchange="loadGrid(true)">
           <option value="">Sab subjects</option>
         </select>
       </div>
       <div>
         <label>Class se filter</label>
-        <select id="fGrade" onchange="loadGrid()">
+        <select id="fGrade" onchange="loadGrid(true)">
           <option value="">Sab classes</option>
         </select>
       </div>
@@ -427,13 +437,13 @@
       </div>
       <div>
         <label>Category</label>
-        <select id="fCategory" onchange="loadGrid()">
+        <select id="fCategory" onchange="loadGrid(true)">
           <option value="">Sab categories</option>
         </select>
       </div>
       <div>
         <label>Question Type</label>
-        <select id="fQType" onchange="loadGrid()">
+        <select id="fQType" onchange="loadGrid(true)">
           <option value="">Sab types</option>
           <option value="count">Count</option>
           <option value="colour">Colour</option>
@@ -449,6 +459,7 @@
 
     <div id="gridStatus"></div>
     <div id="libGrid" class="lib-grid"></div>
+    <div id="paginationBar" style="display:none;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;"></div>
   </div>
 </main>
 
@@ -620,6 +631,8 @@
 // -----------------------------------------------------------------------
 let _allGrades = [];   // [{subject, grade}]  from /api/syllabus-grades
 let _searchTimer = null;
+let _currentPage = 1;
+const _PER_PAGE = 24;
 
 const CATEGORY_OPTIONS = [
   'animal','concept','flower','food','fruit',
@@ -856,7 +869,7 @@ async function uploadImage() {
     } else {
       showUpStatus('ok', `✅ "${data.name}" library mein save ho gai!`);
       resetUploadForm();
-      await loadGrid();
+      await loadGrid(true);
     }
   } catch (e) {
     showUpStatus('err', '❌ Network error: ' + e.message);
@@ -977,7 +990,7 @@ async function bulkUpload() {
       return `<li class="${cls}">${icon} <span>${escHtml(r.name)}${reason}</span></li>`;
     }).join('');
 
-    if (data.added > 0) await loadGrid();
+    if (data.added > 0) await loadGrid(true);
   } catch (e) {
     alert('Bulk upload fail: ' + e.message);
   } finally {
@@ -1030,7 +1043,7 @@ async function importMetaExcel() {
       return `<li class="${cls}">${icon} <span>${text}</span></li>`;
     }).join('');
 
-    if (data.updated > 0) await loadGrid();
+    if (data.updated > 0) await loadGrid(true);
   } catch (e) {
     alert('Import fail: ' + e.message);
   } finally {
@@ -1044,7 +1057,7 @@ async function importMetaExcel() {
 // -----------------------------------------------------------------------
 function scheduleSearch() {
   clearTimeout(_searchTimer);
-  _searchTimer = setTimeout(loadGrid, 350);
+  _searchTimer = setTimeout(() => loadGrid(true), 350);
 }
 
 function clearFilters() {
@@ -1053,10 +1066,12 @@ function clearFilters() {
   document.getElementById('fSearch').value = '';
   document.getElementById('fCategory').value = '';
   document.getElementById('fQType').value = '';
-  loadGrid();
+  loadGrid(true);
 }
 
-async function loadGrid() {
+async function loadGrid(resetPage = false) {
+  if (resetPage) _currentPage = 1;
+
   const subject  = document.getElementById('fSubject').value;
   const grade    = document.getElementById('fGrade').value;
   const q        = document.getElementById('fSearch').value.trim();
@@ -1076,25 +1091,67 @@ async function loadGrid() {
   if (q)        params.set('q', q);
   if (category) params.set('category', category);
   if (qtype)    params.set('question_type', qtype);
+  params.set('page', _currentPage);
+  params.set('per_page', _PER_PAGE);
 
   try {
     const res = await apiFetch('/api/library?' + params.toString());
-    const images = await res.json();
-    if (!res.ok) throw new Error(images.detail || 'Error');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error');
 
-    statusEl.textContent = `${images.length} image${images.length !== 1 ? 's' : ''} mili${images.length !== 1 ? 'n' : ''}.`;
+    const { images, total, page, total_pages } = data;
+    const word = total === 1 ? 'image mili' : 'images milin';
+    statusEl.textContent = `${total} ${word}.`;
 
     if (images.length === 0) {
       gridEl.innerHTML = '<div class="lib-empty">Koi image nahi mili. Upload form se nayi image add karen.</div>';
+      renderPagination(0, 1, 1);
       return;
     }
 
     _imgCache = {};
     images.forEach(img => { _imgCache[img.id] = img; });
     gridEl.innerHTML = images.map(img => renderCard(img)).join('');
+    renderPagination(total, page, total_pages);
   } catch (e) {
     statusEl.textContent = 'Error: ' + e.message;
   }
+}
+
+function renderPagination(total, page, total_pages) {
+  const bar = document.getElementById('paginationBar');
+  if (total_pages <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const parts = [];
+
+  // Prev button
+  parts.push(`<button class="pg-btn" onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>← Pehla</button>`);
+
+  // Page number buttons — always show first, last, current ± 2
+  const pages = new Set([1, total_pages]);
+  for (let i = Math.max(1, page - 2); i <= Math.min(total_pages, page + 2); i++) pages.add(i);
+  const sorted = [...pages].sort((a, b) => a - b);
+
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) parts.push('<span class="pg-info">…</span>');
+    const active = p === page ? ' active' : '';
+    parts.push(`<button class="pg-btn${active}" onclick="goToPage(${p})" ${p === page ? 'disabled' : ''}>${p}</button>`);
+    prev = p;
+  }
+
+  // Next button
+  parts.push(`<button class="pg-btn" onclick="goToPage(${page + 1})" ${page >= total_pages ? 'disabled' : ''}>Agla →</button>`);
+  parts.push(`<span class="pg-info">Page ${page} of ${total_pages}</span>`);
+
+  bar.innerHTML = parts.join('');
+}
+
+function goToPage(p) {
+  _currentPage = p;
+  loadGrid();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderCard(img) {

@@ -1,5 +1,6 @@
 """HTTP routes for the image library (shared teacher-uploaded images)."""
 
+import math
 import uuid
 from pathlib import Path
 from typing import List, Optional
@@ -13,7 +14,7 @@ from app.schemas.requests import (
     BulkUpdateTopicRequest,
     UpdateLibraryImageRequest,
 )
-from app.schemas.responses import LibraryImage, StatusResponse
+from app.schemas.responses import LibraryImage, LibraryPageResponse, StatusResponse
 from app.services import library_meta_import_service
 
 router = APIRouter()
@@ -70,7 +71,7 @@ def upload_library_image(
     return library_repository.find_by_id(image_id)
 
 
-@router.get("/api/library", response_model=List[LibraryImage])
+@router.get("/api/library", response_model=LibraryPageResponse)
 def list_library_images(
     subject: Optional[str] = None,
     grade: Optional[str] = None,
@@ -78,16 +79,31 @@ def list_library_images(
     q: Optional[str] = None,
     category: Optional[str] = None,
     question_type: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 24,
 ):
-    """Library images list karta hai — subject/grade/topic/category/question_type filter + naam+keywords search."""
-    return library_repository.list_by_filters(
+    """Library images list karta hai — subject/grade/topic/category/question_type filter + naam+keywords search + pagination."""
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+    offset = (page - 1) * per_page
+    images, total = library_repository.list_by_filters(
         subject=subject,
         grade=grade,
         syllabus_topic_id=syllabus_topic_id,
         q=q,
         category=category,
         question_type=question_type,
+        limit=per_page,
+        offset=offset,
     )
+    total_pages = max(1, math.ceil(total / per_page))
+    return {
+        "images": images,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": total_pages,
+    }
 
 
 @router.delete("/api/library/{image_id}", response_model=StatusResponse)

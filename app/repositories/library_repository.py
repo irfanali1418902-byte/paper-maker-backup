@@ -179,34 +179,41 @@ def list_by_filters(
     q: Optional[str] = None,
     category: Optional[str] = None,
     question_type: Optional[str] = None,
-) -> list:
+    limit: int = 24,
+    offset: int = 0,
+) -> tuple:
+    """Returns (rows, total_count) — total_count is the count without LIMIT."""
     conn = get_connection()
     cur = conn.cursor()
-    query = "SELECT * FROM image_library WHERE 1=1"
+    where = "WHERE 1=1"
     params: list = []
     if subject:
-        query += " AND subject = ?"
+        where += " AND subject = ?"
         params.append(subject)
     if grade:
-        query += " AND grade = ?"
+        where += " AND grade = ?"
         params.append(grade)
     if syllabus_topic_id:
-        query += " AND syllabus_topic_id = ?"
+        where += " AND syllabus_topic_id = ?"
         params.append(syllabus_topic_id)
     if q:
         like = f"%{q}%"
-        query += " AND (name LIKE ? OR keywords LIKE ? OR category LIKE ?)"
+        where += " AND (name LIKE ? OR keywords LIKE ? OR category LIKE ?)"
         params.extend([like, like, like])
     if category:
-        query += " AND LOWER(category) = LOWER(?)"
+        where += " AND LOWER(category) = LOWER(?)"
         params.append(category)
     if question_type:
-        query += " AND question_types LIKE ?"
+        where += " AND question_types LIKE ?"
         params.append(f"%{question_type}%")
-    query += " ORDER BY created_at DESC"
-    rows = cur.execute(query, params).fetchall()
+
+    total = cur.execute(f"SELECT COUNT(*) FROM image_library {where}", params).fetchone()[0]  # noqa: S608
+    rows = cur.execute(
+        f"SELECT * FROM image_library {where} ORDER BY created_at DESC LIMIT ? OFFSET ?",  # noqa: S608
+        params + [limit, offset],
+    ).fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+    return [dict(row) for row in rows], total
 
 
 def distinct_categories() -> list:
