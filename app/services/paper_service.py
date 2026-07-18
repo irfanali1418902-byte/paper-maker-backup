@@ -138,6 +138,14 @@ def list_papers(query: Optional[str] = None) -> dict:
     return {"papers": rows, "total": len(rows)}
 
 
+def papers_using_question(question_id: str) -> dict:
+    """Delete-warning ke liye — is question ko kitne aur kaun se papers use karte.
+    Returns {count, titles}. Untitled papers ko '(Untitled)' de dete."""
+    papers = papers_repository.find_papers_containing(question_id)
+    titles = [(p.get("paper_title") or "(Untitled)") for p in papers]
+    return {"count": len(papers), "titles": titles}
+
+
 def get_paper_with_questions(paper_id: str) -> dict | None:
     paper = papers_repository.find_by_id(paper_id)
     if not paper:

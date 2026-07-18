@@ -30,6 +30,21 @@ def insert(
     conn.close()
 
 
+def find_papers_containing(question_id: str) -> list[dict]:
+    """Woh papers jinke question_ids mein yeh question_id maujood hai —
+    [{id, paper_title}] (newest first). Delete-warning ke liye: teacher ko
+    dikhao kaun se papers orphan honge. question_ids JSON array ["uuid",...] hai;
+    quoted-id se LIKE match (uuid substring false-match se bacha)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    rows = cur.execute(
+        "SELECT id, paper_title FROM papers WHERE question_ids LIKE ? ORDER BY created_at DESC",
+        (f'%"{question_id}"%',),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def find_by_id(paper_id: str) -> Optional[dict]:
     conn = get_connection()
     cur = conn.cursor()

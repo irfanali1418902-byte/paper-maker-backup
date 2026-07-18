@@ -1551,6 +1551,9 @@ async function buildPaper() {
     paper_type: paperType,
     paper_title: titleVal || null,
     language_filter: langVal || null,
+    // Chuna hua class paper mein daalo — warna SLO coverage ka universe kabhi
+    // nahi banega (class None reh jaata). Grade na chuna ho to null (koi regression nahi).
+    class_name: val('gradeSelect') || null,
   };
   if (paperType === 'custom-ratio') {
     body.mcq_percent = parseInt(val('mcqPercent'));

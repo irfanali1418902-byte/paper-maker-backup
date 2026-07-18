@@ -16,7 +16,7 @@ from app.schemas.requests import (
     UpdateQuestionRequest,
 )
 from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
-from app.services import bulk_import_service, question_service, syllabus_service
+from app.services import bulk_import_service, paper_service, question_service, syllabus_service
 
 _UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
 _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -225,6 +225,15 @@ def update_manual_question(question_id: str, req: ManualQuestionUpdateRequest):
             detail="Manual question nahi mila (ya ye Gemini-generated hai, jo is route se edit nahi hota).",
         )
     return questions_repository.find_by_id(question_id)
+
+
+@router.get("/api/bank/questions/{question_id}/paper-usage")
+def get_question_paper_usage(question_id: str):
+    """Yeh question kitne (aur kaun se) papers mein hai — delete se pehle warning
+    ke liye. {paper_count, paper_titles}. Question ka wajood check nahi (usage
+    zero bhi valid jawab hai)."""
+    usage = paper_service.papers_using_question(question_id)
+    return {"paper_count": usage["count"], "paper_titles": usage["titles"]}
 
 
 @router.delete("/api/bank/questions/{question_id}", response_model=StatusResponse)
