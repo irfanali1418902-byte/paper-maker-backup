@@ -286,6 +286,7 @@ class ManualQuestionRequest(BaseModel):
     source_book: Optional[str] = None
     page_number: Optional[int] = Field(default=None, ge=1)
     status: Literal["published", "draft", "archived"] = "published"
+    slo_ids: Optional[List[str]] = None  # optional — kai SLO se link (khali/None = koi link nahi)
 
     @model_validator(mode="after")
     def _validate(self) -> "ManualQuestionRequest":
@@ -318,6 +319,7 @@ class ManualQuestionUpdateRequest(BaseModel):
     source_book: Optional[str] = None
     page_number: Optional[int] = Field(default=None, ge=1)
     status: Optional[Literal["published", "draft", "archived"]] = None
+    slo_ids: Optional[List[str]] = None  # diya jaye to replace-set; None = link chheda na jaye
 
     @field_validator("options")
     @classmethod
@@ -334,10 +336,18 @@ class ManualQuestionUpdateRequest(BaseModel):
                 self.question_text, self.is_urdu, self.options, self.correct_answer,
                 self.marks, self.answer_lines, self.learning_outcome, self.estimated_time,
                 self.keywords, self.source_book, self.page_number, self.status,
+                self.slo_ids,
             )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
         return self
+
+
+class SetQuestionSloRequest(BaseModel):
+    """PUT /api/questions/{id}/slo — is question ke SLO links poori tarah set (replace).
+    Khali list = saare link hata do. Kisi bhi source (manual/gemini) par chalta hai."""
+
+    slo_ids: List[str] = []
 
 
 _VALID_DIFFICULTIES = {"easy", "medium", "hard"}

@@ -277,5 +277,24 @@ def init_db() -> None:
     # SCAN se bachao. (slo_code ka UNIQUE khud implicit index bhi de deta hai.)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_slo_class_subject ON slo(class, subject)")
 
+    # Question <-> SLO link — Marhala 1. Alag link table (questions column NAHI)
+    # taake: (1) ek sawal = kai SLO, (2) 200+ purane questions bilkul untouched
+    # (koi ALTER/migration nahi), (3) gemini (protected) question bhi tag ho sake
+    # bina uske row ko chhuye. Composite PK duplicate link ko rokta hai (idempotent).
+    # slo_id (PK) se link karte hain, slo_code se nahi — re-import par id stable
+    # rehta hai; report ke liye slo_code/slo_text JOIN se aa jaata hai. FK enforce
+    # nahi hoti (baaqi schema jaisa) — coverage report defensive JOIN karega.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS question_slo (
+            question_id TEXT NOT NULL REFERENCES questions(id),
+            slo_id      TEXT NOT NULL REFERENCES slo(id),
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (question_id, slo_id)
+        )
+        """)
+    # Reverse lookup "is SLO ke saare questions" (Marhala 2 coverage) — SCAN se bachao.
+    # (question_id par filter composite PK ka implicit index khud de deta hai.)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_question_slo_slo ON question_slo(slo_id)")
+
     conn.commit()
     conn.close()

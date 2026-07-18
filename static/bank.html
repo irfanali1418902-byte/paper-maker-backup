@@ -439,6 +439,15 @@
       <div class="topic-img-row" id="addTopicImgRow"></div>
     </div>
 
+    <!-- Add-form SLO picker (optional) -->
+    <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
+    <div id="addSloBox" style="border:1px solid var(--line,#e2e8f0);border-radius:8px;padding:10px;background:#fafbfc;">
+      <div id="addSloHint" style="font-size:13px;color:var(--muted,#64748b);">Pehle upar subject, class aur topic chuno — phir usi ke SLO yahan aayenge.</div>
+      <input type="text" id="addSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('add')"
+             style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />
+      <div id="addSloList" style="max-height:180px;overflow-y:auto;"></div>
+    </div>
+
     <!-- Type -->
     <label>Question Type <span style="color:var(--err-tx)">*</span></label>
     <select id="fType" onchange="onTypeChange()">
@@ -923,6 +932,15 @@
       <div class="topic-img-row" id="efTopicImgRow"></div>
     </div>
 
+    <!-- Edit modal: SLO picker (optional) -->
+    <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
+    <div id="efSloBox" style="border:1px solid var(--line,#e2e8f0);border-radius:8px;padding:10px;background:#fafbfc;">
+      <div id="efSloHint" style="font-size:13px;color:var(--muted,#64748b);">SLO load ho rahe hain...</div>
+      <input type="text" id="efSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('ef')"
+             style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />
+      <div id="efSloList" style="max-height:180px;overflow-y:auto;"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="btn-save" id="ef-saveBtn" onclick="saveEdit()">Save</button>
@@ -996,6 +1014,7 @@ function onSubjectChange() {
 
   topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
   topicEl.disabled = true;
+  if (typeof _loadAddSlos === 'function') _loadAddSlos();  // topic reset → SLO picker bhi reset
 
   if (!subject) {
     gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
@@ -1017,6 +1036,7 @@ async function onGradeChange() {
   const subject = document.getElementById('fSubject').value;
   const grade   = document.getElementById('fGrade').value;
   const topicEl = document.getElementById('fTopic');
+  if (typeof _loadAddSlos === 'function') _loadAddSlos();  // grade badla, topic reset → SLO reset
 
   if (!grade) {
     topicEl.innerHTML = '<option value="">-- Pehle class chunein --</option>';
@@ -1168,6 +1188,116 @@ async function onAddTopicChange() {
   document.getElementById('addStripQType').value = '';
   const imgs = await _loadTopicImages(topicId);
   _renderAddStrip(imgs);
+  _loadAddSlos();
+}
+
+// ================================================================
+// SLO picker (add + edit) — filter by subject + class
+// ================================================================
+let _addSloAll = [];
+let _addSloSelected = new Set();
+let _efSloAll = [];
+let _efSloSelected = new Set();
+
+function _renderSloList(prefix, all, selected) {
+  const listEl = document.getElementById(prefix + 'SloList');
+  const searchEl = document.getElementById(prefix + 'SloSearch');
+  const hintEl = document.getElementById(prefix + 'SloHint');
+  if (!all.length) {
+    searchEl.style.display = 'none';
+    listEl.innerHTML = '';
+    hintEl.style.display = '';
+    hintEl.textContent = 'Is subject/class ke liye koi SLO nahi mila — Excel se import karo (SLO page).';
+    return;
+  }
+  hintEl.style.display = 'none';
+  searchEl.style.display = '';
+  const q = (searchEl.value || '').trim().toLowerCase();
+  const rows = all.filter(s =>
+    !q || (s.slo_code || '').toLowerCase().includes(q) || (s.slo_text || '').toLowerCase().includes(q)
+  );
+  if (!rows.length) { listEl.innerHTML = '<div style="font-size:12px;color:var(--muted,#64748b);padding:4px;">Filter se koi SLO nahi mili.</div>'; return; }
+  listEl.innerHTML = rows.map(s => {
+    const checked = selected.has(s.id) ? 'checked' : '';
+    const strand = s.strand ? `<span style="font-size:10px;background:#eef2f7;color:#475569;border-radius:4px;padding:1px 5px;margin-left:6px;">${escHtml(s.strand)}</span>` : '';
+    return `<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 4px;border-bottom:1px solid #eef1f5;cursor:pointer;font-weight:400;">
+      <input type="checkbox" value="${escAttr(s.id)}" ${checked} onchange="_toggleSlo('${prefix}','${escAttr(s.id)}',this.checked)" style="margin-top:3px;" />
+      <span style="font-size:12.5px;line-height:1.35;"><b>${escHtml(s.slo_code)}</b>${strand}<br><span style="color:#475569;">${escHtml(s.slo_text || '')}</span></span>
+    </label>`;
+  }).join('');
+}
+
+function _toggleSlo(prefix, sloId, on) {
+  const set = prefix === 'add' ? _addSloSelected : _efSloSelected;
+  if (on) set.add(sloId); else set.delete(sloId);
+}
+
+function _filterSloList(prefix) {
+  if (prefix === 'add') _renderSloList('add', _addSloAll, _addSloSelected);
+  else _renderSloList('ef', _efSloAll, _efSloSelected);
+}
+
+async function _fetchSlos(subject, className) {
+  const params = new URLSearchParams();
+  if (subject)   params.set('subject', subject);
+  if (className) params.set('class_name', className);
+  try {
+    const res = await apiFetch(`/api/slo?${params.toString()}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.slos || [];
+  } catch { return []; }
+}
+
+async function _loadAddSlos() {
+  const subject = document.getElementById('fSubject').value;
+  const grade   = document.getElementById('fGrade').value;
+  const topicId = document.getElementById('fTopic').value;
+  const hintEl  = document.getElementById('addSloHint');
+  const searchEl = document.getElementById('addSloSearch');
+  const listEl  = document.getElementById('addSloList');
+  _addSloSelected = new Set();
+  document.getElementById('addSloSearch').value = '';
+
+  // Gate: sirf tab bharo jab subject + class + topic teeno maloom hoon
+  if (!subject || !grade || !topicId) {
+    _addSloAll = [];
+    searchEl.style.display = 'none';
+    listEl.innerHTML = '';
+    hintEl.style.display = '';
+    hintEl.textContent = 'Pehle upar subject, class aur topic chuno — phir usi ke SLO yahan aayenge.';
+    return;
+  }
+  hintEl.textContent = 'SLO load ho rahe hain...';
+  hintEl.style.display = '';
+  _addSloAll = await _fetchSlos(subject, grade);
+  _renderSloList('add', _addSloAll, _addSloSelected);
+}
+
+async function _loadEditSlos(q) {
+  const hintEl = document.getElementById('efSloHint');
+  const searchEl = document.getElementById('efSloSearch');
+  const listEl = document.getElementById('efSloList');
+  _efSloSelected = new Set();
+  document.getElementById('efSloSearch').value = '';
+  searchEl.style.display = 'none';
+  listEl.innerHTML = '';
+  hintEl.style.display = '';
+
+  if (!q.subject) {
+    _efSloAll = [];
+    hintEl.textContent = 'Is sawal ka subject maloom nahi — SLO pick nahi ho sakti.';
+    return;
+  }
+  hintEl.textContent = 'SLO load ho rahe hain...';
+  // subject se filter (class question row mein nahi hota; subject hamesha hota hai)
+  const [all, linkedRes] = await Promise.all([
+    _fetchSlos(q.subject, null),
+    apiFetch(`/api/questions/${encodeURIComponent(q.id)}/slo`).then(r => r.ok ? r.json() : {slos:[]}).catch(() => ({slos:[]})),
+  ]);
+  _efSloAll = all;
+  _efSloSelected = new Set((linkedRes.slos || []).map(s => s.id));
+  _renderSloList('ef', _efSloAll, _efSloSelected);
 }
 
 function _renderEditStripImgs(imgs, qid) {
@@ -1268,6 +1398,7 @@ async function submitQuestion() {
   if (sb) body.source_book = sb;
   const pn = parseInt(document.getElementById('fPageNo').value, 10);
   if (!isNaN(pn) && pn >= 1) body.page_number = pn;
+  if (_addSloSelected.size) body.slo_ids = [..._addSloSelected];
 
   if (type === 'multiple-choice') {
     const opts = [0,1,2,3].map(i => document.getElementById(`opt-${i}`).value.trim()).filter(Boolean);
@@ -1361,6 +1492,13 @@ function resetAddForm() {
   _selectedAddImageId = null;
   document.getElementById('addTopicStrip').style.display = 'none';
   document.getElementById('addTopicImgRow').innerHTML = '';
+  // Reset SLO picker back to "pehle topic chuno" state
+  _addSloAll = []; _addSloSelected = new Set();
+  document.getElementById('addSloSearch').value = '';
+  document.getElementById('addSloSearch').style.display = 'none';
+  document.getElementById('addSloList').innerHTML = '';
+  const _ash = document.getElementById('addSloHint');
+  _ash.style.display = ''; _ash.textContent = 'Pehle upar subject, class aur topic chuno — phir usi ke SLO yahan aayenge.';
 }
 
 // ================================================================
@@ -1550,6 +1688,8 @@ function openEditModal(q) {
 
   // Topic image strip — async, non-blocking
   _loadEditStrip(q.syllabus_topic_id || null, q.id);
+  // SLO picker — async, non-blocking (subject se filter, linked pre-checked)
+  _loadEditSlos(q);
 }
 
 function closeEditModal() {
@@ -1579,6 +1719,8 @@ async function saveEdit() {
   if (esb !== '') body.source_book = esb;
   const epn = parseInt(document.getElementById('ef-page-no').value, 10);
   if (!isNaN(epn) && epn >= 1) body.page_number = epn;
+  // SLO links hamesha bhejo (replace-set) — un-check kar ke clear bhi ho sake
+  body.slo_ids = [..._efSloSelected];
 
   if (_editQtype === 'multiple-choice') {
     const opts = [0,1,2,3].map(i => document.getElementById(`ef-opt-${i}`).value.trim()).filter(Boolean);
