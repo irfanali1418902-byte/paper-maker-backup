@@ -17,7 +17,12 @@ from app.schemas.responses import (
     PaperResponse,
     PapersListResponse,
 )
-from app.services import blueprint_paper_service, paper_service, result_service
+from app.services import (
+    blueprint_paper_service,
+    paper_service,
+    result_service,
+    slo_coverage_service,
+)
 from app.services.exceptions import QuestionBankEmpty, ResultsValidationError
 
 router = APIRouter()
@@ -169,6 +174,21 @@ def get_paper(paper_id: str):
         result = paper_service.get_paper_with_questions(paper_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Paper fetch fail hui (DB error): {e}") from e
+    if result is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    return result
+
+
+@router.get("/api/paper/{paper_id}/slo-coverage")
+def get_paper_slo_coverage(paper_id: str):
+    """Is paper ke sawalon se kaun se SLO cover hue + class/subject ke kaun se
+    reh gaye (strand-wise), untagged sawalon ki ginti samet. Live compute (JOIN)."""
+    try:
+        result = slo_coverage_service.compute_coverage(paper_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"SLO coverage compute fail hui (DB error): {e}"
+        ) from e
     if result is None:
         raise HTTPException(status_code=404, detail="Paper nahi mila.")
     return result
