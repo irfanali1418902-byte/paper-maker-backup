@@ -1,5 +1,29 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — feature/db-index-caching (HISSA 4 DB index + HISSA 5 caching)
+
+**HISSA 4 — image_library filter indexes** (`app/core/database.py`, commit `59517e0`):
+- `init_db()` me 3 `CREATE INDEX IF NOT EXISTS`: `syllabus_topic_id` (list filter +
+  topic_ids_with_images/topic_image_counts + find_by_name_and_topic — 4 code paths), `subject`, `grade`.
+- Migration = sirf CREATE INDEX (existing data safe, idempotent, sirf server restart chahiye — koi schema change nahi).
+- Query plan pehle `SCAN image_library` → ab `SEARCH ... USING INDEX`. init_db 2x chala, error nahi.
+- **Scope se bahar (index nahi lagta):** search `q` (`name/keywords LIKE '%..%'` leading wildcard) aur
+  `category` (`LOWER(category)=?`) — FTS/expression index chahiye, HISSA me nahi.
+- **Reality:** abhi sirf 106 rows — koi query slow nahi thi; ye future-proofing hai (library barhne par).
+
+**HISSA 5 — caching headers** (`app/main.py`):
+- Nayi `@app.middleware("http")` — sirf `/library/*.webp` (full + thumbs) par
+  `Cache-Control: public, max-age=31536000, immutable` (1 saal). HTML/JS ko haath nahi (StaticFiles default ETag/304).
+- **Cache-busting zaroorat NAHI** — code-verified: `image_id=uuid.uuid4()` har upload, koi route
+  existing `{uuid}.webp` overwrite nahi karta (replace = delete + naya upload = naya UUID = nayi URL).
+  Filename hi content-address hai. Future guardrail: agar kabhi in-place replace feature bane to
+  naya UUID/`?v=` rakhna warna immutable stale dega.
+- Verified (TestClient): webp → immutable header; library.html/index.html → koi long-cache nahi.
+
+**Tests:** ruff clean; full suite **666 pass**. Do alag commits (H4 db, H5 main).
+
+---
+
 ## 2026-07-18 — feature/bulk-convert (HISSA 3 — 99 purani PNG → smart WebP)
 
 **Kya kiya:** `image_library` ki 99 purani rows (`file_path .png`, `compression=None`, static/library/)

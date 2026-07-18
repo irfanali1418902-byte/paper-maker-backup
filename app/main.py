@@ -29,6 +29,20 @@ from app.core.database import init_db
 
 app = FastAPI(title="AII Smart Paper Maker - Phase 1")
 
+
+# HISSA 5 — caching headers sirf library WebP par. Ye files content-immutable hain:
+# filename UUID hai aur koi route existing {uuid}.webp ko dubara nahi likhta (replace =
+# delete + naya upload = naya UUID = nayi URL). Isliye 1-saal `immutable` 100% safe hai,
+# koi cache-busting nahi chahiye. HTML/JS ko haath nahi lagate (woh deploy pe badalte hain —
+# StaticFiles ka default ETag/304 revalidation unke liye theek hai).
+@app.middleware("http")
+async def _cache_control_for_library_images(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/library/") and path.endswith(".webp"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
+
 # Cross-origin origins env se (comma-separated). Frontend same-origin (`/`) se
 # serve hota hai, is liye default mein koi cross-origin allow NAHI karte —
 # same-origin requests ko CORS ki zaroorat nahi. Agar API ko kisi doosri domain
