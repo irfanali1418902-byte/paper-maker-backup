@@ -1,5 +1,30 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — feature/bulk-convert (HISSA 3 — 99 purani PNG → smart WebP)
+
+**Kya kiya:** `image_library` ki 99 purani rows (`file_path .png`, `compression=None`, static/library/)
+ko smart WebP me convert kiya — `process_and_save()` (same uuid) se full webp + 300px thumb, phir DB update.
+Data migration hai (koi naya code nahi; detection HISSA-2/saturation-gate wahi).
+
+**Irreversible-safety (convert se PEHLE):**
+- DB backup: `paper_maker_backup_bulkconvert_20260718_*.db`
+- 99 original PNG backup: `backups/library_png_20260718/` (static ke bahar) — `.gitignore` me `backups/` add
+- Convert ke baad browser me crisp confirm (horse_bw, candy_bw, trace, sharpener_bw, walnut_bw lossless;
+  basket_c colour saaf) — TAB original .png delete.
+
+**Per row:** `file_path` → `library/{uuid}.webp`, `thumb_path` → `library/thumbs/{uuid}.webp`,
+`compression` → lossless/lossy. Per-row try/except + commit (resumable; ek run timeout hua, doosre ne baaki 21 pura kiya).
+
+**Natija:** 99/99 convert, 0 fail. **lossless 76, lossy 23** (saare lossy = `_c` colour photos).
+Size: PNG 52.93 MB → WebP full **21.05 MB (−60.2%)** (+thumbs 25.97 MB, −50.9%).
+Lossy 23: 25.19→2.19 MB (−91.3%); lossless 76: 27.74→18.86 MB (−32%, phir bhi crisp).
+Integrity: 99 webp + 99 thumb + DB sab OK.
+
+**Note:** images aur `paper_maker.db` gitignored hain (version control me nahi) — commit sirf PROGRESS + .gitignore.
+Backups (DB + 99 PNG folder) local safe rakhe. Cloud deploy-remote par push NAHI (sirf backup remote).
+
+---
+
 ## 2026-07-18 — smart-compression: unit tests + backup push
 
 **Unit tests — `tests/test_smart_compression.py` (16 naye, pure functions, koi DB/client nahi):**
