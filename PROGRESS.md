@@ -1,5 +1,38 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — fix/paper-class-and-delete-warning (2 zinda bugs)
+
+SLO Marhala 2 Hissa A ke dauran nikle do data-masle ki tashkhees se: `class_name`
+None (47/63 papers) aur orphaned papers (40/63). Do fixes (merge `4fb1409`):
+
+**Fix 1 — Generator class_name capture** (`static/index.html buildPaper`): ab
+`class_name: val('gradeSelect') || null` body mein jaata hai. Backend
+(`GeneratePaperRequest.class_name` + `_persist_paper`) pehle se ready tha — masla
+sirf frontend line ka tha (isi liye har Generator paper class None banta,
+coverage universe kabhi nahi banta). Zero backend change. **Regression-guard**:
+`test_generator_class_name.py` `index.html` ke buildPaper mein `class_name`+`gradeSelect`
+ki maujoodgi check karta — line dobara gayab hui to test fail.
+(Blueprint/bank-paper pehle se class bhejte the — free-text `bpClassName`/`bpClass`.)
+
+**Fix 2 — question delete se pehle paper warning**: `papers.question_ids` JSON blob
+hai (koi FK/cascade nahi), is liye sawal delete karna papers ko chup-chaap orphan
+kar deta tha. Ab delete se pehle warning kaun se papers tootenge:
+`papers_repository.find_papers_containing` (quoted-id `LIKE '%"uuid"%'`, substring-safe),
+`paper_service.papers_using_question` (count+titles, untitled→'(Untitled)'),
+`GET /api/bank/questions/{id}/paper-usage`, `bank.html deleteQuestion` (3-4 naam +
+"aur N mazeed"). **Sirf warning** — koi block/cascade/snapshot nahi (jaan-boojh kar simple).
+
+**Haath NAHI lagaya (data, code nahi):** 40 orphaned papers (deleted sawal wapas nahi
+aate — murda), 47 None-class papers (coverage graceful handle karta, andaaze se backfill
+galat hota). **Deferred tajweez:** Blueprint/bank-paper ka free-text class box →
+dropdown+custom fallback (isi se Jasmine/NUrsery/play aaye) — alag chhota kaam, baad me.
+
+**Tests:** `test_generator_class_name.py` (2) + `test_paper_delete_warning.py` (6) =
+8 naye. ruff clean; full suite **738 pass** (730 → 738). Browser test (teacher) green:
+Generator par Pre Year 1 chuna → paper class set + poora coverage; delete par paper-naam warning.
+
+---
+
 ## 2026-07-18 — SLO Marhala 2 Hissa A (paper coverage + Excel tagging)
 
 Do stacked branches, tarteeb se master mein merge (`--no-ff`):
