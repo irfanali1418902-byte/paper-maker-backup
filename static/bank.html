@@ -1611,7 +1611,22 @@ function renderQRow(q) {
 async function deleteQuestion(id) {
   const q = _allQuestions.find(q => q.id === id);
   const text = q ? (q.question_en || q.question_ur || 'ye question') : 'ye question';
-  if (!confirm(`"${text.slice(0, 60)}..." delete karna chahte ho?\n\nYe wapis nahi aayega.`)) return;
+
+  // Pehle dekho ye sawal kin papers mein hai — delete se woh papers orphan honge
+  let paperWarn = '';
+  try {
+    const ur = await apiFetch(`/api/bank/questions/${encodeURIComponent(id)}/paper-usage`);
+    if (ur.ok) {
+      const u = await ur.json();
+      if (u.paper_count > 0) {
+        const names = (u.paper_titles || []).slice(0, 4).map(t => `• ${t}`).join('\n');
+        const more = u.paper_count > 4 ? `\n…aur ${u.paper_count - 4} mazeed` : '';
+        paperWarn = `\n\n⚠️ Yeh sawal ${u.paper_count} paper${u.paper_count === 1 ? '' : 's'} mein maujood hai — delete karne par woh toot jayenge (orphan):\n${names}${more}\n`;
+      }
+    }
+  } catch (_e) { /* usage fetch fail ho to bhi normal delete confirm chalega */ }
+
+  if (!confirm(`"${text.slice(0, 60)}..." delete karna chahte ho?${paperWarn}\nYe wapis nahi aayega.`)) return;
   try {
     const res = await apiFetch(`/api/bank/questions/${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (!res.ok) {
