@@ -1,5 +1,50 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — SLO Marhala 2 Hissa A (paper coverage + Excel tagging)
+
+Do stacked branches, tarteeb se master mein merge (`--no-ff`):
+`feature/slo-phase-2a-coverage` (9d8a9d1) → `feature/slo-phase-2a-excel-tagging` (f7876c3).
+
+**Coverage** (`slo_coverage_service.py`, `GET /api/paper/{id}/slo-coverage`):
+Paper ke sawalon se covered vs class/subject ke reh gaye SLO + strand breakdown +
+untagged-question ginti. **Live compute (JOIN), stored snapshot NAHI** — link/SLO
+baad me badle to report khud sahi rahe. class match **normalized** (`LOWER(TRIM)`)
+kyunki `papers.class_name` free-text/gandi hai; universe na mile (class None ya us
+class/subject ki koi SLO nahi) to **graceful covered-only + saaf message**, koi crash nahi.
+`coverage_percent` = covered∩universe / total. Repo: `list_links_for_questions` (batch
+JOIN), `list_by_class_subject_normalized`. UI: `index.html` paper preview ke neeche
+SLO Coverage section (progress bar + strand table + reh-gaye list + untagged note).
+
+**Excel tagging** (KAAM A — user manual picker use nahi karta, sab Excel/Blueprint se):
+- **Naye questions**: bulk upload Excel mein optional `slo_code` column (comma-separated
+  = kai SLO). Ghalat code → skip + warning, question phir bhi import (topic-behavior jaisa).
+  Insert ke baad link (image-attach pattern par). `bulk_upload_template.xlsx` + bank.html hint update.
+- **Purane 200+ questions**: `GET /api/questions/slo-export` (Excel: `question_id` +
+  current `slo_code`) → teacher `slo_code` bhare/edit kare → `POST /api/slo/assign-import`.
+  **question_id se match** (text se nahi), **replace-set** (idempotent, khali=clear).
+  `question_id` protection: import par saaf error (khali/unknown id) + Excel cell-comment
+  warning — real sheet-lock NAHI (over-engineer). Shared `resolve_slo_codes` (case/space-insensitive).
+  `question_slo_import_service.py` naya; `slo.html` par bulk-assign card.
+
+**Duplicate trap (confirmed + tested):** bulk question import upsert NAHI karta — har row
+naya uuid. Same sheet dobara upload = QUESTION duplicate. Isi liye purane questions ke liye
+slo-export/assign-import (id se) — question sheet re-upload NAHI. SLO links khud replace-set
+(multiply nahi hote). `test_bulk_import_slo.py::test_reupload_duplicates_the_question` documents.
+
+**Data findings (live test):** saare Pre Year 1 Math papers ORPHANED (question_ids ab
+questions table me nahi — sawal delete ho chuke, coverage 0 dikhega); real-question papers ka
+`class_name = None` (poora universe view sirf class-set paper par). Ye data-hygiene, code bug nahi.
+
+**Tests:** `test_slo_coverage_{service,api}.py` (13) + `test_bulk_import_slo.py` (6) +
+`test_question_slo_import.py` (11) = 30 naye. ruff clean; full suite **730 pass** (700 → 730).
+Browser test (teacher) green: bulk-assign 8 tags, purana paper covered-only + graceful,
+naya Pre Year 1 paper POORA view (0/50, 5 strands sahi, reh-gaye 50), 'play' class graceful.
+`sample_slo_assign.xlsx` (gitignored) test ke liye.
+
+**Baqi:** Hissa B (shortfall) + Hissa C (SLO Health page) abhi NAHI. Aur [[project-papermaker-kaam-b-collapse-manual-add]] (bank.html manual form collapse) pending.
+
+---
+
 ## 2026-07-18 — feature/slo-phase-1 (SLO Marhala 1 — question↔SLO link)
 
 **Scope:** Har question ko ek ya kai SLO se jorna (Marhala 2 paper-coverage report ki buniyaad).
