@@ -1,5 +1,26 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — smart-compression: unit tests + backup push
+
+**Unit tests — `tests/test_smart_compression.py` (16 naye, pure functions, koi DB/client nahi):**
+numpy se controlled images bana kar exact boundaries test kiye —
+- `_buckets_to_cover`: 1 flat colour → 1 bucket; 60/40 → 2; photo-noise → >40;
+  **boundary 47 colours → 40 buckets** (lossless side) vs **48 → 41** (lossy side); khaali → 1.
+- `_is_low_saturation`: pure grayscale → True; saturated red → False;
+  **boundary 13% sat (<0.14) → True** vs **15% (>0.14) → False**; khaali → True.
+- `_choose_compression` **3-stage order**: force_lossless jeetta hai; high-detail B/W
+  (64 near-gray, buckets 55>40 par low-sat) → saturation gate lossless deta hai (bucket rule se pehle);
+  saturated colour noise → lossy; flat colour graphic (chand buckets) → lossless.
+
+**Run:** ruff clean (import-order auto-fix); **poora suite 666 pass** (pehle 650 → +16).
+
+**Git:** commits `bef8ead` (feat: buckets + saturation gate) → merge `6e39909` → `1483f37` (tests).
+**Push:** `backup` remote (paper-maker-backup.git) par push kiya — yeh **backup repo hai, deploy-remote NAHI**
+(Railway/Northflank yahan configured hi nahi). Isliye "master push se deploy todta hai" wala rule nahi toota.
+`master -> master` synced (ahead 0).
+
+---
+
 ## 2026-07-18 — feature/smart-lossy-webp: saturation gate (detailed B/W line-art false-lossy fix)
 
 **Asli _bw test se pakda:** library me 65 named images hain (`_bw` = line-art, `_c` = colour) —
