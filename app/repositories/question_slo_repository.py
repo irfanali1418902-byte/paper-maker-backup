@@ -63,6 +63,23 @@ def list_links_for_questions(question_ids: list) -> list:
     return [dict(row) for row in rows]
 
 
+def all_codes_by_question() -> dict:
+    """Har question_id ke current slo_code (sorted) — ek JOIN se, export ke liye.
+    Returns { question_id: [slo_code, ...] }. Orphan link INNER JOIN se drop."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT qs.question_id, s.slo_code
+           FROM question_slo qs
+           JOIN slo s ON s.id = qs.slo_id
+           ORDER BY s.slo_code"""
+    ).fetchall()
+    conn.close()
+    out: dict = {}
+    for r in rows:
+        out.setdefault(r["question_id"], []).append(r["slo_code"])
+    return out
+
+
 def replace_for_question(question_id: str, slo_ids: list) -> None:
     """Is question ke saare purane link hata kar sirf diye gaye slo_ids set karo
     (replace-set). Khali list = saare link clear. Ek transaction mein — duplicate
