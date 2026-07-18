@@ -200,6 +200,7 @@ def init_db() -> None:
             id                TEXT PRIMARY KEY,
             file_path         TEXT NOT NULL,
             thumb_path        TEXT,
+            compression       TEXT,
             name              TEXT NOT NULL,
             name_normalized   TEXT,
             subject           TEXT,
@@ -241,6 +242,9 @@ def init_db() -> None:
     # HISSA 2: WebP thumbnail path (purani rows NULL — grid full par fall back karta hai).
     if "thumb_path" not in lib_cols:
         cur.execute("ALTER TABLE image_library ADD COLUMN thumb_path TEXT")
+    # Smart Lossy: kaunsa compression use hua ('lossless'|'lossy'; purani rows NULL).
+    if "compression" not in lib_cols:
+        cur.execute("ALTER TABLE image_library ADD COLUMN compression TEXT")
 
     conn.commit()
     conn.close()
