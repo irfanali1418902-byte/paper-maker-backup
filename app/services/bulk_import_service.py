@@ -16,7 +16,7 @@ from typing import Optional
 import pandas as pd
 
 from app.core.database import get_connection
-from app.repositories import library_repository, questions_repository
+from app.repositories import library_repository, question_slo_repository, questions_repository
 
 _LIBRARY_DIR = Path(__file__).parent.parent.parent / "static" / "library"
 _UPLOADS_DIR = Path(__file__).parent.parent.parent / "static" / "uploads"
@@ -271,6 +271,17 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], list[st
     keywords: Optional[str] = _cell(row, "keywords") or None
     source_book: Optional[str] = _cell(row, "source_book") or None
 
+    # ── SLO tagging (optional; comma-separated slo_code) ──────────────────────
+    # Ghalat code par question NAHI girta — sirf woh link chhoot jata hai + warning
+    # (topic ke behavior jaisa). Insert ke baad link banega (image ki tarah).
+    slo_ids: list = []
+    slo_code_raw = _cell(row, "slo_code")
+    if slo_code_raw:
+        from app.services.question_slo_import_service import resolve_slo_codes
+        slo_ids, unknown_codes = resolve_slo_codes(slo_code_raw)
+        for code in unknown_codes:
+            msgs.append(f"row {row_num}: slo_code '{code}' maujood nahi — link nahi bana")
+
     # ── topic matching ────────────────────────────────────────────────────────
     topic_id = _find_topic_id(topic_name, subject, grade) if topic_name else None
     if topic_name and topic_id is None:
@@ -329,6 +340,7 @@ def _validate_row(row: pd.Series, row_num: int) -> tuple[Optional[dict], list[st
         "status": status,
         "answer_lines": answer_lines,
         "_image_name": image_name,  # internal — resolved after insert
+        "_slo_ids": slo_ids,        # internal — linked after insert
     }
     return q, msgs
 
@@ -423,12 +435,16 @@ def import_from_bytes(file_bytes: bytes, filename: str) -> dict:
         warnings.extend(msgs)
 
         image_name = q_dict.pop("_image_name", "")
+        slo_ids = q_dict.pop("_slo_ids", [])
         try:
             questions_repository.insert(q_dict)
         except Exception as db_err:  # noqa: BLE001
             errors.append(f"row {row_num}: save nahi hua (DB error) — {db_err}")
             continue
         added += 1
+
+        if slo_ids:
+            question_slo_repository.replace_for_question(q_dict["id"], slo_ids)
 
         if image_name:
             lib_img = _find_library_image(image_name, q_dict.get("syllabus_topic_id"))

@@ -161,6 +161,32 @@
     </div>
   </div>
 
+  <!-- Bulk-assign card: questions <-> SLO -->
+  <div class="card">
+    <h2>Questions ko SLO se jodo (bulk-assign)</h2>
+    <p class="hint">
+      <strong>Qadam 1:</strong> "Questions Excel download" karo — usme har question ki <code>question_id</code> aur maujooda <code>slo_code</code> hai.
+      <strong>Qadam 2:</strong> sirf <code>slo_code</code> column bharo/edit karo (comma-separated = kai SLO; khali = clear).
+      <strong>Qadam 3:</strong> wahi file yahan wapas upload karo.
+      <br><span style="color:var(--err-tx);">⚠️ <code>question_id</code> column MAT chhedo — import isi se match karta hai (ghalat/gayab id par row saaf error deti hai, chup-chaap kharab nahi hoti).</span>
+    </p>
+    <div class="row">
+      <a href="/api/questions/slo-export" download class="btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Questions Excel download
+      </a>
+      <input type="file" id="assignFile" accept=".xlsx,.xls,.csv" />
+      <button class="btn" id="assignBtn">Assign upload</button>
+    </div>
+    <div class="summary" id="assignSummary">
+      <div class="pills" id="assignPills"></div>
+      <table>
+        <thead><tr><th>Type</th><th>Detail</th></tr></thead>
+        <tbody id="assignBody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- List card -->
   <div class="card">
     <h2>Maujooda SLO</h2>
@@ -245,7 +271,45 @@
     ).join("");
   }
 
+  async function doAssign() {
+    const file = $("assignFile").files[0];
+    if (!file) { alert("Pehle filled Excel chuno (pehle download karo)."); return; }
+    $("assignBtn").disabled = true;
+    $("assignBtn").textContent = "Assign ho raha hai…";
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch("/api/slo/assign-import", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail || "Assign fail hua."); return; }
+      renderAssignSummary(data);
+      loadList();
+    } catch (e) {
+      alert("Assign mein masla: " + e.message);
+    } finally {
+      $("assignBtn").disabled = false;
+      $("assignBtn").textContent = "Assign upload";
+    }
+  }
+
+  function renderAssignSummary(data) {
+    $("assignPills").innerHTML =
+      '<span class="pill upd">Updated: ' + (data.updated || 0) + '</span>' +
+      '<span class="pill err">Errors: ' + (data.errors || []).length + '</span>' +
+      '<span class="pill add" style="background:var(--warn-bg);color:var(--warn-tx);">Warnings: ' + (data.warnings || []).length + '</span>';
+    const rows = []
+      .concat((data.errors || []).map((e) => ['error', e]))
+      .concat((data.warnings || []).map((w) => ['warning', w]));
+    $("assignBody").innerHTML = rows.length
+      ? rows.map(([t, m]) =>
+          '<td class="status-' + (t === 'error' ? 'error' : 'updated') + '">' + esc(t) + '</td><td>' + esc(m) + '</td>')
+          .map((c) => '<tr>' + c + '</tr>').join("")
+      : '<tr><td colspan="2" style="color:var(--ok-tx);">Sab theek — koi error/warning nahi.</td></tr>';
+    $("assignSummary").style.display = "block";
+  }
+
   $("importBtn").addEventListener("click", doImport);
+  $("assignBtn").addEventListener("click", doAssign);
   $("filterBtn").addEventListener("click", loadList);
   loadList();
 </script>

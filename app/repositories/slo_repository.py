@@ -36,6 +36,18 @@ def find_by_code(slo_code: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
+def find_by_code_normalized(slo_code: str) -> Optional[dict]:
+    """slo_code par CASE/whitespace-insensitive match (Excel mein variance hoti
+    hai). Warna None. (Exact-match find_by_code se alag — tagging import forgiving ho.)"""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM slo WHERE LOWER(TRIM(slo_code)) = LOWER(TRIM(?)) LIMIT 1",
+        (slo_code,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def update_by_code(slo_code: str, updates: dict) -> bool:
     """Is slo_code par sirf diye gaye fields update karo (created_at untouched)."""
     if not updates:
