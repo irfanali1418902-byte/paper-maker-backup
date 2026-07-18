@@ -242,6 +242,7 @@ class LibraryImage(BaseModel):
     id: str
     file_path: str
     thumb_path: Optional[str] = None
+    compression: Optional[str] = None
     name: str
     subject: Optional[str] = None
     grade: Optional[str] = None

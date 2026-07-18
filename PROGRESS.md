@@ -1,5 +1,89 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — feature/smart-lossy-webp: saturation gate (detailed B/W line-art false-lossy fix)
+
+**Asli _bw test se pakda:** library me 65 named images hain (`_bw` = line-art, `_c` = colour) —
+UUID naam se store, DB `image_library.name` → `file_path` mapping se mile (original `.png`, compression=None).
+Naye buckets-metric par 40 me se 38 `_bw` lossless, par **2 false-lossy**: `sharpener_bw` (51 buckets,
+21 shaded sharpeners) aur `walnut_bw` (55 buckets, dense stippling) — ground truth Read se dekha, dono
+sach me B/W line-art hain jo lossy me smear ho jate.
+
+**Root cause:** detailed B/W line-art (grey shading/stippling) bucket-count me simple colour photos se
+**OVERLAP** karta hai (sharpener 51, walnut 55 vs cat_c 56, banana_c 46, panda_c 41). Buckets *akele*
+in dono ko alag nahi kar sakte — koi N kaam nahi karega (wahi 8/16 wali limitation, dusre end par).
+
+**Discriminator = saturation.** B/W drawing chahe kitni detailed ho, saturation ~0; colour photo ki high.
+Real library par mapa: `_bw` sat-frac (S>40 wale pixels ka hissa) ≤0.122, `_c` ≥0.104.
+
+**Fix — `app/services/image_processing_service.py`, `_choose_compression` me saturation gate:**
+1. `force_lossless` (mode 1/P/transparency) → lossless  [waise hi]
+2. **NAYA** `_is_low_saturation()` — sat-frac < `_SAT_LOSSLESS_MAX=0.14` → lossless (har B/W drawing, detailed bhi)
+3. warna colour: `_buckets_to_cover <= _MAX_BUCKETS_LOSSLESS(40)` → lossless, warna → lossy
+- Constants: `_SAT_PIXEL_MIN=40` (HSV S se upar = meaningful rang), `_SAT_LOSSLESS_MAX=0.14`.
+
+**Validated (real library, ground truth):** 40/40 `_bw` → lossless ✓; 22/24 `_c` → lossy ✓;
+sirf `cat_c`+`football_c` (muted colour) over-lossless — storage cost only, quality nahi (safety bias).
+ruff clean; 85 library/image tests pass. Merged to master (LOCAL only, cloud push NAHI).
+
+---
+
+## 2026-07-18 — feature/smart-lossy-webp: detection metric fix (top-8 coverage → buckets-to-85)
+
+**Masla (code review se):** purana `_is_line_art` **fixed top-8 buckets ka coverage ≥0.85** dekhta tha.
+Ye multi-colour flat art par galat tha — 10-15 flat rang wali (bacchon wali crisp) illustration ka
+top-8 coverage <0.85 aa jaata → galti se **lossy** (quality loss us cheez par jise crisp chahiye).
+`_TOP_BUCKETS` ko 8→16 karna wahi bug ka bada version tha (16-colour art phir lossy). Magic number kaam nahi karta.
+
+**Naya metric — "85% coverage tak kitne buckets chahiye?"** (`_buckets_to_cover`):
+- Buckets ghatte order me jodo jab tak cumulative coverage ≥0.85 na ho; kitne lage = signal.
+- Flat art (chand flat rang) → **kam buckets**; photo (gradients phaile) → **bohot buckets**.
+- `_is_line_art = _buckets_to_cover(img) <= _MAX_BUCKETS_LOSSLESS (40)`.
+- `_QUANT_SHIFT=3`, `_COVERAGE_TARGET=0.85` waise hi. `force_lossless`/`_choose_compression` unchanged.
+
+**N=40 kaise choose kiya — real uploads par mapa (synthetic NAHI):**
+- `static/uploads/` ke 1206 asli teacher images ka sample: do alag populations —
+  line-art/flat **≤29 buckets** par rukta, photo **≥41** se shuru; **30–40 bilkul khaali (gap)**.
+- 6 library photos ka floor bhi 46 tha — match. N=40 valley me baitha, isliye magic number nahi (±5 safe).
+- Ground truth khud dekha (Read se): `099cdf59`(1b, safed worksheet+trace+text) → lossless ✓;
+  `1b2feffd`(41b, 6 shaded tables+bold "SIX") → lossy ✓ (bold text q85 me bachta, tables photographic);
+  `861d9631`(379b, 23 baskets photo) → lossy ✓. Delicate line-art hamesha safed pages par (kam buckets) → lossless.
+
+**Verified:** updated service function real images par expected split; ruff clean; 85 library/image tests pass. Cloud push NAHI.
+
+---
+
+## 2026-07-17 — feature/smart-lossy-webp (Smart Lossy/Lossless WebP)
+
+**Kya bana (sirf naye uploads):** har image ka type detect karke best compression —
+line drawing/trace/outline → LOSSLESS (bacchon ke liye crisp), photo → LOSSY q85 (zyada saving).
+Ambiguous → hamesha lossless (safety bias).
+
+**Detection tareeqa — "dominant colour coverage" (raw unique-count se robust):**
+- Raw unique-colour count ka masla: anti-aliasing se ek simple trace bhi hazaaron edge-shades de deta
+  hai → galti se photo detect. Isliye coverage use kiya.
+- `app/services/image_processing_service.py`:
+  - `_is_line_art(full)`: RGB → numpy, colours quantize (`>>3` = 32 levels/channel, AA noise merge),
+    `np.bincount` se top-8 buckets ka pixel coverage; **coverage ≥ 0.85 → lossless**, warna lossy.
+  - `_has_graphic_signals(img)`: hard signals jo seedha lossless karte hain (coverage skip):
+    mode "1" (bilevel), mode "P" (palette ≤256), ya real transparency. Grayscale "L" ko force NAHI
+    (B/W photo ho sakta hai) — coverage decide karta hai. Signal P→RGBA convert se PEHLE capture.
+  - `_choose_compression()` → `"lossless"`/`"lossy"`; full + thumb **dono same mode** use karte hain.
+  - Tunables: `_LOSSY_QUALITY=85`, `_QUANT_SHIFT=3`, `_TOP_BUCKETS=8`, `_COVERAGE_LOSSLESS_THRESHOLD=0.85`.
+  - Return dict mein ab `compression` bhi.
+- `app/core/database.py` — `image_library.compression TEXT` (CREATE + safe ALTER; purani rows NULL)
+- `app/schemas/responses.py` — `LibraryImage.compression`
+- `app/repositories/library_repository.py` — `insert()` mein `compression` column
+- `app/api/library.py` — single + bulk row mein `compression` add
+- `requirements.txt` — `numpy` explicitly add (ab seedha import; pehle sirf pandas ke through transitive)
+
+**Verified (manual smoke):**
+- Line art (grid + circle) → `lossless`, full 6.7 KB (crisp) ✓
+- Photo (random noise, worst-case) → `lossy`, full 467 KB ✓
+
+**Baaki:** pytest + ruff (baad mein), naye detection tests likhna. Cloud push NAHI.
+
+---
+
 ## 2026-07-17 — feature/webp-thumbnails (HISSA 2 — WebP + Thumbnails)
 
 **Kya bana (sirf naye uploads — purani JPG/PNG untouched, woh HISSA 3 Bulk Convert mein):**

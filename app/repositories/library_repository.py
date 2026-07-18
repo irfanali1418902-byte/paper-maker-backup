@@ -11,12 +11,14 @@ def insert(row: dict) -> None:
     name_normalized = row["name"].strip().lower()
     cur.execute(
         """INSERT INTO image_library
-           (id, file_path, thumb_path, name, name_normalized, subject, grade, syllabus_topic_id, uploaded_by)
-           VALUES (?,?,?,?,?,?,?,?,?)""",
+           (id, file_path, thumb_path, compression, name, name_normalized,
+            subject, grade, syllabus_topic_id, uploaded_by)
+           VALUES (?,?,?,?,?,?,?,?,?,?)""",
         (
             row["id"],
             row["file_path"],
             row.get("thumb_path"),
+            row.get("compression"),
             row["name"],
             name_normalized,
             row.get("subject"),
