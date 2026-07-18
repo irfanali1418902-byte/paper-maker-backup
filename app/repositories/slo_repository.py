@@ -51,6 +51,23 @@ def update_by_code(slo_code: str, updates: dict) -> bool:
     return affected > 0
 
 
+def list_by_class_subject_normalized(class_name: str, subject: str) -> list:
+    """Coverage universe — class + subject dono par CASE/whitespace-insensitive
+    match (LOWER(TRIM(...))). papers.class_name free-text/gandi hai (e.g.
+    'NUrsery' vs 'Nursery'), is liye compare-time normalize — data ko haath nahi
+    lagate. slo_code se sorted. Koi row na mile to [] (universe unavailable)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT * FROM slo
+           WHERE LOWER(TRIM(class)) = LOWER(TRIM(?))
+             AND LOWER(TRIM(subject)) = LOWER(TRIM(?))
+           ORDER BY slo_code""",
+        (class_name, subject),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def list_by_filters(
     class_name: Optional[str] = None,
     subject: Optional[str] = None,

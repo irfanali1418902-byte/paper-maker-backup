@@ -41,6 +41,28 @@ def list_question_ids_for_slo(slo_id: str) -> list:
     return [row["question_id"] for row in rows]
 
 
+def list_links_for_questions(question_ids: list) -> list:
+    """Diye gaye question_ids ke saare (question_id -> SLO) link — SLO fields
+    JOIN se (slo_code, slo_text, strand, class, subject). Coverage report ki base
+    query: ek `IN (...)` mein poore paper ke covered SLO. Orphan link INNER JOIN se
+    khud drop. Empty list de to empty result."""
+    if not question_ids:
+        return []
+    unique_ids = list(dict.fromkeys(question_ids))
+    placeholders = ",".join("?" for _ in unique_ids)
+    conn = get_connection()
+    rows = conn.execute(
+        f"""SELECT qs.question_id, s.id AS slo_id, s.slo_code, s.slo_text,
+                   s.strand, s.class AS slo_class, s.subject AS slo_subject
+            FROM question_slo qs
+            JOIN slo s ON s.id = qs.slo_id
+            WHERE qs.question_id IN ({placeholders})""",  # noqa: S608
+        unique_ids,
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def replace_for_question(question_id: str, slo_ids: list) -> None:
     """Is question ke saare purane link hata kar sirf diye gaye slo_ids set karo
     (replace-set). Khali list = saare link clear. Ek transaction mein — duplicate

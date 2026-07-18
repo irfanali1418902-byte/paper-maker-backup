@@ -690,6 +690,7 @@
               <div id="balanceSummary"></div>
               <div id="results"></div>
             </details>
+            <div id="sloCoverage"></div>
           </div>
 
           <div class="stack">
@@ -1670,6 +1671,7 @@ function renderPaperPreview(data) {
   const questions = data.questions || [];
   if (!questions.length) {
     els.forEach(el => { el.innerHTML = '<div class="paper-empty">Is paper mein koi question nahi mila.</div>'; });
+    const sc = document.getElementById('sloCoverage'); if (sc) sc.innerHTML = '';
     return;
   }
   const nameEn = (val('schoolNameEn') || 'School Name').trim();
@@ -1706,6 +1708,80 @@ function renderPaperPreview(data) {
     <div class="ph-sec">Questions</div>
     ${qHtml}`;
   els.forEach(el => { el.innerHTML = html; });
+
+  // SLO coverage — lazy, non-blocking (paper preview ke saath)
+  const pid = data.paper_id || (typeof currentPaperId !== 'undefined' ? currentPaperId : null);
+  if (pid) loadSloCoverage(pid);
+}
+
+// ================================================================
+// SLO coverage (Marhala 2 Hissa A) — is paper ne kaun se SLO cover kiye
+// ================================================================
+async function loadSloCoverage(paperId) {
+  const el = document.getElementById('sloCoverage');
+  if (!el) return;
+  try {
+    const res = await apiFetch(`/api/paper/${encodeURIComponent(paperId)}/slo-coverage`);
+    if (!res.ok) { el.innerHTML = ''; return; }
+    renderSloCoverage(await res.json());
+  } catch { el.innerHTML = ''; }
+}
+
+function renderSloCoverage(cov) {
+  const el = document.getElementById('sloCoverage');
+  if (!el || !cov) return;
+  const esc = escapeHtml;
+
+  const untagged = cov.untagged_questions
+    ? `<div style="font-size:12.5px;color:#a9722f;margin-top:6px;">⚠️ ${cov.untagged_questions} sawal ke SLO tag nahi — coverage inhe shumar nahi karta. (Bank mein tag karo.)</div>`
+    : '';
+
+  // Universe available nahi (class/subject ke SLO define nahi) → covered-only + note
+  if (!cov.universe_available) {
+    const list = cov.covered.length
+      ? `<div style="margin-top:8px;">${cov.covered.map(s =>
+          `<span style="display:inline-block;font-size:11.5px;background:#e7f1ed;color:#1d6e56;border-radius:4px;padding:2px 7px;margin:2px 4px 2px 0;">${esc(s.slo_code)}</span>`).join('')}</div>`
+      : '<div style="font-size:12.5px;color:#5B6678;margin-top:6px;">Is paper ke kisi sawal se koi SLO linked nahi.</div>';
+    el.innerHTML = `<div class="summary-box" style="background:#fbfaf7;">
+      <div class="t">SLO Coverage</div>
+      <div style="font-size:12.5px;color:#5B6678;">${esc(cov.universe_message || '')}</div>
+      ${cov.covered.length ? `<div style="font-size:12.5px;margin-top:8px;"><b>${cov.covered_slos}</b> tagged SLO is paper mein:</div>${list}` : ''}
+      ${untagged}
+    </div>`;
+    return;
+  }
+
+  const pct = cov.coverage_percent;
+  const barColor = pct >= 67 ? '#1d6e56' : pct >= 34 ? '#a9722f' : '#b3261e';
+  const bar = `<div style="background:#e6e9ee;border-radius:6px;height:10px;overflow:hidden;margin:6px 0;">
+      <div style="width:${pct}%;height:100%;background:${barColor};"></div></div>`;
+
+  const strandRows = cov.strands.map(s => {
+    const remaining = s.total - s.covered;
+    return `<tr>
+      <td style="padding:3px 8px;">${esc(s.strand || '—')}</td>
+      <td style="padding:3px 8px;text-align:center;">${s.covered}/${s.total}</td>
+      <td style="padding:3px 8px;text-align:center;color:${remaining ? '#b3261e' : '#1d6e56'};">${remaining}</td>
+    </tr>`;
+  }).join('');
+
+  const remainingList = cov.remaining.length
+    ? `<details style="margin-top:8px;"><summary style="cursor:pointer;font-size:12.5px;color:#b3261e;">Reh gaye SLO (${cov.remaining.length})</summary>
+        <div style="margin-top:6px;">${cov.remaining.map(r =>
+          `<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #eef1f5;"><b>${esc(r.slo_code)}</b> <span style="color:#5B6678;">${esc(r.slo_text || '')}</span></div>`).join('')}</div></details>`
+    : '<div style="font-size:12.5px;color:#1d6e56;margin-top:6px;">✅ Is class/subject ke saare SLO cover ho gaye!</div>';
+
+  el.innerHTML = `<div class="summary-box" style="background:#fbfaf7;">
+    <div class="t">SLO Coverage — ${esc(cov.class || '')} / ${esc(cov.subject || '')}</div>
+    <div style="font-size:13px;"><b>${cov.covered_in_universe}/${cov.total_slos}</b> SLO cover (${pct}%)</div>
+    ${bar}
+    <table style="font-size:12px;border-collapse:collapse;margin-top:4px;">
+      <tr style="color:#5B6678;"><th style="text-align:left;padding:3px 8px;">Strand</th><th style="padding:3px 8px;">Cover</th><th style="padding:3px 8px;">Reh gaye</th></tr>
+      ${strandRows}
+    </table>
+    ${remainingList}
+    ${untagged}
+  </div>`;
 }
 
 // Bloom-derived expected difficulty, with a warning when it disagrees with
