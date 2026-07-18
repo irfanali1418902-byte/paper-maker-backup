@@ -246,5 +246,14 @@ def init_db() -> None:
     if "compression" not in lib_cols:
         cur.execute("ALTER TABLE image_library ADD COLUMN compression TEXT")
 
+    # HISSA 4 — image_library filter indexes. list_by_filters()/topic-counts in
+    # columns par filter karte hain; abhi query plan full SCAN karta hai. Ye
+    # CREATE INDEX IF NOT EXISTS existing data par safe + idempotent hain (koi
+    # schema/restart change nahi). Search (LIKE '%..%') aur category (LOWER())
+    # ko ye index nahi lagte — woh alag masla hai (FTS/expression index), yahan nahi.
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_image_library_topic ON image_library(syllabus_topic_id)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_image_library_subject ON image_library(subject)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_image_library_grade ON image_library(grade)")
+
     conn.commit()
     conn.close()
