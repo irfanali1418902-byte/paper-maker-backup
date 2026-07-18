@@ -3,7 +3,7 @@
 import json
 import uuid
 
-from app.repositories import questions_repository
+from app.repositories import question_slo_repository, questions_repository
 from app.schemas.requests import (
     BulkUpdateQuestionMetaRequest,
     GenerateQuestionsRequest,
@@ -110,6 +110,8 @@ def save_manual_question(req: ManualQuestionRequest, resolved_subject: str, reso
             "status": req.status,
         }
     )
+    if req.slo_ids is not None:
+        set_slos_for_question(qid, req.slo_ids)
     return qid
 
 
@@ -169,6 +171,8 @@ def update_manual_question(question_id: str, req: ManualQuestionUpdateRequest) -
 
     if fields:
         questions_repository.update(question_id, fields)
+    if req.slo_ids is not None:
+        set_slos_for_question(question_id, req.slo_ids)
     return True
 
 
@@ -189,6 +193,19 @@ def list_questions(
         subject=subject, topic=topic, bloom_level=bloom_level,
         syllabus_topic_id=syllabus_topic_id, q=q, status=status,
     )
+
+
+def set_slos_for_question(question_id: str, slo_ids: list) -> None:
+    """Is question ke SLO links replace karo. Sirf woh slo_ids likhte hain jo
+    waqai slo table mein maujood hain (orphan link se bachao). Khali list = clear."""
+    valid = question_slo_repository.existing_slo_ids(slo_ids)
+    filtered = [sid for sid in slo_ids if sid in valid]
+    question_slo_repository.replace_for_question(question_id, filtered)
+
+
+def get_slos_for_question(question_id: str) -> list:
+    """Is question ke linked SLO (poore slo rows, slo_code se sorted)."""
+    return question_slo_repository.list_slos_for_question(question_id)
 
 
 def bulk_update_question_meta(req: BulkUpdateQuestionMetaRequest) -> int:

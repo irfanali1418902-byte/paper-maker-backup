@@ -12,6 +12,7 @@ from app.schemas.requests import (
     GenerateQuestionsRequest,
     ManualQuestionRequest,
     ManualQuestionUpdateRequest,
+    SetQuestionSloRequest,
     UpdateQuestionRequest,
 )
 from app.schemas.responses import GenerateQuestionsResponse, Question, StatusResponse
@@ -80,6 +81,27 @@ def update_question(question_id: str, req: UpdateQuestionRequest):
     if not found:
         raise HTTPException(status_code=404, detail="Question nahi mila.")
     return questions_repository.find_by_id(question_id)
+
+
+@router.get("/api/questions/{question_id}/slo")
+def get_question_slos(question_id: str):
+    """Is question ke linked SLO (slo_code, slo_text, strand samet). Kisi bhi
+    source (manual/gemini) par chalta hai — link table protected row ko nahi chhoota."""
+    if questions_repository.find_by_id(question_id) is None:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+    slos = question_service.get_slos_for_question(question_id)
+    return {"slos": slos, "total": len(slos)}
+
+
+@router.put("/api/questions/{question_id}/slo")
+def set_question_slos(question_id: str, req: SetQuestionSloRequest):
+    """Is question ke SLO links poori tarah set (replace-set). Khali list = sab hata do.
+    Sirf maujood slo_ids link hote hain (orphan link se bachao)."""
+    if questions_repository.find_by_id(question_id) is None:
+        raise HTTPException(status_code=404, detail="Question nahi mila.")
+    question_service.set_slos_for_question(question_id, req.slo_ids)
+    slos = question_service.get_slos_for_question(question_id)
+    return {"slos": slos, "total": len(slos)}
 
 
 @router.post("/api/questions/{question_id}/image", response_model=Question)
