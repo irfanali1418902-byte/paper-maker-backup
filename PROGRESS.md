@@ -1,5 +1,48 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — feature/slo-phase-1 (SLO Marhala 1 — question↔SLO link)
+
+**Scope:** Har question ko ek ya kai SLO se jorna (Marhala 2 paper-coverage report ki buniyaad).
+Bulk-assign Excel is marhale me NAHI (pehle manual UI se validate) — baad me
+`question_slo_import_service` + `POST /api/slo/bulk-assign` me fit hoga.
+
+**DB** (`app/core/database.py`): naya **`question_slo` link table** (column NAHI) —
+`question_id`, `slo_id`, `created_at`, composite PK `(question_id, slo_id)`. Wajah: (1) ek sawal =
+kai SLO, (2) `questions` table bilkul untouched → 200+ purane questions bina migration ke chalte
+rahein, (3) gemini (protected) question bhi tag ho bina uske row ko chhue. `slo_id` (PK) se link
+(slo_code se nahi) — re-import par id stable; report ke liye slo_code/slo_text JOIN se. FK enforce
+nahi (baaqi schema jaisa) — coverage report defensive INNER JOIN. Index: `idx_question_slo_slo`
+(reverse lookup "is SLO ke saare questions" — Marhala 2). Migration = sirf CREATE TABLE/INDEX
+(idempotent, server restart chahiye).
+
+**Repo** (`app/repositories/question_slo_repository.py`, naya): `replace_for_question` (replace-set,
+duplicate INSERT OR IGNORE), `list_slo_ids_for_question`, `list_slos_for_question` (JOIN, orphan
+link INNER JOIN se khud drop), `list_question_ids_for_slo` (reverse), `existing_slo_ids` (link se
+pehle validate — orphan se bachao).
+
+**Service** (`app/services/question_service.py`): `set_slos_for_question` (sirf maujood slo_ids
+likhta — orphan filter), `get_slos_for_question`; manual create/update me `slo_ids` diya ho to link
+write (replace-set).
+
+**API** (`app/api/questions.py`): `GET /api/questions/{id}/slo` + `PUT .../slo` (replace-set, khali
+list = clear; **har source** par — link table protected row ko nahi chhoota); `slo_ids` optional on
+manual create (`POST /api/bank/questions`) + update (`PATCH /api/bank/questions/{id}`).
+Schemas: `ManualQuestionRequest`/`Update` me `slo_ids`, naya `SetQuestionSloRequest`; update ke
+"kam az kam ek field" validator me `slo_ids` shaamil.
+
+**UI** (`static/bank.html`): Add + Edit modal me **SLO picker** (checkbox list + search).
+Filter subject+class par — **gate:** subject/class/topic teeno maloom hon tabhi bharta, warna
+"pehle topic chuno" hint (teacher ko 50 SLO me se dhoondna na pare). Add: subject/grade/topic
+badalne par reset. Edit: subject se filter, linked SLO pre-checked, un-check kar ke clear.
+(Edit modal sirf manual questions ke liye khulta; gemini tagging PUT endpoint se — UI me abhi surface nahi.)
+
+**Tests:** `tests/test_question_slo_repository.py` (7) + `tests/test_question_slo_api.py` (11) =
+18 naye. ruff clean; full suite **700 pass** (682 → 700). Live server smoke: PUT link → GET →
+empty-PUT clear sab OK (dev DB cleanup). Browser test (teacher): gate/add/edit/clear/purane-questions —
+sab green, tabhi merge (`--no-ff`, commit `26fb90c` → merge `fca1fbf`).
+
+---
+
 ## 2026-07-18 — feature/slo-phase-0 (SLO Marhala 0 — table + Excel import)
 
 **Scope:** SIRF `slo` table + Excel bulk import. Question↔SLO link (Marhala 1) aur
