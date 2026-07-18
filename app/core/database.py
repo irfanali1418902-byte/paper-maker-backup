@@ -255,5 +255,27 @@ def init_db() -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_image_library_subject ON image_library(subject)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_image_library_grade ON image_library(grade)")
 
+    # SLO (Student Learning Outcomes) — Marhala 0: sirf table + Excel import.
+    # Question<->SLO link Marhala 1 mein, paper coverage Marhala 2 mein aayega.
+    # strand alag column hai (slo_code parse nahi karte) taake Marhala 2 mein
+    # strand-wise coverage report seedha column par ban sake. bloom_level nullable
+    # hai — import verb se suggest karta hai, teacher override kar sakta hai.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS slo (
+            id          TEXT PRIMARY KEY,
+            class       TEXT NOT NULL,
+            subject     TEXT NOT NULL,
+            slo_code    TEXT NOT NULL,
+            slo_text    TEXT NOT NULL,
+            bloom_level TEXT,
+            strand      TEXT,
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(slo_code)
+        )
+        """)
+    # class+subject par listing/filter (e.g. "Pre Year 1 Math ke saare SLO") —
+    # SCAN se bachao. (slo_code ka UNIQUE khud implicit index bhi de deta hai.)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_slo_class_subject ON slo(class, subject)")
+
     conn.commit()
     conn.close()

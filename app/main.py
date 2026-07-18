@@ -21,6 +21,7 @@ from app.api import (
     papers,
     questions,
     school_settings,
+    slo,
     stats,
     syllabus,
 )
@@ -74,6 +75,7 @@ app.include_router(dashboard.router, dependencies=_api_auth)
 app.include_router(export.router, dependencies=_api_auth)
 app.include_router(syllabus.router, dependencies=_api_auth)
 app.include_router(school_settings.router, dependencies=_api_auth)
+app.include_router(slo.router, dependencies=_api_auth)
 app.include_router(stats.router, dependencies=_api_auth)
 
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi

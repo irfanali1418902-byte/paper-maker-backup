@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-18 — feature/slo-phase-0 (SLO Marhala 0 — table + Excel import)
+
+**Scope:** SIRF `slo` table + Excel bulk import. Question↔SLO link (Marhala 1) aur
+paper coverage (Marhala 2) is marhale me NAHI. Data target: Pre Year 1 Math (~50 SLO).
+
+**DB** (`app/core/database.py`): `init_db()` me naya `slo` table (CREATE TABLE IF NOT EXISTS,
+existing data safe) — `id` TEXT uuid PK, `class`, `subject`, `slo_code` (UNIQUE), `slo_text`,
+`bloom_level` (nullable), `strand`, `created_at`. `strand` ALAG column (slo_code parse nahi karte —
+Marhala 2 strand-wise coverage seedha column par bane). Index: `idx_slo_class_subject`.
+
+**Bloom auto-suggest** (`app/core/bloom_standards.py`): naya `suggest_bloom_from_text()` —
+slo_text ke pehle content-verb se level (`_VERB_BLOOM` map: count/identify/recognize→remember,
+describe→understand, solve→apply, compare→analyze...). Fillers (students/will/be/able/to) skip.
+Verb match na ho → **None** (default "remember" NAHI, taake galat label na lage). Sirf tajweez —
+import me teacher ki di hui value overwrite nahi hoti; khali ho tabhi auto-fill.
+
+**Import service** (`app/services/slo_import_service.py`, `library_meta_import_service` pattern par):
+pandas `read_excel(dtype=str)`, columns lowercase-normalize. Required: class/subject/slo_code/slo_text;
+optional: bloom_level/strand; `book_pages` + koi bhi extra column IGNORE (error nahi).
+Duplicate `slo_code` par **UPDATE** (draft dobara import: slo_text/bloom_level/strand refresh,
+`created_at` untouched), naya par ADD. Ek row fail se baaki nahi rukti. Summary:
+`{added, updated, errors, results:[{row, slo_code, status, reason?}]}`.
+
+**Repo/API/UI:** `app/repositories/slo_repository.py` (insert/find_by_code/update_by_code/list_by_filters);
+`app/api/slo.py` — `GET /api/slo` (class/subject/strand filter), `GET /api/slo/template`,
+`POST /api/slo/import`; `app/main.py` me router register (auth ke peeche). `static/slo.html` (import +
+summary + filterable list), `static/slo_import_template.xlsx` (header + 4 sample rows), index.html nav link.
+
+**Strand codes (is book se, 50 SLO):** W=Pre-writing(3), N=Number(25), C=Comparison(6),
+D=Solid Shape(8), S=Flat Shape(8). Pattern/Measurement/Data is book me NAHI.
+
+**Tests:** `tests/test_slo_import.py` (10) + `tests/test_slo_api.py` (6) = 16 naye. ruff clean;
+full suite **682 pass** (666 → 682). Smoke test (real boot): template/import/re-import/list/slo.html
+sab OK; bloom verify (compare→analyze, count/recognize→remember, trace→None); demo rows real DB se saaf.
+
+---
+
 ## 2026-07-18 — feature/db-index-caching (HISSA 4 DB index + HISSA 5 caching)
 
 **HISSA 4 — image_library filter indexes** (`app/core/database.py`, commit `59517e0`):

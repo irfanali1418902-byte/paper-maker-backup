@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Learning Outcomes (SLO) — AII Paper Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2E5AAC; --primary-hover: #244a90; --navy: #16294A;
+    --tint: #EAF1FB; --ink: #16213A; --muted: #5B6678; --border: #E3E8F1;
+    --surface: #FFFFFF; --bg: #EEF1F6;
+    --err-bg: #FBE9E7; --err-tx: #C0392B;
+    --ok-bg: #E6F4EC; --ok-tx: #2E7D5B;
+    --warn-bg: #FBF1DF; --warn-tx: #B5760E;
+    --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink); background: var(--bg);
+    display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .app-sidebar {
+    width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
+    padding: 18px 0; position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .brand { padding: 2px 22px 20px; }
+  .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
+  .brand small { font-size: 10.5px; color: #9DB0D0; display: block; margin-top: 3px; }
+  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  .app-nav a {
+    display: flex; align-items: center; gap: 10px; color: #C6D2E8;
+    font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 8px;
+    border-left: 3px solid transparent;
+  }
+  .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: #5B8DEF; }
+  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: #8092B0; line-height: 1.6; }
+
+  .slo-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .page-head { margin-bottom: 24px; }
+  .page-head h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  .page-head p { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+  .card .hint { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    border: 0; border-radius: var(--radius-btn); font-size: 14px; font-weight: 600;
+    padding: 10px 16px; background: var(--primary); color: #fff;
+  }
+  .btn:hover { background: var(--primary-hover); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-ghost {
+    background: var(--tint); color: var(--primary); border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-btn);
+    font-size: 13.5px; font-weight: 600; padding: 9px 14px;
+  }
+  .btn-ghost:hover { background: #DDE9FA; }
+  input[type=file], select, input[type=text] {
+    padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
+    font-size: 13.5px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+
+  .summary { display: none; margin-top: 16px; }
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pill { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 20px; }
+  .pill.add { background: var(--ok-bg); color: var(--ok-tx); }
+  .pill.upd { background: var(--tint); color: var(--primary); }
+  .pill.err { background: var(--err-bg); color: var(--err-tx); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  td.code { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .bloom { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--tint); color: var(--primary); }
+  .bloom.empty { background: #F1F2F5; color: var(--muted); font-style: italic; }
+  .status-error { color: var(--err-tx); }
+  .status-updated { color: var(--primary); }
+  .status-added { color: var(--ok-tx); }
+  .empty-state { color: var(--muted); font-size: 13.5px; padding: 18px 0; }
+
+  @media (max-width: 720px) {
+    body { flex-direction: column; }
+    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: column; }
+    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0 10px; }
+    .sidebar-foot { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="app-sidebar">
+  <div class="brand">
+    <div class="name">AII Smart Paper Maker</div>
+    <small>Learning Outcomes</small>
+  </div>
+  <nav class="app-nav">
+    <a href="/">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+      Generator
+    </a>
+    <a href="/library.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Image Library
+    </a>
+    <a href="/bank.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      Question Bank
+    </a>
+    <a href="/blueprint.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 9v12"/><path d="M14 3v6"/></svg>
+      Blueprint
+    </a>
+    <a href="/slo.html" class="active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Learning Outcomes
+    </a>
+  </nav>
+  <div class="sidebar-foot">Student Learning Outcomes — Excel se import. Bloom text ke verb se suggest hota hai (teacher override kar sakta hai).</div>
+</aside>
+
+<main class="slo-main">
+  <div class="page-head">
+    <h1>Student Learning Outcomes (SLO)</h1>
+    <p>Excel se SLO import karo. Same <code>slo_code</code> dobara import = update (draft correction). Bloom khali ho to text ke verb se auto-suggest.</p>
+  </div>
+
+  <!-- Import card -->
+  <div class="card">
+    <h2>Excel se import</h2>
+    <p class="hint">Columns: <strong>class, subject, slo_code, slo_text</strong> (zaroori) · bloom_level, strand (optional) · book_pages (ignore). Extra columns theek hain.</p>
+    <div class="row">
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+      <button class="btn" id="importBtn">Import karo</button>
+      <a href="/api/slo/template" download class="btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Template download
+      </a>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="pills" id="pills"></div>
+      <table>
+        <thead><tr><th>Row</th><th>slo_code</th><th>Status</th><th>Reason</th></tr></thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- List card -->
+  <div class="card">
+    <h2>Maujooda SLO</h2>
+    <p class="hint">Filter kar ke dekho.</p>
+    <div class="row" style="margin-bottom:16px;">
+      <input type="text" id="fClass" placeholder="Class (e.g. Pre Year 1)" style="width:190px;" />
+      <input type="text" id="fSubject" placeholder="Subject (e.g. Mathematics)" style="width:190px;" />
+      <input type="text" id="fStrand" placeholder="Strand (e.g. Number)" style="width:160px;" />
+      <button class="btn-ghost" id="filterBtn">Dikhao</button>
+      <span id="listCount" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+    <table>
+      <thead><tr><th>slo_code</th><th>Strand</th><th>SLO text</th><th>Bloom</th></tr></thead>
+      <tbody id="listBody"></tbody>
+    </table>
+    <div class="empty-state" id="listEmpty" style="display:none;">Koi SLO nahi mila — upar se import karo.</div>
+  </div>
+</main>
+
+<script src="/apiClient.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])));
+
+  function bloomCell(v) {
+    if (!v) return '<span class="bloom empty">—</span>';
+    return '<span class="bloom">' + esc(v) + '</span>';
+  }
+
+  async function doImport() {
+    const file = $("fileInput").files[0];
+    if (!file) { alert("Pehle Excel file chuno."); return; }
+    $("importBtn").disabled = true;
+    $("importBtn").textContent = "Import ho raha hai…";
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch("/api/slo/import", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { alert(data.detail || "Import fail hua."); return; }
+      renderSummary(data);
+      loadList();
+    } catch (e) {
+      alert("Import mein masla: " + e.message);
+    } finally {
+      $("importBtn").disabled = false;
+      $("importBtn").textContent = "Import karo";
+    }
+  }
+
+  function renderSummary(data) {
+    $("pills").innerHTML =
+      '<span class="pill add">Added: ' + data.added + '</span>' +
+      '<span class="pill upd">Updated: ' + data.updated + '</span>' +
+      '<span class="pill err">Errors: ' + data.errors + '</span>';
+    $("summaryBody").innerHTML = (data.results || []).map((r) =>
+      '<tr><td>' + esc(r.row) + '</td>' +
+      '<td class="code">' + esc(r.slo_code) + '</td>' +
+      '<td class="status-' + esc(r.status) + '">' + esc(r.status) + '</td>' +
+      '<td>' + esc(r.reason || "") + '</td></tr>'
+    ).join("");
+    $("summary").style.display = "block";
+  }
+
+  async function loadList() {
+    const params = new URLSearchParams();
+    const c = $("fClass").value.trim(), s = $("fSubject").value.trim(), st = $("fStrand").value.trim();
+    if (c) params.set("class_name", c);
+    if (s) params.set("subject", s);
+    if (st) params.set("strand", st);
+    const res = await apiFetch("/api/slo?" + params.toString());
+    const data = await res.json();
+    const rows = data.slos || [];
+    $("listCount").textContent = "(" + (data.total || 0) + ")";
+    $("listEmpty").style.display = rows.length ? "none" : "block";
+    $("listBody").innerHTML = rows.map((r) =>
+      '<tr><td class="code">' + esc(r.slo_code) + '</td>' +
+      '<td>' + esc(r.strand || "") + '</td>' +
+      '<td>' + esc(r.slo_text) + '</td>' +
+      '<td>' + bloomCell(r.bloom_level) + '</td></tr>'
+    ).join("");
+  }
+
+  $("importBtn").addEventListener("click", doImport);
+  $("filterBtn").addEventListener("click", loadList);
+  loadList();
+</script>
+</body>
+</html>
