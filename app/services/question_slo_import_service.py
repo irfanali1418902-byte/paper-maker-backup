@@ -13,6 +13,7 @@ import saaf error deta hai (koi silent corruption nahi).
 from __future__ import annotations
 
 import io
+import re
 
 import openpyxl
 import pandas as pd
@@ -43,11 +44,26 @@ def resolve_slo_codes(codes_str: str) -> tuple[list, list]:
 
 # ── export ────────────────────────────────────────────────────────────────────
 
-def build_export_xlsx() -> bytes:
-    """Sab questions ka Excel: question_id (KEY — mat chhedo), subject, topic,
+def export_filename(grade: str | None = None, subject: str | None = None) -> str:
+    """Export ke liye dynamic filename. Filter tokens ko `_` se join, unsafe chars
+    ko `_` — misal grade='Pre Year 1', subject='Mathematics' ->
+    'slo_assign_export_Pre_Year_1_Mathematics.xlsx'. Koi filter na ho to purana
+    'slo_assign_export.xlsx'."""
+    parts = [p.strip() for p in (grade, subject) if p and p.strip()]
+    if not parts:
+        return "slo_assign_export.xlsx"
+    slug = "_".join(re.sub(r"[^A-Za-z0-9]+", "_", p).strip("_") for p in parts)
+    return f"slo_assign_export_{slug}.xlsx"
+
+
+def build_export_xlsx(grade: str | None = None, subject: str | None = None) -> bytes:
+    """Questions ka Excel: question_id (KEY — mat chhedo), subject, topic,
     question preview, aur current slo_code (comma-separated). Teacher slo_code
-    column bhar/edit kar ke wapas upload karta hai."""
-    questions = questions_repository.list_by_filters()
+    column bhar/edit kar ke wapas upload karta hai.
+
+    Optional grade/subject filter (dono khali = sab questions, backward compatible)
+    `questions_repository.list_for_slo_export` par delegate hota hai."""
+    questions = questions_repository.list_for_slo_export(grade=grade, subject=subject)
     codes_map = question_slo_repository.all_codes_by_question()
 
     wb = openpyxl.Workbook()

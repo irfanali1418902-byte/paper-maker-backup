@@ -42,14 +42,22 @@ def download_slo_template():
 
 
 @router.get("/api/questions/slo-export")
-def export_questions_for_slo_assign():
-    """Sab questions ka Excel (question_id + current slo_code) — bulk-assign ke
-    liye. Teacher slo_code column bhar/edit kar ke /api/slo/assign-import par upload karta hai."""
-    xlsx = question_slo_import_service.build_export_xlsx()
+def export_questions_for_slo_assign(
+    grade: Optional[str] = None,
+    subject: Optional[str] = None,
+):
+    """Questions ka Excel (question_id + current slo_code) — bulk-assign ke liye.
+    Teacher slo_code column bhar/edit kar ke /api/slo/assign-import par upload karta hai.
+
+    Optional filter: `?grade=Pre Year 1&subject=Math` (dono optional, khali = sab
+    questions). subject 'Math'/'Mathematics' dono match; grade syllabus_topics par
+    JOIN. Filename filter ke hisab se dynamic."""
+    xlsx = question_slo_import_service.build_export_xlsx(grade=grade, subject=subject)
+    filename = question_slo_import_service.export_filename(grade=grade, subject=subject)
     return Response(
         content=xlsx,
         media_type=_XLSX_MEDIA,
-        headers={"Content-Disposition": 'attachment; filename="slo_assign_export.xlsx"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

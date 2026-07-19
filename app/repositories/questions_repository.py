@@ -3,6 +3,7 @@
 from typing import Optional
 
 from app.core.database import get_connection
+from app.core.text_norm import normalize_subject
 
 
 def insert(question_row: dict) -> None:
@@ -270,6 +271,37 @@ def list_by_filters(
     rows = cur.execute(query, params).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def list_for_slo_export(
+    grade: Optional[str] = None,
+    subject: Optional[str] = None,
+) -> list:
+    """SLO-export ke liye questions — optional grade + subject filter. Koi filter
+    na ho to SAARE questions (purana backward-compatible behaviour).
+
+    * grade: `syllabus_topics.grade` par JOIN (case/whitespace-insensitive). Grade
+      dene par jin questions ka `syllabus_topic_id` NULL hai wo INNER JOIN se khud
+      EXCLUDE hote hain — yeh expected hai.
+    * subject: `normalize_subject()` se dono taraf normalize kar ke match
+      ('Math' == 'Mathematics'). Python-side filter taake DB variant bhi handle ho.
+    """
+    conn = get_connection()
+    query = "SELECT q.* FROM questions q"
+    params: list = []
+    if grade:
+        query += (
+            " JOIN syllabus_topics st ON q.syllabus_topic_id = st.id"
+            " WHERE LOWER(TRIM(st.grade)) = LOWER(TRIM(?))"
+        )
+        params.append(grade)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    result = [dict(row) for row in rows]
+    if subject:
+        target = normalize_subject(subject)
+        result = [r for r in result if normalize_subject(r.get("subject")) == target]
+    return result
 
 
 def bulk_update_meta(
