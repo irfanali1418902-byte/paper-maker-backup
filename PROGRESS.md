@@ -47,6 +47,37 @@ to "saare PY1 links" wala pehla broad target 161 sahi tags mita deta — target 
 
 ---
 
+## 2026-07-19 — feature/slo-export-class-filter (SLO export grade/subject filter)
+
+SLO bulk-assign export (`GET /api/questions/slo-export`) ab optional `?grade=&subject=`
+leta hai — kyunki export saare 317 Mathematics questions deta tha (Pre Year 1 ke ~197
+nahi), teacher ko tagging ke liye chhaant-na parta. **Backward compatible:** koi param na
+ho to purana sab-questions behaviour + `slo_assign_export.xlsx`.
+
+- **Naya `app/core/text_norm.py`** — `normalize_subject()`: alias **dict** (`math/maths →
+  mathematics`), hardcoded if-else NAHI (nayi alias add karna aasaan). Compare-time only, data untouched.
+- **`questions_repository.list_for_slo_export(grade, subject)`** (naya) — grade par
+  `syllabus_topics` JOIN (case/whitespace-insensitive); **`syllabus_topic_id` NULL wale grade
+  filter par khud EXCLUDE** (expected, INNER JOIN). subject dono-taraf `normalize_subject` se
+  Python-side filter — DB mein `Math`/`Mathematics` dono ho to bhi sahi.
+- **`question_slo_import_service`** — `build_export_xlsx(grade, subject)` (return **bytes hi**,
+  purane 2 export tests untouched) + naya `export_filename()` → dynamic naam
+  `slo_assign_export_Pre_Year_1_Mathematics.xlsx`. Columns waise hi 5 — koi naya nahi.
+- **`app/api/slo.py`** — route par optional query params + dynamic `Content-Disposition`.
+- **`static/slo.html`** — export par grade **`<select>`** (`/api/syllabus-grades` distinct se
+  populate — **hardcode NAHI**, nayi class add hote hi aa jaye) + subject input + button URL builder.
+
+**NOTE (code change NAHI kiya, sirf darj):** coverage universe (`slo_coverage_service`) abhi
+`normalize_subject` use nahi karta — `papers.subject` vs `slo.subject` par `LOWER(TRIM)` (alias
+nahi). Aaj teeno 'Mathematics' hain to theek; Math/Mathematics mismatch aaya to universe khali
+(covered SLO phir bhi dikhte, remaining/% None — crash nahi). [[project-papermaker-roadmap]] Hissa B se pehle chhota fit ho sakta.
+
+**Tests:** `tests/test_slo_export_filter.py` (8) — **seed-based, koi hardcoded 317/197 nahi**
+(apne `q1..q5`/`t_py1,t_py2` ke id-sets se assert). ruff clean; full suite **746 pass** (738 → 746).
+Browser test + merge/push teacher karega (GitHub Desktop).
+
+---
+
 ## 2026-07-18 — fix/paper-class-and-delete-warning (2 zinda bugs)
 
 SLO Marhala 2 Hissa A ke dauran nikle do data-masle ki tashkhees se: `class_name`

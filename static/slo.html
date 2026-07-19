@@ -170,11 +170,17 @@
       <strong>Qadam 3:</strong> wahi file yahan wapas upload karo.
       <br><span style="color:var(--err-tx);">⚠️ <code>question_id</code> column MAT chhedo — import isi se match karta hai (ghalat/gayab id par row saaf error deti hai, chup-chaap kharab nahi hoti).</span>
     </p>
-    <div class="row">
-      <a href="/api/questions/slo-export" download class="btn-ghost">
+    <div class="row" style="margin-bottom:10px;">
+      <select id="exGrade" style="width:180px;">
+        <option value="">Sab grade</option>
+      </select>
+      <input type="text" id="exSubject" placeholder="Subject (khali = sab)" style="width:190px;" />
+      <button class="btn-ghost" id="exportBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
         Questions Excel download
-      </a>
+      </button>
+    </div>
+    <div class="row">
       <input type="file" id="assignFile" accept=".xlsx,.xls,.csv" />
       <button class="btn" id="assignBtn">Assign upload</button>
     </div>
@@ -308,9 +314,37 @@
     $("assignSummary").style.display = "block";
   }
 
+  // Export grade dropdown DB se populate karo (hardcode nahi — nayi class add
+  // hone par khud aa jaye). /api/syllabus-grades distinct subject+grade deta hai.
+  async function loadExportGrades() {
+    try {
+      const res = await apiFetch("/api/syllabus-grades");
+      if (!res.ok) return;
+      const rows = await res.json();
+      const grades = [...new Set((rows || []).map((r) => r.grade).filter(Boolean))].sort();
+      const sel = $("exGrade");
+      grades.forEach((g) => {
+        const opt = document.createElement("option");
+        opt.value = g; opt.textContent = g;
+        sel.appendChild(opt);
+      });
+    } catch (e) { /* dropdown khali "Sab grade" par reh jayega — koi masla nahi */ }
+  }
+
+  function doExport() {
+    const params = new URLSearchParams();
+    const g = $("exGrade").value.trim(), s = $("exSubject").value.trim();
+    if (g) params.set("grade", g);
+    if (s) params.set("subject", s);
+    const qs = params.toString();
+    window.location.href = "/api/questions/slo-export" + (qs ? "?" + qs : "");
+  }
+
   $("importBtn").addEventListener("click", doImport);
   $("assignBtn").addEventListener("click", doAssign);
+  $("exportBtn").addEventListener("click", doExport);
   $("filterBtn").addEventListener("click", loadList);
+  loadExportGrades();
   loadList();
 </script>
 </body>
