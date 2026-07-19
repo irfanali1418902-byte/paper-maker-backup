@@ -63,6 +63,31 @@ def list_links_for_questions(question_ids: list) -> list:
     return [dict(row) for row in rows]
 
 
+def list_slo_blooms_for_questions(question_ids: list) -> list:
+    """Diye gaye question_ids ke liye (question_id -> SLO.bloom_level) rows —
+    Bloom shortfall report ki base (Marhala 2 Hissa B). Ek question kai SLO se
+    juda ho to kai rows (caller "highest" level lega). Orphan link INNER JOIN se
+    khud drop. bloom_level NULL bhi aa sakta (SLO tagged par bloom khali) —
+    caller usay 'bloom-unknown' alag ginta hai. Empty list de to empty result.
+
+    (Coverage ke `list_links_for_questions` se ALAG rakha — woh shared function
+    chherne se coverage ki query badalti; yeh focused hai.)"""
+    if not question_ids:
+        return []
+    unique_ids = list(dict.fromkeys(question_ids))
+    placeholders = ",".join("?" for _ in unique_ids)
+    conn = get_connection()
+    rows = conn.execute(
+        f"""SELECT qs.question_id, s.bloom_level
+            FROM question_slo qs
+            JOIN slo s ON s.id = qs.slo_id
+            WHERE qs.question_id IN ({placeholders})""",  # noqa: S608
+        unique_ids,
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def all_codes_by_question() -> dict:
     """Har question_id ke current slo_code (sorted) — ek JOIN se, export ke liye.
     Returns { question_id: [slo_code, ...] }. Orphan link INNER JOIN se drop."""

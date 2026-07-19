@@ -691,6 +691,7 @@
               <div id="results"></div>
             </details>
             <div id="sloCoverage"></div>
+            <div id="bloomShortfall"></div>
           </div>
 
           <div class="stack">
@@ -1675,6 +1676,7 @@ function renderPaperPreview(data) {
   if (!questions.length) {
     els.forEach(el => { el.innerHTML = '<div class="paper-empty">Is paper mein koi question nahi mila.</div>'; });
     const sc = document.getElementById('sloCoverage'); if (sc) sc.innerHTML = '';
+    const bs = document.getElementById('bloomShortfall'); if (bs) bs.innerHTML = '';
     return;
   }
   const nameEn = (val('schoolNameEn') || 'School Name').trim();
@@ -1712,9 +1714,9 @@ function renderPaperPreview(data) {
     ${qHtml}`;
   els.forEach(el => { el.innerHTML = html; });
 
-  // SLO coverage — lazy, non-blocking (paper preview ke saath)
+  // SLO coverage + Bloom shortfall — lazy, non-blocking (paper preview ke saath)
   const pid = data.paper_id || (typeof currentPaperId !== 'undefined' ? currentPaperId : null);
-  if (pid) loadSloCoverage(pid);
+  if (pid) { loadSloCoverage(pid); loadBloomShortfall(pid); }
 }
 
 // ================================================================
@@ -1784,6 +1786,87 @@ function renderSloCoverage(cov) {
     </table>
     ${remainingList}
     ${untagged}
+  </div>`;
+}
+
+// ================================================================
+// Bloom shortfall (Marhala 2 Hissa B) — paper ka asal Bloom distribution
+// (SLO bloom se) vs class standard. App adjust NAHI karta — teacher 3 option.
+// ================================================================
+async function loadBloomShortfall(paperId) {
+  const el = document.getElementById('bloomShortfall');
+  if (!el) return;
+  try {
+    const res = await apiFetch(`/api/paper/${encodeURIComponent(paperId)}/bloom-shortfall`);
+    if (!res.ok) { el.innerHTML = ''; return; }
+    renderBloomShortfall(await res.json());
+  } catch { el.innerHTML = ''; }
+}
+
+function renderBloomShortfall(sf) {
+  const el = document.getElementById('bloomShortfall');
+  if (!el || !sf) return;
+  const esc = escapeHtml;
+
+  // Excluded questions ki chhoti alag ginti (untagged vs bloom-unknown alag).
+  const notes = [];
+  if (sf.untagged_questions)
+    notes.push(`${sf.untagged_questions} sawal bina SLO tag`);
+  if (sf.bloom_unknown_questions)
+    notes.push(`${sf.bloom_unknown_questions} sawal ke SLO ka Bloom set nahi`);
+  const noteLine = notes.length
+    ? `<div style="font-size:12px;color:#a9722f;margin-top:6px;">⚠️ ${notes.join(' · ')} — distribution mein shumar nahi.</div>`
+    : '';
+  const multiLine = sf.multi_slo_questions
+    ? `<div style="font-size:12px;color:#5B6678;margin-top:4px;">ℹ️ ${sf.multi_slo_questions} sawal multi-SLO — ginti sabse <b>ऊंche</b> Bloom par hui.</div>`
+    : '';
+
+  // Distribution nahi bana (class set nahi / standard nahi / sab untagged) → graceful
+  if (!sf.distribution_available) {
+    el.innerHTML = `<div class="summary-box" style="background:#fbfaf7;">
+      <div class="t">Bloom Shortfall</div>
+      <div style="font-size:12.5px;color:#5B6678;">${esc(sf.message || '')}</div>
+      ${noteLine}
+    </div>`;
+    return;
+  }
+
+  const rows = sf.bloom_rows.map(r => {
+    const ok = r.short === 0;
+    const pct = r.needed ? Math.round(r.actual / r.needed * 100) : (r.actual ? 100 : 0);
+    const barColor = ok ? '#1d6e56' : pct >= 50 ? '#a9722f' : '#b3261e';
+    return `<tr>
+      <td style="padding:3px 8px;text-transform:capitalize;">${esc(r.bloom)}</td>
+      <td style="padding:3px 8px;text-align:center;">${r.needed}</td>
+      <td style="padding:3px 8px;text-align:center;">${r.actual}</td>
+      <td style="padding:3px 8px;text-align:center;color:${r.short ? '#b3261e' : '#1d6e56'};font-weight:600;">${r.short || '✓'}</td>
+      <td style="padding:3px 8px;min-width:70px;"><div style="background:#e6e9ee;border-radius:5px;height:8px;overflow:hidden;"><div style="width:${Math.min(100, pct)}%;height:100%;background:${barColor};"></div></div></td>
+    </tr>`;
+  }).join('');
+
+  // Shortfall ho to 3 option — app khud kuch NAHI karta, teacher chunta hai.
+  const options = sf.total_short
+    ? `<div style="font-size:12.5px;margin-top:10px;border-top:1px solid #eef1f5;padding-top:8px;">
+        <b style="color:#b3261e;">${sf.total_short} sawal ki kami (70/30 ke hisaab se).</b> Aap ke pass teen raaste:
+        <ol style="margin:6px 0 0;padding-left:20px;color:#3a4453;">
+          <li>Jo mil raha usi se paper banao (standard se thoda hat kar).</li>
+          <li>Kami doosre Bloom ke sawalon se poori karo.</li>
+          <li>Us Bloom ke naye sawal likho (ya SLO tag karo).</li>
+        </ol>
+        <div style="font-size:11.5px;color:#5B6678;margin-top:4px;">App khud kuch tabdeel nahi karta — faisla aap ka.</div>
+      </div>`
+    : `<div style="font-size:12.5px;color:#1d6e56;margin-top:8px;">✅ Distribution ${esc(sf.group || '')} standard ke mutabiq hai — koi kami nahi.</div>`;
+
+  el.innerHTML = `<div class="summary-box" style="background:#fbfaf7;">
+    <div class="t">Bloom Shortfall — ${esc(sf.group || '')} standard</div>
+    <div style="font-size:12.5px;color:#5B6678;">${sf.classifiable_questions} classifiable sawal par (SLO bloom se).</div>
+    <table style="font-size:12px;border-collapse:collapse;margin-top:6px;">
+      <tr style="color:#5B6678;"><th style="text-align:left;padding:3px 8px;">Bloom</th><th style="padding:3px 8px;">Chahiye</th><th style="padding:3px 8px;">Mil raha</th><th style="padding:3px 8px;">Kami</th><th style="padding:3px 8px;"></th></tr>
+      ${rows}
+    </table>
+    ${options}
+    ${multiLine}
+    ${noteLine}
   </div>`;
 }
 

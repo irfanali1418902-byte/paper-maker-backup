@@ -22,6 +22,7 @@ from app.services import (
     paper_service,
     result_service,
     slo_coverage_service,
+    slo_shortfall_service,
 )
 from app.services.exceptions import QuestionBankEmpty, ResultsValidationError
 
@@ -188,6 +189,22 @@ def get_paper_slo_coverage(paper_id: str):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"SLO coverage compute fail hui (DB error): {e}"
+        ) from e
+    if result is None:
+        raise HTTPException(status_code=404, detail="Paper nahi mila.")
+    return result
+
+
+@router.get("/api/paper/{paper_id}/bloom-shortfall")
+def get_paper_bloom_shortfall(paper_id: str):
+    """Is paper ka asal Bloom distribution (SLO ke bloom_level se) vs class standard
+    (Pre-Primary 70/30 wagaira) — per-Bloom kami (shortfall). App adjust NAHI karta,
+    sirf report. Live compute (JOIN). Class/standard/tag na ho to graceful message."""
+    try:
+        result = slo_shortfall_service.compute_shortfall(paper_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Bloom shortfall compute fail hui (DB error): {e}"
         ) from e
     if result is None:
         raise HTTPException(status_code=404, detail="Paper nahi mila.")

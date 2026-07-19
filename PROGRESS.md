@@ -1,5 +1,41 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-19 — feature/slo-phase-2b-shortfall (Bloom shortfall — Marhala 2 Hissa B)
+
+Paper ka asal Bloom distribution vs class standard (Pre-Primary 70/30) — per-Bloom
+**kami (shortfall)**. `GET /api/paper/{id}/bloom-shortfall` (coverage endpoint ke parallel).
+**App khud kuch adjust NAHI karta** — sirf report; teacher UI par 3 option chunta hai.
+
+**Faisla (darj):** Bloom source = **SLO ka `bloom_level`**, question ka nahi. Wajah: SLO book
+se soch kar bana (PY1 Math 31 remember/19 understand = 70/30 fit); question ka bloom auto-derive
++ mashkook ("Trace the number 3" par APPLY; 197 mein 80 APPLY = 41%, standard se door).
+
+- **`slo_shortfall_service.py`** (naya): SLO bloom se actual, `bloom_standards.get_bloom_suggestion`
+  se target %, **largest-remainder (Hamilton)** se target counts (sum = N). Per-Bloom
+  `{needed, actual, short}` + total_short. Live compute (JOIN), snapshot nahi.
+- **`question_slo_repository.list_slo_blooms_for_questions`** (naya) — question→SLO.bloom rows.
+  Coverage ka shared `list_links_for_questions` **NAHI chheda** (uski query na toote).
+- **`app/api/papers.py`** — naya route; **`static/index.html`** — Bloom Shortfall panel (SLO Coverage
+  ke neeche): per-Bloom bar + kami + **3 option** (jo mil raha usi se / doosre Bloom se / naye sawal).
+
+**Ahem faisle amal mein:**
+- **Multi-SLO** question → uske SLOs mein sabse **UNCHA (highest)** Bloom; UI par `ℹ️ N multi-SLO` nishaan.
+- **Denominator N** = classifiable questions (SLO-tagged AND bloom maloom).
+- **CASE-normalize** (`_norm` = LOWER+TRIM) har bloom par — `REMEMBER`(q) / `remember`(slo) /
+  `remember`(standard) sab ek jagah; warna ginti zero. (Source SLO hai, magar defensive.)
+- **untagged** (koi SLO link nahi) aur **bloom-unknown** (SLO tagged par bloom NULL) — **DO alag ginti**,
+  distribution se bahar (subject badalne par masla tagging ka hai ya SLO-data ka — farq zaroori).
+- Koi classifiable question na ho → panel ZERO nahi, **graceful message** (coverage `_no_universe` jaisa).
+
+**Tests:** `test_slo_shortfall_service.py` (11) + `test_slo_shortfall_api.py` (2) = 13 naye —
+seed-based, koi hardcoded bank-count nahi. ruff clean; full suite **759 pass** (746 → 759).
+Browser test + merge teacher karega.
+
+**Baqi:** Hissa C (SLO Health page) pending. Pre-generate shortfall (bank-availability) alag scope —
+abhi nahi (post-hoc pehle). Data gaps qaim: Pre-writing/C-05/C-06/Colour-Circle-11-24 (pichhli entry dekho).
+
+---
+
 ## 2026-07-19 — Pre Year 1 Math SLO tagging (DATA kaam, app code nahi)
 
 197 Pre Year 1 Mathematics questions ko SLO se tag kiya — coverage report ko zinda
