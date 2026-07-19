@@ -1,5 +1,52 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-19 — Pre Year 1 Math SLO tagging (DATA kaam, app code nahi)
+
+197 Pre Year 1 Mathematics questions ko SLO se tag kiya — coverage report ko zinda
+karne ke liye (pehle sirf 8 tagged the). Yeh mostly DATA kaam hai; app code touch
+nahi hua, do standalone one-shot scripts `scripts/` mein (branch `chore/slo-prefill-script`).
+
+**1. `scripts/prefill_slo_pre_year1_math.py`** (one-shot, read-only — DB mein kuch NAHI likhta):
+Question text ke template se slo_code khud derive karta hai (manual picker nahi):
+- Number: `Trace the number N` → N-03/N-11/N-16 · `Count..write`/`How many`/`There are`/Urdu
+  count+write → N-04/N-12/N-17 · `Colour` → N-06 · `Circle all` → N-07 — **range** 1-10/11-20/21-24
+  se sahi code. Colour/Circle sirf 1-10 (11-24 ka SLO nahi → khali).
+- Shape: `Trace the <shape>` text se · `Name this shape` MCQ ka **correct_answer_en** (answer-key)
+  se — S-01..S-04 (flat) / D-01..D-06 (solid).
+- Comparison: topic `Concept of "a" and "b"` se C-01..C-04.
+- Koi rule match na ho → khali (andaaza nahi).
+Output DO sheets ek Excel mein: **UPLOAD 161** (auto-filled) · **MANUAL 36** (28 khali +
+8 review). import `pd.read_excel(sheet_name=0)` = pehli sheet (UPLOAD) parhta hai (script verify karta).
+`.xlsx` gitignored (`scripts/*.xlsx`).
+
+**2. Teacher ne UPLOAD sheet import ki** (`/api/slo/assign-import`): **Updated 161, Errors 0**.
+Tagging 8 → **169 questions**.
+
+**3. 8 stray test-tags theek kiye** (bina delete ke): 8 `How many..are there?` MCQ par pichhle
+browser-test ka kachra tha (number question par D-01/C-01/S-01/W-01/N-01). Kyunki assign-import
+**replace-set** hai, `fix_8_stray_tags.xlsx` (8 rows, sab sahi **N-04**, range 1-10) upload se
+purana ghalat link khud replace ho gaya — alag delete ki zaroorat nahi. **Updated 8**.
+
+**4. `scripts/clean_stray_slo_links.py`** — dry-run cleanup helper (default sirf dikhata, delete
+`--delete` par). Is dafa **istemal NAHI hua** (replace-set behtar tha), aainda ke liye rakha.
+Iske dry-run ne ek bara khatra pakRa: table 8 nahi 169 links par tha (teacher upload ho chuki thi),
+to "saare PY1 links" wala pehla broad target 161 sahi tags mita deta — target ko precise
+(`How many` + non-count code) kiya, tab 8 dikhe.
+
+**TASDEEQ:** coverage report ab **zinda** — bare paper par **13/50 (26%)**, aur **Pre-writing 0/3**
+(pehle jhoota `1/3` dikh raha tha, kyunki number-8 question par ghalti se W-01 laga tha).
+
+**DATA GAP (report ne khud pakRa — aainda tagging/question-banane ke liye darj):**
+- **Pre-writing** ke teeno SLO (W-01/02/03) — bank mein ek bhi question nahi.
+- **Comparison C-05** (which has more/less) aur **C-06** (equal groups) — koi question nahi.
+- **Colour/Circle numbers 11-24** — in skills ka koi SLO define nahi (28 questions MANUAL sheet
+  mein khali chhoRe — inhe kabhi tag nahi kar sakte jab tak SLO na banein ya questions na haten).
+
+**Baqi:** Hissa B (shortfall 70/30) + Hissa C (SLO Health page) abhi bhi pending. `feature/slo-export-class-filter`
+(export grade/subject filter, 746 tests) bhi merge ke intezaar mein — alag branch.
+
+---
+
 ## 2026-07-18 — fix/paper-class-and-delete-warning (2 zinda bugs)
 
 SLO Marhala 2 Hissa A ke dauran nikle do data-masle ki tashkhees se: `class_name`
