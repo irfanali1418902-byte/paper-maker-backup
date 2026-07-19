@@ -34,3 +34,6 @@ backups/
 static/uploads/
 static/library/
 sample_slo_assign.xlsx
+
+# One-shot script ke generated Excel (data artifact, code nahi)
+scripts/*.xlsx
