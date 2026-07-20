@@ -7,7 +7,11 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 
 from app.repositories import slo_repository
-from app.services import question_slo_import_service, slo_import_service
+from app.services import (
+    question_slo_import_service,
+    slo_health_service,
+    slo_import_service,
+)
 
 _XLSX_MEDIA = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -27,6 +31,21 @@ def list_slos(
         class_name=class_name, subject=subject, strand=strand
     )
     return {"slos": slos, "total": len(slos)}
+
+
+@router.get("/api/slo-health")
+def get_slo_health(class_name: Optional[str] = None, subject: Optional[str] = None):
+    """SLO Health — dono taraf ka gap: bina (published) question wale SLO +
+    bina SLO tag wale (published) questions, plus per class/subject health line
+    aur "SLO import baqi". Optional class/subject filter. Live compute (JOIN)."""
+    try:
+        return slo_health_service.compute_health(
+            class_filter=class_name, subject_filter=subject
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"SLO health compute fail hui (DB error): {e}"
+        ) from e
 
 
 @router.get("/api/slo/template")

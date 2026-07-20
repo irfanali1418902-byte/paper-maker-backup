@@ -304,6 +304,29 @@ def list_for_slo_export(
     return result
 
 
+def list_published_with_grade_and_tag(school_id: Optional[str] = None) -> list:
+    """SLO Health ke liye — har PUBLISHED question ka `subject`, `grade` (syllabus_topic
+    se LEFT JOIN; NULL agar topic-link nahi = 'class na-maloom'), aur `is_tagged`
+    (kya woh kisi MAUJOODA SLO se juda hai — orphan link ko slo JOIN se count nahi
+    karte, covered ki tarah). draft/archived shumar NAHI.
+
+    `school_id` abhi use NAHI hota — multi-tenant ke liye jagah chhoR di gayi."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT q.id, q.subject, st.grade AS grade,
+                  CASE WHEN EXISTS (
+                      SELECT 1 FROM question_slo qs
+                      JOIN slo s ON s.id = qs.slo_id
+                      WHERE qs.question_id = q.id
+                  ) THEN 1 ELSE 0 END AS is_tagged
+           FROM questions q
+           LEFT JOIN syllabus_topics st ON q.syllabus_topic_id = st.id
+           WHERE q.status = 'published'"""
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def bulk_update_meta(
     question_ids: list,
     fields: dict,

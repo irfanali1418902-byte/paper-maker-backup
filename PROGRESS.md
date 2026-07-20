@@ -1,5 +1,54 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-19 — feat/slo-health (SLO Health page — Marhala 2 Hissa C)
+
+Ek page jo DONO taraf ka gap dikhata hai: (a) SLO jinke paas koi (published) question
+nahi, (b) (published) questions jinke paas koi SLO tag nahi. Plus per class/subject
+health line aur "SLO import baqi". `GET /api/slo-health` (coverage/shortfall ke parallel,
+magar paper-scoped nahi — poore data par). Live compute (JOIN), snapshot NAHI.
+
+**Sab se ahem:** page GENERAL hai — SAARI classes/subjects/strands ke liye. Koi class/
+subject/strand HARDCODE nahi (abhi sirf Pre Year 1 Math ka SLO data hai, magar Grade
+4/5/6 Math, Grade 7 Science, Grade 8 Geography syllabus mein maujood — aate hi khud aayenge).
+
+**Faisle amal mein:**
+- **Covered = SLO ke paas >=1 linked PUBLISHED question.** draft/archived shumar NAHI —
+  page par saaf note (`draft_note`).
+- **Questions par class column NAHI** (koi migration nahi kiya). grade `syllabus_topic`
+  se LEFT JOIN; jis question ka topic-link nahi uska grade na-maloom -> **"(class na-maloom)"**
+  bucket (Part 3 aur health line mein).
+- **`normalize_class`** naya (`app/core/text_norm.py`) — `normalize_subject` jaisa alias-dict
+  (abhi khali, structure mojood). Case/alias normalize har jagah: class, subject, bloom.
+- **Bloom NULL SLO -> "(bloom na-maloom)"** bucket (silently REMEMBER nahi maante).
+- **import_pending** = `syllabus_repository.list_distinct_subject_grade()` ke woh combos
+  jinka SLO group nahi.
+- **Filter** (class+subject) DB se distinct — dropdown response ke `classes`/`subjects`
+  se populate (hardcode nahi); filter server-side, magar dropdown lists hamesha POORE.
+
+**Naye REPO functions (coverage/shortfall ke shared functions NAHI chhede):**
+- `slo_repository.list_all()`
+- `question_slo_repository.slo_ids_with_published_questions()` (JOIN questions status='published')
+- `questions_repository.list_published_with_grade_and_tag()` (LEFT JOIN syllabus_topics for grade,
+  EXISTS+JOIN slo for is_tagged — orphan link ko tagged nahi ginta, covered jaisa).
+
+**MULTI-TENANT (abhi implement NAHI — sirf jagah):** teeno naye repo functions mein optional
+`school_id` param add kiya jo abhi use nahi hota — aage 100+ schools par `WHERE school_id = ?`
+yahin lagega bina signature tode. Service/route abhi ise pass nahi karte.
+
+**Files:** `app/services/slo_health_service.py` (naya) · `app/api/slo.py` (route) ·
+`static/slo-health.html` (naya page) · nav link **6 pages** (index, slo, bank, blueprint,
+library, print — user ne "5" kaha tha; print.html ka nav bhi maujood tha to consistency ke
+liye woh bhi). NOTE: bank/blueprint/library/print ke nav mein "Learning Outcomes" (slo.html)
+link pehle se nahi tha — sirf SLO Health add kiya (scope).
+
+**Tests:** `test_slo_health_service.py` (11) + `test_slo_health_api.py` (2) = 13 naye —
+seed-based, koi hardcoded DB count nahi (apne seeded id/norm-keys par assert). draft-covered,
+class-na-maloom, bloom-null, import-pending, filter, multi-class general — sab covered.
+
+**Baqi:** browser test + merge teacher karega. Pre-generate/blueprint integration alag scope.
+
+---
+
 ## 2026-07-19 — feature/slo-phase-2b-shortfall (Bloom shortfall — Marhala 2 Hissa B)
 
 Paper ka asal Bloom distribution vs class standard (Pre-Primary 70/30) — per-Bloom

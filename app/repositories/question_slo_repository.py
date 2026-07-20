@@ -88,6 +88,23 @@ def list_slo_blooms_for_questions(question_ids: list) -> list:
     return [dict(row) for row in rows]
 
 
+def slo_ids_with_published_questions(school_id: str | None = None) -> set:
+    """Un SLO ke id ka set jinke paas kam-az-kam ek PUBLISHED linked question hai
+    (SLO Health 'covered'). draft/archived question shumar NAHI. Orphan link
+    (question delete) INNER JOIN se khud drop.
+
+    `school_id` abhi use NAHI hota — multi-tenant ke liye jagah chhoR di gayi."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT DISTINCT qs.slo_id
+           FROM question_slo qs
+           JOIN questions q ON q.id = qs.question_id
+           WHERE q.status = 'published'"""
+    ).fetchall()
+    conn.close()
+    return {row["slo_id"] for row in rows}
+
+
 def all_codes_by_question() -> dict:
     """Har question_id ke current slo_code (sorted) — ek JOIN se, export ke liye.
     Returns { question_id: [slo_code, ...] }. Orphan link INNER JOIN se drop."""

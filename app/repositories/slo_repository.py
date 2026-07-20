@@ -80,6 +80,18 @@ def list_by_class_subject_normalized(class_name: str, subject: str) -> list:
     return [dict(row) for row in rows]
 
 
+def list_all(school_id: Optional[str] = None) -> list:
+    """SAARE SLO rows (SLO Health aggregate ke liye — coverage/shortfall paper-scoped
+    hain, yeh poore data par). slo_code se sorted.
+
+    `school_id` abhi use NAHI hota — multi-tenant (100+ schools) ke liye jagah
+    chhoR di gayi hai; aage `WHERE school_id = ?` yahin lagega."""
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM slo ORDER BY slo_code").fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def list_by_filters(
     class_name: Optional[str] = None,
     subject: Optional[str] = None,
