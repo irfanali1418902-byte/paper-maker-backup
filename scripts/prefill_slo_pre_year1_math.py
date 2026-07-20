@@ -5,17 +5,57 @@ chalta hai. App code / export route / API / static — kuch nahi chhoota. DB mei
 kuch NAHI likhta — sirf ek Excel banata hai jo seedha /api/slo/assign-import par
 upload ho sake.
 
-Mapping (text ka skill + number/shape se slo_code):
-  Number  "Trace the number N"                 -> N-03 (1-10) / N-11 (11-20) / N-16 (21-24)
+Branching TEXT par hai (topic par nahi) — question_en.lower() se rule chunte hain.
+Number/range sirf tie-break: pehle text ka number, warna topic ka quoted number,
+warna correct_answer_en ka number (count-match jaise sawaalon ke liye).
+
+Mapping (text ka skill -> slo_code; range 1-10 / 11-20 / 21-24):
+  Number  "Read and trace the number(s)"       -> N-03 / N-11 / N-16
           "Count..write" / "How many" /
-          "There are N.." / Urdu count+write   -> N-04       / N-12        / N-17
-          "Colour the X"                       -> N-06 (sirf 1-10, warna KHAALI)
-          "Circle all the X"                   -> N-07 (sirf 1-10, warna KHAALI)
-  Shape   "Trace the <shape>"                  -> shape-word se S-01..S-04 / D-01..D-06
-          "Name this shape" (MCQ)              -> correct_answer_en ke shape-word se wahi map
+          "There are N.." / Urdu count+write   -> N-04 / N-12 / N-17
+          "Colour the X"  (number-intro)       -> N-06 (sirf 1-10, warna KHAALI)
+          "Circle all the X" (number-intro)    -> N-07 (sirf 1-10, warna KHAALI)
+          "Recite the numbers"                 -> N-01 / N-09 / N-14
+          "Point to and identify the numeral"  -> N-02 / N-10 / N-15
+          "Match the numeral" / "which number
+           matches a group of N objects"       -> N-05 / N-13 / N-18
+          "Count the X and match"              -> N-17 (<=20) / N-18 (21-24)
+          "Write the number word" (N<=10)      -> N-08
+          "Write the missing number"           -> N-21
+          "Which number comes after"           -> N-22
+          "Which number comes before"          -> N-23
+          "Which number comes between"         -> N-24
+          "Count backward" / "backward from"   -> N-25
+          "Match each number..same number" /
+           "Write the numbers from..in order" /
+           "Say the numbers..in order"         -> N-19
+          "out of order" / "out of sequence"   -> N-20
+  Write   "Trace the standing/sleeping/
+           slanting lines"                     -> W-01
+          "Trace the .. curves"                -> W-02
+          "Hold the pencil" / "without going
+           outside"                            -> W-03
+  Solid   "Trace the <solid>"                  -> D-01..D-06 (shape-word)
+          "Match the <solid>"                  -> D-07
+          "Name a solid shape..everyday" /
+           "which solid shape"                 -> D-08
+  Flat    "Trace the <flat>"                   -> S-01..S-04 (shape-word)
+          "Trace and draw the <flat>"          -> S-05
+          "Colour the <flat>"                  -> S-06
+          "Match the <flat>"                   -> S-07
+          "Name a flat shape..everyday" /
+           "which flat shape"                  -> S-08
+          "Name this shape" (MCQ)              -> correct_answer_en ke shape-word se map
   Compare topic 'Concept of "a" and "b"'       -> small/big=C-01, light/heavy=C-02,
                                                   short/tall=C-03, thin/thick=C-04
+          "which group has more" / "more or
+           less" / "circle the group that has" -> C-05
+          "equal number" / "match the
+           groups..equal"                      -> C-06
   Koi rule match na ho                         -> KHAALI (andaaza nahi)
+
+NOT: object-colour/circle (11-24, jaise "Colour the ice creams") ke liye rule
+nahi — N-06/N-07 sirf 1-10 par lagte hain, in ke liye SLO nahi, is liye MANUAL.
 
 Codes par full prefix "MATH-PY1-" lagta hai (import exact slo_code match karta hai).
 Pehle se tagged questions ka maujooda code preserve hota hai (overwrite nahi).
@@ -53,6 +93,9 @@ SHAPE_CODE = {
     "cone": "D-05", "ovoid": "D-06",
 }
 
+FLAT_WORDS = {"circle", "square", "rectangle", "triangle"}
+SOLID_WORDS = {"cube", "cone", "sphere", "ovoid", "cuboid", "cylinder"}
+
 # comparison: dono words (topic mein quoted) -> code
 COMPARISON = [
     (("small", "big"), "C-01"),
@@ -61,8 +104,12 @@ COMPARISON = [
     (("thin", "thick"), "C-04"),
 ]
 
-TRACE_BY_RANGE = ["N-03", "N-11", "N-16"]   # 1-10, 11-20, 21-24
+# range index 0/1/2 -> 1-10 / 11-20 / 21-24
+TRACE_BY_RANGE = ["N-03", "N-11", "N-16"]
 COUNT_BY_RANGE = ["N-04", "N-12", "N-17"]
+RECITE_BY_RANGE = ["N-01", "N-09", "N-14"]
+POINT_BY_RANGE = ["N-02", "N-10", "N-15"]
+NUMERAL_GROUP_BY_RANGE = ["N-05", "N-13", "N-18"]   # match numeral <-> group of objects
 
 
 def _num_range(n: int) -> int | None:
@@ -76,17 +123,22 @@ def _num_range(n: int) -> int | None:
     return None
 
 
-def _extract_number(topic: str, text: str) -> int | None:
-    """Pehle topic ke quoted number (Introduction of number "3"..) se, warna text se."""
-    m = re.search(r'number\s*"?(\d+)"?', topic, re.IGNORECASE)
+def _extract_number(text: str, topic: str = "", answer: str = "") -> int | None:
+    """Tie-break number: pehle text ka pehla number, warna topic ka quoted
+    number (Introduction of number "3"..), warna correct_answer ka number
+    (count-the-X-and-match jaise sawaal jinke text mein number nahi hota)."""
+    m = re.search(r"(\d+)", text)
     if not m:
-        m = re.search(r"(\d+)", text)
+        m = re.search(r'number\s*"?(\d+)"?', topic, re.IGNORECASE)
+    if not m:
+        m = re.search(r"(\d+)", answer)
     return int(m.group(1)) if m else None
 
 
 def prefill_one(q: dict, existing: dict[str, list[str]]) -> tuple[str, str]:
     """Return (slo_code_str, rule_label). slo_code_str khali = MANUAL.
 
+    Branching question TEXT par hai; topic/answer sirf range tie-break.
     Pehle se tagged questions ka maujooda code lauta deta hai (preserve)."""
     qid = q["id"]
     if qid in existing:
@@ -97,26 +149,95 @@ def prefill_one(q: dict, existing: dict[str, list[str]]) -> tuple[str, str]:
     en = (q.get("question_en") or "").strip()
     ur = (q.get("question_ur") or "").strip()
     topic = (q.get("topic") or "")
+    ans = (q.get("correct_answer_en") or "").strip()
     t = en.lower()
     tl = topic.lower()
 
     def full(short: str) -> str:
         return CODE_PREFIX + short
 
-    # Branch priority: NUMBER pehle. (Number-introduction topic ka naam
-    # 'Introduction of number "3" it\'s value and shape' hai — usme lafz "shape"
-    # bhi hai, is liye "shape in topic" se pehle number-topic detect karna zaroori,
-    # warna number-intro questions ghalti se SHAPE branch mein chale jate hain.)
-    is_number_topic = bool(re.search(r'number\s*"?\d', tl))
+    n = _extract_number(en, topic, ans)   # text -> topic -> answer
+    r = _num_range(n) if n is not None else None
 
-    # ── NUMBER ───────────────────────────────────────────────────────────────
-    if is_number_topic:
-        n = _extract_number(topic, en)
-        r = _num_range(n) if n is not None else None
-        if r is None:
-            return "", "MANUAL"
-        if "trace the number" in t:
-            return full(TRACE_BY_RANGE[r]), f"number-trace(N={n})"
+    # ── PRE-WRITING (W) ──────────────────────────────────────────────────────
+    if "trace the standing" in t or "trace the sleeping" in t or "trace the slanting" in t:
+        return full("W-01"), "write-lines"
+    if "trace the" in t and "curve" in t:
+        return full("W-02"), "write-curves"
+    if "hold the pencil" in t or "without going outside" in t:
+        return full("W-03"), "write-grip"
+
+    # ── SHAPE: flat + solid (text ke shape-word par) ─────────────────────────
+    for name, code in SHAPE_CODE.items():
+        if f"trace the {name}" in t:              # "Trace the circle/cube.."
+            return full(code), f"shape-trace:{name}"
+    if any(f"trace and draw the {w}" in t for w in FLAT_WORDS):
+        return full("S-05"), "flat-trace-draw"
+    if any(f"colour the {w}" in t for w in FLAT_WORDS):
+        return full("S-06"), "flat-colour"
+    if any(f"match the {w}" in t for w in FLAT_WORDS):
+        return full("S-07"), "flat-match"
+    if any(f"match the {w}" in t for w in SOLID_WORDS):
+        return full("D-07"), "solid-match"
+    if "name a flat shape" in t or "which flat shape" in t:
+        return full("S-08"), "flat-everyday"
+    if "name a solid shape" in t or "which solid shape" in t:
+        return full("D-08"), "solid-everyday"
+    if "name this shape" in t:
+        a = ans.lower()
+        if a in SHAPE_CODE:
+            return full(SHAPE_CODE[a]), f"shape-name:{a}"
+        return "", "MANUAL"
+
+    # ── COMPARISON (C) ───────────────────────────────────────────────────────
+    if "concept of" in tl:                        # topic-based small/big.. (purana)
+        for words, code in COMPARISON:
+            if all(f'"{w}"' in tl for w in words):
+                return full(code), "comparison"
+        return "", "MANUAL"
+    if "which group has more" in t or "more or less" in t or "circle the group that has" in t:
+        return full("C-05"), "compare-more"
+    if "equal number" in t or ("equal" in t and "match the groups" in t):
+        return full("C-06"), "compare-equal"
+
+    # ── NUMBER (N): text-based skills ────────────────────────────────────────
+    if "read and trace the number" in t and r is not None:
+        return full(TRACE_BY_RANGE[r]), f"number-trace(N={n})"
+    if "trace the number" in t and r is not None:     # purana "Trace the number N"
+        return full(TRACE_BY_RANGE[r]), f"number-trace(N={n})"
+    if "recite the numbers" in t and r is not None:
+        return full(RECITE_BY_RANGE[r]), f"number-recite(N={n})"
+    if "point to and identify the numeral" in t and r is not None:
+        return full(POINT_BY_RANGE[r]), f"number-point(N={n})"
+    if "write the missing number" in t:
+        return full("N-21"), "number-missing"
+    if "which number comes after" in t:
+        return full("N-22"), "number-after"
+    if "which number comes before" in t:
+        return full("N-23"), "number-before"
+    if "which number comes between" in t:
+        return full("N-24"), "number-between"
+    if "count backward" in t or "backward from" in t or "numbers backward" in t:
+        return full("N-25"), "number-backward"
+    if "number word" in t:
+        return (full("N-08"), f"number-word(N={n})") if (n or 0) <= 10 else ("", "MANUAL")
+    if ("match the numeral" in t or "which number matches a group" in t) and r is not None:
+        return full(NUMERAL_GROUP_BY_RANGE[r]), f"numeral-group(N={n})"
+    if re.search(r"count the \w+ and match", t) and r is not None:
+        code = "N-18" if r == 2 else "N-17"
+        return full(code), f"count-match(N={n})"
+    if ("match each number" in t and "same number" in t) \
+       or ("write the numbers from" in t and "in order" in t) \
+       or ("say the numbers" in t and "in" in t and "order" in t):
+        return full("N-19"), "number-sequence"
+    if "out of order" in t or "out of sequence" in t:
+        return full("N-20"), "number-out-of-order"
+
+    # ── NUMBER-INTRO (quoted number topic): purane colour/circle/count rules ─
+    # In ke text mein number nahi hota; range topic se aata hai. Object-colour/
+    # circle (11-24) yahin r!=0 hone se MANUAL rehte hain — N-06/N-07 sirf 1-10.
+    is_number_topic = bool(re.search(r'number\s*"?\d', tl))
+    if is_number_topic and r is not None:
         if "colour" in t or "color" in t:
             return (full("N-06"), f"number-colour(N={n})") if r == 0 else ("", "MANUAL")
         if "circle" in t:
@@ -126,25 +247,6 @@ def prefill_one(q: dict, existing: dict[str, list[str]]) -> tuple[str, str]:
             return full(COUNT_BY_RANGE[r]), f"number-count(N={n})"
         if not en and ur:  # Urdu count+write jorra (question_en khali)
             return full(COUNT_BY_RANGE[r]), f"number-count-urdu(N={n})"
-        return "", "MANUAL"
-
-    # ── COMPARISON ───────────────────────────────────────────────────────────
-    if "concept of" in tl:
-        for words, code in COMPARISON:
-            if all(f'"{w}"' in tl for w in words):
-                return full(code), "comparison"
-        return "", "MANUAL"
-
-    # ── SHAPE ────────────────────────────────────────────────────────────────
-    if "shape" in tl:
-        for name, code in SHAPE_CODE.items():
-            if f"trace the {name}" in t:
-                return full(code), f"shape-trace:{name}"
-        if "name this shape" in t:
-            ans = (q.get("correct_answer_en") or "").strip().lower()
-            if ans in SHAPE_CODE:
-                return full(SHAPE_CODE[ans]), f"shape-name:{ans}"
-        return "", "MANUAL"
 
     return "", "MANUAL"
 
