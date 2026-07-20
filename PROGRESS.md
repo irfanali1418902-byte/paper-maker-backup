@@ -47,6 +47,12 @@ class-na-maloom, bloom-null, import-pending, filter, multi-class general — sab
 
 **Baqi:** browser test + merge teacher karega. Pre-generate/blueprint integration alag scope.
 
+**FUTURE (idea — implement nahi):** Blueprint shortfall warning behtar karna. Abhi sirf
+"Section A: 20 maange, 8 mile" dikhata hai. Behtar yeh ho ke **wajah** bhi bataye (kaunsi
+shart tang hai) aur **teen option** de — bilkul Hissa B ke Bloom shortfall ki tarah:
+(a) jo mil raha usi se banao, (b) filan shart hata do -> itne milenge, (c) naye questions
+likho. App khud chup-chaap adjust NA kare.
+
 ---
 
 ## 2026-07-19 — feature/slo-phase-2b-shortfall (Bloom shortfall — Marhala 2 Hissa B)
