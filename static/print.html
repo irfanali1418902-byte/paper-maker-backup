@@ -357,6 +357,18 @@
     background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px;
     padding: 6px 12px; font-size: 12.5px; color: #7b5c00; margin: 0 0 10px;
   }
+  /* Per-section shortfall panel — blueprint jaisa (reason + read-only options).
+     display:block .no-print ke inline-flex ko override karta hai. */
+  .shortfall-panel {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px;
+    padding: 8px 12px; color: #7b5c00; margin: 0 0 10px; display: block;
+  }
+  .shortfall-panel .sf-head { font-size: 12.5px; font-weight: 700; }
+  .shortfall-panel .sf-reason { font-size: 12.5px; margin-top: 3px; }
+  .shortfall-panel .sf-q { font-size: 12.5px; font-weight: 600; margin-top: 7px; }
+  .shortfall-panel .sf-options { list-style: disc; margin: 3px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .shortfall-panel .sf-options li { margin-top: 2px; }
+  .shortfall-panel .sf-gain { font-weight: 600; }
 
   /* ---- Library picker modal ---- */
   .lib-picker-overlay {
@@ -1094,6 +1106,35 @@ async function printWithImagesLoaded() {
   window.print();
 }
 
+// Per-section shortfall — shortfall_reason/options ho (naye blueprint papers) to
+// backend jaisa panel (heading + wajah + read-only options), warna purana numeric
+// note. Dono screen-only (.no-print) — kaghaz par kuch nahi. Options CLICKABLE
+// nahi; teacher blueprint page se blueprint badalta hai.
+function sectionShortfallHtml(sec, gotCount) {
+  if (!(sec.shortfall > 0)) return '';
+  const wanted = (sec.shortfall || 0) + gotCount;
+
+  if (sec.shortfall_reason) {
+    let html = '<div class="shortfall-panel no-print">';
+    html += `<div class="sf-head">⚠️ ${escapeHtml(sec.heading)} — ${wanted} chahiyen, ${gotCount} mile</div>`;
+    html += `<div class="sf-reason">${escapeHtml(sec.shortfall_reason)}</div>`;
+    const options = sec.shortfall_options || [];
+    if (options.length) {
+      html += '<div class="sf-q">Kya karein?</div><ul class="sf-options">';
+      options.forEach(o => {
+        html += (o.filter === null || o.filter === undefined)
+          ? `<li>${escapeHtml(o.label)}</li>`
+          : `<li>${escapeHtml(o.label)} <span class="sf-gain">→ ${o.would_give} milenge</span></li>`;
+      });
+      html += '</ul>';
+    }
+    return html + '</div>';
+  }
+
+  // Fallback — purane papers jinke sections_meta mein reason/options nahi
+  return `<div class="shortfall-note no-print">⚠️ ${escapeHtml(sec.heading)}: ${wanted} maange, ${gotCount} mile</div>`;
+}
+
 async function loadPaper() {
   const paperId = getParam('paper_id');
   if (!paperId) {
@@ -1149,10 +1190,7 @@ async function loadPaper() {
         qNum += secQs.length;
 
         // Shortfall note — screen only, hidden in @media print via .no-print
-        const wanted = (sec.shortfall || 0) + secQs.length;
-        const shortfallHtml = sec.shortfall > 0
-          ? `<div class="shortfall-note no-print">⚠️ ${escapeHtml(sec.heading)}: ${wanted} maange, ${secQs.length} mile</div>`
-          : '';
+        const shortfallHtml = sectionShortfallHtml(sec, secQs.length);
 
         container.insertAdjacentHTML('beforeend', `
           <div class="section-block">

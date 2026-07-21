@@ -93,8 +93,9 @@ def assemble_blueprint_paper(
         # Shortfall ki soorat mein hi diagnostic — normal generation par ek bhi
         # faltu query nahi. Reason + actionable options deta hai (UI nahi chherta).
         got = len(picked)
+        diag = None
         if got < wanted:
-            shortfall_details.append(_diagnose_shortfall(
+            diag = _diagnose_shortfall(
                 subject,
                 topic_ids=topic_ids,
                 question_types=qtypes,
@@ -107,7 +108,8 @@ def assemble_blueprint_paper(
                 wanted=wanted,
                 got=got,
                 heading=heading,
-            ))
+            )
+            shortfall_details.append(diag)
 
         for q in picked:
             questions_repository.increment_usage_count(q["id"])
@@ -115,12 +117,19 @@ def assemble_blueprint_paper(
         sec_qids  = [q["id"] for q in picked]
         sec_marks = sum(marks_each for _ in picked)
 
-        sections_meta.append({
+        # reason + options ko sections_meta mein bhi rakho — paper insert ke baad
+        # shortfall_details discard ho jaati hai; print.html isi persisted copy se
+        # panel banata hai (blueprint jaisa). Legacy papers mein yeh keys nahi hotin.
+        section_meta = {
             "heading":      heading,
             "question_ids": sec_qids,
             "marks":        sec_marks,
             "shortfall":    wanted - len(picked),
-        })
+        }
+        if diag:
+            section_meta["shortfall_reason"]  = diag["reason"]
+            section_meta["shortfall_options"] = diag["options"]
+        sections_meta.append(section_meta)
 
         all_question_ids.extend(sec_qids)
         all_questions.extend(picked)

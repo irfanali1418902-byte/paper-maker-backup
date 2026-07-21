@@ -276,6 +276,37 @@ class TestReasonMinSoloRule:
         assert opts[0]["filter"] != "bloom_level"
 
 
+# ── sections_meta persistence: reason+options print.html ke liye store hon ──────
+
+class TestSectionsMetaPersistence:
+    def test_short_section_meta_carries_reason_and_options(self, client):
+        """Short section ki sections_meta mein reason + options ho (print.html
+        wahin se panel banata hai — shortfall_details insert ke baad discard hoti)."""
+        for _ in range(8):
+            _insert_q(bloom_level="APPLY")
+        for _ in range(16):
+            _insert_q(bloom_level="UNDERSTAND")
+        res = _post(client, [_section(heading="Section A", count=20, bloom_filter="APPLY")])
+        assert res.status_code == 200
+        meta = res.json()["sections_meta"][0]
+        assert meta["shortfall"] == 12
+        assert "Bloom" in meta["shortfall_reason"] and "APPLY" in meta["shortfall_reason"]
+        bloom_opt = next(o for o in meta["shortfall_options"] if o["filter"] == "bloom_level")
+        assert bloom_opt["would_give"] == 24
+        assert meta["shortfall_options"][-1]["filter"] is None
+
+    def test_full_section_meta_has_no_shortfall_keys(self, client):
+        """Poore section ki meta mein reason/options keys bilkul na hon."""
+        for _ in range(5):
+            _insert_q()
+        res = _post(client, [_section(count=3)])
+        assert res.status_code == 200
+        meta = res.json()["sections_meta"][0]
+        assert meta["shortfall"] == 0
+        assert "shortfall_reason" not in meta
+        assert "shortfall_options" not in meta
+
+
 # ── multi-section: har shortfall section apna detail ────────────────────────────
 
 class TestMultiSection:

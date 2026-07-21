@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-21 — feature/print-shortfall (print.html panel + sections_meta persistence)
+
+Maqsad: print.html blueprint jaisa shortfall payghaam dikhaye (reason + read-only
+options), do jagah alag wording ka khatra khatam. Masla (pichle session ka STOP):
+`shortfall_details` (reason/options) DB mein **mehfooz nahi hoti** — assembly ke waqt
+banti hai phir discard. Sirf `sections_meta` bachti hai (heading/question_ids/marks/
+shortfall-int). Isliye backend change laazmi tha.
+
+**Faisla (Option 1):** reason/options ko **`sections_meta` ke andar** hi rakho (alag
+column/migration nahi). Short section par hi keys aati hain; poore section par bilkul nahi.
+
+- `app/services/blueprint_paper_service.py` — short section ki meta mein `shortfall_reason`
+  + `shortfall_options` embed (`diag` se). Full section = keys hi nahi.
+- `static/print.html` — naya `sectionShortfallHtml(sec, gotCount)`: `shortfall_reason` ho
+  to panel (heading + wajah + read-only options), warna **purana numeric note**
+  (`{wanted} maange, {n} mile`). Options **clickable nahi**. Naya `.shortfall-panel`
+  CSS (`display:block` — `.no-print` ke inline-flex ko override).
+- `tests/test_blueprint_shortfall_reason.py` — `TestSectionsMetaPersistence` (short →
+  reason+options meta mein; full → keys absent).
+
+**SHART (poori hui):** purane papers ke `sections_meta` mein reason/options nahi →
+**numeric-note fallback** chalta hai (bilkul pehle jaisa). `.no-print` usool bar-qarar —
+dono branch screen-only, kaghaz par kuch nahi.
+
+**Real-DB check:** 79 papers, 0 JSON parse-fail, 0 shape-issue → koi page nahi tootta.
+27 legacy short-sections (shortfall>0, no reason) → numeric note. 0 sections mein abhi
+reason (kuch regenerate nahi hua).
+
+**Verify:** **784 tests pass, ruff clean.** (Uncommitted working-tree changes — commit
+Irfan ke kehne par.) Browser render (panel + Ctrl+P par note gayab) baqi — Irfan ka test.
+
 ## 2026-07-21 — feature/design-base (Brand config + local fonts + icon sprite)
 
 Sirf **tanzeem** ka kaam — **koi visual badlaav NAHI**, pages bilkul pehle jaise. Teen
