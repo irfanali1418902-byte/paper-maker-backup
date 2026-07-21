@@ -15,6 +15,7 @@ from app.api import (
     adaptive_results,
     bloom_suggestions,
     blueprints,
+    brand,
     dashboard,
     export,
     library,
@@ -65,6 +66,10 @@ init_db()
 # Har /api router API-key auth ke peeche. Static `/` mount (neeche) khula rehta
 # hai taake frontend HTML/JS bina key ke load ho sake.
 _api_auth = [Depends(require_api_key)]
+# Branding cosmetic shell hai (koi secret/DB/AI-cost nahi) aur har page load par
+# chahiye — is liye ye jaan-boojh kar auth ke bahar hai, static `/` ki tarah. Warna
+# key set hone se pehle har page par key-gate khul jata.
+app.include_router(brand.router)
 app.include_router(adaptive_results.router, dependencies=_api_auth)
 app.include_router(bloom_suggestions.router, dependencies=_api_auth)
 app.include_router(blueprints.router, dependencies=_api_auth)
@@ -81,4 +86,9 @@ app.include_router(stats.router, dependencies=_api_auth)
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi
 # launch ho, file resolve ho jaye.
 _STATIC_DIR = Path(__file__).parent.parent / "static"
+# Naye organized assets (app.css, fonts, icons.svg, brand/, js/) `/static/...` par
+# serve hote hain. Ye `/` catch-all se PEHLE register hota hai warna root-mount
+# `/static/x` ko khud handle karne ki koshish karta. Legacy `/apiClient.js` waghera
+# root mount se aate rehte hain.
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static-assets")
 app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="static")

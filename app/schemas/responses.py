@@ -349,3 +349,15 @@ class DashboardResponse(BaseModel):
     students: List[StudentResult]
     questions: List[QuestionStat]
     bloom_breakdown: List[BloomStat]
+
+
+class BrandResponse(BaseModel):
+    """App branding read from config/brand.json — consumed by static/js/brand.js
+    to set the document title and sidebar name/tag."""
+
+    name: str
+    full_name: str
+    tagline: str
+    logo: str
+    primary: str
+    navy: str
