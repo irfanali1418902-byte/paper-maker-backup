@@ -43,6 +43,7 @@ def assemble_blueprint_paper(
     all_questions: list[dict] = []
     sections_meta: list[dict] = []
     shortfall_notes: list[str] = []
+    shortfall_details: list[dict] = []
 
     for sec in sections_input:
         heading       = sec.get("heading", "Section")
@@ -89,6 +90,25 @@ def assemble_blueprint_paper(
 
         shortfall_notes.extend(sec_shortfall_notes)
 
+        # Shortfall ki soorat mein hi diagnostic — normal generation par ek bhi
+        # faltu query nahi. Reason + actionable options deta hai (UI nahi chherta).
+        got = len(picked)
+        if got < wanted:
+            shortfall_details.append(_diagnose_shortfall(
+                subject,
+                topic_ids=topic_ids,
+                question_types=qtypes,
+                source=source_arg,
+                status=status_filter,
+                difficulty=difficulty_filter,
+                bloom_level=bloom_filter,
+                distribution=distribution,
+                language_filter=language_filter,
+                wanted=wanted,
+                got=got,
+                heading=heading,
+            ))
+
         for q in picked:
             questions_repository.increment_usage_count(q["id"])
 
@@ -130,6 +150,7 @@ def assemble_blueprint_paper(
         "questions":       all_questions,
         "sections_meta":   sections_meta,
         "shortfall_notes": shortfall_notes,
+        "shortfall_details": shortfall_details,
         "balance_summary": item_analysis_service.summarize_paper_balance(all_questions),
     }
 
@@ -235,6 +256,126 @@ def _fetch_with_distribution(
         used_ids.update(q["id"] for q in extra)
 
     return picked, notes
+
+
+def _diagnose_shortfall(
+    subject: Optional[str],
+    *,
+    topic_ids: list,
+    question_types: list,
+    source: Optional[str],
+    status: str,
+    difficulty: Optional[str],
+    bloom_level: Optional[str],
+    distribution: Optional[dict],
+    language_filter: Optional[str],
+    wanted: int,
+    got: int,
+    heading: str,
+) -> dict:
+    """Shortfall ki WAJAH + actionable OPTIONS. SIRF got < wanted par call hota hai.
+
+    Har LAGI HUI shart ko baari-baari (sirf ek, baqi waise hi) hata kar dobara
+    ginti karta hai. Jo shart hatane se sab se zyada faida ho wohi 'tang' hai —
+    usi se reason banta. would_give sirf ginti hai, koi paper assemble nahi hota.
+
+    Sirf woh filters test hote hain jo section mein WAQAI lage hue hain (None/khali
+    shart test karna faltu query + ghalat option deta). Distribution wale section
+    mein ginti _fetch_with_distribution se hoti hai taake used_ids/slice ka hisaab
+    theek rahe (raw SQL count over-count karta). Simple section mein raw pool count.
+    """
+    lang_word = {"en": "English", "ur": "Urdu"}.get(language_filter or "", "")
+
+    # (key, active?, neutral-override, option-label, reason-phrase)
+    tests = [
+        ("bloom_level", bool(bloom_level), {"bloom_level": None},
+         "Bloom shart hata dein",
+         f"Bloom '{bloom_level}' ki shart tang hai — us ke sirf {got} questions hain"),
+        ("difficulty", bool(difficulty), {"difficulty": None},
+         "Difficulty shart hata dein",
+         f"Difficulty '{difficulty}' ki shart tang hai — us ke sirf {got} questions hain"),
+        ("question_types", bool(question_types), {"question_types": []},
+         "Question type shart hata dein",
+         f"Question type ki shart tang hai — us ke sirf {got} questions hain"),
+        ("topic_ids", bool(topic_ids), {"topic_ids": []},
+         "Topic barha dein (poora subject)",
+         f"Chune gaye topics tang hain — un mein sirf {got} questions hain"),
+        ("language_filter", bool(language_filter), {"language_filter": None},
+         "Language shart hata dein (dono zabaan)",
+         f"{lang_word} only ki shart tang hai — us ke sirf {got} questions hain"),
+        ("status", status != "all", {"status": "all"},
+         "Draft/archived bhi shamil karein",
+         f"Sirf published ki shart tang hai — us ke sirf {got} questions hain"),
+    ]
+
+    def _would_give(override: dict) -> int:
+        if distribution:
+            # Distribution mode: asal fill logic dobara chalao (used_ids + per-bucket
+            # slice replicate hote hain). 'difficulty' yahan top-level shart nahi.
+            kwargs = dict(
+                subject=subject,
+                topic_ids=topic_ids,
+                question_types=question_types,
+                source=source,
+                status=status,
+                bloom_level=bloom_level,
+                distribution=distribution,
+                wanted=wanted,
+                heading=heading,
+                language_filter=language_filter,
+            )
+            kwargs.update(override)
+            picked, _ = _fetch_with_distribution(**kwargs)
+            return len(picked)
+        # Simple mode: raw available pool (uncapped) — teacher ko batata hai kitne
+        # questions maujood hain (misaal: 8 -> 24).
+        kwargs = dict(
+            subject=subject,
+            topic_ids=topic_ids,
+            question_types=question_types,
+            source=source,
+            status=status,
+            difficulty=difficulty,
+            bloom_level=bloom_level,
+            language_filter=language_filter,
+        )
+        kwargs.update(override)
+        return len(questions_repository.find_for_blueprint_section(**kwargs))
+
+    scored = []
+    for _key, active, override, label, reason in tests:
+        if not active:
+            continue
+        wg = _would_give(override)
+        if wg > got:
+            scored.append((wg, _key, label, reason))
+
+    # Sab se zyada faida pehle — reason bhi isi (tang-tareen) shart se.
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    if scored:
+        reason = scored[0][3]
+    else:
+        reason = (
+            f"Filters hata kar bhi sirf {got} questions milte hain — is subject/topic "
+            f"mein itne hi maujood hain"
+        )
+
+    # Zyada se zyada 2 filter-options (faida ke lehaz se), phir hamesha aakhri
+    # "jitne mile utne par paper" option. Total <= 3.
+    options = [
+        {"filter": key, "label": label, "would_give": wg}
+        for (wg, key, label, _reason) in scored[:2]
+    ]
+    options.append({"filter": None, "label": f"{got} par hi paper banayen", "would_give": got})
+
+    return {
+        "heading": heading,
+        "wanted": wanted,
+        "got": got,
+        "reason": reason,
+        "options": options,
+    }
 
 
 def _resolve_title(paper_title: Optional[str], subject: str, class_name: Optional[str]) -> str:
