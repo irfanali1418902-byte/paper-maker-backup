@@ -134,7 +134,8 @@ class TestSimpleShortfall:
         assert d["heading"] == "Section A"
         assert d["wanted"] == 20
         assert d["got"] == 8
-        assert "Bloom" in d["reason"] and "APPLY" in d["reason"]
+        # reason = tang shart ki APNI ginti (solo_count); yahan bloom solo == 8
+        assert "Bloom" in d["reason"] and "APPLY" in d["reason"] and "8" in d["reason"]
 
         opts = d["options"]
         assert len(opts) <= 3
@@ -171,17 +172,18 @@ class TestSimpleShortfall:
         assert res.status_code == 200
         d = res.json()["shortfall_details"][0]
         assert d["got"] == 5
-        # topic hatane se sab se zyada (30) → reason topic
-        assert "opic" in d["reason"]
+        # reason: topic ki APNI ginti (solo=15) sab se kam → reason topic, count 15
+        assert "opic" in d["reason"] and "15" in d["reason"]
         opts = d["options"]
         assert len(opts) == 3
         assert opts[0]["filter"] == "topic_ids" and opts[0]["would_give"] == 30
         assert opts[1]["filter"] == "bloom_level" and opts[1]["would_give"] == 15
         assert opts[2]["filter"] is None and opts[2]["would_give"] == 5
 
-    def test_no_helpful_filter_generic_reason(self, client):
-        """Sirf 3 questions maujood; 10 maange. Koi filter hatane se faida nahi
-        (subject mein itne hi hain) → generic reason + sirf 'make paper' option."""
+    def test_no_helpful_filter_still_names_tightest(self, client):
+        """Sirf 3 APPLY maujood; 10 maange. Koi filter hatane se faida nahi →
+        options sirf 'make paper'. Lekin reason phir bhi tang shart (bloom, solo=3)
+        naam le — generic nahi (kyunke bloom shart waqai lagi hui hai)."""
         for _ in range(3):
             _insert_q(bloom_level="APPLY")
         res = _post(client, [_section(count=10, bloom_filter="APPLY")])
@@ -189,7 +191,7 @@ class TestSimpleShortfall:
         d = res.json()["shortfall_details"][0]
         assert d["got"] == 3
         assert d["options"] == [{"filter": None, "label": "3 par hi paper banayen", "would_give": 3}]
-        assert "3" in d["reason"]
+        assert "Bloom" in d["reason"] and "APPLY" in d["reason"] and "3" in d["reason"]
 
 
 # ── distribution shortfall: KHAAS MASLA (would_give via fill logic) ──────────────
@@ -218,10 +220,60 @@ class TestDistributionShortfall:
         d = body["shortfall_details"][0]
         assert d["got"] == 2
         assert d["wanted"] == 6
+        # reason: bloom ki apni ginti (solo=2 APPLY) sab se kam — solo raw hai (no dist)
+        assert "Bloom" in d["reason"] and "APPLY" in d["reason"] and "2" in d["reason"]
         bloom_opt = next(o for o in d["options"] if o["filter"] == "bloom_level")
         assert bloom_opt["would_give"] == 6  # NOT 8 (raw) — fill logic
         assert d["options"][-1]["filter"] is None
         assert d["options"][-1]["would_give"] == 2
+
+
+# ── REASON rule: min solo_count (options rule: max would_give) — divergence ──────
+
+class TestReasonMinSoloRule:
+    def test_reason_from_min_solo_not_max_would_give(self, client):
+        """3 shartein aisi ke reason (min solo) aur option[0] (max would_give)
+        ALAG filter par aayen — nayi rule ki asal jaanch.
+
+        Cells (bloom, topic, type):  A=APPLY U=UNDERSTAND  E=essay M=multiple-choice
+          A,T1,E=2 (got)  A,T1,M=6  A,T2,E=1  U,T1,E=3  U,T2,E=10  U,T2,M=10
+        solo:      bloom=9(min)  topic=11  type=16
+        would_give: type=8(max)  bloom=5   topic=3
+        → reason = BLOOM (solo 9); option[0] = QUESTION_TYPES (would_give 8).
+        """
+        def q(topic, bloom, qtype, n):
+            for _ in range(n):
+                _insert_q(subject="DivTest", topic_id=topic, bloom_level=bloom, qtype=qtype)
+        q("dt-t1", "APPLY", "essay", 2)          # got
+        q("dt-t1", "APPLY", "multiple-choice", 6)
+        q("dt-t2", "APPLY", "essay", 1)
+        q("dt-t1", "UNDERSTAND", "essay", 3)
+        q("dt-t2", "UNDERSTAND", "essay", 10)
+        q("dt-t2", "UNDERSTAND", "multiple-choice", 10)
+
+        sec = _section(
+            count=20,
+            question_types=["essay"],
+            topic_ids=["dt-t1"],
+            bloom_filter="APPLY",
+            source_filter="all",
+        )
+        res = _post(client, [sec], subject="DivTest")
+        assert res.status_code == 200
+        d = res.json()["shortfall_details"][0]
+        assert d["got"] == 2
+
+        # REASON: bloom (solo 9) — got (2) ya would_give se nahi
+        assert "Bloom" in d["reason"] and "APPLY" in d["reason"] and "9" in d["reason"]
+
+        opts = d["options"]
+        assert len(opts) == 3
+        # OPTIONS: would_give desc — pehla question_types (8), phir bloom (5)
+        assert opts[0]["filter"] == "question_types" and opts[0]["would_give"] == 8
+        assert opts[1]["filter"] == "bloom_level" and opts[1]["would_give"] == 5
+        assert opts[2]["filter"] is None and opts[2]["would_give"] == 2
+        # reason-filter (bloom) != top-option-filter (question_types)
+        assert opts[0]["filter"] != "bloom_level"
 
 
 # ── multi-section: har shortfall section apna detail ────────────────────────────

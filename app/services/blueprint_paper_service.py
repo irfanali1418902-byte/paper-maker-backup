@@ -275,37 +275,39 @@ def _diagnose_shortfall(
 ) -> dict:
     """Shortfall ki WAJAH + actionable OPTIONS. SIRF got < wanted par call hota hai.
 
-    Har LAGI HUI shart ko baari-baari (sirf ek, baqi waise hi) hata kar dobara
-    ginti karta hai. Jo shart hatane se sab se zyada faida ho wohi 'tang' hai —
-    usi se reason banta. would_give sirf ginti hai, koi paper assemble nahi hota.
+    Do alag ginti (sirf LAGI HUI shartein test hoti hain):
+      - solo_count : sirf yeh shart, baqi sab (diagnosable) hata kar. REASON ke liye —
+                     'tang' shart wohi jis ki APNI ginti sab se KAM ho.
+      - would_give : sirf yeh shart hata kar, baqi waise. OPTIONS ke liye — un ka
+                     tarteeb would_give ke desc order mein (sab se zyada faida pehle).
 
-    Sirf woh filters test hote hain jo section mein WAQAI lage hue hain (None/khali
-    shart test karna faltu query + ghalat option deta). Distribution wale section
-    mein ginti _fetch_with_distribution se hoti hai taake used_ids/slice ka hisaab
-    theek rahe (raw SQL count over-count karta). Simple section mein raw pool count.
+    Distribution wale section mein would_give _fetch_with_distribution se hoti hai
+    taake used_ids/slice ka hisaab theek rahe (raw SQL count over-count karta).
+    solo_count hamesha ek saada pool-count hai (koi distribution/cap nahi) — us shart
+    ke apne questions kitne hain. would_give sirf ginti hai, koi paper assemble nahi.
     """
     lang_word = {"en": "English", "ur": "Urdu"}.get(language_filter or "", "")
 
-    # (key, active?, neutral-override, option-label, reason-phrase)
-    tests = [
+    # (key, active?, would_give-override, option-label, reason-phrase(solo_count))
+    specs = [
         ("bloom_level", bool(bloom_level), {"bloom_level": None},
          "Bloom shart hata dein",
-         f"Bloom '{bloom_level}' ki shart tang hai — us ke sirf {got} questions hain"),
+         lambda n: f"Bloom '{bloom_level}' ke is subject mein sirf {n} questions hain"),
         ("difficulty", bool(difficulty), {"difficulty": None},
          "Difficulty shart hata dein",
-         f"Difficulty '{difficulty}' ki shart tang hai — us ke sirf {got} questions hain"),
+         lambda n: f"Difficulty '{difficulty}' ke is subject mein sirf {n} questions hain"),
         ("question_types", bool(question_types), {"question_types": []},
          "Question type shart hata dein",
-         f"Question type ki shart tang hai — us ke sirf {got} questions hain"),
+         lambda n: f"Is question type ke is subject mein sirf {n} questions hain"),
         ("topic_ids", bool(topic_ids), {"topic_ids": []},
          "Topic barha dein (poora subject)",
-         f"Chune gaye topics tang hain — un mein sirf {got} questions hain"),
+         lambda n: f"Chune gaye topics mein sirf {n} questions hain"),
         ("language_filter", bool(language_filter), {"language_filter": None},
          "Language shart hata dein (dono zabaan)",
-         f"{lang_word} only ki shart tang hai — us ke sirf {got} questions hain"),
+         lambda n: f"{lang_word} mein is subject ke sirf {n} questions hain"),
         ("status", status != "all", {"status": "all"},
          "Draft/archived bhi shamil karein",
-         f"Sirf published ki shart tang hai — us ke sirf {got} questions hain"),
+         lambda n: f"'{status}' status ke sirf {n} questions hain"),
     ]
 
     def _would_give(override: dict) -> int:
@@ -342,30 +344,47 @@ def _diagnose_shortfall(
         kwargs.update(override)
         return len(questions_repository.find_for_blueprint_section(**kwargs))
 
-    scored = []
-    for _key, active, override, label, reason in tests:
-        if not active:
-            continue
-        wg = _would_give(override)
-        if wg > got:
-            scored.append((wg, _key, label, reason))
+    def _solo_count(key: str) -> int:
+        # Sirf yeh ek shart; baqi diagnosable shartein neutral. subject + source
+        # (jo diagnosable nahi) waise hi rehte. Koi distribution/cap nahi.
+        kwargs = dict(
+            subject=subject, source=source,
+            topic_ids=[], question_types=[], status="all",
+            difficulty=None, bloom_level=None, language_filter=None,
+        )
+        section_values = {
+            "bloom_level": bloom_level,
+            "difficulty": difficulty,
+            "question_types": question_types,
+            "topic_ids": topic_ids,
+            "language_filter": language_filter,
+            "status": status,
+        }
+        kwargs[key] = section_values[key]
+        return len(questions_repository.find_for_blueprint_section(**kwargs))
 
-    # Sab se zyada faida pehle — reason bhi isi (tang-tareen) shart se.
+    active = [(key, ov, label, reason_fn) for (key, act, ov, label, reason_fn) in specs if act]
+
+    # REASON: tang shart = jis ki APNI ginti (solo_count) sab se KAM. Ties -> pehla.
+    if active:
+        solo = {key: _solo_count(key) for (key, _ov, _label, _rfn) in active}
+        tight_key, _ov, _label, tight_rfn = min(active, key=lambda a: solo[a[0]])
+        reason = tight_rfn(solo[tight_key])
+    else:
+        reason = f"Is subject mein sirf {got} questions maujood hain"
+
+    # OPTIONS: sirf faida-mand (would_give > got), would_give ke desc order mein,
+    # max 2 filter-options, phir hamesha aakhri "jitne mile utne par" option.
+    scored = []
+    for key, ov, label, _rfn in active:
+        wg = _would_give(ov)
+        if wg > got:
+            scored.append((wg, key, label))
     scored.sort(key=lambda x: x[0], reverse=True)
 
-    if scored:
-        reason = scored[0][3]
-    else:
-        reason = (
-            f"Filters hata kar bhi sirf {got} questions milte hain — is subject/topic "
-            f"mein itne hi maujood hain"
-        )
-
-    # Zyada se zyada 2 filter-options (faida ke lehaz se), phir hamesha aakhri
-    # "jitne mile utne par paper" option. Total <= 3.
     options = [
         {"filter": key, "label": label, "would_give": wg}
-        for (wg, key, label, _reason) in scored[:2]
+        for (wg, key, label) in scored[:2]
     ]
     options.append({"filter": None, "label": f"{got} par hi paper banayen", "would_give": got})
 
