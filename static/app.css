@@ -52,3 +52,6 @@
   src: url('/static/fonts/NotoNastaliqUrdu-SemiBold.woff2') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
 }
+
+/* ---- Icon sprite (icons.svg via <use>) ---- */
+.icon { width: 17px; height: 17px; flex-shrink: 0; }
