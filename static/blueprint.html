@@ -198,6 +198,18 @@
     font-size: 12.5px; color: var(--warn-tx); background: var(--warn-bg);
     padding: 5px 10px; border-radius: 6px;
   }
+  /* Per-section shortfall panels (reason + read-only options). Warn tokens only. */
+  .shortfall-panels { margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  .shortfall-panel {
+    background: var(--surface); border-left: 3px solid var(--warn-tx);
+    color: var(--warn-tx); padding: 8px 11px; border-radius: 6px;
+  }
+  .shortfall-panel .sf-head { font-size: 12.5px; font-weight: 700; }
+  .shortfall-panel .sf-reason { font-size: 12.5px; margin-top: 3px; }
+  .shortfall-panel .sf-q { font-size: 12.5px; font-weight: 600; margin-top: 7px; }
+  .shortfall-panel .sf-options { list-style: disc; margin: 3px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .shortfall-panel .sf-options li { margin-top: 2px; }
+  .shortfall-panel .sf-gain { font-weight: 600; }
 
   /* ---- Filter section (new: status/difficulty/bloom/distribution) ---- */
   .filter-section { margin-top: 14px; border-top: 1px solid #dce5f3; padding-top: 14px; }
@@ -946,12 +958,10 @@ async function makePaper() {
       return;
     }
 
-    // Show shortfall warnings if any
-    if (data.shortfall_notes && data.shortfall_notes.length) {
-      let html = `<strong>⚠️ Paper ban gaya (${data.questions.length} questions, ${data.total_marks} marks)</strong> — lekin kuch sections mein questions kam mile:<ul class="shortfall-list">`;
-      data.shortfall_notes.forEach(n => { html += `<li>${escHtml(n)}</li>`; });
-      html += '</ul>';
-      setStatusHtml('warn', html);
+    // Show shortfall warnings if any (per-section panels; notes fallback)
+    if ((data.shortfall_details && data.shortfall_details.length) ||
+        (data.shortfall_notes && data.shortfall_notes.length)) {
+      setStatusHtml('warn', shortfallHtml(data));
     } else {
       setStatus('ok', `✅ ${data.questions.length} questions, ${data.total_marks} marks — print view khul raha hai...`);
     }
@@ -1069,11 +1079,9 @@ async function paperFromSaved(bpId, bpName) {
       setStatus('err', '❌ ' + detail);
       return;
     }
-    if (data.shortfall_notes && data.shortfall_notes.length) {
-      let html = `<strong>⚠️ Paper ban gaya (${data.questions.length} q, ${data.total_marks} marks)</strong> — shortfall:<ul class="shortfall-list">`;
-      data.shortfall_notes.forEach(n => { html += `<li>${escHtml(n)}</li>`; });
-      html += '</ul>';
-      setStatusHtml('warn', html);
+    if ((data.shortfall_details && data.shortfall_details.length) ||
+        (data.shortfall_notes && data.shortfall_notes.length)) {
+      setStatusHtml('warn', shortfallHtml(data));
     } else {
       setStatus('ok', `✅ ${data.questions.length} questions — print view khul raha hai...`);
     }
@@ -1125,6 +1133,37 @@ function escHtml(s) {
 }
 function escAttr(s) {
   return String(s).replace(/'/g, "\\'");
+}
+
+// Shortfall message HTML — shortfall_details ho to per-section panels (reason +
+// read-only options), warna purana shortfall_notes fallback. Options CLICKABLE
+// NAHI — teacher khud upar ja kar blueprint badalta hai (Hissa B ka usool).
+function shortfallHtml(data) {
+  const header = `<strong>⚠️ Paper ban gaya (${data.questions.length} questions, ${data.total_marks} marks)</strong> — lekin kuch sections mein questions kam mile:`;
+  const details = data.shortfall_details;
+  if (details && details.length) {
+    let html = header + '<div class="shortfall-panels">';
+    details.forEach(d => {
+      html += '<div class="shortfall-panel">';
+      html += `<div class="sf-head">⚠️ ${escHtml(d.heading)} — ${d.wanted} chahiyen, ${d.got} mile</div>`;
+      html += `<div class="sf-reason">${escHtml(d.reason)}</div>`;
+      if (d.options && d.options.length) {
+        html += '<div class="sf-q">Kya karein?</div><ul class="sf-options">';
+        d.options.forEach(o => {
+          html += (o.filter === null)
+            ? `<li>${escHtml(o.label)}</li>`
+            : `<li>${escHtml(o.label)} <span class="sf-gain">→ ${o.would_give} milenge</span></li>`;
+        });
+        html += '</ul>';
+      }
+      html += '</div>';
+    });
+    return html + '</div>';
+  }
+  // Fallback — purana notes format (details na aaye to bhi toot na jaye)
+  let html = header + '<ul class="shortfall-list">';
+  (data.shortfall_notes || []).forEach(n => { html += `<li>${escHtml(n)}</li>`; });
+  return html + '</ul>';
 }
 </script>
 </body>
