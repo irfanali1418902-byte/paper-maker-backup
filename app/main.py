@@ -38,10 +38,16 @@ app = FastAPI(title="AII Smart Paper Maker - Phase 1")
 # koi cache-busting nahi chahiye. HTML/JS ko haath nahi lagate (woh deploy pe badalte hain —
 # StaticFiles ka default ETag/304 revalidation unke liye theek hai).
 @app.middleware("http")
-async def _cache_control_for_library_images(request, call_next):
+async def _cache_control_for_immutable_assets(request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if path.startswith("/library/") and path.endswith(".webp"):
+    # Library WebP: filename UUID hai, content kabhi nahi badalta.
+    # Bundled fonts (.woff2): woh kabhi nahi badalte. Dono par 1-saal immutable safe.
+    # app.css / icons.svg par jaan-boojh kar koi long cache NAHI (deploy pe badal
+    # sakti hain) — StaticFiles ka default ETag/304 revalidation unke liye theek hai.
+    if (path.startswith("/library/") and path.endswith(".webp")) or (
+        path.startswith("/static/fonts/") and path.endswith(".woff2")
+    ):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
 
