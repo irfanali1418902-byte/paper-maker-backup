@@ -1,5 +1,68 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-21 — feature/design-base (Brand config + local fonts + icon sprite)
+
+Sirf **tanzeem** ka kaam — **koi visual badlaav NAHI**, pages bilkul pehle jaise. Teen
+QADAM, teen alag commits. Maqsad: branding ek jagah se, app fully offline (fonts local),
+aur nav icons ek sprite se.
+
+**QADAM 1 — Brand config:**
+- `config/brand.json` (Parcha / "Parcha Paper Maker" / "Exam paper generator" / colours).
+- `app/services/brand_service.py` — **startup par ek dafa** parhta hai (module-load), file
+  missing/kharab ho to **crash NAHI** — safe defaults + `uvicorn.error` warning. `get_brand()`.
+- `GET /api/brand` (`app/api/brand.py`, `BrandResponse` schema). **Jaan-boojh kar auth ke
+  bahar (public)** — cosmetic shell hai (koi secret/DB/AI-cost nahi) aur har page load par
+  chahiye; auth ke peeche hota to key set hone se pehle har page par key-gate khul jata.
+- `static/js/brand.js` — `/api/brand` se `document.title` (`<page> — full_name`) + sidebar
+  `.brand .name` set. Defaults baked (config jaise) → fetch fail par bhi sahi text, **koi FOUC nahi**.
+- Sab 7 pages: `<body data-page="...">`, hardcoded **"AII Smart Paper Maker" → "Parcha Paper
+  Maker"**, brand.js include. (`.brand .name` par **full_name** dikhta hai — pehle jaisa full
+  naam.)
+- `index.html`: `.sidebar` → **`.app-sidebar`**, `.nav-link` → **`.app-nav a`** (baqi 6 pages
+  jaise). Safe kyunke active-state JS `[data-nav]`/`data-active` par chalta hai, class par nahi.
+
+**QADAM 2 — Fonts local (offline):**
+- 9 woff2 `static/fonts/` mein: **IBM Plex Sans** 400/500/600/700, **Noto Nastaliq Urdu**
+  400/600, **Source Serif 4** 400/600/700 (fontsource CDN = official fonts, per-weight).
+- `static/app.css` `@font-face` (sab `font-display: swap`).
+- Sab pages se Google Fonts ke **3 links** (2 preconnect + css) hataye → `<link rel="stylesheet"
+  href="/static/app.css">`.
+- Cache middleware: `/static/fonts/*.woff2` par **1-saal immutable**; `app.css`/`icons.svg`
+  par jaan-boojh kar **koi long cache nahi** (StaticFiles ka default ETag/304).
+- `.urdu/.ur` stack (sirf index mein defined) pehle se **Jameel-first** — koi tabdeeli nahi.
+
+**QADAM 3 — Icon sprite:**
+- `static/icons.svg` — **10 unique `<symbol>`** (i-generator/library/bank/blueprint/outcomes/
+  slo-health/adaptive/analytics/mypapers/settings), sab `viewBox 0 0 24 24`, stroke 1.8, round.
+- `.icon { 17px }` app.css mein; **index apne `.app-nav a svg` se 19px** rakhta hai (index ke
+  icons pehle 19px the — chhote na hon, no-visual-change).
+- 6 sidebar pages ke inline nav SVG → `<svg class="icon"><use href="/static/icons.svg#i-..."></use></svg>`.
+- `static/brand/logo.svg` (mojooda navy+blue document mark, standalone — abhi koi consumer nahi).
+- `print.html` **chhua nahi** (text-only nav, koi icon nahi — scope ke mutabiq).
+
+**FAISLE / spec se hatt kar (jaan-boojh kar):**
+- **Source Serif 4 bundle kiya** — font-list mein nahi tha, magar index ke paper-preview mein
+  use hota hai (`Georgia` fallback). No-visual-change + offline honor karne ke liye zaroori,
+  warna offline preview Georgia par gir jata.
+- **`/static` mount naya add** kiya (`app/main.py`) — spec ke saare asset paths `/static/...`
+  maangte the, app pehle sirf `/` par mount tha. Legacy `/apiClient.js` waise hi chalta hai.
+- Fontsource ka **"latin" subset** — extended-Latin/doosre scripts system font par fall back
+  (UI text ke liye kaafi).
+- **`/api/brand` public** rakha (upar wajah).
+
+**BAQI (follow-up, is scope se bahar):** `index.html` ke tip-text mein 3 jagah **"AII"** copy
+bacha hai ("AII suggests", "AII PDF/images parse karke…") — sidebar brand naam nahi, body copy
+hai; 1d ne sirf "AII Smart/… Paper Maker" naam kaha tha.
+
+**Files:** naye — `config/brand.json`, `app/api/brand.py`, `app/services/brand_service.py`,
+`static/js/brand.js`, `static/app.css`, `static/icons.svg`, `static/brand/logo.svg`,
+`static/fonts/*.woff2` (9). Chhue — `app/main.py`, `app/schemas/responses.py`, sab 7 static HTML.
+
+**Verify:** **772 tests pass, ruff clean.** Server smoke (curl): saare 7 pages + app.css +
+icons.svg + logo.svg + brand.js + `/api/brand` + 9 fonts → **200**; fonts par 1yr immutable,
+css/svg par sirf ETag. **Browser render (icons `<use>`, font visual, Urdu RTL, print preview,
+OFFLINE) baqi — Irfan ka incognito test** (Claude-in-Chrome extension is env mein connect nahi tha).
+
 ## 2026-07-19 — feat/slo-health (SLO Health page — Marhala 2 Hissa C)
 
 Ek page jo DONO taraf ka gap dikhata hai: (a) SLO jinke paas koi (published) question
