@@ -68,6 +68,20 @@
   }
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
+  /* Collapsible "Naya question add karo" — print.html ke Print Settings jaisa */
+  .add-q-collapse { padding: 0; }
+  .add-q-collapse > .add-q-summary {
+    list-style: none; cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 0; padding: 18px 22px;
+  }
+  .add-q-collapse > .add-q-summary::-webkit-details-marker { display: none; }
+  .add-q-collapse[open] > .add-q-summary { border-bottom: 1px solid var(--border); }
+  .add-q-arrow { font-size: 11px; color: var(--muted); transition: transform .15s ease; }
+  .add-q-collapse[open] .add-q-arrow { transform: rotate(90deg); }
+  .add-q-hint { font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .add-q-body { padding: 20px 22px 22px; }
+
   /* ---- Form elements ---- */
   label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
@@ -399,9 +413,14 @@
   </div>
 
   <!-- ===== ADD QUESTION FORM ===== -->
-  <div class="card">
-    <div class="card-title">Naya question add karo</div>
+  <details class="card add-q-collapse" id="addQCard">
+    <summary class="card-title add-q-summary">
+      <span class="add-q-arrow">▶</span>
+      <span>➕ Naya question add karo</span>
+      <span class="add-q-hint">— main zyadatar Excel se add karta hoon; kholne ke liye click</span>
+    </summary>
 
+    <div class="add-q-body">
     <!-- Cascade: Subject → Class → Topic -->
     <div class="field-row">
       <div>
@@ -602,7 +621,8 @@
       </button>
     </div>
     <div class="status-bar" id="addStatus"></div>
-  </div>
+    </div><!-- /.add-q-body -->
+  </details>
 
   <!-- ===== BANK PAPER GENERATOR ===== -->
   <div class="card bp-card">

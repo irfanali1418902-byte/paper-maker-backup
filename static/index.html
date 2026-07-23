@@ -536,7 +536,8 @@
             <input id="pdfSubject" placeholder="e.g. Mathematics" />
 
             <label data-i18n="form.classGrade2">Class/Grade</label>
-            <input id="pdfGrade" placeholder="e.g. Grade 4" />
+            <input id="pdfGrade" list="pdfGradeOptions" placeholder="Maujooda mein se chuno ya naya likho" />
+            <datalist id="pdfGradeOptions"></datalist>
 
             <label data-i18n="form.singlePdf">Single PDF (text-based ya scanned)</label>
             <input type="file" id="pdfFile" accept=".pdf" />
@@ -1294,6 +1295,19 @@ async function loadSyllabusGrades() {
       opt.textContent = s;
       subjectSelect.appendChild(opt);
     });
+    // Syllabus upload page ka Class/Grade — datalist se maujooda grades suggest karo
+    // (consistency: 'Grade 4' vs 'grade 4' bikharao rok). Ye CREATION field hai, is
+    // liye strict dropdown nahi — nayi class ka syllabus add karne ke liye naya value
+    // bhi likha ja sakta hai.
+    const gradeList = document.getElementById('pdfGradeOptions');
+    if (gradeList) {
+      gradeList.innerHTML = '';
+      [...new Set(_allGrades.map(g => g.grade).filter(Boolean))].sort().forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        gradeList.appendChild(opt);
+      });
+    }
   } catch (e) {
     console.error('Syllabus grades load failed:', e);
   }

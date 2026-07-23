@@ -33,6 +33,13 @@ def list_slos(
     return {"slos": slos, "total": len(slos)}
 
 
+@router.get("/api/slo/facets")
+def get_slo_facets():
+    """Filter dropdowns ke liye — slo table ke distinct class/subject values.
+    Free-text ki jagah dropdown inhi se banta hai (exact match, list khali nahi)."""
+    return slo_repository.list_distinct_facets()
+
+
 @router.get("/api/slo-health")
 def get_slo_health(class_name: Optional[str] = None, subject: Optional[str] = None):
     """SLO Health — dono taraf ka gap: bina (published) question wale SLO +

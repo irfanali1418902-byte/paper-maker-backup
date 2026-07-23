@@ -92,6 +92,26 @@ def list_all(school_id: Optional[str] = None) -> list:
     return [dict(row) for row in rows]
 
 
+def list_distinct_facets() -> dict:
+    """Filter dropdowns ke liye — slo table mein jo class/subject values SACH-MUCH
+    maujood hain unki distinct, sorted list. Wajah: list filter (`list_by_filters`)
+    EXACT match karta hai, is liye free-text mein zara sa farq ('Pre year 1' vs
+    'PRE YEAR 1') list khali kar deta tha. Dropdown ab inhi stored values se banta
+    hai → har option guaranteed match."""
+    conn = get_connection()
+    classes = conn.execute(
+        "SELECT DISTINCT class FROM slo WHERE class IS NOT NULL AND TRIM(class) <> '' ORDER BY class"
+    ).fetchall()
+    subjects = conn.execute(
+        "SELECT DISTINCT subject FROM slo WHERE subject IS NOT NULL AND TRIM(subject) <> '' ORDER BY subject"
+    ).fetchall()
+    conn.close()
+    return {
+        "classes": [row["class"] for row in classes],
+        "subjects": [row["subject"] for row in subjects],
+    }
+
+
 def list_by_filters(
     class_name: Optional[str] = None,
     subject: Optional[str] = None,

@@ -1,5 +1,53 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — UI: class fields free-text → dropdown (KAAM 2)
+
+Maqsad: free-text class/subject se data bikhar jata tha — 'Pre year 1' vs stored
+'PRE YEAR 1'. Aaj isi wajah se SLO list KHALI dikhi thi. Root cause: SLO list filter
+(`slo_repository.list_by_filters`) **EXACT** match karta hai (`class = ?`), zara sa
+farq = 0 rows.
+
+Ahem: SLO ka class/subject syllabus ke `grade` se **alag vocabulary** hai (SLO Excel ke
+apne `class,subject` columns). Is liye dropdown syllabus-grades se NAHI — SLO table ke
+asal distinct values se banaya.
+
+Backend:
+- `slo_repository.list_distinct_facets()` — DISTINCT class + subject (non-empty, sorted).
+- `GET /api/slo/facets` → `{classes, subjects}` (sibling `list_slos` jaisa unwrapped read).
+
+Frontend (`static/slo.html`):
+- `fClass`, `fSubject`, `exSubject` free-text input → `<select>`. `exGrade` (pehle se
+  select) ab syllabus-grades ke bajaye facets.classes se bharta hai — export bhi SLO data
+  se match kare.
+- `loadExportGrades()` (syllabus-grades) → `loadFacets()` + `fillFacetSelect()` (facets).
+  Chaaron dropdown ek hi `/api/slo/facets` call se.
+
+Frontend (`static/index.html` — Syllabus upload):
+- `pdfGrade` ye CREATION field hai (naya class ka syllabus yahin add hota hai) — strict
+  dropdown naye class ko block kar deta. Is liye `<datalist>` (input + maujooda grades
+  suggest, naya likhna bhi allowed). `_allGrades` se populate (already loaded).
+- `pdfSubject` + baaqi subject fields = KAAM 3 (alag phase).
+- Cosmetic label fields (`bpClass` bank.html, `bpClassName` blueprint.html) — chhode,
+  ye paper par chhapne wale roster naam hain, data se link nahi.
+
+Verify: `/api/slo/facets` → `{"classes":["Pre Year 1"],"subjects":["Mathematics"]}`;
+`/api/slo?class_name=Pre Year 1&subject=Mathematics` → rows aate hain (exact match ab
+dropdown se guaranteed). Teenon pages HTML tag-balanced (headless parse). 828/828 tests pass.
+Browser click verify NAHI ho saka — Chrome extension connected nahi tha.
+
+## 2026-07-23 — UI: bank.html "Naya question add karo" form collapsible (KAAM 1)
+
+Maqsad: teacher zyadatar Excel se questions add karta hai — manual add form roz nazar
+aane ki zaroorat nahi, sirf jagah gherta tha. Ab `print.html` ke Print Settings jaisa
+`<details>` pattern, default **BAND**.
+
+Fix (`static/bank.html`):
+- "Naya question add karo" card (`<div class="card">`) → `<details class="card add-q-collapse"
+  id="addQCard">` + `<summary class="add-q-summary">` (arrow + title + hint). Andar ka
+  poora content ek `<div class="add-q-body">` mein wrap. Koi ID/JS/handler nahi badla —
+  form waisa hi kaam karta hai, sirf collapse hua.
+- CSS: summary marker hidden, `[open]` par arrow rotate + border-bottom, body padding.
+
 ## 2026-07-23 — Data cleanup: dummy/trial data DB se hataya
 
 Maqsad: trial data saaf, sirf asal seed rakhna. ("class" = syllabus_topics.grade via

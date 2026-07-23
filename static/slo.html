@@ -176,7 +176,9 @@
       <select id="exGrade" style="width:180px;">
         <option value="">Sab grade</option>
       </select>
-      <input type="text" id="exSubject" placeholder="Subject (khali = sab)" style="width:190px;" />
+      <select id="exSubject" style="width:190px;">
+        <option value="">Sab subject</option>
+      </select>
       <button class="btn-ghost" id="exportBtn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
         Questions Excel download
@@ -200,8 +202,12 @@
     <h2>Maujooda SLO</h2>
     <p class="hint">Filter kar ke dekho.</p>
     <div class="row" style="margin-bottom:16px;">
-      <input type="text" id="fClass" placeholder="Class (e.g. Pre Year 1)" style="width:190px;" />
-      <input type="text" id="fSubject" placeholder="Subject (e.g. Mathematics)" style="width:190px;" />
+      <select id="fClass" style="width:190px;">
+        <option value="">Sab class</option>
+      </select>
+      <select id="fSubject" style="width:190px;">
+        <option value="">Sab subject</option>
+      </select>
       <input type="text" id="fStrand" placeholder="Strand (e.g. Number)" style="width:160px;" />
       <button class="btn-ghost" id="filterBtn">Dikhao</button>
       <span id="listCount" style="font-size:13px;color:var(--muted);"></span>
@@ -317,21 +323,29 @@
     $("assignSummary").style.display = "block";
   }
 
-  // Export grade dropdown DB se populate karo (hardcode nahi — nayi class add
-  // hone par khud aa jaye). /api/syllabus-grades distinct subject+grade deta hai.
-  async function loadExportGrades() {
+  // Filter/export dropdowns SLO table ke ASAL values se bharo (syllabus-grades se
+  // NAHI — woh alag vocabulary hai). Wajah: list filter EXACT match karta hai, is
+  // liye free-text 'Pre year 1' vs stored 'PRE YEAR 1' se list khali aa jati thi.
+  // /api/slo/facets distinct class+subject deta hai → har option guaranteed match.
+  function fillFacetSelect(id, values) {
+    const sel = $(id);
+    if (!sel) return;
+    (values || []).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  }
+  async function loadFacets() {
     try {
-      const res = await apiFetch("/api/syllabus-grades");
+      const res = await apiFetch("/api/slo/facets");
       if (!res.ok) return;
-      const rows = await res.json();
-      const grades = [...new Set((rows || []).map((r) => r.grade).filter(Boolean))].sort();
-      const sel = $("exGrade");
-      grades.forEach((g) => {
-        const opt = document.createElement("option");
-        opt.value = g; opt.textContent = g;
-        sel.appendChild(opt);
-      });
-    } catch (e) { /* dropdown khali "Sab grade" par reh jayega — koi masla nahi */ }
+      const data = await res.json();
+      fillFacetSelect("exGrade", data.classes);   // export: class filter
+      fillFacetSelect("fClass", data.classes);     // list: class filter
+      fillFacetSelect("exSubject", data.subjects); // export: subject filter
+      fillFacetSelect("fSubject", data.subjects);  // list: subject filter
+    } catch (e) { /* dropdowns default option par reh jayenge — koi masla nahi */ }
   }
 
   function doExport() {
@@ -347,7 +361,7 @@
   $("assignBtn").addEventListener("click", doAssign);
   $("exportBtn").addEventListener("click", doExport);
   $("filterBtn").addEventListener("click", loadList);
-  loadExportGrades();
+  loadFacets();
   loadList();
 </script>
 </body>
