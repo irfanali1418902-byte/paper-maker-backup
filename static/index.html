@@ -533,7 +533,8 @@
         <div class="twocol">
           <div class="card">
             <label data-i18n="form.subject">Subject</label>
-            <input id="pdfSubject" placeholder="e.g. Mathematics" />
+            <input id="pdfSubject" list="pdfSubjectOptions" placeholder="Maujooda mein se chuno ya naya likho" />
+            <datalist id="pdfSubjectOptions"></datalist>
 
             <label data-i18n="form.classGrade2">Class/Grade</label>
             <input id="pdfGrade" list="pdfGradeOptions" placeholder="Maujooda mein se chuno ya naya likho" />
@@ -1295,19 +1296,22 @@ async function loadSyllabusGrades() {
       opt.textContent = s;
       subjectSelect.appendChild(opt);
     });
-    // Syllabus upload page ka Class/Grade — datalist se maujooda grades suggest karo
-    // (consistency: 'Grade 4' vs 'grade 4' bikharao rok). Ye CREATION field hai, is
-    // liye strict dropdown nahi — nayi class ka syllabus add karne ke liye naya value
-    // bhi likha ja sakta hai.
-    const gradeList = document.getElementById('pdfGradeOptions');
-    if (gradeList) {
-      gradeList.innerHTML = '';
-      [...new Set(_allGrades.map(g => g.grade).filter(Boolean))].sort().forEach(g => {
+    // Syllabus upload page ke Class/Grade + Subject — datalist se maujooda values
+    // suggest karo (consistency: 'Grade 4' vs 'grade 4', 'Math' vs 'Mathematics'
+    // bikharao rok). Ye CREATION fields hain, is liye strict dropdown nahi — naya
+    // class/subject ka syllabus add karne ke liye naya value bhi likha ja sakta hai.
+    const fillDatalist = (id, values) => {
+      const dl = document.getElementById(id);
+      if (!dl) return;
+      dl.innerHTML = '';
+      [...new Set(values.filter(Boolean))].sort().forEach(v => {
         const opt = document.createElement('option');
-        opt.value = g;
-        gradeList.appendChild(opt);
+        opt.value = v;
+        dl.appendChild(opt);
       });
-    }
+    };
+    fillDatalist('pdfGradeOptions', _allGrades.map(g => g.grade));
+    fillDatalist('pdfSubjectOptions', _allGrades.map(g => g.subject));
   } catch (e) {
     console.error('Syllabus grades load failed:', e);
   }

@@ -1,5 +1,21 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — UI: pdfSubject free-text → datalist (KAAM 3)
+
+Scan ke baad KAAM 3 mein asal mein sirf **ek** field bacha tha (alag phase nahi, chhota
+add-on): `pdfSubject` (index.html Syllabus Upload). `exSubject`/`fSubject` KAAM 2 mein ho
+gaye; generator ka `subject` (index.html:429) cascade se auto-bharta hai — chhoda.
+
+Fix (`static/index.html`):
+- `pdfSubject` → `<datalist>` (pdfGrade jaisa hi). CREATION field hai (naya subject ka
+  syllabus yahin add hota hai), is liye strict dropdown nahi — maujooda subjects suggest,
+  naya likhna bhi allowed.
+- `loadSyllabusGrades()` mein `fillDatalist()` helper — ab pdfGrade + pdfSubject dono
+  `_allGrades` se bharte hain.
+
+Verify: index.html tag-balanced (headless parse); wiring (list=+datalist+fillDatalist)
+match. Backend change nahi (frontend-only). Browser click verify baqi — extension off.
+
 ## 2026-07-23 — UI: class fields free-text → dropdown (KAAM 2)
 
 Maqsad: free-text class/subject se data bikhar jata tha — 'Pre year 1' vs stored
