@@ -285,6 +285,14 @@ def init_db() -> None:
     # SCAN se bachao. (slo_code ka UNIQUE khud implicit index bhi de deta hai.)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_slo_class_subject ON slo(class, subject)")
 
+    # Existing DBs: add sequence column (INTEGER, nullable). slo_code strand ke
+    # hisaab se group hai (teaching order NAHI), is liye taqseem/list ke asal kitab
+    # ki tarteeb ke liye teacher yahan number bharta hai. Purani rows NULL rehti
+    # hain (taqseem un par slo_code fallback karta hai).
+    slo_cols = {row[1] for row in cur.execute("PRAGMA table_info(slo)").fetchall()}
+    if "sequence" not in slo_cols:
+        cur.execute("ALTER TABLE slo ADD COLUMN sequence INTEGER")
+
     # Question <-> SLO link — Marhala 1. Alag link table (questions column NAHI)
     # taake: (1) ek sawal = kai SLO, (2) 200+ purane questions bilkul untouched
     # (koi ALTER/migration nahi), (3) gemini (protected) question bhi tag ho sake

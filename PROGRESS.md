@@ -1,5 +1,34 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — SLO: `sequence` column (asal kitab ki tarteeb)
+
+Maqsad: taqseem (exam distribution) `slo_code` se sort karta tha, magar slo_code
+**strand-grouped** hai (C→D→N→S→W), teaching tarteeb nahi. Nateeja: Number strand
+akela 25/50 SLO hone se **4 exam sirf Number** ke ban rahe the. Asli tarteeb sirf
+teacher jaanta hai — is liye teacher ke bharne ke liye alag `sequence` column.
+
+Changes:
+- `app/core/database.py` — `init_db()` mein idempotent migration: `slo` table mein
+  `ALTER TABLE ADD COLUMN sequence INTEGER` (nullable). Purani 50 rows NULL rehti hain.
+- `app/repositories/slo_repository.py` — `insert()` mein `sequence` column+value.
+  `update_by_code()` generic tha (koi change nahi) — re-import par sequence refresh.
+- `app/services/slo_import_service.py` — `sequence` optional column parho: khali→NULL,
+  poora number→int (Excel "3.0" bhi qubool), **number na ho ("abc"/"2.5")→row error**
+  (chupke null nahi). Add + update dono paths mein sequence.
+- `static/slo_import_template.xlsx` — purana (ignored) `book_pages` column hataya,
+  `sequence` add. Sample rows teaching-order (W,N,C,S = seq 1,2,3,4) dikhate hain.
+- `static/slo.html` — list mein pehla **"Seq"** column (NULL → "—" muted, taake teacher
+  dekh sake kaunse khali). Import hint text update (book_pages hata, sequence likha).
+- `scripts?/taqseem.py` (scratchpad standalone) — sort ab `sequence` se, NULL par
+  slo_code fallback (aakhir mein); report top par kitne NULL saaf batata hai. N configurable.
+
+Verify: migration real DB par chala (sequence column + 50 NULL confirmed). Import
+end-to-end test (valid/float/empty/invalid/re-import) sahi. Naye 5 sequence tests +
+poora SLO suite: **104 passed**. Koi DB data change nahi (sirf nullable column add).
+
+Agla step (manual): teacher/user Excel mein sequence bhar kar re-import karega →
+50 rows update; phir taqseem asal teaching order se banega.
+
 ## 2026-07-23 — UI: pdfSubject free-text → datalist (KAAM 3)
 
 Scan ke baad KAAM 3 mein asal mein sirf **ek** field bacha tha (alag phase nahi, chhota

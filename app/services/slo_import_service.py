@@ -6,7 +6,8 @@ Har row ek SLO. slo_code se pehchan hoti hai:
     created_at ko haath nahi lagate)
 bloom_level cell khali ho to slo_text ke verb se auto-suggest hota hai; teacher
 ne value di ho to wahi rehne di jaati hai. Ek row fail hone se baaki nahi rukti.
-book_pages jaise extra columns ignore ho jaate hain (error nahi).
+sequence (optional, INTEGER): asal kitab ki tarteeb — khali ho to NULL; number na
+ho (e.g. "abc") to us row ko error (chupke null nahi). Baaqi extra columns ignore.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from app.core.bloom_standards import suggest_bloom_from_text
 from app.repositories import slo_repository
 
 REQUIRED_COLUMNS = {"class", "subject", "slo_code", "slo_text"}
-OPTIONAL_COLUMNS = {"bloom_level", "strand"}
+OPTIONAL_COLUMNS = {"bloom_level", "strand", "sequence"}
 
 
 def _cell(row: pd.Series, col: str) -> Optional[str]:
@@ -97,6 +98,27 @@ def import_slos_from_excel(file_bytes: bytes) -> dict:
 
         strand = _cell(row, "strand")
 
+        # sequence: khali -> None; number -> int; kuch aur (e.g. "abc") -> row error
+        # (chupke null nahi, taake teacher ko galti pata chale). Float bhi jo poora
+        # number ho (Excel "3.0") qubool.
+        sequence: Optional[int] = None
+        seq_raw = _cell(row, "sequence")
+        if seq_raw is not None:
+            try:
+                seq_float = float(seq_raw)
+                if seq_float != int(seq_float):
+                    raise ValueError
+                sequence = int(seq_float)
+            except (ValueError, TypeError):
+                errors += 1
+                results.append({
+                    "row": row_num,
+                    "slo_code": slo_code,
+                    "status": "error",
+                    "reason": f"sequence poora number hona chahiye, mila: '{seq_raw}'",
+                })
+                continue
+
         try:
             existing = slo_repository.find_by_code(slo_code)
             if existing is None:
@@ -108,16 +130,18 @@ def import_slos_from_excel(file_bytes: bytes) -> dict:
                     "slo_text": slo_text,
                     "bloom_level": bloom_level,
                     "strand": strand,
+                    "sequence": sequence,
                 })
                 added += 1
                 results.append({"row": row_num, "slo_code": slo_code, "status": "added"})
             else:
                 # UPDATE mode: draft dobara import ho sakti hai. slo_text/bloom_level/
-                # strand refresh; created_at nahi badalta (update mein hai hi nahi).
+                # strand/sequence refresh; created_at nahi badalta (update mein hai hi nahi).
                 slo_repository.update_by_code(slo_code, {
                     "slo_text": slo_text,
                     "bloom_level": bloom_level,
                     "strand": strand,
+                    "sequence": sequence,
                 })
                 updated += 1
                 results.append({"row": row_num, "slo_code": slo_code, "status": "updated"})

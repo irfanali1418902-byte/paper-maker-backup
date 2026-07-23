@@ -144,7 +144,7 @@
   <!-- Import card -->
   <div class="card">
     <h2>Excel se import</h2>
-    <p class="hint">Columns: <strong>class, subject, slo_code, slo_text</strong> (zaroori) · bloom_level, strand (optional) · book_pages (ignore). Extra columns theek hain.</p>
+    <p class="hint">Columns: <strong>class, subject, slo_code, slo_text</strong> (zaroori) · bloom_level, strand, sequence (optional). sequence = asal kitab ki tarteeb (poora number; khali chalega). Extra columns theek hain.</p>
     <div class="row">
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
       <button class="btn" id="importBtn">Import karo</button>
@@ -213,7 +213,7 @@
       <span id="listCount" style="font-size:13px;color:var(--muted);"></span>
     </div>
     <table>
-      <thead><tr><th>slo_code</th><th>Strand</th><th>SLO text</th><th>Bloom</th></tr></thead>
+      <thead><tr><th>Seq</th><th>slo_code</th><th>Strand</th><th>SLO text</th><th>Bloom</th></tr></thead>
       <tbody id="listBody"></tbody>
     </table>
     <div class="empty-state" id="listEmpty" style="display:none;">Koi SLO nahi mila — upar se import karo.</div>
@@ -279,7 +279,11 @@
     $("listCount").textContent = "(" + (data.total || 0) + ")";
     $("listEmpty").style.display = rows.length ? "none" : "block";
     $("listBody").innerHTML = rows.map((r) =>
-      '<tr><td class="code">' + esc(r.slo_code) + '</td>' +
+      '<tr>' +
+      ((r.sequence === null || r.sequence === undefined)
+        ? '<td style="color:var(--muted);" title="sequence khali — teaching tarteeb import nahi hui">—</td>'
+        : '<td class="code">' + esc(r.sequence) + '</td>') +
+      '<td class="code">' + esc(r.slo_code) + '</td>' +
       '<td>' + esc(r.strand || "") + '</td>' +
       '<td>' + esc(r.slo_text) + '</td>' +
       '<td>' + bloomCell(r.bloom_level) + '</td></tr>'

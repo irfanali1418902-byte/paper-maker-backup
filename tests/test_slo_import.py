@@ -145,3 +145,65 @@ def test_extra_book_pages_column_ignored(test_db):
     result = slo_import_service.import_slos_from_excel(xlsx)
     assert result["added"] == 1
     assert result["errors"] == 0
+
+
+# ── sequence (optional, INTEGER — asal kitab ki tarteeb) ─────────────────────────
+
+SEQ_HEADER = ["class", "subject", "slo_code", "slo_text", "bloom_level", "strand", "sequence"]
+
+
+def test_sequence_integer_stored(test_db):
+    xlsx = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-10",
+         "Students will be able to count to 10.", "", "Number", "5"],
+    ], header=SEQ_HEADER)
+    result = slo_import_service.import_slos_from_excel(xlsx)
+    assert result["added"] == 1 and result["errors"] == 0
+    assert slo_repository.find_by_code("MATH-PY1-N-10")["sequence"] == 5
+
+
+def test_sequence_empty_is_null(test_db):
+    xlsx = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-11",
+         "Students will be able to count to 20.", "", "Number", ""],
+    ], header=SEQ_HEADER)
+    slo_import_service.import_slos_from_excel(xlsx)
+    assert slo_repository.find_by_code("MATH-PY1-N-11")["sequence"] is None
+
+
+def test_sequence_whole_float_coerced_to_int(test_db):
+    # Excel numeric cell "3.0" ban jaata hai — poora number qubool, int mein.
+    xlsx = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-12",
+         "Students will be able to count backward.", "", "Number", "3.0"],
+    ], header=SEQ_HEADER)
+    slo_import_service.import_slos_from_excel(xlsx)
+    assert slo_repository.find_by_code("MATH-PY1-N-12")["sequence"] == 3
+
+
+def test_sequence_non_numeric_is_error(test_db):
+    xlsx = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-13",
+         "Students will be able to count on.", "", "Number", "abc"],
+    ], header=SEQ_HEADER)
+    result = slo_import_service.import_slos_from_excel(xlsx)
+    assert result["added"] == 0 and result["errors"] == 1
+    err = next(r for r in result["results"] if r["status"] == "error")
+    assert "sequence" in err["reason"]
+    # ghalat value chupke null nahi honi chahiye — row bilkul add na ho.
+    assert slo_repository.find_by_code("MATH-PY1-N-13") is None
+
+
+def test_sequence_refreshed_on_reimport(test_db):
+    first = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-14",
+         "Students will be able to order numbers.", "", "Number", "7"],
+    ], header=SEQ_HEADER)
+    slo_import_service.import_slos_from_excel(first)
+    second = _make_xlsx([
+        ["Pre Year 1", "Mathematics", "MATH-PY1-N-14",
+         "Students will be able to order numbers.", "", "Number", "9"],
+    ], header=SEQ_HEADER)
+    result = slo_import_service.import_slos_from_excel(second)
+    assert result["updated"] == 1
+    assert slo_repository.find_by_code("MATH-PY1-N-14")["sequence"] == 9

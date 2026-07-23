@@ -10,8 +10,8 @@ def insert(row: dict) -> None:
     cur = conn.cursor()
     cur.execute(
         """INSERT INTO slo
-           (id, class, subject, slo_code, slo_text, bloom_level, strand)
-           VALUES (?,?,?,?,?,?,?)""",
+           (id, class, subject, slo_code, slo_text, bloom_level, strand, sequence)
+           VALUES (?,?,?,?,?,?,?,?)""",
         (
             row["id"],
             row["class"],
@@ -20,6 +20,7 @@ def insert(row: dict) -> None:
             row["slo_text"],
             row.get("bloom_level"),
             row.get("strand"),
+            row.get("sequence"),
         ),
     )
     conn.commit()
