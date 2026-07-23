@@ -1618,7 +1618,7 @@ function renderQRow(q) {
       </div>
       <div class="q-marks">[${q.marks}]</div>
       <div class="q-actions">
-        <button class="btn-edit" onclick="openEditModal(${escAttr(JSON.stringify(q))})">Edit</button>
+        <button class="btn-edit" onclick="openEditModal('${escAttr(q.id)}')">Edit</button>
         <button class="btn-danger" onclick="deleteQuestion('${escAttr(q.id)}')">Delete</button>
       </div>
     </div>`;
@@ -1663,7 +1663,14 @@ async function deleteQuestion(id) {
 // Edit modal
 // ================================================================
 function openEditModal(q) {
-  if (typeof q === 'string') q = JSON.parse(q);
+  // Delete jaisa: button id-string bhejta hai, question yahin _allQuestions se
+  // dhoondte hain. (Pehle onclick mein JSON.stringify inject hota tha — uske double
+  // quotes double-quoted onclick attribute ko toR dete the, isliye Edit chalta hi nahi tha.)
+  if (typeof q === 'string') {
+    const found = _allQuestions.find(x => x.id === q);
+    if (!found) { console.warn('Edit: question nahi mila —', q); return; }
+    q = found;
+  }
   _editQid   = q.id;
   _editQtype = q.question_type;
 

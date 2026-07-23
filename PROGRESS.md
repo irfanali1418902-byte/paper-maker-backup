@@ -1,5 +1,27 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — Fix: bank.html Edit button dead (onclick markup toota)
+
+Symptom: Question Bank mein **Edit** dabane se kuch nahi hota (Delete theek — confirm
++ orphan warning). Script parse ho rahi thi (Delete chalta tha), masla generated
+markup mein tha.
+
+Wajah: `renderQRow` mein Edit button ka onclick
+`openEditModal(${escAttr(JSON.stringify(q))})` tha. `JSON.stringify` **double quotes**
+deta hai (`{"id":...}`) aur `escAttr` sirf single quote escape karta hai — double-quoted
+`onclick="..."` attribute pehle hi `"` par **toot jata** tha → handler `openEditModal({`
+ban jata (invalid JS) → click par kuch nahi. (Delete safe tha kyunki UUID mein quote
+nahi.) `node --check` isse nahi pakadta — bug JS syntax mein nahi, HTML markup mein tha.
+
+Fix (`static/bank.html`):
+- Edit onclick ab Delete jaisa: `openEditModal('${escAttr(q.id)}')` (id string).
+- `openEditModal(q)` ab string aane par `_allQuestions` se lookup karta hai (JSON.parse
+  path hata — UUID JSON nahi).
+
+Verify: node --check clean; VM mein real HTML id-set + missing-id→null getElementById ke
+sath `openEditModal('<id>')` sab 5 types (mcq/tf/fill/short-answer + Urdu `"quotes"&<b>`
+wala) par bina throw OK; koi missing element id nahi. Static file live — sirf hard-refresh.
+
 ## 2026-07-23 — Marhala 2B: Blueprint Bloom shortfall (soft guidance)
 
 Maqsad: Blueprint se paper banate waqt paper ka ASAL Bloom mix class-standard se
