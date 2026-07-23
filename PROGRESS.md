@@ -1,5 +1,44 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — Marhala 2B: Blueprint Bloom shortfall (soft guidance)
+
+Maqsad: Blueprint se paper banate waqt paper ka ASAL Bloom mix class-standard se
+compare → kisi Bloom level par **10% se ZYADA** farq ho to teacher ko soft guidance
++ 2 option (Ignore / Questions badlo). App khud kuch adjust NAHI karta.
+
+**Ahem faisle:**
+- Bloom source = **question ka apna `bloom_level`** (Question Bank wala), SLO ka NAHI
+  (SLO-based per-paper wala purana `slo_shortfall_service` alag hai — chheda nahi).
+- `bloom_level` khali/na-maloom questions **alag gine** (`no_bloom`); percentages
+  sirf `with_bloom` par (warna numbers jhoot bolenge).
+- Threshold strictly > 10 (epsilon se float-noise ignore) — **theek 10% par warning NAHI**.
+- Class→tier: `bloom_standards.get_bloom_suggestion` (reliable source = syllabus
+  `grade`, na ho to free-text `class_name`).
+- Option 2 = **pointer-only** (user faisla): under-represented Bloom ke liye bank-count
+  + `/bank.html?subject&bloom` filtered link; koi inline replace nahi.
+
+**Backend:**
+- `app/services/blueprint_bloom_guidance_service.py` (naya) — `compute_bloom_guidance(
+  questions, class_tier, subject)`. subject=None → bank-count skip (pure/testable).
+  Graceful: class na ho / tier na mile / `with_bloom==0` → `available False` + message.
+- `app/services/blueprint_paper_service.py` — `assemble_blueprint_paper` mein
+  `class_tier` param + return mein `bloom_guidance`.
+- `app/schemas/requests.py` — `BlueprintPaperRequest.grade` (tier ke liye).
+- `app/api/papers.py` — `class_tier = resolved_grade or class_name` resolve + pass.
+- `tests/test_blueprint_bloom_guidance.py` (naya, 16 tests) — mix/empty-alag,
+  case-insensitive, per-tier shortfall, boundary theek-10%, all-empty graceful,
+  bank-pointer (seeded), 2× `/api/blueprint-paper` integration.
+
+**Frontend:**
+- `static/blueprint.html` — makePaper `grade` bhejta hai; `#bloomGuidance` panel
+  (`renderBloomGuidance`) sirf `available && has_shortfall` par; no_bloom note,
+  per-Bloom rows, "Ignore karo" (hide) + "Questions badlo" (bank pointers reveal).
+- `static/bank.html` — `applyUrlListFilters()`: `?subject&bloom` se list pre-filter.
+
+**Verify:** `pytest tests/test_blueprint_bloom_guidance.py` 16 green; blueprint+api
+regression suites 157 green. **Browser test baaqi — server RESTART ke baad** (naya
+`grade` field + guidance panel).
+
 ## 2026-07-23 — Marhala 4B: live print controls (sidebar stepper + POST save)
 
 Maqsad: teacher print.html sidebar mein 3 knobs hilaye → preview foran badle

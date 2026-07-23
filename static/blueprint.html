@@ -211,6 +211,24 @@
   .shortfall-panel .sf-options li { margin-top: 2px; }
   .shortfall-panel .sf-gain { font-weight: 600; }
 
+  /* ---- Bloom guidance panel (Marhala 2B — soft) ---- */
+  .bloom-guide {
+    background: var(--warn-bg); border: 1px solid #e7cf9a;
+    border-left: 3px solid var(--warn-tx); color: var(--ink);
+    padding: 14px 16px; border-radius: 10px; margin-top: 14px;
+  }
+  .bloom-guide .bg-head { font-size: 13.5px; font-weight: 700; color: var(--warn-tx); }
+  .bloom-guide .bg-nobloom { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .bloom-guide ul.bg-rows { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .bloom-guide ul.bg-rows li { font-size: 12.5px; }
+  .bloom-guide .bg-under { color: var(--err-tx); font-weight: 600; }
+  .bloom-guide .bg-over  { color: var(--muted); }
+  .bloom-guide .bg-fix { margin-top: 10px; display: none; }
+  .bloom-guide .bg-fix.show { display: block; }
+  .bloom-guide .bg-fix ul { list-style: disc; margin: 4px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .bloom-guide .bg-fix a { color: var(--primary); font-weight: 600; text-decoration: underline; }
+  .bloom-guide .bg-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
   /* ---- Filter section (new: status/difficulty/bloom/distribution) ---- */
   .filter-section { margin-top: 14px; border-top: 1px solid #dce5f3; padding-top: 14px; }
   .filter-section-title {
@@ -376,6 +394,9 @@
   </div>
 
   <div class="status-bar" id="actionStatus"></div>
+
+  <!-- Bloom guidance panel (Marhala 2B) — soft; sirf 10% se zyada farq par dikhta hai -->
+  <div id="bloomGuidance" style="display:none;"></div>
 
   <!-- ===== SAVED BLUEPRINTS ===== -->
   <div class="card">
@@ -920,6 +941,7 @@ async function saveBlueprint() {
 // ================================================================
 async function makePaper() {
   setStatus('', '');
+  clearBloomGuidance();
   const v = validate();
   if (!v) return;
 
@@ -931,6 +953,7 @@ async function makePaper() {
   const body = {
     sections_input: v.sections,
     subject,
+    grade,
     class_name: className,
     paper_title: paperTitle,
   };
@@ -965,6 +988,8 @@ async function makePaper() {
     } else {
       setStatus('ok', `✅ ${data.questions.length} questions, ${data.total_marks} marks — print view khul raha hai...`);
     }
+
+    renderBloomGuidance(data.bloom_guidance);
 
     setTimeout(() => {
       window.open(`/print.html?paper_id=${encodeURIComponent(data.paper_id)}`, '_blank');
@@ -1064,6 +1089,7 @@ function loadBpIntoForm(bp) {
 
 async function paperFromSaved(bpId, bpName) {
   setStatus('warn', `⏳ "${bpName}" se paper ban raha hai...`);
+  clearBloomGuidance();
   const paperTitle = document.getElementById('bpPaperTitle').value.trim() || null;
   const className  = document.getElementById('bpClassName').value.trim() || null;
 
@@ -1085,6 +1111,7 @@ async function paperFromSaved(bpId, bpName) {
     } else {
       setStatus('ok', `✅ ${data.questions.length} questions — print view khul raha hai...`);
     }
+    renderBloomGuidance(data.bloom_guidance);
     setTimeout(() => {
       window.open(`/print.html?paper_id=${encodeURIComponent(data.paper_id)}`, '_blank');
     }, 600);
@@ -1123,6 +1150,77 @@ function setStatusHtml(type, html) {
   el.className = 'status-bar' + (type ? ' ' + type : '');
   el.innerHTML = html;
   el.style.display = type ? 'block' : 'none';
+}
+
+// ================================================================
+// Bloom guidance (Marhala 2B) — soft, sirf 10% se zyada farq par
+// ================================================================
+const _BLOOM_LABEL = {
+  remember: 'Remember', understand: 'Understand', apply: 'Apply',
+  analyze: 'Analyze', evaluate: 'Evaluate', create: 'Create',
+};
+
+function clearBloomGuidance() {
+  const el = document.getElementById('bloomGuidance');
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
+// Soft guidance: guidance available ho AUR koi 10%+ farq ho tabhi panel. Warna khamosh
+// (saaf paper ko nag mat karo). App khud kuch adjust nahi karta — sirf report + 2 option.
+function renderBloomGuidance(g) {
+  const el = document.getElementById('bloomGuidance');
+  if (!g || !g.available || !g.has_shortfall) { clearBloomGuidance(); return; }
+
+  const cap = (b) => _BLOOM_LABEL[b] || b;
+  const subject = g.subject || null;
+
+  const rowsHtml = g.rows.map(r => {
+    const flagged = Math.abs(r.diff) > g.threshold_percent;
+    const cls = !flagged ? '' : (r.diff < 0 ? 'bg-under' : 'bg-over');
+    const gap = flagged
+      ? ` — ${Math.abs(r.diff)}% ${r.diff < 0 ? 'kam' : 'zyada'}`
+      : ' — theek';
+    return `<li class="${cls}">${cap(r.bloom)}: ${r.actual_percent}% (chahiye ${r.target_percent}%)${gap}</li>`;
+  }).join('');
+
+  // "Questions badlo" par khulne wale pointers — sirf under-represented Bloom, jinke
+  // liye bank mein questions maujood hain. Har ek ka bank-count + filtered bank link.
+  const under = g.shortfalls.filter(s => s.direction === 'under');
+  const fixHtml = under.map(s => {
+    const n = (s.bank_available == null) ? null : s.bank_available;
+    const link = subject
+      ? `<a href="/bank.html?subject=${encodeURIComponent(subject)}&bloom=${encodeURIComponent(s.bloom.toUpperCase())}" target="_blank">Bank mein dekho</a>`
+      : '';
+    const countTxt = (n == null)
+      ? ''
+      : (n > 0
+          ? `Bank mein ${n} '${cap(s.bloom)}' question${n !== 1 ? 's' : ''} hain — `
+          : `Bank mein is subject ke '${cap(s.bloom)}' questions nahi — pehle add karo. `);
+    return `<li>${countTxt}${link}</li>`;
+  }).join('');
+
+  const noBloomNote = g.no_bloom > 0
+    ? `<div class="bg-nobloom">${g.no_bloom} question${g.no_bloom !== 1 ? 's' : ''} ka Bloom set nahi (report se bahar — percentages sirf ${g.with_bloom} par).</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="bloom-guide">
+      <div class="bg-head">⚠️ Bloom farq — ${escHtml(g.group)} standard</div>
+      ${noBloomNote}
+      <ul class="bg-rows">${rowsHtml}</ul>
+      <div class="bg-fix" id="bloomFix">
+        ${under.length
+          ? `<div style="font-size:12.5px;font-weight:600;">Kam wale Bloom levels ke questions:</div><ul>${fixHtml}</ul>`
+          : `<div style="font-size:12.5px;color:var(--muted);">Kam wale Bloom level ke liye bank pointer maujood nahi.</div>`}
+      </div>
+      <div class="bg-actions">
+        <button class="btn-ghost" onclick="clearBloomGuidance()">Ignore karo</button>
+        <button class="btn-ghost" onclick="document.getElementById('bloomFix').classList.add('show'); this.disabled=true;">Questions badlo</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:8px;">Yeh sirf mashwara hai — paper waise hi ban chuka hai.</div>
+    </div>`;
+  el.style.display = 'block';
 }
 
 // ================================================================

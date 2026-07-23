@@ -461,6 +461,9 @@ class BlueprintPaperRequest(BaseModel):
     sections_input: Optional[List[BlueprintSection]] = None
     subject: Optional[str] = None
     class_name: Optional[str] = None
+    # grade = syllabus class string (e.g. "Class 8") — Bloom-standard tier isse map hota
+    # hai. class_name free-text hota hai (e.g. "Class 8A"), tier ke liye reliable nahi.
+    grade: Optional[str] = None
     paper_title: Optional[str] = None
 
     @model_validator(mode="after")

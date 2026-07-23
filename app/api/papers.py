@@ -71,9 +71,15 @@ def generate_blueprint_paper(req: BlueprintPaperRequest):
             raise HTTPException(status_code=404, detail="Blueprint nahi mila.")
         sections = bp["sections"]
         resolved_subject = req.subject or bp.get("subject")
+        resolved_grade = req.grade or bp.get("grade")
     else:
         sections = [s.model_dump() for s in req.sections_input]
         resolved_subject = req.subject
+        resolved_grade = req.grade
+
+    # Bloom-standard tier: grade (syllabus class) sabse reliable; na ho to free-text
+    # class_name par gir jao.
+    class_tier = resolved_grade or req.class_name
 
     try:
         result = blueprint_paper_service.assemble_blueprint_paper(
@@ -82,6 +88,7 @@ def generate_blueprint_paper(req: BlueprintPaperRequest):
             subject=resolved_subject,
             class_name=req.class_name,
             paper_title=req.paper_title,
+            class_tier=class_tier,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Blueprint paper assemble fail: {e}") from e

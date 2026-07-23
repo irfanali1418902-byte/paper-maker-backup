@@ -971,8 +971,24 @@ let _selectedQids      = new Set();  // bulk selection
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
   await loadSyllabusGrades();
+  applyUrlListFilters();   // blueprint "Bank mein dekho" link se aaye to pre-filter
   await loadList();
 });
+
+// Blueprint Bloom-guidance ke link (?subject=..&bloom=..) se list filter pre-set karo.
+function applyUrlListFilters() {
+  const p = new URLSearchParams(location.search);
+  const subject = p.get('subject');
+  const bloom   = p.get('bloom');
+  if (subject) {
+    const sel = document.getElementById('lSubject');
+    if ([...sel.options].some(o => o.value === subject)) sel.value = subject;
+  }
+  if (bloom) {
+    const sel = document.getElementById('lBloom');
+    if ([...sel.options].some(o => o.value === bloom)) sel.value = bloom;
+  }
+}
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeEditModal();

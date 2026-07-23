@@ -17,7 +17,7 @@ from datetime import date
 from typing import Optional
 
 from app.repositories import papers_repository, questions_repository
-from app.services import item_analysis_service
+from app.services import blueprint_bloom_guidance_service, item_analysis_service
 
 
 def assemble_blueprint_paper(
@@ -26,6 +26,7 @@ def assemble_blueprint_paper(
     subject: Optional[str],
     class_name: Optional[str],
     paper_title: Optional[str],
+    class_tier: Optional[str] = None,
 ) -> dict | None:
     """Core assembly — called by route with either a saved blueprint_id
     (sections_input ignored) or inline sections_input list.
@@ -161,6 +162,9 @@ def assemble_blueprint_paper(
         "shortfall_notes": shortfall_notes,
         "shortfall_details": shortfall_details,
         "balance_summary": item_analysis_service.summarize_paper_balance(all_questions),
+        "bloom_guidance": blueprint_bloom_guidance_service.compute_bloom_guidance(
+            all_questions, class_tier, subject=subject,
+        ),
     }
 
 
