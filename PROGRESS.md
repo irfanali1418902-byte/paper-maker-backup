@@ -1,5 +1,24 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — Data cleanup: dummy/trial data DB se hataya
+
+Maqsad: trial data saaf, sirf asal seed rakhna. ("class" = syllabus_topics.grade via
+syllabus_topic_id; questions table mein direct class column nahi.)
+
+RAKHA: Pre Year 1 Mathematics 329 questions, saare 50 SLOs, 329 question_slo links
+(sab Pre Year 1 ke), Image Library (99) — poori, syllabus_topics, blueprints (2),
+usage_log (99).
+
+DELETE (single transaction, guards ke sath): ALL papers (72), class null/empty
+Mathematics questions (60) + Pre Year 2 (40) + Pre Year 3 (20) = 120 questions +
+unke question_slo links (0 the). Orphan trial results bhi (user ne "sab delete"
+chuna): result_uploads (14) + student_question_results (840).
+
+Nateeja: questions 449→329, papers 72→0, results 0, SLO 50 (unchanged), question_slo
+329 (unchanged), image_library 99 (unchanged). Verify: live API 329; 0 non-Pre-Year-1
+baaqi; 0 dangling question_slo (dono taraf). Backup (user ke apne backup ke ilawa,
+sqlite .backup se consistent): `paper_maker_backup_before_dummy_cleanup_20260723_172026.db`.
+
 ## 2026-07-23 — Fix: bank.html Edit button dead (onclick markup toota)
 
 Symptom: Question Bank mein **Edit** dabane se kuch nahi hota (Delete theek — confirm
