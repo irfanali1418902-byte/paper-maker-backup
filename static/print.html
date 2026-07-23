@@ -6,7 +6,9 @@
 <title>Exam Paper — Print</title>
 <link rel="stylesheet" href="/static/app.css">
 <style>
-  @page { size: A4; margin: 14mm; }
+  /* Margin single-source: @page ka margin 0, saara page-margin .sheet padding se
+     (var --page-margin). Pehle @page 14mm + .sheet padding 14mm = 28mm ho raha tha. */
+  @page { size: A4; margin: 0; }
   * { box-sizing: border-box; }
 
   :root {
@@ -19,6 +21,12 @@
     --border: #E3E8F1;
     --bg: #F5F7FB;
     --radius-btn: 8px;
+    /* Print knobs (Marhala 4A). Defaults = purani hardcoded values, isliye
+       koi class-override na ho to output bilkul waisa. JS in par per-class
+       settings apply karta hai (loadPaper mein). */
+    --page-margin: 14mm;
+    --q-font: 14px;
+    --q-gap: 14px;
   }
 
   body {
@@ -42,6 +50,7 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;  /* print-settings panel khule to clip na ho */
   }
   .brand { font-weight: 700; font-size: 18px; line-height: 1.3; }
   .brand small { display: block; font-weight: 400; font-size: 12px; color: #A9B6CE; margin-top: 4px; }
@@ -61,11 +70,55 @@
   .side-actions span { color: #C7D2E6; font-size: 13px; }
   .sidebar-foot { margin-top: auto; font-size: 12px; color: #8092B0; line-height: 1.6; }
 
+  /* ---- Print settings panel (Marhala 4B — screen only, .no-print) ---- */
+  /* width:100% — sidebar flex-column mein details shrink na ho; summary block —
+     warna summary+body side-by-side aa jaate the. */
+  .print-settings {
+    width: 100%; box-sizing: border-box; margin-top: 20px;
+    border: 1px solid rgba(255,255,255,.14); border-radius: 8px;
+  }
+  .print-settings > summary {
+    display: block; cursor: pointer; list-style: none; padding: 10px 12px;
+    font-size: 13px; font-weight: 600; color: #E7EDF7; user-select: none;
+  }
+  .print-settings > summary::-webkit-details-marker { display: none; }
+  .print-settings > summary::before { content: "▸ "; color: #8092B0; }
+  .print-settings[open] > summary::before { content: "▾ "; }
+  .ps-body { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .ps-row { display: flex; flex-direction: column; gap: 5px; }
+  .ps-row .ps-label { font-size: 12px; color: #C7D2E6; }
+  .ps-stepper { display: flex; align-items: center; gap: 8px; }
+  .ps-stepper button {
+    width: 30px; height: 30px; flex-shrink: 0; border: none; border-radius: 6px;
+    background: #2b3f66; color: #fff; font-size: 18px; line-height: 1; cursor: pointer;
+    font-family: inherit; display: flex; align-items: center; justify-content: center;
+  }
+  .ps-stepper button:hover { background: #38507f; }
+  .ps-stepper button:disabled { opacity: .4; cursor: not-allowed; }
+  .ps-value { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #fff; }
+  .ps-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+  .ps-save {
+    padding: 9px 12px; border: none; border-radius: var(--radius-btn);
+    background: #fff; color: var(--navy); font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .ps-save:hover { background: var(--tint); }
+  .ps-save:disabled { opacity: .5; cursor: not-allowed; }
+  .ps-reset {
+    padding: 7px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius-btn);
+    background: none; color: #C7D2E6; font-size: 12.5px; font-family: inherit; cursor: pointer;
+  }
+  .ps-reset:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .ps-status { font-size: 12px; line-height: 1.5; min-height: 16px; }
+  .ps-status.ok { color: #7ee0a7; }
+  .ps-status.err { color: #ffb3b3; }
+  .ps-hint { font-size: 11px; color: #8092B0; line-height: 1.5; }
+
   /* ---- Main + printable sheet ---- */
   .print-main { flex: 1; min-width: 0; padding: 24px; }
 
   .sheet {
-    max-width: 210mm; margin: 0 auto; background: #fff; padding: 14mm;
+    max-width: 210mm; margin: 0 auto; background: #fff; padding: var(--page-margin);
     box-shadow: 0 8px 24px rgba(0,0,0,.12); border-radius: 6px;
   }
 
@@ -126,12 +179,13 @@
   }
 
   /* ---- Questions ---- */
-  .question { margin-bottom: 14px; page-break-inside: avoid; }
-  .qhead { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
-  .qhead .qnum { font-weight: 800; font-size: 15px; color: #111; min-width: 28px; }
-  .qtext-en { margin-top: 2px; font-size: 14px; }
+  /* font-size var(--q-font); Urdu = base +2px, qnum = base +1px (nisbat barqarar). */
+  .question { margin-bottom: var(--q-gap); page-break-inside: avoid; }
+  .qhead { display: flex; justify-content: space-between; gap: 10px; font-size: var(--q-font); }
+  .qhead .qnum { font-weight: 800; font-size: calc(var(--q-font) + 1px); color: #111; min-width: 28px; }
+  .qtext-en { margin-top: 2px; font-size: var(--q-font); }
   .qtext-ur {
-    margin-top: 4px; font-size: 16px; direction: rtl;
+    margin-top: 4px; font-size: calc(var(--q-font) + 2px); direction: rtl;
     font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif;
     line-height: 1.7;
   }
@@ -140,7 +194,9 @@
   .visual-row { margin: 6px 0; font-size: 26px; letter-spacing: 6px; }
 
   /* ---- Section A: objective ---- */
-  .options { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; font-size: 13px; }
+  /* Options bhi --q-font ke saath scale hote hain (base -1px) — font bara karne par
+     bachcha jawab bhi padh sake. Default 14 par 13px = pehle jaisa. */
+  .options { margin-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; font-size: calc(var(--q-font) - 1px); }
   .options .opt { display: flex; gap: 6px; align-items: baseline; }
   .opt .circle { display: inline-block; width: 14px; height: 14px; border: 1px solid #444; border-radius: 50%; flex-shrink: 0; }
 
@@ -433,6 +489,45 @@
     <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
     <span id="toolbarInfo"></span>
   </div>
+
+  <!-- Print settings (Marhala 4B) — screen only (.no-print). Stepper hilane par
+       preview foran badalta hai (setVar). DB mein sirf Save par likhta hai. -->
+  <details class="print-settings no-print" id="printSettings">
+    <summary>🖨️ Print Settings</summary>
+    <div class="ps-body">
+      <div class="ps-row">
+        <span class="ps-label">Font size (sawal)</span>
+        <div class="ps-stepper">
+          <button type="button" onclick="stepPrint('font_size',-1)" aria-label="Font chhota">−</button>
+          <span class="ps-value" id="psFontVal">14px</span>
+          <button type="button" onclick="stepPrint('font_size',1)" aria-label="Font bara">+</button>
+        </div>
+      </div>
+      <div class="ps-row">
+        <span class="ps-label">Sawalon ka faasla</span>
+        <div class="ps-stepper">
+          <button type="button" onclick="stepPrint('q_gap',-1)" aria-label="Faasla kam">−</button>
+          <span class="ps-value" id="psGapVal">14px</span>
+          <button type="button" onclick="stepPrint('q_gap',1)" aria-label="Faasla zyada">+</button>
+        </div>
+      </div>
+      <div class="ps-row">
+        <span class="ps-label">Page margin</span>
+        <div class="ps-stepper">
+          <button type="button" onclick="stepPrint('page_margin',-1)" aria-label="Margin kam">−</button>
+          <span class="ps-value" id="psMarginVal">14mm</span>
+          <button type="button" onclick="stepPrint('page_margin',1)" aria-label="Margin zyada">+</button>
+        </div>
+      </div>
+      <div class="ps-actions">
+        <button type="button" class="ps-save" id="psSaveBtn" onclick="savePrintSettings()">Is class ke liye mehfooz karein</button>
+        <button type="button" class="ps-reset" onclick="resetPrintSettings()">Reset (default par)</button>
+      </div>
+      <div class="ps-status" id="psStatus"></div>
+      <div class="ps-hint" id="psHint"></div>
+    </div>
+  </details>
+
   <div class="sidebar-foot">Sidebar sirf screen par hai —<br/>print/PDF mein sirf paper aata hai.</div>
 </aside>
 
@@ -886,6 +981,116 @@ function setVar(name, value) {
   document.documentElement.style.setProperty(name, value);
 }
 
+// ============================================================================
+// Print settings — live controls (Marhala 4B). Stepper hilane par foran setVar
+// (koi fetch nahi); DB mein sirf Save par. Reset = global default par (visual).
+// Bounds server-schema ke mirror hain (out-of-range wahan bhi 422).
+// ============================================================================
+const PRINT_BOUNDS = {
+  font_size:   { min: 11, max: 20, step: 1, unit: 'px', varName: '--q-font',      valEl: 'psFontVal'   },
+  q_gap:       { min: 6,  max: 30, step: 2, unit: 'px', varName: '--q-gap',       valEl: 'psGapVal'    },
+  page_margin: { min: 10, max: 25, step: 1, unit: 'mm', varName: '--page-margin', valEl: 'psMarginVal' },
+};
+let _printState          = { font_size: 14, q_gap: 14, page_margin: 14 };
+let _printGlobalDefaults = { font_size: 14, q_gap: 14, page_margin: 14 };
+let _currentClassName    = '';
+
+function _clampPrint(key, v) {
+  const b = PRINT_BOUNDS[key];
+  return Math.max(b.min, Math.min(b.max, v));
+}
+
+// _printState → CSS vars + readouts + button-limit state. Koi fetch nahi.
+function _renderPrintControls() {
+  for (const key of Object.keys(PRINT_BOUNDS)) {
+    const b = PRINT_BOUNDS[key];
+    const v = _printState[key];
+    setVar(b.varName, v + b.unit);
+    const valEl = document.getElementById(b.valEl);
+    valEl.textContent = v + b.unit;
+    const stepper = valEl.parentElement;          // [−] <span.ps-value> [+]
+    stepper.children[0].disabled = v <= b.min;
+    stepper.children[2].disabled = v >= b.max;
+  }
+}
+
+function stepPrint(key, dir) {
+  const b = PRINT_BOUNDS[key];
+  _printState[key] = _clampPrint(key, _printState[key] + dir * b.step);
+  _renderPrintControls();
+  _setPsStatus('', '');   // value badla → purana save-payghaam hata do
+}
+
+function _setPsStatus(msg, kind) {
+  const el = document.getElementById('psStatus');
+  el.textContent = msg;
+  el.className = 'ps-status' + (kind ? ' ' + kind : '');
+}
+
+// Class ho to Save enable + hint; na ho to disable (per-class ke liye class laazmi).
+function _configurePrintSaveUI() {
+  const saveBtn = document.getElementById('psSaveBtn');
+  const hint = document.getElementById('psHint');
+  if (_currentClassName) {
+    saveBtn.disabled = false;
+    hint.textContent = `Save is class ("${_currentClassName}") ke sab papers par lagega.`;
+  } else {
+    saveBtn.disabled = true;
+    hint.textContent = 'Is paper ki class set nahi — per-class save mumkin nahi. (Preview phir bhi chalta hai.)';
+  }
+}
+
+// Marhala 4A — backend se resolved values (class row ya global fallback) le kar
+// CSS vars + controls initialize karo. Fail-safe: error par defaults (14/14/14)
+// barqarar. _printGlobalDefaults loadPaper mein school-settings se pehle set hote hain.
+async function applyPrintSettings(className) {
+  _currentClassName = (className || '').trim();
+  try {
+    const res = await apiFetch('/api/print-settings?class_name=' + encodeURIComponent(_currentClassName));
+    if (res.ok) {
+      const ps = await res.json();
+      if (Number.isFinite(ps.font_size))   _printState.font_size   = ps.font_size;
+      if (Number.isFinite(ps.q_gap))       _printState.q_gap       = ps.q_gap;
+      if (Number.isFinite(ps.page_margin)) _printState.page_margin = ps.page_margin;
+    }
+  } catch (_e) { /* silent — defaults CSS mein pehle se hain */ }
+  _renderPrintControls();
+  _configurePrintSaveUI();
+}
+
+function resetPrintSettings() {
+  _printState = { ..._printGlobalDefaults };
+  _renderPrintControls();
+  _setPsStatus('Default par reset — mehfooz karne ke liye Save dabaayein.', 'ok');
+}
+
+async function savePrintSettings() {
+  if (!_currentClassName) return;
+  const btn = document.getElementById('psSaveBtn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Mehfooz ho raha…';
+  _setPsStatus('', '');
+  try {
+    const res = await apiFetch('/api/print-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ class_name: _currentClassName, ..._printState }),
+    });
+    if (!res.ok) {
+      const detail = await res.json().then(d => d.detail).catch(() => null);
+      _setPsStatus(typeof detail === 'string' ? detail : 'Save fail hui — dobara.', 'err');
+    } else {
+      _setPsStatus(`✓ "${_currentClassName}" ke liye mehfooz — ab is class ke sab papers par lagega.`, 'ok');
+    }
+  } catch (e) {
+    _setPsStatus('Network error: ' + e.message, 'err');
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = !_currentClassName;
+  }
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
@@ -1167,6 +1372,15 @@ async function loadPaper() {
     document.getElementById('paperTitle').textContent = paper.paper_title || `${paper.subject} — Examination Paper`;
     document.getElementById('metaClass').textContent = paper.class_name || '';
     document.getElementById('metaMarks').textContent = paper.total_marks;
+
+    // Per-class print settings (Marhala 4A/4B) — global defaults school-settings se
+    // (Reset inhi par le jaata hai), phir class-resolved values apply + controls init.
+    _printGlobalDefaults = {
+      font_size:   Number.isFinite(settings.print_font_size)   ? settings.print_font_size   : 14,
+      q_gap:       Number.isFinite(settings.print_q_gap)       ? settings.print_q_gap       : 14,
+      page_margin: Number.isFinite(settings.print_page_margin) ? settings.print_page_margin : 14,
+    };
+    await applyPrintSettings(paper.class_name);
 
     const container = document.getElementById('sectionsContainer');
 

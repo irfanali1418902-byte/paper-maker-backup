@@ -236,6 +236,15 @@ class StatusResponse(BaseModel):
     status: str
 
 
+class PrintSettingsResolved(BaseModel):
+    """GET /api/print-settings — ek class ke resolved print knobs (per-class row
+    ya global fallback). print.html inhe CSS vars par apply karta hai."""
+
+    font_size: int
+    q_gap: int
+    page_margin: int
+
+
 class LibraryImage(BaseModel):
     """One row of the image_library table."""
 

@@ -1,5 +1,126 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-23 — Marhala 4B: live print controls (sidebar stepper + POST save)
+
+Maqsad: teacher print.html sidebar mein 3 knobs hilaye → preview foran badle
+(setVar, koi fetch) → "Is class ke liye mehfooz karein" par DB likhe (auto-save
+nahi) → Reset global default par (visual-only, DB untouched).
+
+**Backend (POST):**
+- `app/schemas/requests.py` — naya `ClassPrintSettingsSave` (class_name + font_size
+  11–20 / q_gap 6–30 / page_margin 10–25, `Field(ge/le)` → out-of-range 422).
+- `app/services/class_print_settings_service.py` — naya `save_print_settings()`:
+  normalize_class, blank class → ValueError (route 400), warna repo.upsert (4A wala).
+- `app/api/school_settings.py` — naya `POST /api/print-settings` (StatusResponse;
+  ValueError→400, baaqi→500). GET/repo 4A se.
+- `tests/test_class_print_settings.py` — POST: roundtrip, normalization, upsert
+  overwrite, blank→400, out-of-bounds→422 (6 params, value persist bhi nahi hoti),
+  boundary font accept. Total file ab 28 tests.
+
+**Frontend (print.html):**
+- `.options` font-size → `calc(var(--q-font) - 1px)` — **user faisla:** options bhi
+  scale hon (font bara = bachcha jawab bhi padh sake). `.marks`/`.sec-title` waise.
+  Default 14 par 13px = pehle jaisa.
+- Sidebar mein `<details class="print-settings no-print">` — 3 stepper controls
+  (+/− buttons, min/max par disabled), Save + Reset, status + hint line. Collapsible
+  ([[project-papermaker-kaam-b-collapse-manual-add]] pattern). `.app-sidebar` par
+  `overflow-y:auto` (khulne par clip na ho).
+- JS: `PRINT_BOUNDS` (UI limits = schema mirror), `_printState`/`_printGlobalDefaults`/
+  `_currentClassName`. `stepPrint` → clamp + setVar foran. `applyPrintSettings` (4A)
+  extend: resolved values se controls init + Save UI configure (class na ho to Save
+  disabled). `resetPrintSettings` → global default (visual). `savePrintSettings` →
+  POST, inline feedback (koi alert nahi). `_printGlobalDefaults` loadPaper mein
+  school-settings ke print_* se.
+
+**Control type:** stepper +/− (non-tech teachers ke liye — sirf valid steps, bade
+tap-target). **Feedback:** inline status line (✓ mehfooz / err), koi browser-dialog nahi.
+
+**Verify:** POST tests + `pytest` (poora suite) 812 green; `ruff` clean; inline
+JS `node --check` OK. **Browser test — server RESTART ke baad** (naya POST route).
+
+**Browser test follow-up (2026-07-23):**
+- Layout bug: sidebar flex-column mein `.print-settings` (details) shrink ho raha tha
+  → summary+ps-body side-by-side, buttons wrap. Fix: `.print-settings { width:100%;
+  box-sizing:border-box }` + `summary { display:block }`. (CSS-only.)
+- POST 405: code theek — current app ke openapi mein `['get','post']` dono, TestClient
+  POST=200. 405 = live server abhi **purana 4A code** (sirf GET) chala raha tha (GET+405
+  combo = stale process ki nishaani). Hal: sahi process kill karke restart. Code bug nahi.
+
+## 2026-07-23 — Marhala 4A · Commit 3: print.html CSS vars + JS apply (+ tests)
+
+Maqsad: backend ke resolved print settings ko print.html par CSS vars se apply.
+
+- `static/print.html` — (1) `:root` mein `--q-font: 14px`, `--q-gap: 14px`
+  (`--page-margin` Commit 1 se). (2) `.question` gap → `var(--q-gap)`; `.qhead`
+  + `.qtext-en` → `var(--q-font)`; `.qnum` → `calc(var(--q-font) + 1px)`;
+  `.qtext-ur` → `calc(var(--q-font) + 2px)` (Urdu +2, qnum +1 nisbat barqarar).
+  (3) naya `applyPrintSettings(className)` — `GET /api/print-settings?class_name=`
+  fetch, `setVar` se font(px)/gap(px)/margin(mm) apply; fetch/JSON error par
+  silent (defaults CSS mein pehle se). `loadPaper` mein `paper.class_name` ke
+  saath await.
+- `tests/test_class_print_settings.py` (naya, 16 tests) — migration columns
+  DEFAULT 14, resolution (fresh default, global fallback, blank/None class,
+  class-row override, normalization "Class 5"/"class 5"/" CLASS 5 ", other class
+  → global, upsert replace), aur endpoint (global/override/no-param).
+
+**Defaults par diff-zero:** `--q-font 14 / --q-gap 14 / --page-margin 14mm` =
+purani hardcoded values → koi class-override na ho to output bilkul waisa.
+
+**Verify:** `pytest` = **800 passed** (poora suite). Browser test baaqi (server
+restart ke baad — neeche).
+
+## 2026-07-23 — Marhala 4A · Commit 2: per-class print settings backend + chain
+
+Maqsad: 3 print knobs (font_size, q_gap, page_margin) per-class store + resolve.
+Row-level fallback: class ki row ho to woh, warna school_settings ke global
+defaults. UI 4B mein; yeh sirf backend + endpoint.
+
+- `app/core/database.py` — (1) school_settings migration mein 3 naye global-default
+  columns `print_font_size/print_q_gap/print_page_margin` (DEFAULT 14 = maujooda
+  print.html values, purana output na badle). (2) naya `class_print_settings` table
+  (`class_key` PK = normalize_class(class_name); font_size/q_gap/page_margin NOT NULL).
+- `app/schemas/requests.py` — `SchoolSettings` mein 3 fields (default 14).
+- `app/repositories/settings_repository.py` — `upsert` mein 3 columns (accent jaisa).
+- `app/services/settings_service.py` — `save_settings` 3 fields pass karta hai.
+- **naya** `app/repositories/class_print_settings_repository.py` — get(class_key)/upsert.
+- **naya** `app/services/class_print_settings_service.py` — `get_print_settings(class_name)`:
+  normalize_class → class row → warna global. Row-level fallback.
+- `app/schemas/responses.py` — naya `PrintSettingsResolved` (font_size/q_gap/page_margin).
+- `app/api/school_settings.py` — naya `GET /api/print-settings?class_name=` (auth same router).
+
+**Verify:** temp-DB smoke (real DB safe) — fresh default 14/14/14, global override,
+class-row wins + normalization ("class 5"=="Class 5"==" CLASS 5 "), aur other/empty/None
+class → global fallback. `pytest tests/test_settings_repository.py tests/test_api_routes.py`
+= 62 passed. Client-side (print.html JS apply) = Commit 3.
+
+**Baaqi:** naye service/endpoint ke liye dedicated test abhi nahi likha (existing pass;
+smoke se cover) — chaho to Commit 3 se pehle add kar dun.
+
+## 2026-07-23 — Marhala 4A · Commit 1: print margin bug (28mm → 14mm)
+
+Maqsad (per-class print settings feature ka Commit 1 — sirf bug fix, aage nahi barha).
+Bug: `print.html` mein `@page { margin: 14mm }` **+** `.sheet { padding: 14mm }`, aur
+`@media print` mein `.sheet` padding reset nahi hota tha → chhapte waqt asal margin
+14+14 = **28mm** ban raha tha.
+
+**Faisla (plan §0 — single source):** `@page` margin `0`, saara page-margin `.sheet`
+padding se, `var(--page-margin)` (default `14mm`). Isse bug bhi theek aur aage
+`page_margin` setting ke liye mechanism bhi tayyar (throwaway `padding:0` nahi likha).
+
+- `static/print.html` — 3 edits: (1) `@page` margin `14mm→0` (2) `:root` mein
+  `--page-margin: 14mm` (3) `.sheet` padding `14mm → var(--page-margin)`.
+- `@media print` block chhua nahi — padding ab var se aata hai (14mm), single source.
+
+**Asar:** har paper ka print margin 28→14mm (yeh deliberate correction, user ne manzoor
+kiya). Font/spacing waghera bilkul waise hi — koi aur farq nahi. Sirf CSS, koi
+backend/JS nahi. User browser test karega.
+
+**Note (4B ke liye):** `export_service.py` (DOCX/python-docx + PDF/LibreOffice) apna
+**alag** layout render karta hai — Word default ~1inch margin, yeh CSS use hi nahi karta.
+4A/print.html ke settings export par apply NAHI honge. Teacher kis raaste se print karta
+hai (browser vs export) — 4B se pehle confirm karna.
+
+
 ## 2026-07-21 — feature/print-shortfall (print.html panel + sections_meta persistence)
 
 Maqsad: print.html blueprint jaisa shortfall payghaam dikhaye (reason + read-only

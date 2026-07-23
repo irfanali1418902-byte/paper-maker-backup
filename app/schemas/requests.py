@@ -483,3 +483,18 @@ class SchoolSettings(BaseModel):
     class_size: int = 25
     min_analysis_percent: int = 60
     weak_topic_threshold: int = 60
+    # Marhala 4A — global print defaults (per-class na ho to yehi lagte hain).
+    print_font_size: int = 14
+    print_q_gap: int = 14
+    print_page_margin: int = 14
+
+
+class ClassPrintSettingsSave(BaseModel):
+    """POST /api/print-settings — ek class ke print knobs mehfooz karna (Marhala 4B).
+    Bounds UI ki hadd ka mirror hain: out-of-range value 422 de deti hai, DB tak
+    nahi pahunchti. class_name blank ho to route 400 (per-class ke liye laazmi)."""
+
+    class_name: str
+    font_size: int = Field(ge=11, le=20)
+    q_gap: int = Field(ge=6, le=30)
+    page_margin: int = Field(ge=10, le=25)

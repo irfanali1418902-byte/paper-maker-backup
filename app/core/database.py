@@ -219,6 +219,14 @@ def init_db() -> None:
         cur.execute("ALTER TABLE school_settings ADD COLUMN min_analysis_percent INTEGER DEFAULT 60")
     if "weak_topic_threshold" not in settings_cols:
         cur.execute("ALTER TABLE school_settings ADD COLUMN weak_topic_threshold INTEGER DEFAULT 60")
+    # Marhala 4A — global print defaults (per-class na ho to yehi). Default 14 =
+    # print.html ke maujooda hardcoded values, isliye purana output bilkul na badle.
+    if "print_font_size" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN print_font_size INTEGER DEFAULT 14")
+    if "print_q_gap" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN print_q_gap INTEGER DEFAULT 14")
+    if "print_page_margin" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN print_page_margin INTEGER DEFAULT 14")
 
     # Existing DBs: add name_normalized column and back-fill from name.
     lib_cols = {row[1] for row in cur.execute("PRAGMA table_info(image_library)").fetchall()}
@@ -295,6 +303,19 @@ def init_db() -> None:
     # Reverse lookup "is SLO ke saare questions" (Marhala 2 coverage) — SCAN se bachao.
     # (question_id par filter composite PK ka implicit index khud de deta hai.)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_question_slo_slo ON question_slo(slo_id)")
+
+    # Marhala 4A — per-class print settings. class_key = normalize_class(class_name);
+    # papers.class_name free-text hai isliye normalized key se "Class 5"/"class 5" ek
+    # hi row. Row na mile to school_settings ke global print_* defaults (row-level
+    # fallback). Purane papers: koi row nahi + defaults 14/14/14 = output bilkul waisa.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS class_print_settings (
+            class_key   TEXT PRIMARY KEY,
+            font_size   INTEGER NOT NULL,
+            q_gap       INTEGER NOT NULL,
+            page_margin INTEGER NOT NULL
+        )
+        """)
 
     conn.commit()
     conn.close()

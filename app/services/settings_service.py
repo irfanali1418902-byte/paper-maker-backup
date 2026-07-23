@@ -24,4 +24,7 @@ def save_settings(settings: SchoolSettings) -> None:
         class_size=settings.class_size,
         min_analysis_percent=settings.min_analysis_percent,
         weak_topic_threshold=settings.weak_topic_threshold,
+        print_font_size=settings.print_font_size,
+        print_q_gap=settings.print_q_gap,
+        print_page_margin=settings.print_page_margin,
     )
