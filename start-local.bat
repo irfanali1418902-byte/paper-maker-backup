@@ -42,7 +42,8 @@ echo   Band karne ke liye: Ctrl+C
 echo ============================================================
 echo(
 
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+REM --reload: code save karte hi server khud naya module load kare (stale-server se bacho)
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 echo(
 echo Server band ho gaya. Koi key dabayein.
