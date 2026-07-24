@@ -500,6 +500,25 @@ class SchoolSettings(BaseModel):
     print_page_margin: int = 14
 
 
+class TaqseemGenerateRequest(BaseModel):
+    """POST /api/taqseem/generate — ek (class, subject) ka auto exam plan banao.
+    N (exam count) global hai (school_settings.exam_count), is liye body mein nahi
+    aata. class_name/subject blank par route 400 deta hai (GET /api/taqseem jaisa)."""
+
+    class_name: str
+    subject: str
+
+
+class TaqseemMoveRequest(BaseModel):
+    """POST /api/taqseem/move — ek SLO ka assignment badlo (drag/drop).
+    exam_no 0 = Unassigned. Range (0..N) check route/service karta hai (N global).
+    position optional (exam ke andar tarteeb)."""
+
+    slo_id: str
+    exam_no: int
+    position: Optional[int] = None
+
+
 class ClassPrintSettingsSave(BaseModel):
     """POST /api/print-settings — ek class ke print knobs mehfooz karna (Marhala 4B).
     Bounds UI ki hadd ka mirror hain: out-of-range value 422 de deti hai, DB tak

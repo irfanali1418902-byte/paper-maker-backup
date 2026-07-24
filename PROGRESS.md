@@ -1,5 +1,155 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — Taqseem Hissa 2 / Tukda 4: taqseem.html page + nav
+
+Maqsad: taqseem ka UI. Tukda 3 (move) browser-confirmed (move 200, range 400, restore).
+
+Naya page `static/taqseem.html` (StaticFiles se serve — koi naya backend route nahi):
+- Upar: class + subject dropdown (`/api/slo/facets` se — GET /api/taqseem dono laazmi
+  maangta hai), `N = k exams` badge (`plan.exam_count`), "Sequence se auto-generate"
+  button, status line.
+- Board: N columns (Exam 1..N) + alag **Unassigned** column (dashed). Har chip:
+  `slo_code` + strand pill + `seq k` (NULL → "seq —" warn-rang). Chip par
+  **"move to exam" dropdown** (Unassigned + Exam 1..N; current selected) — drag-drop
+  NAHI (tay-shuda).
+- Move: `change` par `POST /api/taqseem/move {slo_id, exam_no}` (position nahi bhejte →
+  None; **siblings shift nahi hote**, position sirf ishara). Har move ke baad plan reload
+  (source-of-truth server).
+- Auto-generate: custom confirm modal (native `confirm()` nahi) — count dikhata hai
+  kitne SLO abhi exams mein rakhe hain (yehi tarteeb overwrite hogi). Confirm ke baad
+  `POST /api/taqseem/generate`; result mein backend ka theek `assigned/unassigned/
+  overwritten` status line par.
+- Nav "Exam Taqseem" (i-blueprint icon) **Learning Outcomes ke baad** — jin 3 pages ke
+  nav mein SLO link tha (`index.html`, `slo.html`, `slo-health.html`) unmein add.
+
+**Dead-code trap se bacha (Jul 24 ka sabaq):** har function ek hi jagah define, ek hi
+call — koi `_orig… = fn; fn = wrapper` reassignment nahi. Move dropdown **event
+delegation** par (`board` ka `change`), koi inline `onclick`/`JSON.stringify`-in-markup
+nahi (frontend onclick-markup trap se door).
+
+Verify (read-only): taqseem.html tag-balanced + inline JS `node --check` OK; teenon
+nav-edited pages tag-balanced, har ek mein 1 taqseem link. **Khud test nahi kiya** — user
+browser se. Server fresh `--reload` zaroori (Tukda 2/3 routes + naya page).
+
+## 2026-07-24 — Taqseem Hissa 2 / Tukda 3: POST /api/taqseem/move (per-move)
+
+Maqsad: ek SLO ka assignment badalne ka route (drag/drop ke liye). Tukda 2 (generate)
+browser-confirmed — plan sahi bana (exam 1: seq 1-7, exam 2: seq 8-14, split 7/7/6×6).
+Sirf route; page Tukda 4 mein.
+
+Body: `{slo_id, exam_no, position?}`. Usool:
+- `exam_no 0` = Unassigned (valid). Range `0 <= exam_no <= N` (N global). Bahar → **400**.
+- `slo_id` DB mein na ho → **404**. `position` optional (None = get_plan sequence par
+  fall back). Sirf isi SLO ki row upsert — siblings ki positions nahi chhedi jaatin
+  (re-pack Tukda 4 ka kaam).
+
+Changes:
+- `app/repositories/slo_repository.py` — naya `find_by_id()` (existence check;
+  questions_repository jaisa).
+- `app/services/taqseem_service.py` — naya `move_slo()` + `SloNotFoundError`. Range
+  check pehle (ValueError), phir existence (SloNotFoundError), phir `overwrite_assignments`
+  se ek-row upsert (Tukda 2 ka bulk-upsert dobara istemaal).
+- `app/schemas/requests.py` — `TaqseemMoveRequest {slo_id, exam_no, position?}`.
+- `app/api/taqseem.py` — `POST /api/taqseem/move`; SloNotFoundError→404, ValueError→400,
+  baaqi→500.
+- `tests/test_taqseem_move.py` — 10 test: move to exam, exam_no 0, position optional,
+  >N & negative reject, missing slo, route 200/400/404.
+
+Verify: move+generate suites **16 passed**. **Move khud NAHI chalaya** — user browser se.
+Server fresh `--reload` zaroori (naya route) — warna 404/stale (aaj chauthi dafa stale-server).
+
+## 2026-07-24 — Taqseem Hissa 2 / Tukda 2: POST /api/taqseem/generate (auto-split)
+
+Maqsad: ek (class, subject) ke SLO ko **sequence** ke hisaab se N exams mein khud-ba-khud
+baant do (Tukda 1 = read-only GET pehle browser-confirmed ho chuka).
+
+Split usool:
+- `sequence` NULL wale SLO **kisi exam mein NAHI** jaate — `exam_no 0` (Unassigned)
+  rehte hain (in ki asal teaching-tarteeb maloom nahi). Chahe pehle manually assign
+  the, regenerate unhe 0 par le aata hai.
+- baaqi SLO **sequence ASC** par (tie → slo_code, deterministic): `total` = un ki
+  ginti, `base = total//N`, `rem = total%N`. Pehle `rem` exams ko `base+1`, baaqi ko
+  `base`. (misal total=50, N=8 → do exam 7, chhe exam 6.)
+- Poora regenerate: har SLO ka row upsert. `overwritten` = kitne SLO ka pehle se plan
+  row tha (frontend confirm/summary ke liye) — pehli dafa 0, dobara sab.
+
+Changes:
+- `app/repositories/slo_exam_plan_repository.py` — naya `overwrite_assignments()`:
+  `executemany` + `ON CONFLICT(slo_id) DO UPDATE` (class_print_settings jaisa pattern),
+  ek transaction/commit. Sirf likhna — split logic service mein.
+- `app/services/taqseem_service.py` — naya `generate_plan()`: `list_resolved()` se
+  rows, `_exam_count()` se N, split compute, exam_no 0 for NULL-seq, counts wapas.
+- `app/schemas/requests.py` — `TaqseemGenerateRequest {class_name, subject}` (N global,
+  body mein nahi).
+- `app/api/taqseem.py` — `POST /api/taqseem/generate`; blank class/subject → 400
+  (GET /api/taqseem jaisa), DB error → 500.
+- `tests/test_taqseem_generate.py` — 7 test: even/uneven split, NULL-seq unassigned,
+  sequence-not-slo_code ordering, overwritten count, N>total, blank-class 400.
+
+Verify: naye 7 test pass; related suites (api_routes + slo_repo + class_print) **93
+passed**, koi regression nahi. **Generate khud NAHI chalaya** — user browser se karega
+(fresh `--reload` server zaroori, warna naya module load na ho — dekho Jul 24 stale-server sabaq).
+
+Symptom: Class Size save (DB=30, GET confirm) magar F5 ke baad field 25 dikhata. Do cache
+theories (server no-store, phir client no-store — neeche wali entries) **galat** thi;
+data kabhi clobber nahi hua. Asal wajah frontend mein thi:
+
+`static/index.html` mein `loadSchoolSettings` DO baar mojood tha —
+- L1302 original `async function loadSchoolSettings()` (sirf identity fields set karta,
+  classSize NAHI), aur L1340 par **call**.
+- L2595-2596 par baad mein `_origLoadSchoolSettings = loadSchoolSettings; loadSchoolSettings
+  = async function(){…}` — wrapper jo classSize/minAnalysisPct/weakTopicThreshold populate
+  karta tha.
+- Magar ekloti call (L1340) reassignment se PEHLE chalti thi → hamesha **original** chalta,
+  **wrapper kabhi call nahi hota** (dead code). Natija: classSize field kabhi server se load
+  hi nahi hota → har F5 par HTML default `value="25"`. (Instrumentation ne sabit kiya:
+  console mein sirf ORIGINAL log aaya, WRAPPER ka kabhi nahi.)
+
+Fix: wrapper + reassignment poora delete; classSize/minAnalysisPct/weakTopicThreshold
+populate ab **isi** original `loadSchoolSettings` ke andar (logo ke baad). Ab ek hi
+function, ek hi call. Saari [PM-DEBUG] instrumentation (frontend 4 + backend 2) nikaal di.
+
+Verify (read-only, koi POST nahi — user khud browser se test karega): served index.html
+mein PM-DEBUG=0, wrapper=0, `loadSchoolSettings`=2 (1 def+1 call), classSize-in-load=1.
+index.html tag-balanced; backend import OK; server clean restart. Data salaamat (logo
+97491, class_size 30).
+
+Alag masla (isi din): meri adhoori curl POST ne school_settings wipe kar diya tha
+(address/logo/email/principal) — logo backup se surgical single-column UPDATE se restore
+(baaqi untouched); backup `paper_maker_backup_before_logo_restore_20260724_084757.db`.
+Sabaq: `/api/school-settings` merge-less POST (sirf kuch fields) baaqi ko pydantic-defaults
+par reset kar deta — test/verify ke liye kabhi partial POST na karo.
+
+Note: neeche ki do "Cache-Control / stale-UI" entries asal bug ka hal nahi thi, magar woh
+headers (api no-store, HTML/JS/CSS no-cache, client cache:'no-store') sahih hygiene hain —
+rakhe gaye.
+
+## 2026-07-24 — Stale-UI fix ka round 2: client cache:'no-store' + JS/CSS no-cache
+
+Pichhla fix (server no-store/no-cache) kaafi na tha — bug baqi raha. Do asal wajah:
+1. **fetch() purani cached entry reuse karta tha.** Server ab no-store deta hai, magar us
+   se PEHLE (jab koi Cache-Control nahi tha) browser ne `/api/school-settings` cache kar
+   liya tha; `fetch()` default mode us stored entry ko bina revalidate reuse karta hai.
+   Natija: merge se pehle wala GET **stale** → `saveSchoolSettings` purani `class_size`
+   dobara POST → clobber. (DB mein 30 sirf isliye ke aakhri save Class Settings ka tha —
+   user ne theek pakda.)
+   Fix (`static/apiClient.js`, single choke-point): `_rawFetch` par default
+   `cache:'no-store'` (`Object.assign({cache:'no-store'}, opts, {headers})`, opts override
+   kar sakta hai). loadSchoolSettings + dono merge GET + print.html ka GET + har API call
+   ek saath cache-proof.
+2. **apiClient.js khud stale ho sakti thi.** Woh alag JS file hai; pichhla middleware sirf
+   `text/html` par no-cache lagata tha, is liye external JS par koi Cache-Control nahi →
+   naya no-store code hi load na hota.
+   Fix (`app/main.py`): no-cache branch ab HTML + JS + CSS teenon par (`_NO_CACHE_TYPES =
+   text/html, javascript, text/css`; content-type match). Immutable webp/fonts pehle
+   branch mein mehfooz.
+
+Verify (curl matrix): `/api/*` no-store; `/`, `index.html`, `print.html`, `apiClient.js`,
+`app.css` no-cache; library webp abhi bhi immutable. Served apiClient.js mein naya code
+mojood. Clean restart (--reload par bharosa nahi). Tests: api_routes **58 passed**.
+Ahem: user ko ek dafa **Ctrl+F5** karna hoga taake purani cached apiClient.js/index.html
+nikal jaye; uske baad no-cache khud maintain karega.
+
 ## 2026-07-24 — Cache-Control: /api no-store + HTML no-cache (stale-UI fix)
 
 Symptom: Class Size 25→30 Save (✅), phir identity "Settings save karen", F5 → Class Size

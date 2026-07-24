@@ -50,7 +50,14 @@ async function apiFetch(url, opts = {}) {
   const key = pmGetKey();
   const headers = Object.assign({}, opts.headers || {});
   if (key) headers["x-api-key"] = key;
-  const res = await _rawFetch(url, Object.assign({}, opts, { headers }));
+  // Har API call cache-proof: browser ka HTTP cache bypass. Server bhi /api par
+  // no-store bhejta hai, magar us se PEHLE cache hui purani entry ko fetch() default
+  // mode reuse kar leta tha (stale GET → merge purani value wapas POST → clobber).
+  // `cache:'no-store'` us stored entry ko bhi ignore karta hai. opts se override mumkin.
+  const res = await _rawFetch(
+    url,
+    Object.assign({ cache: "no-store" }, opts, { headers }),
+  );
   if (res.status === 401) {
     localStorage.removeItem(PM_KEY_STORAGE);
     pmShowKeyGate("Key ghalat ya missing hai — dobara daalein.");

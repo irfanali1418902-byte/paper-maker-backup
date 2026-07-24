@@ -369,6 +369,7 @@
       <a href="/bank.html"><svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg><span>Question Bank</span></a>
       <a href="/blueprint.html"><svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg><span>Blueprint</span></a>
       <a href="/slo.html"><svg class="icon"><use href="/static/icons.svg#i-outcomes"></use></svg><span>Learning Outcomes</span></a>
+      <a href="/taqseem.html"><svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg><span>Exam Taqseem</span></a>
       <a href="/slo-health.html"><svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg><span>SLO Health</span></a>
     </nav>
     <div class="sidebar-foot">
@@ -1318,6 +1319,12 @@ async function loadSchoolSettings() {
       img.src = logoBase64;
       img.style.display = 'block';
     }
+    // Class Settings fields bhi yahin populate. (Pehle ye alag wrapper mein tha jo
+    // reassignment se PEHLE call ho kar dead-code ban gaya tha → F5 par classSize
+    // hamesha HTML default 25 dikhata.)
+    if (s.class_size != null) document.getElementById('classSize').value = s.class_size;
+    if (s.min_analysis_percent != null) document.getElementById('minAnalysisPct').value = s.min_analysis_percent;
+    if (s.weak_topic_threshold != null) document.getElementById('weakTopicThreshold').value = s.weak_topic_threshold;
     syncHeaderPreview();
   } catch (e) {
     console.error('Settings load failed:', e);
@@ -2590,19 +2597,6 @@ async function saveClassSettings() {
     statusEl.textContent = 'Error: ' + e.message;
   }
 }
-
-// Populate class settings fields from server on settings load.
-const _origLoadSchoolSettings = loadSchoolSettings;
-loadSchoolSettings = async function() {
-  await _origLoadSchoolSettings();
-  try {
-    const res = await apiFetch('/api/school-settings');
-    const s = await res.json();
-    if (s.class_size != null) document.getElementById('classSize').value = s.class_size;
-    if (s.min_analysis_percent != null) document.getElementById('minAnalysisPct').value = s.min_analysis_percent;
-    if (s.weak_topic_threshold != null) document.getElementById('weakTopicThreshold').value = s.weak_topic_threshold;
-  } catch (e) { /* silent */ }
-};
 </script>
 </body>
 </html>

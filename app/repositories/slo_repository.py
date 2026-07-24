@@ -27,6 +27,16 @@ def insert(row: dict) -> None:
     conn.close()
 
 
+def find_by_id(slo_id: str) -> Optional[dict]:
+    """Ek SLO apni PK (id) se, warna None. (taqseem move ke existence-check ke liye.)"""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM slo WHERE id = ? LIMIT 1", (slo_id,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def find_by_code(slo_code: str) -> Optional[dict]:
     """slo_code (UNIQUE) se ek SLO wapas karo, warna None."""
     conn = get_connection()

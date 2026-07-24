@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Exam Taqseem — Parcha Paper Maker</title>
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  :root {
+    --primary: #2E5AAC; --primary-hover: #244a90; --navy: #16294A;
+    --tint: #EAF1FB; --ink: #16213A; --muted: #5B6678; --border: #E3E8F1;
+    --surface: #FFFFFF; --bg: #EEF1F6;
+    --err-bg: #FBE9E7; --err-tx: #C0392B;
+    --ok-bg: #E6F4EC; --ok-tx: #2E7D5B;
+    --warn-bg: #FBF1DF; --warn-tx: #B5760E;
+    --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--ink); background: var(--bg);
+    display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .app-sidebar {
+    width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
+    padding: 18px 0; position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .brand { padding: 2px 22px 20px; }
+  .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
+  .brand small { font-size: 10.5px; color: #9DB0D0; display: block; margin-top: 3px; }
+  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  .app-nav a {
+    display: flex; align-items: center; gap: 10px; color: #C6D2E8;
+    font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 8px;
+    border-left: 3px solid transparent;
+  }
+  .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: #5B8DEF; }
+  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: #8092B0; line-height: 1.6; }
+
+  .tq-main { flex: 1; min-width: 0; padding: 30px 34px; margin: 0 auto; width: 100%; max-width: 1400px; }
+  .page-head { margin-bottom: 24px; }
+  .page-head h1 { margin: 0; font-size: 22px; font-weight: 700; }
+  .page-head p { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    border: 0; border-radius: var(--radius-btn); font-size: 14px; font-weight: 600;
+    padding: 10px 16px; background: var(--primary); color: #fff;
+  }
+  .btn:hover { background: var(--primary-hover); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-ghost {
+    background: var(--tint); color: var(--primary); border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-btn);
+    font-size: 13.5px; font-weight: 600; padding: 9px 14px; cursor: pointer;
+  }
+  .btn-ghost:hover { background: #DDE9FA; }
+  select {
+    padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
+    font-size: 13.5px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+  .n-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;
+    padding: 7px 13px; border-radius: 20px; background: var(--tint); color: var(--primary);
+  }
+  .status { font-size: 13px; color: var(--muted); min-height: 18px; }
+  .status.ok { color: var(--ok-tx); }
+  .status.err { color: var(--err-tx); }
+
+  /* Board */
+  .board { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+  .col {
+    flex: 0 0 220px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; box-shadow: var(--shadow);
+  }
+  .col.unassigned { background: #FAFBFD; border-style: dashed; }
+  .col-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .col-head .title { font-size: 13.5px; font-weight: 700; }
+  .col-head .count { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+  .col.unassigned .col-head .title { color: var(--warn-tx); }
+  .chips { display: flex; flex-direction: column; gap: 8px; min-height: 24px; }
+  .chip {
+    border: 1px solid var(--border); border-radius: 10px; padding: 8px 9px;
+    background: #fff; display: flex; flex-direction: column; gap: 6px;
+  }
+  .chip-main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chip .code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; font-weight: 700; }
+  .chip .strand { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; background: var(--tint); color: var(--primary); }
+  .chip .seq { font-size: 11px; color: var(--muted); }
+  .chip .seq.none { color: var(--warn-tx); }
+  .chip select.move-sel { width: 100%; padding: 5px 7px; font-size: 12px; border-radius: 7px; }
+  .col-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 6px 2px; }
+  .pick-note { font-size: 13.5px; color: var(--muted); padding: 8px 0; }
+
+  /* Confirm modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(22,33,58,.55); z-index: 9998;
+    display: none; align-items: center; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 14px; padding: 22px; width: 92%; max-width: 420px;
+    box-shadow: 0 14px 44px rgba(22,33,58,.28);
+  }
+  .modal h3 { margin: 0 0 8px; font-size: 16px; }
+  .modal p { margin: 0 0 8px; font-size: 13.5px; color: var(--ink); line-height: 1.5; }
+  .modal .warn { color: var(--warn-tx); font-weight: 600; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  @media (max-width: 720px) {
+    body { flex-direction: column; }
+    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: column; }
+    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0 10px; }
+    .sidebar-foot { display: none; }
+  }
+</style>
+</head>
+<body data-page="Exam Taqseem">
+
+<aside class="app-sidebar">
+  <div class="brand">
+    <div class="name">Parcha Paper Maker</div>
+    <small>Exam Taqseem</small>
+  </div>
+  <nav class="app-nav">
+    <a href="/">
+      <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
+      Generator
+    </a>
+    <a href="/library.html">
+      <svg class="icon"><use href="/static/icons.svg#i-library"></use></svg>
+      Image Library
+    </a>
+    <a href="/bank.html">
+      <svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg>
+      Question Bank
+    </a>
+    <a href="/blueprint.html">
+      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      Blueprint
+    </a>
+    <a href="/slo.html">
+      <svg class="icon"><use href="/static/icons.svg#i-outcomes"></use></svg>
+      Learning Outcomes
+    </a>
+    <a href="/taqseem.html" class="active">
+      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      Exam Taqseem
+    </a>
+    <a href="/slo-health.html">
+      <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
+      SLO Health
+    </a>
+  </nav>
+  <div class="sidebar-foot">SLO ko N exams mein baanto. Auto-generate sequence ke hisaab se; phir chip par "move to exam" se hath se theek karo.</div>
+</aside>
+
+<main class="tq-main">
+  <div class="page-head">
+    <h1>Exam Taqseem</h1>
+    <p>Ek class + subject ke SLO ko exams mein baanto. NULL-sequence wale SLO auto-generate mein Unassigned rehte hain — unhe hath se move karo.</p>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <select id="selClass" style="width:200px;"><option value="">Class chuno…</option></select>
+      <select id="selSubject" style="width:200px;"><option value="">Subject chuno…</option></select>
+      <span class="n-badge" id="nBadge" style="display:none;">N = <span id="nVal">–</span> exams</span>
+      <button class="btn" id="genBtn" disabled>Sequence se auto-generate</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+
+  <div id="pickNote" class="pick-note">Upar se class aur subject chuno — plan yahan dikhega.</div>
+  <div class="board" id="board" style="display:none;"></div>
+</main>
+
+<!-- Confirm modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Auto-generate confirm</h3>
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="confirmCancel">Cancel</button>
+      <button class="btn" id="confirmOk">Haan, generate karo</button>
+    </div>
+  </div>
+</div>
+
+<script src="/apiClient.js"></script>
+<script src="/static/js/brand.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])));
+
+  // Last loaded plan (auto-generate confirm ke count ke liye).
+  let currentPlan = null;
+
+  function setStatus(msg, kind) {
+    const el = $("status");
+    el.textContent = msg || "";
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function selection() {
+    return { cls: $("selClass").value.trim(), subj: $("selSubject").value.trim() };
+  }
+
+  // exam_no 0 = Unassigned; 1..N = Exam k. Chip ke move-dropdown ke options.
+  function moveOptions(current, n) {
+    let html = '<option value="0"' + (current === 0 ? " selected" : "") + ">Unassigned</option>";
+    for (let k = 1; k <= n; k++) {
+      html += '<option value="' + k + '"' + (current === k ? " selected" : "") +
+              ">Exam " + k + "</option>";
+    }
+    return html;
+  }
+
+  function chipHtml(slo, n) {
+    const seqNull = (slo.sequence === null || slo.sequence === undefined);
+    const seq = seqNull
+      ? '<span class="seq none" title="sequence khali — auto-generate isse Unassigned rakhta hai">seq —</span>'
+      : '<span class="seq">seq ' + esc(slo.sequence) + "</span>";
+    const strand = slo.strand ? '<span class="strand">' + esc(slo.strand) + "</span>" : "";
+    const current = (slo.exam_no === null || slo.exam_no === undefined) ? 0 : slo.exam_no;
+    return (
+      '<div class="chip">' +
+      '<div class="chip-main"><span class="code">' + esc(slo.slo_code) + "</span>" + strand + seq + "</div>" +
+      '<select class="move-sel" data-slo="' + esc(slo.slo_id) + '">' + moveOptions(current, n) + "</select>" +
+      "</div>"
+    );
+  }
+
+  function colHtml(title, slos, n, extraClass) {
+    const chips = slos.length
+      ? slos.map((s) => chipHtml(s, n)).join("")
+      : '<div class="col-empty">khali</div>';
+    return (
+      '<div class="col' + (extraClass ? " " + extraClass : "") + '">' +
+      '<div class="col-head"><span class="title">' + esc(title) +
+      '</span><span class="count">' + slos.length + "</span></div>" +
+      '<div class="chips">' + chips + "</div></div>"
+    );
+  }
+
+  function renderBoard(data) {
+    const n = data.exam_count;
+    $("nVal").textContent = n;
+    $("nBadge").style.display = "inline-flex";
+    let html = "";
+    (data.exams || []).forEach((e) => {
+      html += colHtml("Exam " + e.exam_no, e.slos || [], n);
+    });
+    html += colHtml("Unassigned", data.unassigned || [], n, "unassigned");
+    $("board").innerHTML = html;
+    $("board").style.display = "flex";
+    $("pickNote").style.display = "none";
+  }
+
+  async function loadPlan() {
+    const { cls, subj } = selection();
+    $("genBtn").disabled = !(cls && subj);
+    if (!cls || !subj) {
+      $("board").style.display = "none";
+      $("pickNote").style.display = "block";
+      $("nBadge").style.display = "none";
+      currentPlan = null;
+      return;
+    }
+    setStatus("Plan load ho raha hai…");
+    try {
+      const params = new URLSearchParams({ class_name: cls, subject: subj });
+      const res = await apiFetch("/api/taqseem?" + params.toString());
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Plan load fail hua.", "err"); return; }
+      currentPlan = data;
+      renderBoard(data);
+      const placed = (data.exams || []).reduce((a, e) => a + (e.slos || []).length, 0);
+      setStatus(data.has_plan
+        ? "Plan maujood — " + placed + " exams mein, " + (data.unassigned || []).length + " unassigned."
+        : "Abhi koi plan nahi — sab " + (data.total || 0) + " SLO Unassigned. Auto-generate chalao.", "ok");
+    } catch (e) {
+      setStatus("Plan load mein masla: " + e.message, "err");
+    }
+  }
+
+  async function moveSlo(sloId, examNo) {
+    setStatus("Move ho raha hai…");
+    try {
+      const res = await apiFetch("/api/taqseem/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slo_id: sloId, exam_no: examNo }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Move fail hua.", "err"); await loadPlan(); return; }
+      await loadPlan();
+      setStatus(examNo === 0 ? "Unassigned kar diya." : "Exam " + examNo + " mein daal diya.", "ok");
+    } catch (e) {
+      setStatus("Move mein masla: " + e.message, "err");
+      await loadPlan();
+    }
+  }
+
+  // --- Confirm modal (native confirm ki jagah — count nicely dikha sakein) ---
+  let _confirmResolve = null;
+  function askConfirm(msg) {
+    $("confirmMsg").innerHTML = msg;
+    $("overlay").classList.add("show");
+    return new Promise((resolve) => { _confirmResolve = resolve; });
+  }
+  function closeConfirm(val) {
+    $("overlay").classList.remove("show");
+    if (_confirmResolve) { _confirmResolve(val); _confirmResolve = null; }
+  }
+
+  async function autoGenerate() {
+    const { cls, subj } = selection();
+    if (!cls || !subj) { setStatus("Pehle class aur subject chuno.", "err"); return; }
+
+    // Confirm: kitne SLO abhi exams mein rakhe hain (yehi tarteeb overwrite hogi).
+    const placed = currentPlan
+      ? (currentPlan.exams || []).reduce((a, e) => a + (e.slos || []).length, 0)
+      : 0;
+    const msg = placed > 0
+      ? "Abhi <span class='warn'>" + placed + " SLO</span> exams mein rakhe hain. Auto-generate inhe " +
+        "sequence ke hisaab se dobara baantega — <span class='warn'>maujooda tarteeb overwrite ho jayegi</span>. " +
+        "NULL-sequence wale SLO Unassigned hi rahenge. Aage barhein?"
+      : "Sequence ke hisaab se saare SLO ko exams mein baant diya jayega. NULL-sequence wale Unassigned rahenge. Aage barhein?";
+    const ok = await askConfirm(msg);
+    if (!ok) return;
+
+    $("genBtn").disabled = true;
+    setStatus("Generate ho raha hai…");
+    try {
+      const res = await apiFetch("/api/taqseem/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ class_name: cls, subject: subj }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Generate fail hua.", "err"); return; }
+      await loadPlan();
+      setStatus(
+        "Ho gaya — " + data.assigned + " assign, " + data.unassigned +
+        " unassigned, " + data.overwritten + " overwrite.", "ok");
+    } catch (e) {
+      setStatus("Generate mein masla: " + e.message, "err");
+    } finally {
+      $("genBtn").disabled = false;
+    }
+  }
+
+  function fillSelect(id, values) {
+    const sel = $(id);
+    (values || []).forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+  }
+  async function loadFacets() {
+    try {
+      const res = await apiFetch("/api/slo/facets");
+      if (!res.ok) return;
+      const data = await res.json();
+      fillSelect("selClass", data.classes);
+      fillSelect("selSubject", data.subjects);
+    } catch (e) { /* selects default option par reh jayenge */ }
+  }
+
+  // --- Wiring (event delegation — koi inline onclick nahi) ---
+  $("selClass").addEventListener("change", loadPlan);
+  $("selSubject").addEventListener("change", loadPlan);
+  $("genBtn").addEventListener("click", autoGenerate);
+  $("confirmOk").addEventListener("click", () => closeConfirm(true));
+  $("confirmCancel").addEventListener("click", () => closeConfirm(false));
+  $("overlay").addEventListener("click", (e) => { if (e.target === $("overlay")) closeConfirm(false); });
+  $("board").addEventListener("change", (e) => {
+    const sel = e.target.closest(".move-sel");
+    if (!sel) return;
+    moveSlo(sel.getAttribute("data-slo"), parseInt(sel.value, 10));
+  });
+
+  loadFacets();
+  loadPlan();
+</script>
+</body>
+</html>

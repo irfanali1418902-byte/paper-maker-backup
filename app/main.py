@@ -25,6 +25,7 @@ from app.api import (
     slo,
     stats,
     syllabus,
+    taqseem,
 )
 from app.api.auth import require_api_key
 from app.core.database import init_db
@@ -39,21 +40,28 @@ app = FastAPI(title="AII Smart Paper Maker - Phase 1")
 #   2. /api/* → no-store. Warna browser purana GET (e.g. /api/school-settings) cache
 #      se padh kar stale value dikhata hai (Class Size 30 save, F5 par 25 — asal DB
 #      theek, sirf UI cached response padh raha tha).
-#   3. HTML documents → no-cache (har load par revalidate). StaticFiles default sirf
-#      ETag/Last-Modified deta tha (koi Cache-Control nahi) → heuristic cache par normal
-#      F5 purana index.html/JS serve kar deta tha (stale merge-code = clobber bug jaisa
-#      lagta). no-cache = hamesha revalidate, purana JS band.
+#   3. App code (HTML + JS + CSS) → no-cache (har load par revalidate; ETag se 304
+#      sasta rehta hai). StaticFiles default sirf ETag/Last-Modified deta tha (koi
+#      Cache-Control nahi) → heuristic cache par normal F5 purana index.html AUR
+#      alag-serve hone wali `apiClient.js`/js files serve kar deta tha. Sirf HTML par
+#      no-cache kaafi nahi — inline JS to HTML mein hai, magar apiClient.js/js/*.js
+#      alag files hain; wo stale rahein to naya code load hi na ho. no-cache = purana
+#      JS band. (Hashed-immutable assets upar branch 1 mein pehle nikal jaate hain.)
+_NO_CACHE_TYPES = ("text/html", "javascript", "text/css")
+
+
 @app.middleware("http")
 async def _cache_control_headers(request, call_next):
     response = await call_next(request)
     path = request.url.path
+    ctype = response.headers.get("content-type", "")
     if (path.startswith("/library/") and path.endswith(".webp")) or (
         path.startswith("/static/fonts/") and path.endswith(".woff2")
     ):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
-    elif "text/html" in response.headers.get("content-type", ""):
+    elif any(t in ctype for t in _NO_CACHE_TYPES):
         response.headers["Cache-Control"] = "no-cache"
     return response
 
@@ -94,6 +102,7 @@ app.include_router(syllabus.router, dependencies=_api_auth)
 app.include_router(school_settings.router, dependencies=_api_auth)
 app.include_router(slo.router, dependencies=_api_auth)
 app.include_router(stats.router, dependencies=_api_auth)
+app.include_router(taqseem.router, dependencies=_api_auth)
 
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi
 # launch ho, file resolve ho jaye.

@@ -339,5 +339,21 @@ def init_db() -> None:
         )
         """)
 
+    # Hissa 2 — SLO → exam plan (taqseem). Har SLO ka ek assignment: kaunsi exam
+    # (1..N) mein. exam_no = 0 => Unassigned (NULL-sequence ya N-shrink se nikle SLO).
+    # class/subject slo se JOIN par milte hain (slo_id globally ek hi class+subject ka),
+    # is liye yahan denormalize nahi. N global hai (school_settings.exam_count).
+    # position = exam ke andar teacher ka order (optional). Plan per class+subject =
+    # us (class,subject) ke slo_id set ke assignments.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS slo_exam_plan (
+            slo_id     TEXT PRIMARY KEY REFERENCES slo(id),
+            exam_no    INTEGER NOT NULL,
+            position   INTEGER,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_slo_exam_plan_exam ON slo_exam_plan(exam_no)")
+
     conn.commit()
     conn.close()
