@@ -28,6 +28,9 @@ class GeneratePaperRequest(BaseModel):
     mcq_percent: Optional[int] = Field(default=None, ge=0, le=100)
     paper_title: Optional[str] = None
     language_filter: Optional[Literal["en", "ur"]] = None
+    # Paper kis exam se tag ho (coverage ke liye). None = Unassigned. UI dropdown
+    # bhejta hai (Marhala 6). ge=0 — 0 bhi Unassigned; upar N ki hadd taqseem/global.
+    exam_no: Optional[int] = Field(default=None, ge=0)
 
 
 class AdaptivePaperRequest(BaseModel):
@@ -39,6 +42,8 @@ class AdaptivePaperRequest(BaseModel):
     class_name: Optional[str] = None
     total_questions: int = 10
     difficulty: Optional[str] = None
+    # Paper kis exam se tag ho (coverage). None = Unassigned.
+    exam_no: Optional[int] = Field(default=None, ge=0)
     # Weakness signal (Bloom) aur format choice (type) alag cheezein hain — teacher
     # adaptive follow-up ka format chun sake. custom-ratio jaan-boojh kar allowed
     # nahi: weakness-distribution × ratio-split ka combo abhi scope se bahar hai.
@@ -248,6 +253,8 @@ class BankPaperRequest(BaseModel):
     total_questions: Optional[int] = Field(default=None, ge=1)
     class_name: Optional[str] = None
     paper_title: Optional[str] = None
+    # Paper kis exam se tag ho (coverage). None = Unassigned.
+    exam_no: Optional[int] = Field(default=None, ge=0)
     # 'manual' = sirf teacher-written (bina Gemini); 'all' = manual + gemini dono
     source_filter: str = "manual"
 

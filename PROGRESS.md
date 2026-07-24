@@ -1,5 +1,98 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — Coverage Marhala 3: coverage_service + exam_no threading
+
+`app/services/coverage_service.py` (naya):
+- `_assemble_coverage(planned, covered_ids, papers)` — PURE core, koi DB query nahi.
+  Coverage math (covered/remaining/percent/strands) + papers attach. total=0 → pct
+  None. Hissa 4 (Blueprint tajweez) isay draft question_ids ke covered_ids se reuse
+  karega — is liye DB-free rakha (warna Hissa 4 mein refactor).
+- `exam_coverage(class, subject, exam_no)` — DB se planned (list_planned) + covered_ids
+  (covered_slo_pairs, subject/class-filtered) + papers (list_by_exam) → core ko feed.
+- `coverage_summary(class, subject)` — exams 1..N + Unassigned(0). covered_pairs_all_
+  exams() EK query → exam_no par bucket (N calls se bachne ko). Unassigned: planned
+  count dikhta, covered HAMESHA 0. Bucketing taqseem rule (NULL/0/>N → Unassigned).
+- `_exam_count()` — N = school_settings.exam_count (taqseem_service jaisa rule).
+
+`app/services/paper_service.py`:
+- `_persist_paper(...)` mein `exam_no` param + `insert(exam_no=...)`.
+- CHAARON callers (balanced/adaptive/bank/ratio) ko KEYWORD args mein badla +
+  `exam_no=req.exam_no`. (Positional se exam_no galat param mein jaata — is liye
+  keyword lazmi.)
+
+`app/schemas/requests.py`:
+- `exam_no: Optional[int] = Field(default=None, ge=0)` teeno paper-requests mein
+  (Generate/Adaptive/Bank). None = Unassigned. UI (Marhala 6) bhejega.
+
+Design note: "paper_map" ko `papers` (list_by_exam rows) banaya — core mein display-
+only passthrough, Hissa 4 draft mein [] chalega. Cross-exam correctness coverage_
+summary ke bucketing mein (Marhala 5 test isi ko pakdega).
+
+Tasdeeq (live + pure): core 2/3=67%, empty→None. exam_coverage(PY1,Math,1)=5 planned/
+0 covered/2 papers (covered SLO doosre exams ke plan mein — asli cross-exam data).
+coverage_summary: exam_count=8, exam3 planned6/covered1, Unassigned planned1/covered0.
+Chaaron _persist_paper callers keyword (grep). Saari files ast.parse OK. git diff
+--stat + grep -c 'def <fn>' = sab disk par.
+
+Agla: Marhala 4 — routes (GET /api/coverage + /api/coverage-summary, main.py register).
+
+## 2026-07-24 — Coverage Marhala 2: repos (exam-wise coverage data layer)
+
+`app/repositories/papers_repository.py`:
+- `insert(...)` mein `exam_no: Optional[int] = None` param + INSERT column add. Purane
+  callers exam_no na bhejein to None (Unassigned) — backward-compatible.
+- `list_by_exam(exam_no, subject, class_name)` — ek exam ke papers (list-view fields).
+- `covered_slo_pairs(exam_no, subject, class_name) -> set` — us exam ke papers ke
+  sawalon se cover hue distinct slo_id. SQL: `json_each(p.question_ids)` se JSON
+  expand → `question_slo` JOIN. Membership-test ke liye set.
+- `covered_pairs_all_exams(subject, class_name) -> [{exam_no, slo_id}]` — har
+  (exam, slo) coverage-jodi, tagged papers (exam_no IS NOT NULL). Cross-exam data.
+
+BUG-FIX (isi marhale mein pakda): teeno functions mein subject+class filter add.
+Pehle sirf `WHERE exam_no = ?` tha → doosre subject/class ke same-exam_no papers
+leak ho jaate (Pre Year 1 Math ka coverage nikaalte waqt Class 8 Urdu ke papers
+bhi gin liye jaate). Ab `LOWER(TRIM(subject/class_name)) = LOWER(TRIM(?))` normalized
+match (papers.class_name free-text, slo_coverage_service jaisa). class_name NULL wale
+papers khud bahar. Tasdeeq: ghalat subject/class → 0, ganda-casing ('MATHEMATICS' +
+'  pre year 1 ') → sahi 8.
+
+`app/repositories/slo_exam_plan_repository.py`:
+- `list_planned(class, subject, exam_no)` — us exam ka 'universe': planned SLO poore
+  fields samet (slo JOIN slo_exam_plan, INNER). Ordering list_resolved jaisa.
+
+Design: "pair" = (exam_no, slo_id). Single-exam function sirf slo_id set deta hai
+(exam fix), all-exams (exam_no, slo_id) jodi.
+
+Tasdeeq (live DB, read-only): sab import/callable. json_each chali —
+covered_pairs_all_exams()=8 jodi, covered_slo_pairs(1)=set of 4, list_by_exam(1)=2
+papers, list_planned('Pre Year 1','Mathematics',2)=8 SLO. git diff --stat +
+grep -c 'def <fn>' = har function disk par (=1).
+
+Agla: Marhala 3 — coverage_service.py (_assemble_coverage core + exam_coverage +
+coverage_summary; exam_no threading through _persist_paper, saare callers keyword args).
+
+## 2026-07-24 — Coverage Marhala 1-fix: papers.exam_no schema migration
+
+Pas-manzar: Marhala 2-7 (Coverage feature) ka session ECONNRESET se toota tha; audit
+mein nikla source files (coverage_service.py, coverage.py, UI, tests) gum, sirf `.pyc`
+bache the. Live DB ke `papers` table mein `exam_no` column pehle se maujood tha (kisi
+gum-shuda migration ne banaya), magar `database.py` mein iska koi zikr nahi tha → fresh
+DB par column banta hi nahi (orphan column).
+
+Kiya:
+- Stale `.pyc` delete: `app/api/__pycache__/coverage*.pyc`,
+  `app/services/__pycache__/coverage_service*.pyc` (confusion se bachne ko).
+- `app/core/database.py` — papers-migration block (line ~108, `sections_meta` ke baad)
+  mein idempotent add: `if "exam_no" not in papers_cols: ALTER TABLE papers ADD COLUMN
+  exam_no INTEGER`. Usi `papers_cols` PRAGMA-check pattern par → live DB par dobara add
+  nahi hota.
+
+Tasdeeq: `init_db()` do baar chala (live DB) → `exam_no` count = 1, koi error nahi.
+Fresh temp DB par `init_db()` → `exam_no` present = True.
+
+Agla: Marhala 2 (repos) — papers_repository (insert exam_no, covered_slo_pairs,
+covered_pairs_all_exams, list_by_exam) + slo_exam_plan_repository.list_planned.
+
 ## 2026-07-24 — Taqseem Hissa 2 / Tukda 4: taqseem.html page + nav
 
 Maqsad: taqseem ka UI. Tukda 3 (move) browser-confirmed (move 200, range 400, restore).

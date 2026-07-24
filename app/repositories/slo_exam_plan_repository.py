@@ -28,6 +28,28 @@ def list_resolved(class_name: str, subject: str) -> list:
     return [dict(row) for row in rows]
 
 
+def list_planned(class_name: str, subject: str, exam_no: int) -> list:
+    """Ek (class, subject, exam_no) ke liye PLANNED SLO — poore slo fields (slo_code,
+    slo_text, strand, bloom_level) + position. INNER JOIN (sirf woh SLO jinka plan is
+    exam mein hai). Ye exam-coverage ka 'universe' hai: is exam mein kya-kya cover
+    hona chahiye. Ordering list_resolved jaisa (position -> sequence -> slo_code).
+    Exact class/subject match (facets se aaye values guaranteed match)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT s.id AS slo_id, s.slo_code, s.slo_text, s.strand, s.bloom_level,
+                  s.sequence, p.position
+           FROM slo_exam_plan p
+           JOIN slo s ON s.id = p.slo_id
+           WHERE s.class = ? AND s.subject = ? AND p.exam_no = ?
+           ORDER BY COALESCE(p.position, 999999),
+                    COALESCE(s.sequence, 999999),
+                    s.slo_code""",
+        (class_name, subject, exam_no),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def overwrite_assignments(assignments: list) -> int:
     """Bulk upsert: har SLO ka exam_no/position set (ya update). slo_id PK par
     ON CONFLICT — pehle se maujood row overwrite ho jaati hai. Sab ek hi transaction

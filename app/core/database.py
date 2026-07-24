@@ -106,6 +106,11 @@ def init_db() -> None:
         cur.execute("ALTER TABLE papers ADD COLUMN paper_title TEXT")
     if "sections_meta" not in papers_cols:
         cur.execute("ALTER TABLE papers ADD COLUMN sections_meta TEXT")
+    # exam_no: paper ko kis exam se tag kiya (0 = Unassigned). Coverage feature
+    # isse cross-exam SLO coverage nikalti hai. Live DB mein column pehle se
+    # maujood ho sakta hai — papers_cols check idempotent hai, dobara add nahi hoga.
+    if "exam_no" not in papers_cols:
+        cur.execute("ALTER TABLE papers ADD COLUMN exam_no INTEGER")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS blueprints (
