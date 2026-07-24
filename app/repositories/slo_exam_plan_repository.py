@@ -28,6 +28,30 @@ def list_resolved(class_name: str, subject: str) -> list:
     return [dict(row) for row in rows]
 
 
+def list_planned(class_name: str, subject: str, exam_no: int) -> list:
+    """Us (class, subject) ke woh SLO jo EXACTLY is exam (exam_no) mein planned hain
+    — coverage detail (Hissa 3) ka universe. slo values canonical (facets) hain, is
+    liye exact match (taqseem `list_resolved` jaisa). exam ke andar teacher ka
+    position, phir sequence, phir slo_code se sorted.
+
+    Sirf exam_no 1..N ke liye (real exams). Unassigned (0/NULL/>N) ka bucketing
+    yahan nahi — woh summary get_plan se aata hai."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT s.id AS slo_id, s.slo_code, s.slo_text, s.strand, s.sequence,
+                  p.exam_no, p.position
+           FROM slo s
+           JOIN slo_exam_plan p ON p.slo_id = s.id
+           WHERE s.class = ? AND s.subject = ? AND p.exam_no = ?
+           ORDER BY COALESCE(p.position, 999999),
+                    COALESCE(s.sequence, 999999),
+                    s.slo_code""",
+        (class_name, subject, exam_no),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def overwrite_assignments(assignments: list) -> int:
     """Bulk upsert: har SLO ka exam_no/position set (ya update). slo_id PK par
     ON CONFLICT — pehle se maujood row overwrite ho jaati hai. Sab ek hi transaction

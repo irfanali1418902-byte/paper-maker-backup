@@ -28,6 +28,9 @@ class GeneratePaperRequest(BaseModel):
     mcq_percent: Optional[int] = Field(default=None, ge=0, le=100)
     paper_title: Optional[str] = None
     language_filter: Optional[Literal["en", "ur"]] = None
+    # Hissa 3 — coverage. Kis exam (taqseem) ka paper hai: None = Unassigned (default).
+    # 1..N = us exam se attach (upper bound strict dropdown par; ge=1 garbage rokta).
+    exam_no: Optional[int] = Field(default=None, ge=1)
 
 
 class AdaptivePaperRequest(BaseModel):
@@ -465,6 +468,8 @@ class BlueprintPaperRequest(BaseModel):
     # hai. class_name free-text hota hai (e.g. "Class 8A"), tier ke liye reliable nahi.
     grade: Optional[str] = None
     paper_title: Optional[str] = None
+    # Hissa 3 — coverage. None = Unassigned (default); 1..N = us exam se attach.
+    exam_no: Optional[int] = Field(default=None, ge=1)
 
     @model_validator(mode="after")
     def _blueprint_or_sections(self) -> "BlueprintPaperRequest":

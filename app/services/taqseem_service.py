@@ -21,6 +21,12 @@ def _exam_count() -> int:
     return n if n >= 1 else 8
 
 
+def exam_count() -> int:
+    """Global N (school_settings.exam_count). Public wrapper — coverage route jaisi
+    jagahon ke liye jahan exam_no ki range (1..N) validate karni hoti hai."""
+    return _exam_count()
+
+
 def get_plan(class_name: str, subject: str) -> dict:
     """Resolved taqseem: har exam (1..N) ke SLO + Unassigned bucket.
 

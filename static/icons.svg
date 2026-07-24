@@ -19,6 +19,13 @@
     <path d="M9 9v12"/>
     <path d="M14 3v6"/>
   </symbol>
+  <!-- Exam Taqseem — SLO ko exams mein baraabar baantna (columns of varying height). -->
+  <symbol id="i-taqseem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 21h18"/>
+    <rect x="4" y="11" width="4" height="7" rx="1"/>
+    <rect x="10" y="7" width="4" height="11" rx="1"/>
+    <rect x="16" y="14" width="4" height="4" rx="1"/>
+  </symbol>
   <symbol id="i-outcomes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9 11l3 3L22 4"/>
     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>

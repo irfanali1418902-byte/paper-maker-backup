@@ -45,7 +45,12 @@ def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
 
     title = _resolve_title(req.paper_title, req.subject, req.class_name)
     paper_id, total_marks = _persist_paper(
-        req.subject, req.class_name, selected_ids, selected_questions, title
+        subject=req.subject,
+        class_name=req.class_name,
+        selected_ids=selected_ids,
+        selected_questions=selected_questions,
+        paper_title=title,
+        exam_no=req.exam_no,
     )
     return {
         "paper_id": paper_id,
@@ -78,8 +83,13 @@ def assemble_adaptive_paper(req: AdaptivePaperRequest) -> dict | None:
         return None
 
     title = _resolve_title(None, subject, req.class_name)
+    # Adaptive paper kisi taqseem-exam se attach nahi (koi exam dropdown nahi) — exam_no None.
     paper_id, total_marks = _persist_paper(
-        subject, req.class_name, selected_ids, selected_questions, title
+        subject=subject,
+        class_name=req.class_name,
+        selected_ids=selected_ids,
+        selected_questions=selected_questions,
+        paper_title=title,
     )
     return {
         "paper_id": paper_id,
@@ -119,7 +129,14 @@ def assemble_bank_paper(req: BankPaperRequest) -> dict | None:
 
     selected_ids = [q["id"] for q in questions]
     title = _resolve_title(req.paper_title, resolved_subject, req.class_name)
-    paper_id, total_marks = _persist_paper(resolved_subject, req.class_name, selected_ids, questions, title)
+    # Bank paper mein exam dropdown nahi — exam_no None (Unassigned).
+    paper_id, total_marks = _persist_paper(
+        subject=resolved_subject,
+        class_name=req.class_name,
+        selected_ids=selected_ids,
+        selected_questions=questions,
+        paper_title=title,
+    )
 
     for qid in selected_ids:
         questions_repository.increment_usage_count(qid)
@@ -235,7 +252,12 @@ def _assemble_by_ratio(req: GeneratePaperRequest) -> dict | None:
 
     title = _resolve_title(req.paper_title, req.subject, req.class_name)
     paper_id, total_marks = _persist_paper(
-        req.subject, req.class_name, selected_ids, selected_questions, title
+        subject=req.subject,
+        class_name=req.class_name,
+        selected_ids=selected_ids,
+        selected_questions=selected_questions,
+        paper_title=title,
+        exam_no=req.exam_no,
     )
     return {
         "paper_id": paper_id,
@@ -302,6 +324,7 @@ def _persist_paper(
     selected_ids: list[str],
     selected_questions: list[dict],
     paper_title: Optional[str] = None,
+    exam_no: Optional[int] = None,
 ) -> tuple[str, int]:
     """Annotate expected difficulty, persist the paper row, return (id, marks)."""
     _annotate_expected_difficulty(selected_questions)
@@ -314,6 +337,7 @@ def _persist_paper(
         total_marks=total_marks,
         question_ids=selected_ids,
         paper_title=paper_title,
+        exam_no=exam_no,
     )
     return paper_id, total_marks
 

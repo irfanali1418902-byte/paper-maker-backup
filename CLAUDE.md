@@ -341,3 +341,32 @@ available), say so explicitly. Don't claim success on faith.
   commit.
 - Never use `--no-verify` to bypass hooks. If a hook fails, fix the
   failure.
+
+---
+
+## 11. Debugging discipline (learned the hard way)
+
+These are not optional. Each cost real time to relearn.
+
+- **Instrument before you fix — never guess.** Before changing anything to
+  "fix" a bug, add logging/instrumentation and confirm the actual cause from
+  observed output. A fix based on a theory you didn't verify is how the
+  `loadSchoolSettings` dead-code (two cache theories, both wrong) and the
+  stale-server "Updated:50 but seq NULL" hunts wasted hours. Prove the cause,
+  then fix, then remove the instrumentation.
+- **Debugging is read-only — no writes, no POSTs.** While diagnosing, only
+  read (GET, SELECT, file reads). Never fire a `curl` POST / write query to
+  "test" — a partial `POST /api/school-settings` once wiped address/logo/email
+  because merge-less writes reset other fields to pydantic defaults. If you must
+  reproduce a write, do it against a throwaway copy of the DB, never the live one.
+- **One function, one place — no wrapper/reassignment patterns.** Define each
+  function exactly once and call it. Never do `_orig = fn; fn = async function
+  … wrapper …`. The reassignment ran after the only call site, so the wrapper
+  was dead code and the field never loaded. If a function needs more behaviour,
+  edit the function body — don't shadow it.
+- **After a new route or DB column, restart the server — don't trust
+  `--reload`.** A running uvicorn can hold a stale module (old
+  `slo_import_service` kept updating everything *except* the new `sequence`
+  column while reporting success). New routes 404 and new columns silently skip
+  until a hard restart. When you add a route or migrate a column, hard-restart
+  before browser-testing.

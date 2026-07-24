@@ -14,16 +14,18 @@ def insert(
     question_ids: list,
     paper_title: Optional[str] = None,
     sections_meta: Optional[list] = None,
+    exam_no: Optional[int] = None,
 ) -> None:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids, paper_title, sections_meta) "
-        "VALUES (?,?,?,?,?,?,?)",
+        "INSERT INTO papers (id, subject, class_name, total_marks, question_ids, paper_title, sections_meta, exam_no) "
+        "VALUES (?,?,?,?,?,?,?,?)",
         (
             paper_id, subject, class_name, total_marks,
             json.dumps(question_ids), paper_title,
             json.dumps(sections_meta) if sections_meta is not None else None,
+            exam_no,
         ),
     )
     conn.commit()
@@ -93,6 +95,66 @@ def list_all() -> list[dict]:
     rows = cur.execute(
         "SELECT id, paper_title, subject, class_name, total_marks, created_at "
         "FROM papers ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def covered_slo_pairs(exam_no: int, subject: str, class_name: Optional[str]) -> list[dict]:
+    """Coverage (Hissa 3) ki core join — SIRF usi exam ke papers se. `question_ids`
+    JSON array hai; `json_each` se har id ko row bana kar `question_slo` tak jaate
+    hain. Returns distinct [{slo_id, paper_id}].
+
+    AHEM: `p.exam_no = ?` hi "usi exam" ka usool nafiz karta hai — doosre exam (ya
+    NULL) ke paper yahan aate hi nahi (SQL mein NULL = ? kabhi true nahi). subject +
+    class normalized match (papers.class_name free-text/gandi — data ko haath nahi
+    lagate; slo_coverage_service jaisa)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT DISTINCT qs.slo_id AS slo_id, p.id AS paper_id
+           FROM papers p
+           JOIN json_each(p.question_ids) je
+           JOIN question_slo qs ON qs.question_id = je.value
+           WHERE p.exam_no = ?
+             AND LOWER(TRIM(p.subject)) = LOWER(TRIM(?))
+             AND LOWER(TRIM(COALESCE(p.class_name, ''))) = LOWER(TRIM(?))""",
+        (exam_no, subject, class_name or ""),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def covered_pairs_all_exams(subject: str, class_name: Optional[str]) -> list[dict]:
+    """Summary (bulk coverage) ke liye — ek hi query mein SAB exams ke (exam_no,
+    slo_id) distinct pairs. exam_no NULL wale papers bahar (IS NOT NULL). Caller
+    exam_no par group kar ke har exam ka covered-slo set bana leta hai. Isi se N
+    alag queries se bachte hain."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT DISTINCT p.exam_no AS exam_no, qs.slo_id AS slo_id
+           FROM papers p
+           JOIN json_each(p.question_ids) je
+           JOIN question_slo qs ON qs.question_id = je.value
+           WHERE p.exam_no IS NOT NULL
+             AND LOWER(TRIM(p.subject)) = LOWER(TRIM(?))
+             AND LOWER(TRIM(COALESCE(p.class_name, ''))) = LOWER(TRIM(?))""",
+        (subject, class_name or ""),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def list_by_exam(exam_no: int, subject: str, class_name: Optional[str]) -> list[dict]:
+    """Us exam ke papers — [{id, paper_title}] (newest first). Coverage detail mein
+    'kis paper mein aaya' dikhane ke liye. subject + class normalized match."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT id, paper_title FROM papers
+           WHERE exam_no = ?
+             AND LOWER(TRIM(subject)) = LOWER(TRIM(?))
+             AND LOWER(TRIM(COALESCE(class_name, ''))) = LOWER(TRIM(?))
+           ORDER BY created_at DESC""",
+        (exam_no, subject, class_name or ""),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]

@@ -369,7 +369,7 @@
       <a href="/bank.html"><svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg><span>Question Bank</span></a>
       <a href="/blueprint.html"><svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg><span>Blueprint</span></a>
       <a href="/slo.html"><svg class="icon"><use href="/static/icons.svg#i-outcomes"></use></svg><span>Learning Outcomes</span></a>
-      <a href="/taqseem.html"><svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg><span>Exam Taqseem</span></a>
+      <a href="/taqseem.html"><svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg><span>Exam Taqseem</span></a>
       <a href="/slo-health.html"><svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg><span>SLO Health</span></a>
     </nav>
     <div class="sidebar-foot">
@@ -489,6 +489,12 @@
               <option value="">Sab (English + Urdu)</option>
               <option value="en">English only</option>
               <option value="ur">Urdu only</option>
+            </select>
+
+            <!-- Hissa 3 — coverage. Kis exam (taqseem) ka paper. Khali = Unassigned. -->
+            <label>Exam (taqseem)</label>
+            <select id="paperExamNo">
+              <option value="">Unassigned (kisi exam se nahi)</option>
             </select>
 
             <label data-i18n="form.paperTitle">Paper title / naam (optional)</label>
@@ -1312,6 +1318,7 @@ async function loadSchoolSettings() {
     document.getElementById('schoolPrincipal').value = s.principal_name || '';
     document.getElementById('sessionStartMonth').value = String(s.session_start_month || 3);
     document.getElementById('examCount').value = String(s.exam_count || 8);
+    populateExamDropdown(parseInt(s.exam_count, 10) || 8);  // Generator exam (taqseem) options
     document.getElementById('accentColor').value = s.accent_color || '#0e4d3c';
     if (s.logo_base64) {
       logoBase64 = s.logo_base64;
@@ -1622,6 +1629,21 @@ async function generateQuestions() {
   }
 }
 
+// Generator exam (taqseem) dropdown ko Exam 1..N se bharo (Unassigned option HTML
+// mein pehle se hai). Ek function, ek jagah — settings load par call hota hai.
+function populateExamDropdown(n) {
+  const sel = document.getElementById('paperExamNo');
+  if (!sel) return;
+  const prev = sel.value;  // maujooda selection bacha lo (re-populate par na ude)
+  sel.querySelectorAll('option[data-exam]').forEach((o) => o.remove());
+  for (let k = 1; k <= n; k++) {
+    const opt = document.createElement('option');
+    opt.value = String(k); opt.textContent = 'Exam ' + k; opt.setAttribute('data-exam', '1');
+    sel.appendChild(opt);
+  }
+  sel.value = prev;  // agar ab bhi valid hai to restore
+}
+
 async function buildPaper() {
   setStatus("Paper assemble ho raha hai...");
   const paperType = val('paperType');
@@ -1639,6 +1661,9 @@ async function buildPaper() {
     // nahi banega (class None reh jaata). Grade na chuna ho to null (koi regression nahi).
     class_name: val('gradeSelect') || null,
   };
+  // Exam (taqseem) — khali = Unassigned (null). Warna 1..N. Coverage isi se ginti hai.
+  const examVal = val('paperExamNo');
+  if (examVal) body.exam_no = parseInt(examVal, 10);
   if (paperType === 'custom-ratio') {
     body.mcq_percent = parseInt(val('mcqPercent'));
   }

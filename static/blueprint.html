@@ -340,6 +340,13 @@
         <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
         <input type="text" id="bpClassName" placeholder="e.g. Class 8A" />
       </div>
+      <div>
+        <!-- Hissa 3 — coverage. Kis exam (taqseem) ka paper. Khali = Unassigned. -->
+        <label>Exam (taqseem) <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
+        <select id="bpExamNo">
+          <option value="">Unassigned</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -417,9 +424,27 @@ let _presets = [];
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
-  await Promise.all([loadSyllabusGrades(), loadPresets(), loadBpList()]);
+  await Promise.all([loadSyllabusGrades(), loadPresets(), loadBpList(), loadExamOptions()]);
   addSection(); // start with one section
 });
+
+// Exam (taqseem) dropdown ko Exam 1..N se bharo (N = school_settings.exam_count).
+// Unassigned option HTML mein pehle se hai. Fail ho to sirf Unassigned reh jaye.
+async function loadExamOptions() {
+  try {
+    const res = await apiFetch('/api/school-settings');
+    if (!res.ok) return;
+    const s = await res.json();
+    const n = parseInt(s.exam_count, 10) || 8;
+    const sel = document.getElementById('bpExamNo');
+    if (!sel) return;
+    for (let k = 1; k <= n; k++) {
+      const opt = document.createElement('option');
+      opt.value = String(k); opt.textContent = 'Exam ' + k;
+      sel.appendChild(opt);
+    }
+  } catch (e) { /* dropdown sirf Unassigned par reh jaye — koi block nahi */ }
+}
 
 // ================================================================
 // Cascade dropdowns
@@ -949,6 +974,7 @@ async function makePaper() {
   const grade      = document.getElementById('bpGrade').value || null;
   const paperTitle = document.getElementById('bpPaperTitle').value.trim() || null;
   const className  = document.getElementById('bpClassName').value.trim() || null;
+  const examNo     = document.getElementById('bpExamNo').value;  // '' = Unassigned
 
   const body = {
     sections_input: v.sections,
@@ -957,6 +983,8 @@ async function makePaper() {
     class_name: className,
     paper_title: paperTitle,
   };
+  // Exam (taqseem) — khali = Unassigned (na bhejo). Warna 1..N. Coverage isi se ginti.
+  if (examNo) body.exam_no = parseInt(examNo, 10);
 
   const btn = document.getElementById('makePaperBtn');
   btn.disabled = true;
@@ -1092,12 +1120,15 @@ async function paperFromSaved(bpId, bpName) {
   clearBloomGuidance();
   const paperTitle = document.getElementById('bpPaperTitle').value.trim() || null;
   const className  = document.getElementById('bpClassName').value.trim() || null;
+  const examNo     = document.getElementById('bpExamNo').value;  // '' = Unassigned
 
   try {
+    const savedBody = { blueprint_id: bpId, paper_title: paperTitle, class_name: className };
+    if (examNo) savedBody.exam_no = parseInt(examNo, 10);
     const res = await apiFetch('/api/blueprint-paper', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blueprint_id: bpId, paper_title: paperTitle, class_name: className }),
+      body: JSON.stringify(savedBody),
     });
     const data = await res.json();
     if (!res.ok) {

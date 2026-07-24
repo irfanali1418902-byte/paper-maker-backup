@@ -89,6 +89,7 @@ def generate_blueprint_paper(req: BlueprintPaperRequest):
             class_name=req.class_name,
             paper_title=req.paper_title,
             class_tier=class_tier,
+            exam_no=req.exam_no,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Blueprint paper assemble fail: {e}") from e

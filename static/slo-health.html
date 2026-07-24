@@ -77,6 +77,8 @@
   th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   td.code { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+  .cov-ok   { color: var(--ok-tx, #2E7D5B); font-weight: 600; white-space: nowrap; }
+  .cov-miss { color: var(--err-tx, #C0392B); font-weight: 600; white-space: nowrap; }
 
   .pct { font-weight: 700; }
   .pct.good { color: var(--ok-tx); }
@@ -137,7 +139,7 @@
       Learning Outcomes
     </a>
     <a href="/taqseem.html">
-      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
       Exam Taqseem
     </a>
     <a href="/slo-health.html" class="active">
@@ -208,6 +210,21 @@
       <tbody id="pendingBody"></tbody>
     </table>
     <div class="empty-state" id="pendingEmpty" style="display:none;">Har syllabus grade/subject ka SLO maujood hai.</div>
+  </div>
+
+  <!-- Part 5: Exam coverage detail (Hissa 3) -->
+  <div class="card">
+    <h2>Exam coverage (taqseem)</h2>
+    <p class="hint">Ek class + subject + exam chuno — us exam ke plan ke kaunse SLO covered hain (aur kis paper mein), kaunse missing. Coverage sirf USI exam ke papers se ginti hai.</p>
+    <div class="row" style="margin-bottom:14px;">
+      <select id="covClass"><option value="">Class chuno…</option></select>
+      <select id="covSubject"><option value="">Subject chuno…</option></select>
+      <select id="covExam"><option value="">Exam chuno…</option></select>
+      <button class="btn-ghost" id="covBtn">Dikhao</button>
+      <span id="covMsg" style="font-size:12.5px;color:var(--muted);"></span>
+    </div>
+    <div id="covResult"></div>
+    <div class="empty-state" id="covEmpty">Class, subject aur exam chun kar "Dikhao" dabao.</div>
   </div>
 </main>
 
@@ -318,6 +335,83 @@
   $("resetBtn").addEventListener("click", () => {
     $("fClass").value = ""; $("fSubject").value = ""; load();
   });
+
+  // ---- Part 5: Exam coverage detail (Hissa 3) ----
+  // Controls apni facets (/api/slo/facets) se bharte hain — health filter se alag,
+  // taake class/subject guaranteed match karein. Exam 1..N settings se.
+  async function loadCovControls() {
+    try {
+      const [fRes, sRes] = await Promise.all([
+        apiFetch("/api/slo/facets"),
+        apiFetch("/api/school-settings"),
+      ]);
+      if (fRes.ok) {
+        const f = await fRes.json();
+        (f.classes || []).forEach((v) => $("covClass").add(new Option(v, v)));
+        (f.subjects || []).forEach((v) => $("covSubject").add(new Option(v, v)));
+      }
+      if (sRes.ok) {
+        const s = await sRes.json();
+        const n = parseInt(s.exam_count, 10) || 8;
+        for (let k = 1; k <= n; k++) $("covExam").add(new Option("Exam " + k, String(k)));
+      }
+    } catch (e) { /* controls khali reh jayein — koi block nahi */ }
+  }
+
+  async function showCoverage() {
+    const cls = $("covClass").value, subj = $("covSubject").value, exam = $("covExam").value;
+    if (!cls || !subj || !exam) { $("covMsg").textContent = "Class, subject aur exam — teeno chuno."; return; }
+    $("covMsg").textContent = "Load ho raha hai…";
+    try {
+      const params = new URLSearchParams({ class_name: cls, subject: subj, exam_no: exam });
+      const res = await apiFetch("/api/coverage?" + params.toString());
+      const data = await res.json();
+      if (!res.ok) { $("covMsg").textContent = data.detail || "Load fail hua."; return; }
+      renderCoverage(data);
+      $("covMsg").textContent = "";
+    } catch (e) {
+      $("covMsg").textContent = "Masla: " + e.message;
+    }
+  }
+
+  function renderCoverage(data) {
+    $("covEmpty").style.display = "none";
+    const titles = {};
+    (data.papers || []).forEach((p) => { titles[p.id] = p.paper_title || "(Untitled)"; });
+    const pct = data.coverage_percent == null ? "—" : data.coverage_percent + "%";
+    let html =
+      '<div style="font-size:13.5px;margin-bottom:12px;">' +
+      '<strong>Exam ' + esc(data.exam_no) + '</strong> — ' +
+      data.planned_count + ' planned · ' + data.covered_count + ' covered (' + pct + ')</div>';
+
+    if (!data.planned_count) {
+      html += '<div class="empty-state">Is exam ke liye koi SLO planned nahi.</div>';
+      $("covResult").innerHTML = html;
+      return;
+    }
+    html += '<table><thead><tr><th>Seq</th><th>slo_code</th><th>Strand</th><th>SLO text</th>' +
+            '<th>Status</th><th>Papers</th></tr></thead><tbody>';
+    (data.planned || []).forEach((s) => {
+      const paperList = (s.paper_ids || []).map((id) => esc(titles[id] || id)).join(", ");
+      html +=
+        '<tr>' +
+        '<td>' + (s.sequence == null ? "—" : esc(s.sequence)) + '</td>' +
+        '<td class="code">' + esc(s.slo_code) + '</td>' +
+        '<td>' + esc(s.strand || "") + '</td>' +
+        '<td>' + esc(s.slo_text) + '</td>' +
+        '<td>' + (s.covered
+          ? '<span class="cov-ok">✓ covered</span>'
+          : '<span class="cov-miss">✗ missing</span>') + '</td>' +
+        '<td>' + paperList + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    $("covResult").innerHTML = html;
+  }
+
+  $("covBtn").addEventListener("click", showCoverage);
+
+  loadCovControls();
   load();
 </script>
 </body>

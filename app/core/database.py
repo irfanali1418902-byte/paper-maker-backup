@@ -106,6 +106,12 @@ def init_db() -> None:
         cur.execute("ALTER TABLE papers ADD COLUMN paper_title TEXT")
     if "sections_meta" not in papers_cols:
         cur.execute("ALTER TABLE papers ADD COLUMN sections_meta TEXT")
+    # Hissa 3 — coverage tracking. Paper kis exam (taqseem) ka hai: NULL = kisi exam
+    # se attach nahi (default; Generator/Blueprint dropdown "Unassigned"). 1..N =
+    # us exam ka paper. Nullable + no-default: purane saare papers NULL rehte hain,
+    # is liye coverage (`WHERE exam_no = ?`) se khud bahar (NULL = ? kabhi true nahi).
+    if "exam_no" not in papers_cols:
+        cur.execute("ALTER TABLE papers ADD COLUMN exam_no INTEGER")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS blueprints (

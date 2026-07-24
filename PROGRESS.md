@@ -1,5 +1,48 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — Hissa 3: Exam Coverage Tracking (per-exam SLO coverage)
+
+Maqsad: batao kis exam (taqseem) ke plan ke kaunse SLO covered hue — aur AHEM: coverage
+**sirf USI exam ke papers** se ginti hai (exam-5 ke paper mein aaya SLO, exam-3 ke liye
+covered NAHI, warna taqseem bemani). Branch: feature/hissa3-coverage.
+
+Marhala-wise:
+1. **Migration** (`database.py`): idempotent `ALTER TABLE papers ADD COLUMN exam_no
+   INTEGER` (nullable, no-default). Purane papers NULL → coverage (`WHERE exam_no = ?`)
+   se khud bahar (NULL = ? kabhi true nahi). Live DB par chalaya + verify.
+2. **Repos**: `papers_repository` — insert(exam_no); `covered_slo_pairs` (detail: single
+   exam, `json_each(question_ids)` → question_slo, DISTINCT); `covered_pairs_all_exams`
+   (summary: ek query, saare exams); `list_by_exam` (paper titles). `slo_exam_plan_
+   repository.list_planned(class,subject,exam_no)` (planned universe, exact match).
+3. **Service** `coverage_service.py`: shared **`_assemble_coverage`** core (planned +
+   covered_ids set → covered/missing/counts — evidence-agnostic, Hissa 4 draft-check
+   isi ko reuse karega); `exam_coverage` (detail, paper_map ke saath) + `coverage_
+   summary` (bulk, taqseem `get_plan` se planned buckets — Unassigned=0 samet).
+   `taqseem_service.exam_count()` public wrapper. `_persist_paper` + insert mein exam_no;
+   **saare 4 callers keyword-args** (Generator 2 exam_no pass karte, adaptive/bank None);
+   blueprint bhi (`exam_no` param). Schema: exam_no GeneratePaperRequest + BlueprintPaperRequest.
+4. **Routes** `api/coverage.py`: `GET /api/coverage` (detail; blank→400, exam_no 1..N
+   se bahar→400) + `GET /api/coverage-summary` (badges). main.py mein registered.
+5. **Tests**: `test_coverage_service.py` (8) — sabse ahem "doosre exam ke paper→phir bhi
+   missing", + NULL-paper bahar, ek SLO do papers→no double-count, summary+Unassigned,
+   class-normalized. `test_coverage_api.py` (6) — 200/400 matrix. Regression: paper/
+   blueprint/adaptive/bank **191 passed** (keyword-args ne kuch nahi toda).
+6. **UI**: taqseem.html — har exam column header par coverage badge (`Y/X covered` +
+   traffic light: 100%🟢 ≥60%🟡 <60%🔴; Unassigned/0-planned grey) via coverage-summary.
+   index.html (Generator) + blueprint.html — "Exam (taqseem)" strict dropdown
+   (Unassigned + 1..N, N settings se), exam_no POST body mein. slo-health.html — naya
+   "Exam coverage (taqseem)" card: class+subject+exam → planned SLO covered/missing +
+   kis paper mein.
+7. **Nav icon**: naya `i-taqseem` symbol (bars=distribution); "Exam Taqseem" nav 4 pages
+   par i-blueprint→i-taqseem (asli Blueprint nav i-blueprint par barqarar).
+
+Dead-code trap se bacha (CLAUDE.md §11): har naya JS function ek jagah, koi wrapper/
+reassignment; `populateExamDropdown` selection bacha kar re-populate karta.
+
+Verify: coverage 13 + regression 191 pass; ruff clean; saari 4 HTML tag-balanced +
+inline JS node-check OK. Server hard-restart baqi (naya route + column) — browser-test
+se pehle. **Khud browser test nahi kiya** — user karega.
+
 ## 2026-07-24 — Taqseem Hissa 2 / Tukda 4: taqseem.html page + nav
 
 Maqsad: taqseem ka UI. Tukda 3 (move) browser-confirmed (move 200, range 400, restore).

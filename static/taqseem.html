@@ -88,6 +88,16 @@
   .col-head .title { font-size: 13.5px; font-weight: 700; }
   .col-head .count { font-size: 11.5px; font-weight: 600; color: var(--muted); }
   .col.unassigned .col-head .title { color: var(--warn-tx); }
+  /* Coverage badge (Hissa 3) — traffic light per exam column. */
+  .cov-badge {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px;
+    border-radius: 10px; margin-bottom: 10px; border: 1px solid transparent;
+  }
+  .cov-badge.loading { background: #F1F2F5; color: var(--muted); font-weight: 500; }
+  .cov-badge.grey  { background: #F1F2F5; color: var(--muted); }
+  .cov-badge.green { background: var(--ok-bg);   color: var(--ok-tx);   border-color: #BFE3CD; }
+  .cov-badge.amber { background: var(--warn-bg); color: var(--warn-tx); border-color: #EFD9A8; }
+  .cov-badge.red   { background: var(--err-bg);  color: var(--err-tx);  border-color: #F3C9C2; }
   .chips { display: flex; flex-direction: column; gap: 8px; min-height: 24px; }
   .chip {
     border: 1px solid var(--border); border-radius: 10px; padding: 8px 9px;
@@ -154,7 +164,7 @@
       Learning Outcomes
     </a>
     <a href="/taqseem.html" class="active">
-      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
       Exam Taqseem
     </a>
     <a href="/slo-health.html">
@@ -242,7 +252,7 @@
     );
   }
 
-  function colHtml(title, slos, n, extraClass) {
+  function colHtml(title, slos, n, examNo, extraClass) {
     const chips = slos.length
       ? slos.map((s) => chipHtml(s, n)).join("")
       : '<div class="col-empty">khali</div>';
@@ -250,6 +260,8 @@
       '<div class="col' + (extraClass ? " " + extraClass : "") + '">' +
       '<div class="col-head"><span class="title">' + esc(title) +
       '</span><span class="count">' + slos.length + "</span></div>" +
+      // coverage badge yahan loadCoverage() bharega (data-exam se match).
+      '<div class="cov-badge loading" data-exam="' + examNo + '">…</div>' +
       '<div class="chips">' + chips + "</div></div>"
     );
   }
@@ -260,12 +272,51 @@
     $("nBadge").style.display = "inline-flex";
     let html = "";
     (data.exams || []).forEach((e) => {
-      html += colHtml("Exam " + e.exam_no, e.slos || [], n);
+      html += colHtml("Exam " + e.exam_no, e.slos || [], n, e.exam_no);
     });
-    html += colHtml("Unassigned", data.unassigned || [], n, "unassigned");
+    html += colHtml("Unassigned", data.unassigned || [], n, 0, "unassigned");
     $("board").innerHTML = html;
     $("board").style.display = "flex";
     $("pickNote").style.display = "none";
+  }
+
+  // Har column ke header par coverage badge — "Y/X covered" + traffic light.
+  // /api/coverage-summary ek call mein saare exams (+ Unassigned=0) ke counts deta hai.
+  async function loadCoverage() {
+    const { cls, subj } = selection();
+    if (!cls || !subj) return;
+    try {
+      const params = new URLSearchParams({ class_name: cls, subject: subj });
+      const res = await apiFetch("/api/coverage-summary?" + params.toString());
+      if (!res.ok) return;  // badge "…" par reh jayega — plan phir bhi kaam kare
+      const data = await res.json();
+      (data.exams || []).forEach((e) => {
+        const el = document.querySelector('.cov-badge[data-exam="' + e.exam_no + '"]');
+        if (el) fillCovBadge(el, e);
+      });
+    } catch (err) { /* badge optional — chhupa nahi, sirf "…" reh jaye */ }
+  }
+
+  function fillCovBadge(el, e) {
+    el.classList.remove("loading");
+    // Unassigned (exam 0): "covered" bemani — sirf planned count, neutral.
+    if (e.exam_no === 0) {
+      el.className = "cov-badge grey";
+      el.textContent = e.planned_count + " planned";
+      el.title = e.planned_count + " SLO Unassigned (kisi exam mein nahi)";
+      return;
+    }
+    if (e.planned_count === 0) {
+      el.className = "cov-badge grey";
+      el.textContent = "0 planned";
+      el.title = "Is exam ke liye koi SLO planned nahi";
+      return;
+    }
+    const pct = Math.round((e.covered_count / e.planned_count) * 100);
+    const light = pct >= 100 ? "green" : pct >= 60 ? "amber" : "red";
+    el.className = "cov-badge " + light;
+    el.textContent = e.covered_count + "/" + e.planned_count + " covered";
+    el.title = e.planned_count + " planned · " + e.covered_count + " covered (" + pct + "%)";
   }
 
   async function loadPlan() {
@@ -286,6 +337,7 @@
       if (!res.ok) { setStatus(data.detail || "Plan load fail hua.", "err"); return; }
       currentPlan = data;
       renderBoard(data);
+      loadCoverage();  // badges async bharega — plan render block na kare
       const placed = (data.exams || []).reduce((a, e) => a + (e.slos || []).length, 0);
       setStatus(data.has_plan
         ? "Plan maujood — " + placed + " exams mein, " + (data.unassigned || []).length + " unassigned."

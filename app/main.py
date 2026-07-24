@@ -16,6 +16,7 @@ from app.api import (
     bloom_suggestions,
     blueprints,
     brand,
+    coverage,
     dashboard,
     export,
     library,
@@ -103,6 +104,7 @@ app.include_router(school_settings.router, dependencies=_api_auth)
 app.include_router(slo.router, dependencies=_api_auth)
 app.include_router(stats.router, dependencies=_api_auth)
 app.include_router(taqseem.router, dependencies=_api_auth)
+app.include_router(coverage.router, dependencies=_api_auth)
 
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi
 # launch ho, file resolve ho jaye.
