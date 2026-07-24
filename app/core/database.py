@@ -227,6 +227,20 @@ def init_db() -> None:
         cur.execute("ALTER TABLE school_settings ADD COLUMN print_q_gap INTEGER DEFAULT 14")
     if "print_page_margin" not in settings_cols:
         cur.execute("ALTER TABLE school_settings ADD COLUMN print_page_margin INTEGER DEFAULT 14")
+    # School Settings page — identity (phone/email/principal) + academic session.
+    # phone/email letterhead .contact line par; principal_name sirf record ke liye.
+    # session_start_month default 3 (March); exam_count default 8 (taqseem N ka
+    # future source — abhi sirf store, wiring Hissa 2 mein).
+    if "phone" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN phone TEXT DEFAULT ''")
+    if "email" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN email TEXT DEFAULT ''")
+    if "principal_name" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN principal_name TEXT DEFAULT ''")
+    if "session_start_month" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN session_start_month INTEGER DEFAULT 3")
+    if "exam_count" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN exam_count INTEGER DEFAULT 8")
 
     # Existing DBs: add name_normalized column and back-fill from name.
     lib_cols = {row[1] for row in cur.execute("PRAGMA table_info(image_library)").fetchall()}

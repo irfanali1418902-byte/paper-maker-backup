@@ -1,5 +1,41 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — School Settings: identity (phone/email/principal) + academic session
+
+Maqsad: School Settings page ko extend karna — A) identity (phone, email, principal),
+B) academic session (start month, exams N). Naya page/table NAHI: `school_settings`
+singleton (id=1) aur mojooda `settings` screen pehle se the, sirf extend kiya.
+
+Backend:
+- `app/core/database.py` — 5 idempotent `ALTER TABLE ADD COLUMN` (wahi migration
+  pattern): `phone TEXT ''`, `email TEXT ''`, `principal_name TEXT ''`,
+  `session_start_month INTEGER 3` (March), `exam_count INTEGER 8`. ADD…DEFAULT purani
+  row (id=1) ko backfill kar deta hai.
+- `app/schemas/requests.py` — `SchoolSettings` model mein yehi 5 fields defaults ke sath.
+- `settings_repository.upsert()` + `settings_service.save_settings()` — pass-through
+  (INSERT + ON CONFLICT UPDATE dono). Routes (`GET/POST /api/school-settings`) schema-
+  driven the, isliye naye nahi banaye — fields khud flow karte hain.
+
+Frontend (`static/index.html` settings screen):
+- Card A (identity) mein Phone / Email / Principal name (principal par "record only —
+  print par nahi" note). Card B (Academic Session) naya: Session start month (dropdown,
+  default March) + Number of exams N (default 8).
+- `saveSchoolSettings()`: (1) `school_name` REQUIRED — khali par block + focus, save nahi.
+  (2) ab **merge-safe** — pehle GET kar ke `Object.assign(existing, {...})`, taake identity
+  save `class_size`/`print_*` ko model-defaults par clobber na kare (ye pehle latent bug
+  tha; Class Settings save already merge karta tha). `loadSchoolSettings()` naye fields
+  populate karta hai.
+
+print.html letterhead: address ke neeche `.contact` line — phone · email (jo mojood ho).
+principal print par NAHI (record-only, user ka faisla). exam_count → taqseem N wiring
+JAAN-BOOJH kar chhoda (Hissa 2 mein).
+
+Verify: migration real DB par chali (5 column + defaults backfill confirmed). API round-
+trip (POST→GET) sab naye fields persist. Merge-safety: class_size=30 set ho kar bacha
+raha. Poora suite **833 passed**. index+print.html tag-balanced (headless parse). Server
+fresh restart (migration ke liye), DB wapas Test-School defaults par saaf chhoda.
+Browser click-verify baqi (extension off) — hard-refresh ke baad.
+
 ## 2026-07-24 — Ops: sequence import "Updated:50" magar seq NULL — stale server
 
 Alaamat: teacher ne sequence-wali Excel import ki, "Updated: 50, Errors: 0" mila,

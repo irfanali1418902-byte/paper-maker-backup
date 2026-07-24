@@ -778,6 +778,15 @@
             <label data-i18n="form.address">Address</label>
             <input id="schoolAddress" placeholder="e.g. Swat, Khyber Pakhtunkhwa" />
 
+            <label>Phone</label>
+            <input id="schoolPhone" placeholder="e.g. 0946-1234567" />
+
+            <label>Email</label>
+            <input id="schoolEmail" type="email" placeholder="e.g. info@school.edu.pk" />
+
+            <label>Principal name <span style="color:var(--muted);font-weight:400">(record only — print par nahi)</span></label>
+            <input id="schoolPrincipal" placeholder="e.g. Muhammad Irfan" />
+
             <label data-i18n="form.accent">Accent colour (letterhead line)</label>
             <input id="accentColor" type="color" value="#0e4d3c" style="min-height:48px;cursor:pointer;padding:4px" />
 
@@ -793,6 +802,35 @@
               <div id="hpEn" style="font-family:'Source Serif 4',Georgia,serif; font-size:15px; font-weight:700;">Government High School</div>
               <div id="hpUr" class="urdu" style="font-size:14px; margin:3px 0;"></div>
               <div style="font-size:11.5px; color:var(--muted);">Examination — 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Session -->
+        <div class="card" style="margin-top:18px">
+          <div class="card-title">Academic Session</div>
+          <p class="sub" style="margin-top:2px">Session ka aaghaz aur saal mein imtihanaat ki tadaad. (Upar wale "Settings save karen" se save hoga.)</p>
+          <div class="field-row" style="margin-top:14px;flex-wrap:wrap;gap:16px">
+            <div style="flex:1;min-width:180px">
+              <label>Session start month</label>
+              <select id="sessionStartMonth" style="width:100%">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3" selected>March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:160px">
+              <label>Number of exams (N)</label>
+              <input type="number" id="examCount" value="8" min="1" max="24" style="width:100%" />
             </div>
           </div>
         </div>
@@ -1225,24 +1263,39 @@ function onLogoSelected(event) {
 }
 
 async function saveSchoolSettings() {
-  const body = {
-    school_name: val('schoolNameEn'),
-    school_name_ur: val('schoolNameUr'),
-    address: val('schoolAddress'),
-    logo_base64: logoBase64,
-    accent_color: val('accentColor'),
-  };
+  const statusEl = document.getElementById('settingsStatus');
+  const name = val('schoolNameEn').trim();
+  if (!name) {
+    statusEl.textContent = '⚠️ School/Institute name (English) zaroori hai.';
+    document.getElementById('schoolNameEn').focus();
+    return;
+  }
   try {
+    // Merge existing taake identity save class_size/print_* ko clobber na kare
+    // (Class Settings save bhi isi tarah merge karta hai).
+    const existing = await (await apiFetch('/api/school-settings')).json();
+    const body = Object.assign({}, existing, {
+      school_name: name,
+      school_name_ur: val('schoolNameUr'),
+      address: val('schoolAddress'),
+      phone: val('schoolPhone'),
+      email: val('schoolEmail'),
+      principal_name: val('schoolPrincipal'),
+      session_start_month: parseInt(val('sessionStartMonth'), 10) || 3,
+      exam_count: parseInt(val('examCount'), 10) || 8,
+      logo_base64: logoBase64,
+      accent_color: val('accentColor'),
+    });
     const res = await apiFetch('/api/school-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error('Save failed');
-    document.getElementById('settingsStatus').textContent = '✅ Saved';
+    statusEl.textContent = '✅ Saved';
     syncHeaderPreview();
   } catch (e) {
-    document.getElementById('settingsStatus').textContent = 'Error: ' + e.message;
+    statusEl.textContent = 'Error: ' + e.message;
   }
 }
 
@@ -1253,6 +1306,11 @@ async function loadSchoolSettings() {
     document.getElementById('schoolNameEn').value = s.school_name || '';
     document.getElementById('schoolNameUr').value = s.school_name_ur || '';
     document.getElementById('schoolAddress').value = s.address || '';
+    document.getElementById('schoolPhone').value = s.phone || '';
+    document.getElementById('schoolEmail').value = s.email || '';
+    document.getElementById('schoolPrincipal').value = s.principal_name || '';
+    document.getElementById('sessionStartMonth').value = String(s.session_start_month || 3);
+    document.getElementById('examCount').value = String(s.exam_count || 8);
     document.getElementById('accentColor').value = s.accent_color || '#0e4d3c';
     if (s.logo_base64) {
       logoBase64 = s.logo_base64;
