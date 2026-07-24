@@ -1,5 +1,29 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — Ops: sequence import "Updated:50" magar seq NULL — stale server
+
+Alaamat: teacher ne sequence-wali Excel import ki, "Updated: 50, Errors: 0" mila,
+magar `/api/slo` aur DB dono mein saari 50 `sequence` NULL. DB file ka mtime import
+ke baad bhi purana (Jul 23 21:21) — yani us DB par aaj koi write hi nahi hua.
+
+Diagnosis:
+- Do uvicorn processes chal rahe the (PID 21160, 38148), dono ka `cwd` repo, `DB_PATH`
+  unset → **dono ek hi** `paper_maker.db` par. Sirf 38148 :8000 par bind tha.
+- Dono **Jul 23 18:34** ke — yani `sequence` ka code (jo isi 23 ko baad mein aaya) is
+  running process mein load hi nahi tha. uvicorn `--reload` ke baghair chala tha, is liye
+  purana `slo_import_service` module memory mein reh gaya (slo_text/bloom/strand update
+  karta tha, sequence nahi → "Updated:50" sach tha magar seq NULL).
+- Disk code sahi sabit hua: DB ki temp copy par poora import path chalaya → `updated:1,
+  errors:0`, DB ne `sequence=99` wapas diya.
+
+Hal: dono purane process band → fresh `uvicorn --reload` (PID naya). Teacher ne dobara
+import kiya → (1) `POST /api/slo/import 200` access-log mein, (2) DB mtime badla
+(Jul 24 06:38), (3) seq non-null **50/50**. Phir taqseem N=8 sahi chala (4 mixed,
+4 single-strand; ab strand-boundary par mix, alphabetical artifact nahi).
+
+Sabaq: `sequence`/naye feature ke baad server hamesha restart (ya `--reload` ke saath
+chalao); warna "Updated" report sach hote hue bhi naye columns skip ho sakte hain.
+
 ## 2026-07-23 — SLO: `sequence` column (asal kitab ki tarteeb)
 
 Maqsad: taqseem (exam distribution) `slo_code` se sort karta tha, magar slo_code
