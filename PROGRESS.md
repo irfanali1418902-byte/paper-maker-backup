@@ -1,5 +1,27 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-24 — Cache-Control: /api no-store + HTML no-cache (stale-UI fix)
+
+Symptom: Class Size 25→30 Save (✅), phir identity "Settings save karen", F5 → Class Size
+wapas 25. **Data theek tha** — `GET /api/school-settings` DB mein 30 deta tha; UI purana
+cached GET response padh raha tha. Root cause: StaticFiles/API responses par koi
+`Cache-Control` header nahi tha (sirf ETag/Last-Modified) → browser heuristic caching se
+normal F5 par purana `index.html`/JS aur purana API JSON serve kar deta (stale merge-code
+bhi = "merge kaam nahi kiya" jaisa lagta, halaanki code theek tha).
+
+Fix (`app/main.py`, mojooda immutable-assets middleware extend kiya, rename
+`_cache_control_headers`, priority order):
+1. `/library/*.webp` + `/static/fonts/*.woff2` → `public, max-age=31536000, immutable`
+   (pehle se, **untouched** — jaan-boojh kar; filename UUID/font kabhi nahi badalta).
+2. `/api/*` → `no-store` (API kabhi cache na ho).
+3. HTML documents (content-type `text/html`) → `no-cache` (har load revalidate; stale JS band).
+
+Verify: curl headers — `/api/school-settings` no-store, `/` + `/static/index.html` +
+`/print.html` no-cache, library webp abhi bhi immutable (na toota). Server clean restart
+(--reload ne main.py change flaky uthhaya tha — fresh start se yaqeeni). Tests:
+api_routes + settings **62 passed**. Browser re-test (Class 25→30 → Save Class → identity
+Save → F5 → 30 rehna) hard-refresh ke baad user karega.
+
 ## 2026-07-24 — School Settings: identity (phone/email/principal) + academic session
 
 Maqsad: School Settings page ko extend karna — A) identity (phone, email, principal),

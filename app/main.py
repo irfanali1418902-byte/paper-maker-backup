@@ -32,23 +32,29 @@ from app.core.database import init_db
 app = FastAPI(title="AII Smart Paper Maker - Phase 1")
 
 
-# HISSA 5 — caching headers sirf library WebP par. Ye files content-immutable hain:
-# filename UUID hai aur koi route existing {uuid}.webp ko dubara nahi likhta (replace =
-# delete + naya upload = naya UUID = nayi URL). Isliye 1-saal `immutable` 100% safe hai,
-# koi cache-busting nahi chahiye. HTML/JS ko haath nahi lagate (woh deploy pe badalte hain —
-# StaticFiles ka default ETag/304 revalidation unke liye theek hai).
+# Cache-Control policy (priority order):
+#   1. Library WebP + bundled fonts → 1-saal immutable. Content-immutable hain:
+#      filename UUID hai / font kabhi nahi badalta (replace = naya UUID = nayi URL).
+#      Ye jaan-boojh kar hain — inhe haath nahi lagana.
+#   2. /api/* → no-store. Warna browser purana GET (e.g. /api/school-settings) cache
+#      se padh kar stale value dikhata hai (Class Size 30 save, F5 par 25 — asal DB
+#      theek, sirf UI cached response padh raha tha).
+#   3. HTML documents → no-cache (har load par revalidate). StaticFiles default sirf
+#      ETag/Last-Modified deta tha (koi Cache-Control nahi) → heuristic cache par normal
+#      F5 purana index.html/JS serve kar deta tha (stale merge-code = clobber bug jaisa
+#      lagta). no-cache = hamesha revalidate, purana JS band.
 @app.middleware("http")
-async def _cache_control_for_immutable_assets(request, call_next):
+async def _cache_control_headers(request, call_next):
     response = await call_next(request)
     path = request.url.path
-    # Library WebP: filename UUID hai, content kabhi nahi badalta.
-    # Bundled fonts (.woff2): woh kabhi nahi badalte. Dono par 1-saal immutable safe.
-    # app.css / icons.svg par jaan-boojh kar koi long cache NAHI (deploy pe badal
-    # sakti hain) — StaticFiles ka default ETag/304 revalidation unke liye theek hai.
     if (path.startswith("/library/") and path.endswith(".webp")) or (
         path.startswith("/static/fonts/") and path.endswith(".woff2")
     ):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    elif "text/html" in response.headers.get("content-type", ""):
+        response.headers["Cache-Control"] = "no-cache"
     return response
 
 # Cross-origin origins env se (comma-separated). Frontend same-origin (`/`) se
