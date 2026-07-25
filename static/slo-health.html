@@ -72,6 +72,17 @@
   }
   .btn-ghost:hover { background: #DDE9FA; }
 
+  /* Exam Coverage card */
+  .cov-summary { font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+  .cov-group { margin-top: 14px; }
+  .cov-group .cov-h { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+  .cov-line { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.5; }
+  .cov-line .cov-code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 12px; }
+  .cov-line .cov-strand { font-size: 11px; padding: 1px 7px; border-radius: 10px; background: var(--tint); color: var(--primary); }
+  .cov-in { color: var(--ok-tx); font-size: 12px; }
+  .cov-miss { color: var(--err-tx); font-size: 12px; font-weight: 600; }
+  .cov-empty { font-size: 13px; color: var(--muted); }
+
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
   th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
@@ -163,6 +174,18 @@
       <button class="btn-ghost" id="resetBtn">Reset</button>
       <span id="loadMsg" style="font-size:12.5px;color:var(--muted);"></span>
     </div>
+  </div>
+
+  <!-- Exam Coverage — planned (taqseem) vs covered (papers), paper drill-down -->
+  <div class="card">
+    <h2>Exam Coverage</h2>
+    <p class="hint">Ek class + subject + exam chuno — us exam ke planned SLO mein se kaun covered (aur kis paper mein) aur kaun baqi. Live compute (taqseem vs papers).</p>
+    <div class="row">
+      <select id="covClass"><option value="">Class chuno…</option></select>
+      <select id="covSubject"><option value="">Subject chuno…</option></select>
+      <select id="covExam"><option value="">Exam chuno…</option></select>
+    </div>
+    <div id="covResult" style="margin-top:14px;"></div>
   </div>
 
   <!-- Part 1: health lines -->
@@ -288,6 +311,9 @@
     });
     addOpts($("fClass"), data.classes || []);
     addOpts($("fSubject"), data.subjects || []);
+    // Coverage card ke apne class/subject selects — wahi facet data reuse.
+    addOpts($("covClass"), data.classes || []);
+    addOpts($("covSubject"), data.subjects || []);
     _dropdownsReady = true;
   }
 
@@ -313,11 +339,84 @@
     }
   }
 
+  // ── Exam Coverage card ──────────────────────────────────────────────────────
+  // covExam: "Exam chuno…" (value="") placeholder + Unassigned(0) + Exam 1..N.
+  // N = school_settings.exam_count (taqseem/coverage jaisa source). Blueprint jaisa
+  // reuse GET (naya endpoint nahi); fail par 8. Dobara-call safe rebuild.
+  async function loadCovExamOptions() {
+    let n = 8;
+    try {
+      const res = await apiFetch("/api/school-settings");
+      const s = await res.json();
+      if (res.ok && s && s.exam_count) n = s.exam_count;
+    } catch (e) { /* default 8 */ }
+    const sel = $("covExam");
+    sel.innerHTML = '<option value="">Exam chuno…</option><option value="0">Unassigned</option>';
+    for (let k = 1; k <= n; k++) {
+      const o = document.createElement("option");
+      o.value = String(k); o.textContent = "Exam " + k;
+      sel.appendChild(o);
+    }
+  }
+
+  function _sloLine(s, tailHtml) {
+    return '<div class="cov-line">' +
+      '<span class="cov-code">' + esc(s.slo_code) + '</span> ' + esc(s.slo_text) +
+      (s.strand ? ' <span class="cov-strand">' + esc(s.strand) + '</span>' : '') +
+      ' ' + tailHtml + '</div>';
+  }
+
+  function renderCoverage(data) {
+    if (!data.total_slos) {
+      $("covResult").innerHTML = '<div class="cov-empty">Is exam ke liye koi SLO planned nahi.</div>';
+      return;
+    }
+    const titles = data.paper_titles || {};
+    const pct = data.coverage_percent == null ? "—" : data.coverage_percent + "%";
+    const summary = '<div class="cov-summary">' + data.covered_slos + "/" + data.total_slos +
+      " covered — " + pct + "</div>";
+    // Covered: har SLO ke saamne kin papers mein aaya (paper_ids -> paper_titles).
+    const coveredHtml = (data.covered || []).map((s) => {
+      const names = (s.paper_ids || []).map((id) => esc(titles[id] || "(paper)")).join(", ");
+      return _sloLine(s, '<span class="cov-in">in: ' + names + "</span>");
+    }).join("");
+    // Remaining: paper_ids hote hi nahi — koi naam nahi.
+    const remainingHtml = (data.remaining || []).map((s) =>
+      _sloLine(s, '<span class="cov-miss">(kisi paper mein nahi)</span>')
+    ).join("");
+    $("covResult").innerHTML = summary +
+      (coveredHtml ? '<div class="cov-group"><div class="cov-h">Covered</div>' + coveredHtml + "</div>" : "") +
+      (remainingHtml ? '<div class="cov-group"><div class="cov-h">Baqi (uncovered)</div>' + remainingHtml + "</div>" : "");
+  }
+
+  async function loadCoverageCard() {
+    const cls = $("covClass").value, subj = $("covSubject").value, exam = $("covExam").value;
+    if (!cls || !subj || exam === "") { $("covResult").innerHTML = ""; return; }
+    $("covResult").innerHTML = '<div class="cov-empty">Load ho raha hai…</div>';
+    try {
+      const params = new URLSearchParams({ class_name: cls, subject: subj, exam_no: exam });
+      const res = await apiFetch("/api/coverage?" + params.toString());
+      const data = await res.json();
+      if (!res.ok) {
+        $("covResult").innerHTML = '<div class="cov-empty">' + esc(data.detail || "Load fail hua.") + "</div>";
+        return;
+      }
+      renderCoverage(data);
+    } catch (e) {
+      $("covResult").innerHTML = '<div class="cov-empty">Masla: ' + esc(e.message) + "</div>";
+    }
+  }
+
+  $("covClass").addEventListener("change", loadCoverageCard);
+  $("covSubject").addEventListener("change", loadCoverageCard);
+  $("covExam").addEventListener("change", loadCoverageCard);
+
   $("fClass").addEventListener("change", load);
   $("fSubject").addEventListener("change", load);
   $("resetBtn").addEventListener("click", () => {
     $("fClass").value = ""; $("fSubject").value = ""; load();
   });
+  loadCovExamOptions();
   load();
 </script>
 </body>
