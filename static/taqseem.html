@@ -99,6 +99,12 @@
   .chip .seq { font-size: 11px; color: var(--muted); }
   .chip .seq.none { color: var(--warn-tx); }
   .chip select.move-sel { width: 100%; padding: 5px 7px; font-size: 12px; border-radius: 7px; }
+  /* Coverage badge (col-head) — .strand/.seq pill jaisa; traffic-light tokens se */
+  .cov-badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; margin-left: 6px; white-space: nowrap; }
+  .cov-badge.green  { background: var(--ok-bg);   color: var(--ok-tx); }
+  .cov-badge.yellow { background: var(--warn-bg); color: var(--warn-tx); }
+  .cov-badge.red    { background: var(--err-bg);  color: var(--err-tx); }
+  .cov-badge.grey   { background: var(--bg);      color: var(--muted); }
   .col-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 6px 2px; }
   .pick-note { font-size: 13.5px; color: var(--muted); padding: 8px 0; }
 
@@ -242,12 +248,12 @@
     );
   }
 
-  function colHtml(title, slos, n, extraClass) {
+  function colHtml(title, slos, n, extraClass, examNo) {
     const chips = slos.length
       ? slos.map((s) => chipHtml(s, n)).join("")
       : '<div class="col-empty">khali</div>';
     return (
-      '<div class="col' + (extraClass ? " " + extraClass : "") + '">' +
+      '<div class="col' + (extraClass ? " " + extraClass : "") + '" data-exam="' + examNo + '">' +
       '<div class="col-head"><span class="title">' + esc(title) +
       '</span><span class="count">' + slos.length + "</span></div>" +
       '<div class="chips">' + chips + "</div></div>"
@@ -260,9 +266,9 @@
     $("nBadge").style.display = "inline-flex";
     let html = "";
     (data.exams || []).forEach((e) => {
-      html += colHtml("Exam " + e.exam_no, e.slos || [], n);
+      html += colHtml("Exam " + e.exam_no, e.slos || [], n, null, e.exam_no);
     });
-    html += colHtml("Unassigned", data.unassigned || [], n, "unassigned");
+    html += colHtml("Unassigned", data.unassigned || [], n, "unassigned", 0);
     $("board").innerHTML = html;
     $("board").style.display = "flex";
     $("pickNote").style.display = "none";
@@ -290,9 +296,48 @@
       setStatus(data.has_plan
         ? "Plan maujood — " + placed + " exams mein, " + (data.unassigned || []).length + " unassigned."
         : "Abhi koi plan nahi — sab " + (data.total || 0) + " SLO Unassigned. Auto-generate chalao.", "ok");
+      loadCoverage();   // board render ho gaya — ab har column par coverage badge
     } catch (e) {
       setStatus("Plan load mein masla: " + e.message, "err");
     }
+  }
+
+  // Har exam column ke header par "covered/planned" badge (traffic-light). Ek call
+  // (/api/coverage-summary) saare exams deta. Idempotent: purana .cov-badge remove
+  // karke inject (loadPlan re-render par double-badge na ho). Badge optional —
+  // fail par plan render nahi tootta.
+  function covBadgeHtml(row) {
+    const pct = row.coverage_percent;
+    let cls, label;
+    if (row.unassigned || row.planned === 0 || pct == null) {
+      cls = "grey";
+      label = row.planned ? row.planned + " planned" : "—";
+    } else {
+      cls = pct >= 100 ? "green" : (pct >= 60 ? "yellow" : "red");
+      label = row.covered + "/" + row.planned + " covered";
+    }
+    return '<span class="cov-badge ' + cls + '">' + label + "</span>";
+  }
+
+  async function loadCoverage() {
+    const { cls, subj } = selection();
+    if (!cls || !subj) return;
+    try {
+      const params = new URLSearchParams({ class_name: cls, subject: subj });
+      const res = await apiFetch("/api/coverage-summary?" + params.toString());
+      if (!res.ok) return;
+      const data = await res.json();
+      const byExam = new Map((data.exams || []).map((e) => [e.exam_no, e]));
+      document.querySelectorAll("#board .col").forEach((col) => {
+        const head = col.querySelector(".col-head");
+        if (!head) return;
+        const old = head.querySelector(".cov-badge");
+        if (old) old.remove();                       // idempotent
+        const row = byExam.get(parseInt(col.getAttribute("data-exam"), 10));
+        if (!row) return;
+        head.insertAdjacentHTML("beforeend", covBadgeHtml(row));
+      });
+    } catch (e) { /* badge optional — plan render tod na de */ }
   }
 
   async function moveSlo(sloId, examNo) {
