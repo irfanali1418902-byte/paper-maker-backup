@@ -1,5 +1,27 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Coverage Marhala 2-3 refinement: paper drill-down (slo_id→paper_ids)
+
+Marhala 2-3 commit (464f975) ke baad refine kiya — mudda: coverage sirf "ye SLO covered
+hai/nahi" (boolean) batati thi, "KIN papers ne cover kiya" nahi. slo-health drill-down ke
+liye ye chahiye.
+
+- `papers_repository.covered_slo_pairs()` — pehle `set` of slo_id lautata tha; ab
+  `list[dict]` of DISTINCT `(slo_id, paper_id)` jodi. Ek hi query se caller membership-set
+  BHI banata hai aur `{slo_id: [paper_ids]}` map BHI (do query se bacha).
+- `coverage_service._assemble_coverage()` — param `papers: list` → `paper_map: dict`; har
+  covered SLO ke brief mein ab `paper_ids: [...]` chip jaata. Purana top-level `"papers"`
+  field hataya (ab paper_titles alag).
+- `exam_coverage()` — pairs se covered_ids + paper_map banata; `list_by_exam` se alag
+  `paper_titles {id: title}` map (UI paper_id ki jagah naam dikhaye).
+
+Tasdeeq (LIVE DB, class='Pre Year 1'/Mathematics): `coverage_service` import OK;
+`coverage_summary` → 8 exams + Unassigned (Exam 3 mein 1 covered); `exam_coverage(1)` →
+total_slos=5, covered_slos=0, paper_titles=2, keys mein `covered/remaining/strands/
+paper_titles`. git diff --stat: papers_repository +15, coverage_service +35.
+
+Agla: Marhala 4 — Routes (GET /api/coverage + /api/coverage-summary, main.py register).
+
 ## 2026-07-24 — Coverage Marhala 3: coverage_service + exam_no threading
 
 `app/services/coverage_service.py` (naya):

@@ -38,13 +38,15 @@ def _slo_brief(s: dict) -> dict:
     }
 
 
-def _assemble_coverage(planned: list, covered_ids: set, papers: list) -> dict:
+def _assemble_coverage(planned: list, covered_ids: set, paper_map: dict) -> dict:
     """PURE core — koi DB query nahi. Coverage math + shape banata hai.
 
     planned      : is exam ke universe SLO (list_planned se) — poore slo fields.
     covered_ids  : jo slo_id waqai cover ho gaye unka SET (membership-test).
-    papers       : is exam ke paper rows (display ke liye). Hissa 4 draft-reuse mein
-                   [] de sakte (koi saved paper nahi) — result shape phir bhi wahi.
+    paper_map    : {slo_id: [paper_id, ...]} — kaunsa SLO kin papers mein aaya
+                   (slo-health drill-down). Har covered SLO ke brief mein paper_ids
+                   chip jaate. Hissa 4 draft-reuse mein {} de sakte (koi saved paper
+                   nahi) — result shape phir bhi wahi.
 
     total == 0 (is exam ke liye koi SLO planned nahi) => coverage_percent None
     (slo_coverage_service jaisa — 0/0 ko 0% nahi dikhate)."""
@@ -64,10 +66,9 @@ def _assemble_coverage(planned: list, covered_ids: set, papers: list) -> dict:
         "total_slos": total,
         "covered_slos": len(covered),
         "coverage_percent": round(len(covered) / total * 100) if total else None,
-        "covered": [_slo_brief(s) for s in covered],
+        "covered": [{**_slo_brief(s), "paper_ids": paper_map.get(s["slo_id"], [])} for s in covered],
         "remaining": [_slo_brief(s) for s in remaining],
         "strands": sorted(strands.values(), key=lambda x: x["strand"] or ""),
-        "papers": papers,
     }
 
 
@@ -75,10 +76,26 @@ def exam_coverage(class_name: str, subject: str, exam_no: int) -> dict:
     """Ek exam ka mukammal coverage. DB se planned/covered/papers la kar core ko deta.
     covered_slo_pairs subject+class-filtered hai (doosre subject/class leak nahi)."""
     planned = slo_exam_plan_repository.list_planned(class_name, subject, exam_no)
-    covered_ids = papers_repository.covered_slo_pairs(exam_no, subject, class_name)
-    papers = papers_repository.list_by_exam(exam_no, subject, class_name)
-    result = _assemble_coverage(planned, covered_ids, papers)
-    result.update({"class": class_name, "subject": subject, "exam_no": exam_no})
+
+    # (slo_id, paper_id) jodiyan -> covered_ids SET (membership) + paper_map
+    # {slo_id: [paper_ids]} (drill-down) — dono ek hi query se.
+    pairs = papers_repository.covered_slo_pairs(exam_no, subject, class_name)
+    covered_ids = {row["slo_id"] for row in pairs}
+    paper_map: dict = {}
+    for row in pairs:
+        paper_map.setdefault(row["slo_id"], []).append(row["paper_id"])
+
+    result = _assemble_coverage(planned, covered_ids, paper_map)
+
+    # list_by_exam ALAG — id->title map taake UI paper_id ki jagah naam dikhaye.
+    paper_titles = {
+        p["id"]: (p.get("paper_title") or "(Untitled)")
+        for p in papers_repository.list_by_exam(exam_no, subject, class_name)
+    }
+    result.update({
+        "class": class_name, "subject": subject, "exam_no": exam_no,
+        "paper_titles": paper_titles,
+    })
     return result
 
 

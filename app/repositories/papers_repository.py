@@ -135,17 +135,22 @@ def list_by_exam(exam_no: int, subject: str, class_name: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def covered_slo_pairs(exam_no: int, subject: str, class_name: str) -> set:
-    """Ek exam ke papers ke sawalon se cover hue distinct slo_id ka SET — sirf DIYE
+def covered_slo_pairs(exam_no: int, subject: str, class_name: str) -> list[dict]:
+    """Ek exam ke papers se cover hui distinct (slo_id, paper_id) JODIYAN — sirf DIYE
     GAYE subject+class ke papers (warna doosre subject/class ke papers jinka exam_no
     same ho leak ho jaate). papers.class_name free-text/gandi hai is liye compare-time
     LOWER(TRIM(...)) normalize (slo_coverage_service jaisa) — data ko haath nahi.
     class_name NULL wale papers khud bahar (NULL match nahi karta).
     question_ids (JSON) json_each se expand -> question_slo JOIN -> slo_id. Orphan
-    link INNER JOIN se drop. Membership-test ke liye set."""
+    link INNER JOIN se drop.
+
+    slo_id + paper_id dono (pehle sirf slo_id set tha): caller ek hi query se
+    membership-set BHI banata hai aur paper_map {slo_id: [paper_ids]} BHI (slo-health:
+    'ye SLO in papers mein aaya'). DISTINCT jodi — ek SLO ek hi paper mein kai baar
+    aaye to ek row."""
     conn = get_connection()
     rows = conn.execute(
-        """SELECT DISTINCT qs.slo_id
+        """SELECT DISTINCT qs.slo_id, p.id AS paper_id
            FROM papers p, json_each(p.question_ids) je
            JOIN question_slo qs ON qs.question_id = je.value
            WHERE p.exam_no = ?
@@ -154,7 +159,7 @@ def covered_slo_pairs(exam_no: int, subject: str, class_name: str) -> set:
         (exam_no, subject, class_name),
     ).fetchall()
     conn.close()
-    return {row["slo_id"] for row in rows}
+    return [dict(row) for row in rows]
 
 
 def covered_pairs_all_exams(subject: str, class_name: str) -> list[dict]:
