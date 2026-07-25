@@ -294,7 +294,7 @@
       renderBoard(data);
       const placed = (data.exams || []).reduce((a, e) => a + (e.slos || []).length, 0);
       setStatus(data.has_plan
-        ? "Plan maujood — " + placed + " exams mein, " + (data.unassigned || []).length + " unassigned."
+        ? "Plan maujood — " + placed + " SLO placed, " + (data.unassigned || []).length + " unassigned."
         : "Abhi koi plan nahi — sab " + (data.total || 0) + " SLO Unassigned. Auto-generate chalao.", "ok");
       loadCoverage();   // board render ho gaya — ab har column par coverage badge
     } catch (e) {
