@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, Response
 
 from app.repositories import slo_repository
 from app.services import (
+    question_service,
     question_slo_import_service,
     slo_health_service,
     slo_import_service,
@@ -38,6 +39,25 @@ def get_slo_facets():
     """Filter dropdowns ke liye — slo table ke distinct class/subject values.
     Free-text ki jagah dropdown inhi se banta hai (exact match, list khali nahi)."""
     return slo_repository.list_distinct_facets()
+
+
+@router.get("/api/slo/{slo_id}/questions")
+def list_questions_for_slo(slo_id: str):
+    """Is SLO se tagged questions (published + draft dono) — Hissa 4-B READ-ONLY.
+    Blueprint warning se teacher missing SLO ke maujood questions dekh kar KHUD chunta;
+    app kuch add nahi karti. Minimal fields (poora row nahi): id, question_en, status,
+    bloom_level. SLO ka wajood check nahi (koi question na ho to khali list valid hai)."""
+    rows = question_service.list_questions_for_slo(slo_id)
+    questions = [
+        {
+            "id": r["id"],
+            "question_en": r.get("question_en"),
+            "status": r.get("status"),
+            "bloom_level": r.get("bloom_level"),
+        }
+        for r in rows
+    ]
+    return {"questions": questions, "total": len(questions)}
 
 
 @router.get("/api/slo-health")

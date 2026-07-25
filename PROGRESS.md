@@ -1,5 +1,28 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Hissa 4-B: "questions dikhao" — missing SLO ke tagged questions (Option A)
+
+4-A warning box extend: har missing SLO ke saath "questions dikhao" link; click par
+us SLO se tagged questions (published + draft dono) inline expand — READ-ONLY, teacher
+khud upar section mein daalta (app add nahi karti). Zero DB/schema change — sirf ek
+naya read route jo maujooda question_slo link table parhta.
+
+- STEP 1: `question_slo_repository.list_questions_for_slo(slo_id)` — ek JOIN (q.* JOIN
+  question_slo WHERE slo_id), koi status filter nahi (sab), created_at se sorted. N+1 nahi.
+- STEP 2: `question_service.list_questions_for_slo(slo_id)` — pass-through wrapper.
+- STEP 3: `GET /api/slo/{slo_id}/questions` (app/api/slo.py) — READ-ONLY, minimal fields
+  {id, question_en, status, bloom_level} (poora row nahi). SLO wajood check nahi (khali
+  list valid). slo router pehle se registered.
+- STEP 4: blueprint.html — remaining SLO `<li>` mein "questions dikhao" link (slo_id via
+  escAttr) + hidden `<div>`; `showSloQuestions(sloId, linkEl)` GET fetch, question_en +
+  status badge render, toggle band. escHtml-safe, koi add/checkbox nahi.
+- STEP 5: tests/test_slo_questions_api.py — 2 pass: published+draft dono tagged aayein
+  (untagged bahar, minimal shape); unknown slo => 200 + khali list.
+
+Tasdeeq: repo/service/route AST OK + route router par registered; blueprint inline JS
+node --check OK (showSloQuestions grep=2); pytest 2 passed. Naya route => server
+hard-restart chahiye.
+
 ## 2026-07-25 — Hissa 4-A: Blueprint exam-coverage warning (frontend-only)
 
 blueprint.html mein exam (bpExamNo) chunte hi taqseem-coverage ka READ-ONLY warning —

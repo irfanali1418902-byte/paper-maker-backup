@@ -41,6 +41,22 @@ def list_question_ids_for_slo(slo_id: str) -> list:
     return [row["question_id"] for row in rows]
 
 
+def list_questions_for_slo(slo_id: str) -> list:
+    """Is SLO se jude POORE question rows — ek JOIN se (N+1 nahi). Hissa 4-B: blueprint
+    warning se teacher missing SLO ke maujooda questions dekh sake. Koi status filter
+    NAHI — sab (published + draft dono). Orphan link INNER JOIN se khud hat jaata."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT q.* FROM questions q
+           JOIN question_slo qs ON qs.question_id = q.id
+           WHERE qs.slo_id = ?
+           ORDER BY q.created_at""",
+        (slo_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def list_links_for_questions(question_ids: list) -> list:
     """Diye gaye question_ids ke saare (question_id -> SLO) link — SLO fields
     JOIN se (slo_code, slo_text, strand, class, subject). Coverage report ki base

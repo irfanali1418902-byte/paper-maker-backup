@@ -565,12 +565,18 @@ async function checkExamCoverage() {
     }
 
     // Readable: slo_text pehle, SLO-code bracket mein. Lambi list ho to pehle 8 + baqi ka count.
+    // Har SLO ke saath "questions dikhao" link (slo_id) — click par 4-B expand (read-only).
     const shown = remaining.slice(0, 8);
-    let listHtml = shown.map(s =>
-      '<li>' + escHtml(s.slo_text || '(no text)') +
-      (s.slo_code ? ' <span style="color:var(--muted)">(' + escHtml(s.slo_code) + ')</span>' : '') +
-      '</li>'
-    ).join('');
+    let listHtml = shown.map(s => {
+      const codeSpan = s.slo_code
+        ? ' <span style="color:var(--muted)">(' + escHtml(s.slo_code) + ')</span>' : '';
+      const qLink = s.slo_id
+        ? ' <a href="#" onclick="showSloQuestions(\'' + escAttr(s.slo_id) + '\', this); return false;"'
+          + ' style="color:#1565c0;font-size:11px;text-decoration:underline;">questions dikhao</a>'
+        : '';
+      return '<li style="margin-bottom:4px;">' + escHtml(s.slo_text || '(no text)') + codeSpan + qLink +
+             '<div style="display:none;margin:3px 0 2px;font-size:11.5px;color:#333;"></div></li>';
+    }).join('');
     const extra = remaining.length - shown.length;
     if (extra > 0) listHtml += '<li style="list-style:none;color:var(--muted)">… aur ' + extra + ' zyada</li>';
 
@@ -580,6 +586,39 @@ async function checkExamCoverage() {
   } catch (e) {
     console.error('coverage check fail:', e);
     box.style.display = 'none';
+  }
+}
+
+// Hissa 4-B: missing SLO ke saamne "questions dikhao" — us SLO se tagged questions
+// (published + draft dono) inline expand. GET /api/slo/{slo_id}/questions. READ-ONLY:
+// sirf question_en + status badge dikhata, koi add/checkbox nahi — teacher khud upar
+// section mein daalta. Toggle: dobara click par band. linkEl ke baad wala <div> target.
+async function showSloQuestions(sloId, linkEl) {
+  const box = linkEl.nextElementSibling;
+  if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; } // toggle band
+  box.style.display = 'block';
+  box.innerHTML = '<span style="color:var(--muted)">Load ho raha hai…</span>';
+  try {
+    const res = await apiFetch('/api/slo/' + encodeURIComponent(sloId) + '/questions');
+    const data = await res.json();
+    if (!res.ok) {
+      box.innerHTML = '<span style="color:#c62828">' + escHtml(data.detail || 'Load fail hua.') + '</span>';
+      return;
+    }
+    const qs = data.questions || [];
+    if (qs.length === 0) {
+      box.innerHTML = '<span style="color:var(--muted)">Is SLO se koi question tagged nahi.</span>';
+      return;
+    }
+    box.innerHTML = qs.map(q => {
+      const badge = '<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:#eceff1;color:#455a64;">'
+        + escHtml(q.status || '—') + '</span>';
+      return '<div style="padding:3px 0;border-top:1px solid rgba(0,0,0,.08);">'
+        + escHtml(q.question_en || '(no text)') + ' ' + badge + '</div>';
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<span style="color:#c62828">Masla: ' + escHtml(e.message) + '</span>';
   }
 }
 

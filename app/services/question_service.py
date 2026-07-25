@@ -208,6 +208,12 @@ def get_slos_for_question(question_id: str) -> list:
     return question_slo_repository.list_slos_for_question(question_id)
 
 
+def list_questions_for_slo(slo_id: str) -> list:
+    """Is SLO se jude saare question rows (published + draft dono, koi status filter
+    nahi). Hissa 4-B read-only — route minimal fields nikalta hai."""
+    return question_slo_repository.list_questions_for_slo(slo_id)
+
+
 def bulk_update_question_meta(req: BulkUpdateQuestionMetaRequest) -> int:
     fields = req.model_dump(
         include={"keywords", "source_book", "page_number", "status", "learning_outcome", "estimated_time"},
