@@ -1,5 +1,31 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Hissa 4-C: "daalo" — must-include pinned questions (Option A)
+
+Teacher "questions dikhao" (4-B) list se question pin karta; backend usay blueprint
+section mein GUARANTEE karta. "Tajweez, hukm nahi" — app khud add nahi, teacher pin
+karta. Faisla: pinned COUNT KE ANDAR (pinned pehle, filter baqi jagah); pinned > count
+to count barh jaata.
+
+- STEP 1: schema `BlueprintSection.include_question_ids: List[str] = []` (requests.py).
+  Khali = purana rawaiyya (backward-compat).
+- STEP 2: `blueprint_paper_service._apply_pinned(picked, ids, wanted)` — pinned pehle
+  (dedup, order-preserve), filler baqi; effective count = max(wanted, #valid-pins);
+  non-existent id skip (find_by_id None); double-count guard. Loop mein filter ke baad
+  call; pins ki soorat mein shortfall-note final got par recompute. Koi valid pin na
+  ho to picked/wanted bilkul waise (regression-safe).
+- STEP 3: blueprint.html — `_pinned = new Set()` (ephemeral, paper-level); 4-B list ke
+  har question par "daalo"/✓pinned toggle (togglePin); action-bar mein "N pinned" badge
+  (updatePinnedBadge); makePaper body mein pins PEHLI section par attach (saveBlueprint
+  ko nahi chhua — template mein pins save nahi). escAttr/escHtml-safe.
+- STEP 4: tests/test_blueprint_hissa4c_pin.py — 5 pass: guaranteed-first-within-count,
+  dedup, over-count-expands, nonexistent-skip, no-pins-unchanged.
+
+Tasdeeq: schema default []/list accept; service AST+import OK; blueprint inline JS
+node --check OK (_pinned=8, togglePin=2, pinnedBadge=2, include_question_ids=1);
+pytest -k "blueprint or coverage or paper" = 260 passed; ruff clean. Naya schema
+field + service => server hard-restart chahiye.
+
 ## 2026-07-25 — Hissa 4-B: "questions dikhao" — missing SLO ke tagged questions (Option A)
 
 4-A warning box extend: har missing SLO ke saath "questions dikhao" link; click par

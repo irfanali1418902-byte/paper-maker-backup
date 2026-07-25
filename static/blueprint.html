@@ -397,6 +397,7 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Paper Banao → Print
     </button>
+    <span id="pinnedBadge" style="display:none;align-self:center;font-size:12px;padding:4px 10px;border-radius:14px;background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;"></span>
   </div>
 
   <div class="status-bar" id="actionStatus"></div>
@@ -420,6 +421,7 @@ let _allGrades = [];     // from /api/syllabus-grades
 let _topics = [];        // from /api/topics (for current subject+grade)
 let _sections = [];      // [{heading, question_types, topic_ids, count, marks_each, source_filter}]
 let _presets = [];
+let _pinned = new Set(); // Hissa 4-C: teacher ke pin kiye question_ids (must-include) — paper-level, ephemeral
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
@@ -614,12 +616,38 @@ async function showSloQuestions(sloId, linkEl) {
     box.innerHTML = qs.map(q => {
       const badge = '<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:#eceff1;color:#455a64;">'
         + escHtml(q.status || '—') + '</span>';
+      // "daalo" toggle — teacher pin karta (must-include). Pinned par green ✓.
+      const on = _pinned.has(q.id);
+      const pinBtn = '<button type="button" onclick="togglePin(\'' + escAttr(q.id) + '\', this); return false;"'
+        + ' style="margin-left:6px;font-size:10px;padding:1px 7px;border-radius:4px;border:none;cursor:pointer;'
+        + (on ? 'background:#2e7d32;color:#fff;' : 'background:#eceff1;color:#333;') + '">'
+        + (on ? '✓ pinned' : 'daalo') + '</button>';
       return '<div style="padding:3px 0;border-top:1px solid rgba(0,0,0,.08);">'
-        + escHtml(q.question_en || '(no text)') + ' ' + badge + '</div>';
+        + escHtml(q.question_en || '(no text)') + ' ' + badge + pinBtn + '</div>';
     }).join('');
   } catch (e) {
     box.innerHTML = '<span style="color:#c62828">Masla: ' + escHtml(e.message) + '</span>';
   }
+}
+
+// Hissa 4-C: pin/unpin toggle. _pinned set update kar ke button + "N pinned" badge
+// refresh. Teacher pin karta — app khud nahi. Pins ephemeral (sirf agle makePaper mein).
+function togglePin(qid, btnEl) {
+  if (_pinned.has(qid)) _pinned.delete(qid);
+  else _pinned.add(qid);
+  const on = _pinned.has(qid);
+  btnEl.textContent = on ? '✓ pinned' : 'daalo';
+  btnEl.style.background = on ? '#2e7d32' : '#eceff1';
+  btnEl.style.color = on ? '#fff' : '#333';
+  updatePinnedBadge();
+}
+
+function updatePinnedBadge() {
+  const b = document.getElementById('pinnedBadge');
+  if (!b) return;
+  const n = _pinned.size;
+  b.style.display = n ? 'inline-block' : 'none';
+  b.textContent = '📌 ' + n + ' pinned question' + (n === 1 ? '' : 's');
 }
 
 // ================================================================
@@ -1070,8 +1098,16 @@ async function makePaper() {
   const paperTitle = document.getElementById('bpPaperTitle').value.trim() || null;
   const className  = document.getElementById('bpClassName').value.trim() || null;
 
+  // Hissa 4-C: pin kiye questions (must-include) pehli section par attach — backend
+  // guarantee karta (pinned pehle, count ke andar). Pins ephemeral: sirf is paper mein,
+  // saved blueprint template mein nahi. Koi pin na ho to purana body bilkul waisa hi.
+  const pinnedIds = [..._pinned];
+  const sectionsInput = pinnedIds.length
+    ? v.sections.map((s, i) => (i === 0 ? { ...s, include_question_ids: pinnedIds } : s))
+    : v.sections;
+
   const body = {
-    sections_input: v.sections,
+    sections_input: sectionsInput,
     subject,
     grade,
     class_name: className,

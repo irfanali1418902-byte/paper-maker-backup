@@ -90,6 +90,20 @@ def assemble_blueprint_paper(
                 language_filter=language_filter,
             )
 
+        # Hissa 4-C: teacher ke pin kiye questions must-include. Pinned pehle (dedup,
+        # order-preserve), filter-natija baqi jagah bhare; count ke andar; pinned > count
+        # to count inhi tak barh jaata (`wanted` update). Non-existent id chup-chaap skip.
+        pinned_ids = sec.get("include_question_ids") or []
+        picked, wanted, pin_added = _apply_pinned(picked, pinned_ids, wanted)
+
+        # Pins sirf questions ADD karte (shortfall ghata sakte). Fetch ka note original
+        # wanted par bana tha — pins ki soorat mein gumraah-kun, is liye final got par
+        # recompute (bina pins purana rawaiyya bilkul waisa hi).
+        if pin_added:
+            got_after = len(picked)
+            sec_shortfall_notes = (
+                [f"{heading}: {wanted} maange, {got_after} mile"] if got_after < wanted else []
+            )
         shortfall_notes.extend(sec_shortfall_notes)
 
         # Shortfall ki soorat mein hi diagnostic — normal generation par ek bhi
@@ -171,6 +185,43 @@ def assemble_blueprint_paper(
 
 
 # ── private helpers ───────────────────────────────────────────────────────────
+
+def _apply_pinned(
+    picked: list[dict],
+    include_question_ids: list[str],
+    wanted: int,
+) -> tuple[list[dict], int, bool]:
+    """Teacher ke pin kiye questions (must-include) ko section mein guarantee karo.
+
+    - Pinned PEHLE (diye gaye order mein, dedup), filter-natija (`picked`) baqi jagah.
+    - Effective count = max(wanted, #valid-pins) — pinned > count to count barh jaata.
+    - Pinned jo pehle se `picked` mein ho, filler se hata (double-count nahi).
+    - Non-existent question_id chup-chaap skip (find_by_id None).
+
+    Returns (merged_picked, effective_count, any_pin_added). Koi valid pin na ho to
+    (picked, wanted, False) — bilkul purana rawaiyya (backward-compat)."""
+    if not include_question_ids:
+        return picked, wanted, False
+
+    seen: set[str] = set()
+    pinned_rows: list[dict] = []
+    for qid in include_question_ids:
+        if qid in seen:
+            continue
+        seen.add(qid)
+        row = questions_repository.find_by_id(qid)
+        if row is not None:
+            pinned_rows.append(row)
+
+    if not pinned_rows:
+        return picked, wanted, False
+
+    pinned_id_set = {r["id"] for r in pinned_rows}
+    filler = [q for q in picked if q["id"] not in pinned_id_set]
+    effective = max(wanted, len(pinned_rows))
+    merged = pinned_rows + filler[: effective - len(pinned_rows)]
+    return merged, effective, True
+
 
 def _fetch_simple(
     subject: Optional[str],

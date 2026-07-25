@@ -372,6 +372,10 @@ class BlueprintSection(BaseModel):
     count: int = Field(ge=1)
     marks_each: int = Field(default=1, ge=1)
     source_filter: str = "manual"
+    # Hissa 4-C: teacher ke KHUD pin kiye question_ids (must-include). Filter-natije se
+    # pehle guarantee hote (dedup); agar count se zyada to count inhi tak barh jaata.
+    # Khali = koi pin nahi (purana rawaiyya). Teacher pin karta — app khud nahi.
+    include_question_ids: List[str] = []
 
     # --- New filter fields (all optional; absent = no filter / safe default) ---
     status_filter: Literal["published", "draft", "archived", "all"] = "published"
