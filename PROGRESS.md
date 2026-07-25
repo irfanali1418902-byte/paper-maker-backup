@@ -1,5 +1,28 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Coverage Marhala 4: routes (GET /api/coverage + /api/coverage-summary)
+
+Nayi file `app/api/coverage.py` — HTTP layer (taqseem.py/papers.py jaisa: `APIRouter()`
+koi prefix nahi, full path per route, GET query params, `.strip()` khali-check → 400,
+service call `try/except` → 500).
+- `GET /api/coverage?class_name&subject&exam_no` — ek exam ka mukammal coverage.
+  exam_no LAAZMI (koi default nahi; UI hamesha bhejta, missing par FastAPI 422 —
+  intended). Range 0..N validate (N = `coverage_service._exam_count()`, reuse — koi
+  naya public wrapper nahi banaya). Out-of-range → 400.
+- `GET /api/coverage-summary?class_name&subject` — saare exams 1..N + Unassigned(0)
+  ek-nazar. N + bucketing service khud handle karti.
+- `main.py`: import block mein `coverage` (alphabetical, brand ke baad), aur
+  `taqseem.router` ke baad `include_router(coverage.router, dependencies=_api_auth)` —
+  siblings jaisa protected (key unset local par unprotected, magar consistency).
+
+Tasdeeq (hard-restart, --reload par bharosa nahi; fresh uvicorn PID par curl):
+- `coverage-summary` → 200, Exam 3 planned=6 covered=1 pct=17.
+- `coverage?exam_no=1` → 200, total_slos=5, remaining asal SLO data.
+- khali class_name → 400; missing exam_no → 422; exam_no=99 → 400 "0..8".
+git diff --stat: main.py +2; coverage.py naya. grep -c coverage.router (main.py)=1.
+
+Agla: Marhala 5 — Tests (cross-exam coverage test sab se ahem).
+
 ## 2026-07-25 — Coverage Marhala 2-3 refinement: paper drill-down (slo_id→paper_ids)
 
 Marhala 2-3 commit (464f975) ke baad refine kiya — mudda: coverage sirf "ye SLO covered
