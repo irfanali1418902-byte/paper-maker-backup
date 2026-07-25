@@ -1,5 +1,31 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Coverage Marhala 5: tests (service + api)
+
+`tests/test_coverage_service.py` (6) + `tests/test_coverage_api.py` (3) — conftest
+`test_db` fixture (tmp SQLite + init_db), data seedha repos se seed. Helpers _q/_slo/
+_link/_paper(exam_no=)/_plan(overwrite_assignments). API: TestClient(app) module-level,
+koi auth header nahi (key unset => unprotected, sibling jaisa).
+
+Service tests:
+- ⭐ test_covered_in_wrong_exam_stays_missing (STRICT cross-exam): s1 exam 2 mein
+  planned, exam 3 ke paper ne cover kiya => exam 2 remaining mein, summary exam 2 & 3
+  dono covered=0. Covered-in-wrong-exam kisi ko credit nahi (leak-guard lock).
+- test_planned_but_missing: planned SLO, koi paper nahi => remaining.
+- test_null_exam_paper_excluded: exam_no=NULL paper coverage se bahar (detail + summary).
+- test_slo_two_papers_same_exam: paper_map mein dono paper_ids, covered_slos double-count
+  nahi (SET membership).
+- test_summary_includes_unassigned: exam_no=0 bucket shamil.
+- test_class_normalized_match: paper class 'pre year 1' vs SLO 'Pre Year 1' match.
+
+API tests: test_coverage_summary_200 (shape: class/subject/exam_count/exams + row keys),
+test_blank_class_400, test_exam_no_out_of_range_400.
+
+Tasdeeq: `pytest tests/test_coverage_service.py tests/test_coverage_api.py -v` => 9 passed.
+Poora suite (test_ai_service network-call ke ilawa) regression check.
+
+Agla: Marhala 6 — UI (taqseem.html badges, index/blueprint exam dropdown, slo-health card).
+
 ## 2026-07-25 — Coverage Marhala 4: routes (GET /api/coverage + /api/coverage-summary)
 
 Nayi file `app/api/coverage.py` — HTTP layer (taqseem.py/papers.py jaisa: `APIRouter()`
