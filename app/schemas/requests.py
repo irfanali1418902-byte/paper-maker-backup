@@ -472,6 +472,9 @@ class BlueprintPaperRequest(BaseModel):
     # hai. class_name free-text hota hai (e.g. "Class 8A"), tier ke liye reliable nahi.
     grade: Optional[str] = None
     paper_title: Optional[str] = None
+    # Paper kis exam se tag ho (coverage ke liye). None = Unassigned. UI dropdown
+    # bhejta hai (Marhala 6). ge=0 — 0 bhi Unassigned; upar N ki hadd taqseem/global.
+    exam_no: Optional[int] = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def _blueprint_or_sections(self) -> "BlueprintPaperRequest":

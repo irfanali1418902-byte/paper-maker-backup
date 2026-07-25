@@ -5,10 +5,18 @@ PAPER_MAKER_API_KEY unset => endpoints unprotected, is liye koi auth header nahi
 (sibling test_slo_coverage_api jaisa).
 """
 
+import json
+import uuid
+
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.repositories import slo_exam_plan_repository, slo_repository
+from app.repositories import (
+    papers_repository,
+    questions_repository,
+    slo_exam_plan_repository,
+    slo_repository,
+)
 
 client = TestClient(app)
 
@@ -61,3 +69,48 @@ def test_exam_no_out_of_range_400(test_db):
         params={"class_name": "Pre Year 1", "subject": "Mathematics", "exam_no": 99},
     )
     assert resp.status_code == 400
+
+
+# --- Marhala 6a gap-guard: blueprint path exam_no threading ---
+
+def _insert_q(subject="Science", qtype="multiple-choice") -> str:
+    qid = str(uuid.uuid4())
+    questions_repository.insert({
+        "id": qid, "subject": subject, "topic": "Test Topic",
+        "bloom_level": "UNDERSTAND", "difficulty": "medium",
+        "question_type": qtype, "marks": 1,
+        "question_en": f"Q {qid[:6]}?", "question_ur": None,
+        "options_en": json.dumps(["A", "B", "C", "D"]), "options_ur": "[]",
+        "correct_answer_en": "A", "correct_answer_ur": None,
+        "explanation_en": None, "explanation_ur": None,
+        "visual_emoji": None, "visual_count": None,
+        "syllabus_topic_id": None, "source": "manual", "status": "published",
+    })
+    return qid
+
+
+def test_blueprint_paper_persists_exam_no(test_db):
+    """Marhala 6a gap-guard: blueprint se bana paper exam_no ke saath PERSIST ho —
+    poori chain schema(BlueprintPaperRequest) -> route(papers.py) -> service
+    (assemble_blueprint_paper) -> papers_repository.insert. Pehle exam_no silently
+    gir jaata tha (paper hamesha NULL). Ye test us gap ko band rakhta hai."""
+    _insert_q(subject="Science", qtype="multiple-choice")
+    section = {
+        "heading": "Sec A",
+        "question_types": ["multiple-choice"],
+        "topic_ids": [],
+        "count": 1,
+        "marks_each": 1,
+        "source_filter": "manual",
+        "status_filter": "published",
+    }
+    resp = client.post("/api/blueprint-paper", json={
+        "sections_input": [section],
+        "subject": "Science",
+        "exam_no": 3,
+    })
+    assert resp.status_code == 200
+    pid = resp.json()["paper_id"]
+    paper = papers_repository.find_by_id(pid)
+    assert paper is not None
+    assert paper["exam_no"] == 3      # NULL nahi — gap band

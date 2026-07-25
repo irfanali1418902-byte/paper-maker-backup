@@ -27,6 +27,7 @@ def assemble_blueprint_paper(
     class_name: Optional[str],
     paper_title: Optional[str],
     class_tier: Optional[str] = None,
+    exam_no: Optional[int] = None,
 ) -> dict | None:
     """Core assembly — called by route with either a saved blueprint_id
     (sections_input ignored) or inline sections_input list.
@@ -152,6 +153,7 @@ def assemble_blueprint_paper(
         question_ids=all_question_ids,
         paper_title=resolved_title,
         sections_meta=sections_meta,
+        exam_no=exam_no,
     )
 
     return {

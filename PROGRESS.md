@@ -1,5 +1,32 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Coverage Marhala 6a: blueprint exam_no threading (silent gap fix)
+
+Gap: generate/bank/adaptive paper paths exam_no ko papers.exam_no tak thread karte
+the, magar BLUEPRINT path nahi — UI dropdown se exam_no aata bhi to silently gir jaata
+(blueprint paper hamesha exam_no=NULL). Marhala 3 threading ne ye path chhod diya tha.
+UI (6b) se pehle band karna zaroori warna bpExamNo dropdown bekaar.
+
+Teen keyword-arg edits (positional trap se bacha — pichla dead-code sabaq):
+- `app/schemas/requests.py` BlueprintPaperRequest: `exam_no: Optional[int] =
+  Field(default=None, ge=0)` (baaki 3 paper schemas jaisa).
+- `app/api/papers.py` blueprint-paper route: `assemble_blueprint_paper(..., exam_no=
+  req.exam_no)` (keyword).
+- `app/services/blueprint_paper_service.py`: signature mein `exam_no: Optional[int] =
+  None` param, aur `papers_repository.insert(..., exam_no=exam_no)` (keyword).
+
+Test (`tests/test_coverage_api.py` — TestClient, full chain): `test_blueprint_paper_
+persists_exam_no` — question seed -> POST /api/blueprint-paper {sections_input, subject,
+exam_no:3} -> paper_id read -> assert paper["exam_no"] == 3 (NULL nahi). Exactly wo
+silent gap band karta hai.
+
+Tasdeeq: pytest tests/test_coverage_api.py -v => 4 passed. grep -c exam_no: requests.py
+6, papers.py 1, blueprint_paper_service.py 2. Regression (blueprint hissa1-3 + shortfall
++ bloom + coverage + paper_service) => 180 passed. git diff --stat: 4 files, +60/-1.
+
+Agla: Marhala 6b — UI (taqseem badges, index paperExamNo, blueprint bpExamNo, slo-health
+coverage card).
+
 ## 2026-07-25 — Coverage Marhala 5: tests (service + api)
 
 `tests/test_coverage_service.py` (6) + `tests/test_coverage_api.py` (3) — conftest
