@@ -1,5 +1,30 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Coverage Marhala 6b (UI) + 7 (nav icon) — feature mukammal
+
+ECONNRESET mein jo 6 markers 0 nikle the (cov-badge/loadCoverage/paperExamNo/bpExamNo/
+covResult + backend exam_no) — sab wapas, har file apne commit mein (ECONNRESET-safe).
+Faisla: Unassigned = null (0 nahi) teeno paper-dropdown par. N-source har jagah
+school_settings.exam_count (drift nahi). Traffic-light server coverage_percent reuse.
+
+- 6b-1 (a5329c4) index.html `paperExamNo`: paper-build dropdown (Unassigned""→null +
+  1..N). buildExamNoOptions loadSchoolSettings se (fail 8). buildPaper body exam_no.
+- 6b-2 (3ce0a6c) blueprint.html `bpExamNo`: dropdown; N ek reuse GET /api/school-
+  settings (page-load init); makePaper body exam_no. Inline-handler trap-zone chhua nahi.
+- 6b-3 (444c560) slo-health.html `covResult` card: class+subject+exam -> GET /api/coverage;
+  covered SLO ke saamne paper naam (paper_ids->paper_titles drill-down), remaining ke
+  saamne "(kisi paper mein nahi)". esc() escaped, addEventListener saaf.
+- 6b-4 (68c34cb) taqseem.html `loadCoverage`+`cov-badge`: har exam column header par
+  "covered/planned" + traffic-light (>=100 green, >=60 yellow, <60 red, unassigned/
+  planned0/null grey). Ek GET /api/coverage-summary, data-exam se match, idempotent inject.
+- 7 (59a7fb2) icons.svg `i-taqseem` symbol (3-column exam-bucket shape) + 4 pages
+  (index/slo-health/slo/taqseem) nav i-blueprint->i-taqseem. Blueprint nav har page
+  i-blueprint par barqarar.
+
+Tasdeeq: har file grep -c <marker> + node --check (inline JS) + per-file commit.
+icons.svg XML well-formed. Full regression (test_ai_service ke ilawa) = 842 passed,
+working tree clean.
+
 ## 2026-07-25 — Coverage Marhala 6a: blueprint exam_no threading (silent gap fix)
 
 Gap: generate/bank/adaptive paper paths exam_no ko papers.exam_no tak thread karte
