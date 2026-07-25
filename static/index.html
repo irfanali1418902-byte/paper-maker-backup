@@ -495,6 +495,10 @@
             <input id="paperTitle" placeholder="e.g. First Term – Math – Class 4" />
             <p style="margin:2px 0 10px;font-size:12px;color:var(--muted);">Ye paper ka naam hai, subject nahi — print par header mein dikhe ga.</p>
 
+            <label>Exam (taqseem)</label>
+            <select id="paperExamNo"><option value="">Unassigned</option></select>
+            <p style="margin:2px 0 10px;font-size:12px;color:var(--muted);">Ye paper kis exam ka hissa hai — coverage isi se naapi jaati hai. Unassigned = kisi exam se tag nahi.</p>
+
             <div class="actions">
               <button class="gen-btn" onclick="generateQuestions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg><span data-i18n="btn.genQuestions">1. Generate questions (AI)</span></button>
               <button class="ghost-btn" onclick="buildPaper()" data-i18n="btn.buildPaper">2. Build paper from bank</button>
@@ -1312,6 +1316,7 @@ async function loadSchoolSettings() {
     document.getElementById('schoolPrincipal').value = s.principal_name || '';
     document.getElementById('sessionStartMonth').value = String(s.session_start_month || 3);
     document.getElementById('examCount').value = String(s.exam_count || 8);
+    buildExamNoOptions(s.exam_count || 8);   // paperExamNo dropdown ko N tak bharo
     document.getElementById('accentColor').value = s.accent_color || '#0e4d3c';
     if (s.logo_base64) {
       logoBase64 = s.logo_base64;
@@ -1328,6 +1333,22 @@ async function loadSchoolSettings() {
     syncHeaderPreview();
   } catch (e) {
     console.error('Settings load failed:', e);
+    buildExamNoOptions(8);   // settings fetch fail — N default 8 se dropdown phir bhi bane
+  }
+}
+
+// paperExamNo dropdown: "Unassigned" (static, value="") ke baad Exam 1..N options.
+// N = school_settings.exam_count (taqseem/coverage jaisa hi source — drift nahi).
+// Dobara-call safe: pehle purane 1..N options hata do (Unassigned option chhod kar).
+function buildExamNoOptions(n) {
+  const sel = document.getElementById('paperExamNo');
+  if (!sel) return;
+  sel.querySelectorAll('option[value]:not([value=""])').forEach((o) => o.remove());
+  for (let k = 1; k <= n; k++) {
+    const opt = document.createElement('option');
+    opt.value = String(k);
+    opt.textContent = 'Exam ' + k;
+    sel.appendChild(opt);
   }
 }
 
@@ -1638,6 +1659,8 @@ async function buildPaper() {
     // Chuna hua class paper mein daalo — warna SLO coverage ka universe kabhi
     // nahi banega (class None reh jaata). Grade na chuna ho to null (koi regression nahi).
     class_name: val('gradeSelect') || null,
+    // Exam taqseem tag (coverage ke liye). Unassigned ("") => null (0 nahi).
+    exam_no: val('paperExamNo') ? parseInt(val('paperExamNo'), 10) : null,
   };
   if (paperType === 'custom-ratio') {
     body.mcq_percent = parseInt(val('mcqPercent'));
