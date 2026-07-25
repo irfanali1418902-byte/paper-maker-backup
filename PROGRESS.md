@@ -1,5 +1,24 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-25 — Hissa 4-A: Blueprint exam-coverage warning (frontend-only)
+
+blueprint.html mein exam (bpExamNo) chunte hi taqseem-coverage ka READ-ONLY warning —
+kaun se planned SLO abhi shamil nahi. Koi backend/DB/route change nahi; GET /api/coverage
+ka maujooda `remaining` list reuse (per-SLO uncovered). Server restart nahi, hard refresh.
+
+- STEP 1: bpExamNo ke neeche `<div id="bpCoverageWarn">` (hint div ke baad, container
+  332 ke andar) + select par `onchange="checkExamCoverage()"`.
+- STEP 2: `checkExamCoverage()` — guards (Unassigned""/subject/grade khaali => hide),
+  GET /api/coverage (slo-health.html:398 pattern), render: remaining=0 & total_slos>0
+  green tick; remaining>0 amber "⚠️ N planned SLO abhi shamil nahi" + list (slo_text
+  readable, SLO-code bracket mein, pehle 8 + "… aur M zyada"); total_slos=0 => hide.
+  esc via escHtml. Read-only — koi button/action nahi.
+- STEP 3: triggers — bpExamNo onchange + onSubjectChange()/onGradeChange() ke andar
+  checkExamCoverage() call (subject/grade badle to warning refresh).
+
+Tasdeeq: grep -c bpCoverageWarn=2, checkExamCoverage=4; onchange @334, calls @499/@539;
+inline JS node --check OK.
+
 ## 2026-07-25 — Coverage Marhala 6b (UI) + 7 (nav icon) — feature mukammal
 
 ECONNRESET mein jo 6 markers 0 nikle the (cov-badge/loadCoverage/paperExamNo/bpExamNo/

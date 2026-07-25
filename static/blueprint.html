@@ -331,8 +331,9 @@
       </div>
       <div>
         <label>Exam (taqseem)</label>
-        <select id="bpExamNo"><option value="">Unassigned</option></select>
+        <select id="bpExamNo" onchange="checkExamCoverage()"><option value="">Unassigned</option></select>
         <div style="margin-top:4px;font-size:11px;color:var(--muted);line-height:1.4">Paper kis exam ka hissa hai — coverage isi se. Unassigned = tag nahi.</div>
+        <div id="bpCoverageWarn" style="display:none;margin-top:6px;font-size:12px;"></div>
       </div>
     </div>
 
@@ -495,6 +496,7 @@ function onSubjectChange() {
     gradeEl.appendChild(o);
   });
   gradeEl.disabled = false;
+  checkExamCoverage(); // subject badla to warning refresh (grade abhi khaali ho to guard hide karega)
 }
 
 async function onGradeChange() {
@@ -533,6 +535,52 @@ async function onGradeChange() {
       bloomBox.style.display = 'block';
     }
   } catch (e) { /* silent — suggestion optional hai */ }
+
+  checkExamCoverage(); // grade badla to warning refresh (class param isi se banta hai)
+}
+
+// Exam chunne par: is exam ke planned SLO mein se kaun abhi shamil nahi (taqseem
+// coverage). READ-ONLY warning — GET /api/coverage se `remaining` list; koi button/
+// action nahi. Guards: Unassigned("") ya subject/grade khaali => box hide. total_slos
+// 0 (is exam ke liye kuch planned hi nahi) => box hide (bemani warning se bachao).
+async function checkExamCoverage() {
+  const box = document.getElementById('bpCoverageWarn');
+  if (!box) return;
+  const exam    = document.getElementById('bpExamNo').value;
+  const subject = document.getElementById('bpSubject').value;
+  const grade   = document.getElementById('bpGrade').value;
+  if (exam === '' || !subject || !grade) { box.style.display = 'none'; return; }
+
+  try {
+    const params = new URLSearchParams({ class_name: grade, subject: subject, exam_no: exam });
+    const res = await apiFetch('/api/coverage?' + params.toString());
+    const data = await res.json();
+    if (!res.ok || !data.total_slos) { box.style.display = 'none'; return; }
+
+    const remaining = data.remaining || [];
+    if (remaining.length === 0) {
+      box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;';
+      box.innerHTML = '✓ Is exam ke sab planned SLO shamil hain';
+      return;
+    }
+
+    // Readable: slo_text pehle, SLO-code bracket mein. Lambi list ho to pehle 8 + baqi ka count.
+    const shown = remaining.slice(0, 8);
+    let listHtml = shown.map(s =>
+      '<li>' + escHtml(s.slo_text || '(no text)') +
+      (s.slo_code ? ' <span style="color:var(--muted)">(' + escHtml(s.slo_code) + ')</span>' : '') +
+      '</li>'
+    ).join('');
+    const extra = remaining.length - shown.length;
+    if (extra > 0) listHtml += '<li style="list-style:none;color:var(--muted)">… aur ' + extra + ' zyada</li>';
+
+    box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:#fff8e1;border:1px solid #ffcc80;color:#e65100;';
+    box.innerHTML = '⚠️ ' + remaining.length + ' planned SLO abhi shamil nahi:' +
+      '<ul style="margin:6px 0 0;padding-left:18px;">' + listHtml + '</ul>';
+  } catch (e) {
+    console.error('coverage check fail:', e);
+    box.style.display = 'none';
+  }
 }
 
 // ================================================================
