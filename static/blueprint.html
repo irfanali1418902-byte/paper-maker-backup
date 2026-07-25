@@ -329,6 +329,11 @@
           <span id="bloomSuggestionText"></span>
         </div>
       </div>
+      <div>
+        <label>Exam (taqseem)</label>
+        <select id="bpExamNo"><option value="">Unassigned</option></select>
+        <div style="margin-top:4px;font-size:11px;color:var(--muted);line-height:1.4">Paper kis exam ka hissa hai — coverage isi se. Unassigned = tag nahi.</div>
+      </div>
     </div>
 
     <div class="field-row" style="margin-top:4px;">
@@ -417,9 +422,37 @@ let _presets = [];
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
-  await Promise.all([loadSyllabusGrades(), loadPresets(), loadBpList()]);
+  await Promise.all([loadSyllabusGrades(), loadPresets(), loadBpList(), loadExamCount()]);
   addSection(); // start with one section
 });
+
+// bpExamNo dropdown: "Unassigned" (static, value="") ke baad Exam 1..N. N =
+// school_settings.exam_count (taqseem/coverage jaisa source — drift nahi). Blueprint
+// khud settings fetch nahi karta, is liye ek reuse GET (naya endpoint nahi). Fail par 8.
+// Dobara-call safe: purane 1..N hata kar rebuild.
+async function loadExamCount() {
+  let n = 8;
+  try {
+    const res = await apiFetch('/api/school-settings');
+    const s = await res.json();
+    if (res.ok && s && s.exam_count) n = s.exam_count;
+  } catch (e) {
+    console.error('exam_count load fail (default 8):', e);
+  }
+  buildBpExamOptions(n);
+}
+
+function buildBpExamOptions(n) {
+  const sel = document.getElementById('bpExamNo');
+  if (!sel) return;
+  sel.querySelectorAll('option[value]:not([value=""])').forEach((o) => o.remove());
+  for (let k = 1; k <= n; k++) {
+    const opt = document.createElement('option');
+    opt.value = String(k);
+    opt.textContent = 'Exam ' + k;
+    sel.appendChild(opt);
+  }
+}
 
 // ================================================================
 // Cascade dropdowns
@@ -956,6 +989,10 @@ async function makePaper() {
     grade,
     class_name: className,
     paper_title: paperTitle,
+    // Exam taqseem tag (coverage). Unassigned ("") => null (0 nahi). Value seedhe
+    // parseInt — koi template-literal/JSON arg nahi.
+    exam_no: document.getElementById('bpExamNo').value
+      ? parseInt(document.getElementById('bpExamNo').value, 10) : null,
   };
 
   const btn = document.getElementById('makePaperBtn');
