@@ -9,6 +9,9 @@ env.local.bat
 # SQLite database files (runtime state, not source)
 *.db
 *.db.*
+# WAL-mode sidecar files (hyphen, not dot — *.db.* inhe match nahi karta)
+*.db-wal
+*.db-shm
 
 # Python build/cache
 __pycache__/

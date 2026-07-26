@@ -18,8 +18,20 @@ DB_PATH = Path(os.environ.get("DB_PATH") or _DEFAULT_DB_PATH)
 
 
 def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    # Concurrency (20 teachers, ek server, local-disk DB): default DELETE-journal +
+    # busy_timeout=0 par write-conflict foran "database is locked" (500) deta tha —
+    # data safe rehta (SQLite ACID), par teacher ko error dikhta. Fix:
+    #   * timeout=30 / busy_timeout=5000 — locked par foran fail nahi, thodi der wait.
+    #   * journal_mode=WAL — concurrent reads smooth (reader/writer ek doosre ko block
+    #     nahi karte); ek writer serialized rehta. WAL local disk par safe (network-FS
+    #     par NAHI, par yahan clients HTTP se aate, DB file local hai).
+    #   * synchronous=NORMAL — WAL ke saath durable + tez.
+    # WAL DB file par persistent (ek dafa stick); busy_timeout/synchronous per-connection.
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute("PRAGMA synchronous=NORMAL")
     return conn
 
 

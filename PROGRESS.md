@@ -1,5 +1,41 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Concurrency fix: SQLite WAL + busy_timeout (20-teacher concurrent write)
+
+MASLA: 20 teachers ek server se (LAN) ek saath likhte — default DELETE-journal +
+busy_timeout=0 par write-conflict FORAN "database is locked" (500) deta tha. Data SAFE
+tha (SQLite ACID — failed write cleanly rollback, koi corruption NAHI; DB local disk par,
+clients HTTP se — network-FS nahi), par teacher ko error dikhta aur dobara try karna padta.
+Fix chhota + in-place, koi re-architecture nahi.
+
+- STEP 1: `get_connection()` (app/core/database.py) —
+  `sqlite3.connect(DB_PATH, timeout=30)` + `PRAGMA journal_mode=WAL` +
+  `busy_timeout=5000` + `synchronous=NORMAL`.
+    * WAL — concurrent reads smooth (reader/writer ek doosre ko block nahi karte); ek
+      writer serialized. WAL local disk par safe (network-FS par NAHI — yahan clients
+      HTTP se aate, DB file local hai). WAL DB header par persistent (ek dafa stick).
+    * timeout=30 / busy_timeout=5000 — locked par foran fail nahi, thodi der wait
+      (short writes ab ek doosre ka intezaar kar lete, error nahi).
+    * synchronous=NORMAL — WAL ke saath durable + tez.
+- STEP 4: .gitignore — `*.db-wal` + `*.db-shm` add. (`*.db.*` dot-pattern hyphen-siblings
+  ko match nahi karta tha — WAL sidecar files kabhi git par na jayein.)
+- Regression: sirf get_connection() ke ANDAR PRAGMAs — koi endpoint/repository/connection-
+  per-op logic chhua NAHI (open→execute→commit→close waise ka waisa).
+
+Deployment context: `start.bat` → `uvicorn --host 0.0.0.0 --port 8000` (single worker);
+teachers LAN par doosre PCs se EK server machine se connect karte, DB usi ki local disk par.
+Sync `def` endpoints threadpool mein → concurrent threads, har ek apna connection — yahi
+contention point tha.
+
+Tasdeeq: PRAGMAs present; live raw-open `PRAGMA journal_mode` = **wal** (persistent, bina
+PRAGMA set kiye — hatmi saboot), busy_timeout=5000, synchronous=NORMAL; `-wal/-shm` ab
+gitignored; pytest -q = 874 passed; ruff clean. Browser test (Irfan): server restart ke
+baad WAL ON confirm, do-tab se ek saath paper banaya — dono success, koi "database is
+locked" error nahi. Note: `-wal/-shm` sidecar sirf live connection ke doraan disk par
+(connection-per-op → idle par SQLite checkpoint kar ke hata deta — WAL-off ki nishani nahi).
+Server restart chahiye tha (naya get_connection) — ho chuka. Postgres tab jab writes bahut
+heavy hon (database.py comment migration path likhta) — abhi WAL+timeout kaafi.
+
 ## 2026-07-26 — Landing / teacher-welcome page (static/landing.html)
 
 App ke andar chhota teacher-welcome page — 3 hisse: Hero, 7 quick-action cards
