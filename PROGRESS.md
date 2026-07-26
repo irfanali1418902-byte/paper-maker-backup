@@ -1,5 +1,32 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Hissa 5-A: Bloom distribution tajweez — investigation + guard test
+
+Maqsad tha blueprint page par class-tier ki soft Bloom distribution tajweez (Pre-Primary
+70/30 … Matric 15/25/30/20/10, read-only, "mashwara hukm nahi"). INSPECT mein pata chala
+feature **pehle se end-to-end maujood** hai: `app/core/bloom_standards.py` (_GROUPS) →
+`GET /api/bloom-suggestion/{class_name}` (app/api/bloom_suggestions.py) → blueprint.html
+`onGradeChange` fetch + `#bloomSuggestionBox` render. Yaani naya kaam sirf tasdeeq +
+tahaffuz ka tha.
+
+- STEP 1 (rejected): frontend-only mirror try kiya — `BLOOM_STD` JS const (UPPERCASE keys,
+  casing bridge) + `bloomSuggestion()`/`renderBloomSuggestion()` helpers, API call ki jagah.
+  Faisla: REVERT. Wajah — `bloom_standards.py` waise bhi 3 jagah consume hota
+  (bloom-suggestion route + blueprint_bloom_guidance_service + slo_shortfall_service), to
+  Python copy khatam nahi ho sakti; mirror teesri copy = net duplication + drift-risk.
+  Localhost par round-trip ka faida ~sifar (onGradeChange mein pehle hi /api/topics fetch).
+  "Ek source of truth" (backend) saaf jeeta. blueprint.html byte-identical wapas (git diff khali).
+- STEP 2 (kept): tests/test_bloom_standards.py — 6 tests jo canonical %ages pin karte:
+  Pre-Primary 70/30, Primary 30/35/25/10, Middle 20/30/30/20, Matric 15/25/30/20/10;
+  normalize variants (grade 1 / Grade  1 / GRADE-1 / grade_1 → Primary); unknown/khali → None.
+  Yeh guidance + shortfall services ki bunyaad bhi pin karta (woh bhi inhi standards par tikke).
+
+Tasdeeq: blueprint.html unchanged (diff khali, API path bahal, /api/bloom-suggestion=1);
+inline JS node --check OK; pytest test_bloom_standards.py = 6 passed; full suite 874 passed;
+ruff clean. Net change is branch par: sirf naya guard-test (frontend/backend code chhua nahi).
+Note: Bloom naming casing — questions.bloom_level UPPERCASE, slo.bloom_level lowercase;
+standard keys lowercase (services `.upper()` se bridge karte).
+
 ## 2026-07-26 — Hissa 4-D: multi-section pin targeting
 
 4-C ka pin ab per-section — teacher batata hai konsa pinned question KIS section mein
