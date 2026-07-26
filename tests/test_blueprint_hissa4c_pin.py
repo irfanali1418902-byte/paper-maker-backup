@@ -116,3 +116,45 @@ def test_no_pins_unchanged(client):
     res = _post(client, _section(count=5))  # no include_question_ids key
     assert res.status_code == 200
     assert len(res.json()["questions"]) == 2
+
+
+# ── Hissa 4-D: multi-section per-section pin contract (backend already per-section) ──
+
+def test_two_sections_distinct_pins(client):
+    """Do sections, har ek ka apna include_question_ids → har pin apni-apni section
+    mein aaye, cross-contamination nahi (frontend isi contract par bharosa karta)."""
+    _insert_q(status="published")  # filler taake sections khaali na hon
+    _insert_q(status="published")
+    pin_a = _insert_q(status="draft")  # sirf pin par aayenge (published-only filter se bahar)
+    pin_b = _insert_q(status="draft")
+
+    sec_a = _section(count=2, pins=[pin_a])
+    sec_b = _section(count=2, pins=[pin_b])
+    sec_b["heading"] = "Sec B"
+
+    res = client.post("/api/blueprint-paper", json={
+        "sections_input": [sec_a, sec_b], "subject": "Science",
+    })
+    assert res.status_code == 200
+    meta = res.json()["sections_meta"]
+    assert len(meta) == 2
+    assert pin_a in meta[0]["question_ids"]
+    assert pin_b in meta[1]["question_ids"]
+
+
+def test_pin_only_in_its_section(client):
+    """Section A ka pin section B mein na aaye (aur ulta)."""
+    pin_a = _insert_q(status="draft")
+    pin_b = _insert_q(status="draft")
+
+    sec_a = _section(count=1, pins=[pin_a])
+    sec_b = _section(count=1, pins=[pin_b])
+    sec_b["heading"] = "Sec B"
+
+    res = client.post("/api/blueprint-paper", json={
+        "sections_input": [sec_a, sec_b], "subject": "Science",
+    })
+    assert res.status_code == 200
+    meta = res.json()["sections_meta"]
+    assert pin_a not in meta[1]["question_ids"]
+    assert pin_b not in meta[0]["question_ids"]

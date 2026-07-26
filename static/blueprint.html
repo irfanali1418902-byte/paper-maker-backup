@@ -421,7 +421,7 @@ let _allGrades = [];     // from /api/syllabus-grades
 let _topics = [];        // from /api/topics (for current subject+grade)
 let _sections = [];      // [{heading, question_types, topic_ids, count, marks_each, source_filter}]
 let _presets = [];
-let _pinned = new Set(); // Hissa 4-C: teacher ke pin kiye question_ids (must-include) — paper-level, ephemeral
+let _pinned = new Map(); // Hissa 4-D: qid -> sectionIndex (0-based). Teacher ke pin kiye question_ids (must-include) — paper-level, ephemeral
 
 // ---- Init ----
 window.addEventListener('DOMContentLoaded', async () => {
@@ -616,6 +616,16 @@ async function showSloQuestions(sloId, linkEl) {
     box.innerHTML = qs.map(q => {
       const badge = '<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:#eceff1;color:#455a64;">'
         + escHtml(q.status || '—') + '</span>';
+      // Hissa 4-D: kis section mein daalna hai — <select> (A/B/C… = section index/letter).
+      // Pinned ho to us ki section pre-select; warna default pehli (A). togglePin isi value
+      // ko uthata. Sirf 1 section = ek hi option (4-C jaisa default).
+      const pinnedIdx = _pinned.get(q.id);
+      const secOpts = _sections.map((s, si) =>
+        '<option value="' + si + '"' + (pinnedIdx === si ? ' selected' : '') + '>'
+        + String.fromCharCode(65 + si) + '</option>'
+      ).join('');
+      const secSel = '<select class="pin-sec-sel" onchange="setPinSection(\'' + escAttr(q.id) + '\', this)"'
+        + ' style="margin-left:6px;font-size:10px;padding:1px 3px;border-radius:4px;">' + secOpts + '</select>';
       // "daalo" toggle — teacher pin karta (must-include). Pinned par green ✓.
       const on = _pinned.has(q.id);
       const pinBtn = '<button type="button" onclick="togglePin(\'' + escAttr(q.id) + '\', this); return false;"'
@@ -623,22 +633,36 @@ async function showSloQuestions(sloId, linkEl) {
         + (on ? 'background:#2e7d32;color:#fff;' : 'background:#eceff1;color:#333;') + '">'
         + (on ? '✓ pinned' : 'daalo') + '</button>';
       return '<div style="padding:3px 0;border-top:1px solid rgba(0,0,0,.08);">'
-        + escHtml(q.question_en || '(no text)') + ' ' + badge + pinBtn + '</div>';
+        + escHtml(q.question_en || '(no text)') + ' ' + badge + secSel + pinBtn + '</div>';
     }).join('');
   } catch (e) {
     box.innerHTML = '<span style="color:#c62828">Masla: ' + escHtml(e.message) + '</span>';
   }
 }
 
-// Hissa 4-C: pin/unpin toggle. _pinned set update kar ke button + "N pinned" badge
-// refresh. Teacher pin karta — app khud nahi. Pins ephemeral (sirf agle makePaper mein).
+// Hissa 4-C/4-D: pin/unpin toggle. Map<qid, sectionIndex> update. Pin par saath wale
+// section <select> ki value (0-based index) uthata; unpin par delete. Teacher pin
+// karta — app khud nahi. Pins ephemeral (sirf agle makePaper mein).
 function togglePin(qid, btnEl) {
-  if (_pinned.has(qid)) _pinned.delete(qid);
-  else _pinned.add(qid);
+  if (_pinned.has(qid)) {
+    _pinned.delete(qid);
+  } else {
+    const selEl = btnEl.parentElement ? btnEl.parentElement.querySelector('.pin-sec-sel') : null;
+    const idx = selEl ? (Number(selEl.value) || 0) : 0;
+    _pinned.set(qid, idx);
+  }
   const on = _pinned.has(qid);
   btnEl.textContent = on ? '✓ pinned' : 'daalo';
   btnEl.style.background = on ? '#2e7d32' : '#eceff1';
   btnEl.style.color = on ? '#fff' : '#333';
+  updatePinnedBadge();
+}
+
+// Hissa 4-D: section <select> badla — agar question pehle se pinned hai to us ki
+// section re-assign. Unpinned par kuch nahi (daalo dabane par togglePin value uthayega).
+function setPinSection(qid, selEl) {
+  const idx = Number(selEl.value) || 0;
+  if (_pinned.has(qid)) _pinned.set(qid, idx);
   updatePinnedBadge();
 }
 
@@ -647,7 +671,12 @@ function updatePinnedBadge() {
   if (!b) return;
   const n = _pinned.size;
   b.style.display = n ? 'inline-block' : 'none';
-  b.textContent = '📌 ' + n + ' pinned question' + (n === 1 ? '' : 's');
+  // Hissa 4-D: total + per-section breakdown (A:2 B:1) — teacher dekhe pins kahan ja rahe.
+  const bySec = {};
+  _pinned.forEach((idx) => { bySec[idx] = (bySec[idx] || 0) + 1; });
+  const parts = Object.keys(bySec).map(Number).sort((a, b) => a - b)
+    .map(i => String.fromCharCode(65 + i) + ':' + bySec[i]).join(' ');
+  b.textContent = '📌 ' + n + ' pinned' + (n && parts ? ' (' + parts + ')' : '');
 }
 
 // ================================================================
@@ -706,14 +735,36 @@ function addSection() {
     language_filter: null,
     unit_filter: null,
   });
+  renumberDefaultHeadings();   // Hissa 4-D: default "Section X" headings ko index se align
   renderSections();
   updateMarksBar();
 }
 
+// Hissa 4-D: "ek source of truth" — badge/select/heading sab section index se derive.
+// Sirf DEFAULT headings ("Section A", "Section B"…) ko index se re-align; teacher ki
+// custom heading (jaise "Objective Questions") ko chhod do — /^Section [A-Z]$/ hi default.
+function renumberDefaultHeadings() {
+  _sections.forEach((s, i) => {
+    if (/^Section [A-Z]$/.test(s.heading || '')) {
+      s.heading = 'Section ' + String.fromCharCode(65 + i);
+    }
+  });
+}
+
 function removeSection(idx) {
   _sections.splice(idx, 1);
+  // Hissa 4-D: pinned sections re-map — hataayi gayi section (idx) ke pins DROP; us se
+  // upar wale (idx se bara) ek khisak (index shift). Warna pin ghalat section par point.
+  const remapped = new Map();
+  _pinned.forEach((secIdx, qid) => {
+    if (secIdx === idx) return;                          // hataayi section ka pin drop
+    remapped.set(qid, secIdx > idx ? secIdx - 1 : secIdx);
+  });
+  _pinned = remapped;
+  renumberDefaultHeadings();   // Hissa 4-D: default "Section X" headings ko index se re-align
   renderSections();
   updateMarksBar();
+  updatePinnedBadge();
 }
 
 function renderSections() {
@@ -1098,12 +1149,18 @@ async function makePaper() {
   const paperTitle = document.getElementById('bpPaperTitle').value.trim() || null;
   const className  = document.getElementById('bpClassName').value.trim() || null;
 
-  // Hissa 4-C: pin kiye questions (must-include) pehli section par attach — backend
-  // guarantee karta (pinned pehle, count ke andar). Pins ephemeral: sirf is paper mein,
-  // saved blueprint template mein nahi. Koi pin na ho to purana body bilkul waisa hi.
-  const pinnedIds = [..._pinned];
-  const sectionsInput = pinnedIds.length
-    ? v.sections.map((s, i) => (i === 0 ? { ...s, include_question_ids: pinnedIds } : s))
+  // Hissa 4-D: pin kiye questions (must-include) apni-apni section par attach — Map
+  // <qid, sectionIndex> value se group. Backend har section apne pins guarantee karta.
+  // STEP 8 safety: out-of-range index (section hataayi gayi) wala pin drop. Pins
+  // ephemeral: sirf is paper mein, saved template mein nahi. Koi pin na ho → body waisa hi.
+  const sectionCount = v.sections.length;
+  const sectionsInput = _pinned.size
+    ? v.sections.map((s, i) => {
+        const ids = [..._pinned.entries()]
+          .filter(([, idx]) => idx === i && idx < sectionCount)
+          .map(([qid]) => qid);
+        return ids.length ? { ...s, include_question_ids: ids } : s;
+      })
     : v.sections;
 
   const body = {
