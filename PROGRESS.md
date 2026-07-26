@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Hissa 4-D: multi-section pin targeting
+
+4-C ka pin ab per-section — teacher batata hai konsa pinned question KIS section mein
+jaye (pehle sab pehli section par jaate the). `_pinned` ab `Set<qid>` ki jagah
+`Map<qid, sectionIndex>`. Backend pehle se per-section `include_question_ids` guarantee
+karta tha (4-C contract), sirf frontend value-group kar ke bhejta.
+
+- STEP 1: blueprint.html — `_pinned = new Map()` (qid -> 0-based sectionIndex, ephemeral).
+  showSloQuestions har question par section `<select>` (A/B/C… = index) deta; pinned ho
+  to us ki section pre-select. togglePin saath wale select ki value uthata; setPinSection
+  already-pinned ki section re-assign. Badge ab per-section breakdown (📌 3 pinned A:2 B:1).
+- STEP 2: makePaper — `_pinned.entries()` ko section index se group, har section apne ids
+  `include_question_ids` mein; koi pin na ho to body bilkul waisa (regression-safe).
+- STEP 3: removeSection — pin re-map: hataayi section (idx) ke pins DROP, us se upar wale
+  (secIdx > idx) ek khisak (secIdx-1). Warna pin ghalat section par point karta.
+- STEP 4 (BUG fix): browser test se "pinned question galat section" pakra. Instrumentation
+  pehle ([PIN-DBG] console.log removeSection+makePaper) — console trace + 2 PDF se saabit
+  ke pin LOGIC sahi hai; asli masla sirf COSMETIC label-drift tha: default headings
+  ("Section A/B/C") remove ke baad re-number nahi hote the, jabke select/badge index-based
+  letter dikhate. `renumberDefaultHeadings()` — conditional: sirf `/^Section [A-Z]$/`
+  (default) headings ko index se align; teacher ki custom heading ("Objective Questions")
+  MAT chhue. removeSection (re-map ke baad) + addSection dono par chalta — "ek source of
+  truth" (badge/select/heading sab index se derive). Phir instrumentation revert.
+- STEP 5: tests/test_blueprint_hissa4c_pin.py — +2 (total 7): two-sections-distinct-pins,
+  pin-only-in-its-section (backend per-section contract jis par frontend bharosa karta).
+
+Tasdeeq: grep [PIN-DBG]=0 (reverted); renumberDefaultHeadings 1 def + 2 call; inline JS
+node --check "JS SYNTAX OK"; pytest test_blueprint_hissa4c_pin.py = 7 passed; ruff clean.
+Frontend-only change (backend/schema untouched) — hard refresh kaafi, restart nahi.
+Deferred: pin reset-gap (blueprint reset/switch par pins clear nahi hote) — Hissa 4-E candidate.
+
 ## 2026-07-25 — Hissa 4-C: "daalo" — must-include pinned questions (Option A)
 
 Teacher "questions dikhao" (4-B) list se question pin karta; backend usay blueprint
