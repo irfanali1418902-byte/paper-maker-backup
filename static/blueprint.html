@@ -483,6 +483,8 @@ function onSubjectChange() {
 
   _topics = [];
   renderTopicsInSections();
+  clearPins();   // Hissa 4-E: purane subject ke qids naye subject ke liye be-maani —
+                 // aur 4-C backend unhe force-include karta (ghalat-subject leak).
 
   if (!subject) {
     gradeEl.innerHTML = '<option value="">-- Pehle subject chunein --</option>';
@@ -507,6 +509,7 @@ async function onGradeChange() {
 
   _topics = [];
   renderTopicsInSections();
+  clearPins();   // Hissa 4-E: grade-set badla — purane pins ab be-maani (same wajah).
 
   // Reset bloom suggestion box
   const bloomBox = document.getElementById('bloomSuggestionBox');
@@ -677,6 +680,14 @@ function updatePinnedBadge() {
   const parts = Object.keys(bySec).map(Number).sort((a, b) => a - b)
     .map(i => String.fromCharCode(65 + i) + ':' + bySec[i]).join(' ');
   b.textContent = '📌 ' + n + ' pinned' + (n && parts ? ' (' + parts + ')' : '');
+}
+
+// Hissa 4-E: pins ephemeral — teen jagah clear (paper success, subject/grade change).
+// Khali Map -> khali Map + badge refresh, to koi pin na ho to no-op (regression-safe).
+// Caller open SLO panels ka stale "✓ pinned" checkExamCoverage() se refresh karta.
+function clearPins() {
+  _pinned = new Map();
+  updatePinnedBadge();
 }
 
 // ================================================================
@@ -1205,6 +1216,12 @@ async function makePaper() {
     } else {
       setStatus('ok', `✅ ${data.questions.length} questions, ${data.total_marks} marks — print view khul raha hai...`);
     }
+
+    // Hissa 4-E: paper ban gaya (success — dono branches: shortfall + ok) → pins clear.
+    // Har paper apna; agle paper mein purane pins na rahein. SIRF success par — 404/
+    // !res.ok/catch guards upar return kar chuke, finally sirf btn re-enable karta.
+    clearPins();
+    checkExamCoverage();   // open SLO panels ka stale "✓ pinned" reset (agar khule hon)
 
     renderBloomGuidance(data.bloom_guidance);
 

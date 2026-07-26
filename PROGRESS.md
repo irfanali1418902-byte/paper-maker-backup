@@ -1,5 +1,32 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Hissa 4-E: pin reset-gap fix (deferred 4-D bug)
+
+4-D mein pins ephemeral kehlaate the lekin makePaper ke baad `_pinned` clear nahi hota
+tha — purane pins agle paper mein reh jaate ("yeh question kahan se aaya?" confusion).
+4-E: pins teen jagah clear, ek DRY helper se. Frontend-only, koi backend/DB/schema change nahi.
+
+- STEP 1: `clearPins()` helper — `_pinned = new Map(); updatePinnedBadge();`. Khali Map ->
+  khali Map, to koi pin na ho to no-op (regression-safe).
+- STEP 2: makePaper SUCCESS par reset — dono success branches (shortfall `if` + ok `else`)
+  ke BAAD, renderBloomGuidance/print-open se pehle. `clearPins()` + `checkExamCoverage()`
+  (open SLO panels ka stale "✓ pinned" button reset). SUCCESS-ONLY: 404 / `!res.ok` guards
+  pehle return kar chuke, `catch` network-error, aur `finally` (sirf btn re-enable) — in par
+  reset NAHI, pins intact (warna fail par teacher ko dobara pin karna padta).
+- STEP 3+4: `onSubjectChange` + `onGradeChange` mein bhi `clearPins()`. Yeh sirf tidy nahi —
+  CORRECTNESS fix: pins `qid` hain jo ek subject/grade ke question-set se bandhe. Subject/
+  grade badle to purane qids be-maani; aur 4-C backend pinned ids ko filters ke BAHAR bhi
+  force-include karta — doosre subject ka valid qid naye paper mein force-inject ho kar
+  ghalat-subject question la sakta tha. checkExamCoverage() dono handlers mein already hai
+  (L501/L541), to SLO panels bhi refresh ho jaate.
+- STEP 5: pin-attach logic (makePaper L1156-1164) chhua NAHI — sirf success ke baad clear add.
+
+Tasdeeq: grep clearPins=4 (1 def + 3 call: onSubjectChange/onGradeChange/makePaper-success);
+inline JS node --check "JS SYNTAX OK"; pytest -q = 874 passed; ruff clean. Browser test (Irfan):
+success→clear ✓, subject/grade change→clear ✓, fail→intact ✓. Naya backend test nahi (behaviour
+puri tarah frontend/DOM; pin-attach backend contract pehle se 7 tests se covered). Frontend-only —
+hard refresh kaafi, restart nahi. 4-D ka reset-gap ab band.
+
 ## 2026-07-26 — Hissa 5-A: Bloom distribution tajweez — investigation + guard test
 
 Maqsad tha blueprint page par class-tier ki soft Bloom distribution tajweez (Pre-Primary
