@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Hissa 5-B: question-type ↔ Bloom hint (section-level, soft)
+
+Section card mein Bloom Level chunne par uske paas chhoti soft hint — us bloom ke munasib
+question-types (misal "Apply ke liye aksar behtar: Short-answer · Fill-blank"). Tajweez,
+hukm nahi; override khula. Frontend-only, koi backend/DB/5-A change nahi.
+
+- STEP 1: `QTYPE_HINT` const (frontend, script scope) — UPPERCASE bloom key → labels array.
+  Values SIRF section-card ke 4 selectable types (MCQ / Fill-blank / True/False /
+  Short-answer). `essay` bloom_service/ai_service mein hai par section-card checkbox mein
+  selectable NAHI, is liye hint se chhoda (warna teacher aisi type ki tajweez dekhta jo
+  select hi nahi kar sakta). Keys UPPERCASE = dropdown value se seedha match (koi casing-
+  bridge nahi, 5-A wala lowercase masla yahan nahi). Purely presentational — koi backend
+  consumer nahi, is liye frontend const (5-A ke ulat jahan bloom_standards 3 services
+  consume karte the).
+- STEP 4: `qtypeHintHtml(bloomVal)` DRY helper — UPPERCASE bloom → hint HTML (ya khali
+  agar Any/null/unknown). renderSecCard (initial render) + onBloomFilter (update) dono
+  reuse karte — ek jagah.
+- STEP 2: `#qtypeHint_${i}` read-only div, renderSecCard mein Bloom `<select>` ke baad
+  (isi wrapping div). Initial content `qtypeHintHtml(sec.bloom_filter)`. escHtml-safe.
+- STEP 3 (STALE-TRAP FIX): `onBloomFilter` pehle sirf state set karta tha (card re-render
+  nahi) — to static hint bloom badalne par stale reh jata. Ab handler hint element ka
+  `innerHTML` seedhe update karta (`getElementById('qtypeHint_'+idx)`). Poora
+  `renderSections()` NAHI — focus/scroll safe + sasta.
+- STEP 5: regression-safe — bloom_filter khali/'Any'/null → helper `''` return → hint
+  hidden (invisible). Question Types checkboxes / onTypeChange / Bloom filter ki asal
+  functionality chhui NAHI (sirf ek read-only div + handler mein ek update-line). 5-A box
+  (#bloomSuggestionBox) + backend untouched.
+
+5-A se alag: 5-A paper-level Bloom DISTRIBUTION (class-tier %, grade dropdown ke paas),
+5-B section-level QTYPE hint (Bloom filter ke paas). Alag DOM, scope, trigger — koi takrav nahi.
+
+Tasdeeq: grep QTYPE_HINT=2 (def+use), qtypeHintHtml=3 (def + renderSecCard + onBloomFilter),
+qtypeHint_=2 (element+handler); inline JS node --check "JS SYNTAX OK"; pytest -q = 874 passed;
+ruff clean. Browser test (Irfan): Remember/Apply/Analyze → sahi hint ✓, Any → gayab ✓, fauran
+badalta bina blink/scroll-jump ✓. Naya backend test nahi (behaviour puri tarah frontend/DOM;
+koi contract nahi badla). Frontend-only — hard refresh kaafi, restart nahi.
+
 ## 2026-07-26 — Hissa 4-E: pin reset-gap fix (deferred 4-D bug)
 
 4-D mein pins ephemeral kehlaate the lekin makePaper ke baad `_pinned` clear nahi hota

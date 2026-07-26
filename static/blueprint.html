@@ -787,6 +787,29 @@ function renderSections() {
   container.innerHTML = _sections.map((sec, i) => renderSecCard(sec, i)).join('');
 }
 
+// Hissa 5-B: question-type ↔ Bloom soft hint. Keys UPPERCASE (section-card Bloom
+// dropdown value se seedha match). Values sirf section-card ke 4 selectable types
+// (MCQ/Fill-blank/True/False/Short-answer) — essay yahan selectable nahi. Soft tajweez,
+// hukm nahi; teacher override khula. Purely presentational — koi backend consumer nahi.
+const QTYPE_HINT = {
+  REMEMBER:   ['MCQ', 'Fill-blank', 'True/False'],
+  UNDERSTAND: ['MCQ', 'Short-answer', 'Fill-blank'],
+  APPLY:      ['Short-answer', 'Fill-blank'],
+  ANALYZE:    ['Short-answer'],
+  EVALUATE:   ['Short-answer'],
+  CREATE:     ['Short-answer'],
+};
+
+// UPPERCASE bloom -> hint HTML (ya khali agar Any/null/unknown). renderSecCard (initial)
+// + onBloomFilter (update) dono reuse karte — DRY, ek jagah.
+function qtypeHintHtml(bloomVal) {
+  const types = QTYPE_HINT[bloomVal];        // '' / null / unknown -> undefined
+  if (!types || !types.length) return '';
+  const titled = bloomVal.charAt(0) + bloomVal.slice(1).toLowerCase();   // APPLY -> Apply
+  return '💡 ' + escHtml(titled) + ' ke liye aksar behtar: '
+    + types.map(escHtml).join(' · ') + ' <span style="opacity:.65">(mashwara)</span>';
+}
+
 function renderSecCard(sec, i) {
   const lockedByOthers = new Set(
     _sections.filter((_, j) => j !== i).flatMap(s => s.question_types)
@@ -921,6 +944,7 @@ function renderSecCard(sec, i) {
             <option value="EVALUATE"   ${bloomSel('EVALUATE')}>Evaluate</option>
             <option value="CREATE"     ${bloomSel('CREATE')}>Create</option>
           </select>
+          <div class="qtype-hint" id="qtypeHint_${i}" style="font-size:11px;color:#1565c0;margin-top:5px;line-height:1.4;">${qtypeHintHtml(sec.bloom_filter)}</div>
         </div>
         <div>
           <label>Language</label>
@@ -1013,6 +1037,9 @@ function onDiffFilter(idx, val) {
 
 function onBloomFilter(idx, val) {
   _sections[idx].bloom_filter = val || null;
+  // Hissa 5-B: hint seedhe refresh (poora re-render nahi — focus/scroll safe). Any/'' -> khali.
+  const hintEl = document.getElementById('qtypeHint_' + idx);
+  if (hintEl) hintEl.innerHTML = qtypeHintHtml(val);
 }
 
 function onLangFilter(idx, val) {
