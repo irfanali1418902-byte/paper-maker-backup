@@ -1,5 +1,39 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-07-26 — Landing / teacher-welcome page (static/landing.html)
+
+App ke andar chhota teacher-welcome page — 3 hisse: Hero, 7 quick-action cards
+(existing pages tak), aur intro cards. Modern lekin saaf, teacher-focused (public
+marketing NAHI). Frontend-only, responsive.
+
+- STEP 1: `<head>` dhaancha index.html jaisa (consistency) — `app.css` link + inline
+  `:root` vars (wahi palette: primary/navy/tint/ink/muted/border/surface/bg/radius/shadow)
+  + body font 'IBM Plex Sans' + end mein `<script src="/static/js/brand.js">`. `<body
+  data-page="Welcome">` (brand.js title + .brand name/tag set karta). Nastaliq @font-face
+  skip (page English/Roman-Urdu, koi Nastaliq text nahi).
+- STEP 2 (Hero): navy gradient band; `.brand .logo` (/static/brand/logo.svg) + name/tag
+  (brand.js bharega) + welcome line (offline exam paper generator, AII Mingora).
+- STEP 3 (Quick actions): 7 hover-lift cards, icons `icons.svg` se — Generator (/),
+  Blueprint (/blueprint.html), Question Bank (/bank.html), Image Library (/library.html),
+  Learning Outcomes (/slo.html), Exam Taqseem (/taqseem.html), SLO Health (/slo-health.html).
+  Icon pattern `<svg class="icon"><use href="/static/icons.svg#i-…"></use></svg>`.
+- STEP 4 (Intro cards): 4 chhote cards (Paper banao / Blueprint templates / SLO coverage /
+  Image library), 1-line each — intro, marketing nahi.
+- STEP 5: responsive (grid auto-fill/auto-fit wrap + mobile media query). Koi external
+  CDN/font/script nahi (offline) — sirf app.css vars + icons.svg + brand.js REUSE, koi
+  naya brand code nahi.
+
+Placement: `/landing.html` — ZERO backend/main.py change (StaticFiles `/` mount ise serve
+karta). `/` waise ka waisa hai (= index.html Generator); landing usay replace nahi karta.
+Palette: navy + primary-blue on-brand — brand.json mein gold color nahi, is liye invent NAHI
+kiya (agar gold accent chahiye to pehle brand system mein add ho, tab landing use kare).
+
+Tasdeeq: git diff sirf naya static/landing.html (koi backend/dusra page change nahi);
+7 quick-action cards + 7 sahi hrefs, 11 icon `<use>` refs (7+4), brand.js + data-page,
+div balance 38/38; ruff clean; pytest -q = 874 passed. Browser test (Irfan): Hero+brand
+(name/tag/logo) sahi ✓, 7 links sahi pages ✓ (Blueprint confirm), mobile cards wrap ✓,
+navy+blue on-brand ✓. Frontend-only — koi restart nahi.
+
 ## 2026-07-26 — Hissa 5-B: question-type ↔ Bloom hint (section-level, soft)
 
 Section card mein Bloom Level chunne par uske paas chhoti soft hint — us bloom ke munasib
