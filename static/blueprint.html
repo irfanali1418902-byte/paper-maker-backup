@@ -5,22 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Blueprint Builder — Parcha Paper Maker</title>
 <link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/theme.css">
 <style>
   :root {
-    --primary: #2E5AAC;
-    --primary-hover: #244a90;
-    --navy: #16294A;
-    --tint: #EAF1FB;
-    --ink: #16213A;
-    --ink2: #1B2433;
-    --muted: #5B6678;
-    --muted2: #8A93A4;
-    --border: #E3E8F1;
-    --surface: #FFFFFF;
-    --bg: #EEF1F6;
-    --err-bg: #FBE9E7; --err-tx: #C0392B;
-    --ok-bg: #E6F4EC;  --ok-tx: #2E7D5B;
-    --warn-bg: #FBF1DF; --warn-tx: #B5760E;
+    /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
+       hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
+       light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
+    --primary: var(--brand);
+    --primary-hover: var(--brand-2);
+    --navy: var(--brand);
+    --tint: var(--chip-bg);
+    --ink: var(--fg);
+    --ink2: var(--fg);
+    --muted2: var(--muted);
+    --border: var(--line);
+    --surface: var(--panel);
+    --bg: var(--app-bg);
+    --err-bg: var(--red-bg);     --err-tx: var(--red);
+    --ok-bg: var(--green-bg);    --ok-tx: var(--green);
+    --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
     --radius-btn: 10px;
     --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
@@ -42,17 +45,17 @@
   }
   .brand { padding: 2px 22px 20px; }
   .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
-  .brand small { font-size: 10.5px; color: #9DB0D0; display: block; margin-top: 3px; }
+  .brand small { font-size: 10.5px; color: var(--sidebar-fg); display: block; margin-top: 3px; }
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
   .app-nav a {
     display: flex; align-items: center; gap: 10px;
-    color: #C6D2E8; font-size: 14px; font-weight: 500;
+    color: var(--sidebar-fg); font-size: 14px; font-weight: 500;
     padding: 10px 12px; border-radius: 8px;
     border-left: 3px solid transparent;
   }
   .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
-  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: #5B8DEF; }
-  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: #8092B0; line-height: 1.6; }
+  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: var(--sidebar-active); }
+  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: var(--sidebar-fg); line-height: 1.6; }
 
   /* ---- Main ---- */
   .bp-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1000px; margin: 0 auto; width: 100%; }
@@ -73,8 +76,8 @@
   label:first-of-type { margin-top: 0; }
   input[type="text"], input[type="number"], select {
     width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid #D6DEEA; border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 10px;
+    font-size: 14.5px; font-family: inherit; background: var(--panel); color: var(--ink);
   }
   input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
 
@@ -94,7 +97,7 @@
 
   .btn-secondary {
     display: inline-flex; align-items: center; gap: 8px;
-    background: #fff; border: 1.5px solid var(--primary); color: var(--primary);
+    background: var(--panel); border: 1.5px solid var(--primary); color: var(--primary);
     min-height: 44px; padding: 0 20px; border-radius: var(--radius-btn);
     font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer;
   }
@@ -103,18 +106,18 @@
 
   .btn-ghost {
     display: inline-flex; align-items: center; gap: 7px;
-    background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--line); color: var(--ink);
     min-height: 36px; padding: 0 14px; border-radius: 9px;
     font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
   }
   .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 
   .btn-danger-sm {
-    background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
+    background: var(--err-bg); border: 1px solid var(--red); color: var(--err-tx);
     padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer;
   }
-  .btn-danger-sm:hover { background: #fdd; }
+  .btn-danger-sm:hover { background: var(--red-bg); }
 
   /* ---- Status banner ---- */
   .status-bar {
@@ -138,8 +141,8 @@
   /* ---- Topics multi-select ---- */
   .topic-checks-wrap {
     margin-top: 8px; max-height: 140px; overflow-y: auto;
-    border: 1px solid #D6DEEA; border-radius: 10px; padding: 10px 12px;
-    background: #fafbfd; display: flex; flex-direction: column; gap: 6px;
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel-2); display: flex; flex-direction: column; gap: 6px;
   }
   .topic-checks-wrap .no-topics-msg {
     font-size: 12.5px; color: var(--muted2); font-style: italic;
@@ -155,8 +158,8 @@
   /* ---- Section cards ---- */
   .sec-list { display: flex; flex-direction: column; gap: 14px; }
   .sec-card {
-    border: 1.5px solid #c7d8f7; border-radius: 12px;
-    padding: 18px 20px; background: #f8fbff; position: relative;
+    border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; background: var(--panel-2); position: relative;
   }
   .sec-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -183,9 +186,9 @@
   .bp-row {
     display: flex; align-items: center; gap: 14px;
     padding: 14px 16px; border: 1px solid var(--border);
-    border-radius: 10px; background: #fff;
+    border-radius: 10px; background: var(--panel);
   }
-  .bp-row:hover { border-color: #b8c9e8; }
+  .bp-row:hover { border-color: var(--brand-2); }
   .bp-info { flex: 1; min-width: 0; }
   .bp-name { font-size: 14px; font-weight: 600; }
   .bp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -213,7 +216,7 @@
 
   /* ---- Bloom guidance panel (Marhala 2B — soft) ---- */
   .bloom-guide {
-    background: var(--warn-bg); border: 1px solid #e7cf9a;
+    background: var(--warn-bg); border: 1px solid var(--warn-tx);
     border-left: 3px solid var(--warn-tx); color: var(--ink);
     padding: 14px 16px; border-radius: 10px; margin-top: 14px;
   }
@@ -230,7 +233,7 @@
   .bloom-guide .bg-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
 
   /* ---- Filter section (new: status/difficulty/bloom/distribution) ---- */
-  .filter-section { margin-top: 14px; border-top: 1px solid #dce5f3; padding-top: 14px; }
+  .filter-section { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
   .filter-section-title {
     font-size: 11px; font-weight: 700; color: var(--muted2);
     text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
@@ -325,7 +328,7 @@
         <select id="bpGrade" disabled onchange="onGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
-        <div id="bloomSuggestionBox" style="display:none;margin-top:8px;padding:10px 14px;background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;font-size:13px;color:#0d47a1;line-height:1.5">
+        <div id="bloomSuggestionBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;font-size:13px;color:var(--brand);line-height:1.5">
           <span id="bloomSuggestionText"></span>
         </div>
       </div>
@@ -397,7 +400,7 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Paper Banao → Print
     </button>
-    <span id="pinnedBadge" style="display:none;align-self:center;font-size:12px;padding:4px 10px;border-radius:14px;background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;"></span>
+    <span id="pinnedBadge" style="display:none;align-self:center;font-size:12px;padding:4px 10px;border-radius:14px;background:var(--green-bg);border:1px solid var(--green);color:var(--green);"></span>
   </div>
 
   <div class="status-bar" id="actionStatus"></div>
@@ -536,7 +539,7 @@ async function onGradeChange() {
         .join(', ');
       document.getElementById('bloomSuggestionText').innerHTML =
         `💡 <strong>${b.group}</strong> ke liye tajweez: ${parts}<br>` +
-        `<span style="font-size:11.5px;color:#1565c0">(Yeh sirf mashwara hai — aap apni marzi se badal sakte hain)</span>`;
+        `<span style="font-size:11.5px;color:var(--brand)">(Yeh sirf mashwara hai — aap apni marzi se badal sakte hain)</span>`;
       bloomBox.style.display = 'block';
     }
   } catch (e) { /* silent — suggestion optional hai */ }
@@ -564,7 +567,7 @@ async function checkExamCoverage() {
 
     const remaining = data.remaining || [];
     if (remaining.length === 0) {
-      box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;';
+      box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:var(--green-bg);border:1px solid var(--green);color:var(--green);';
       box.innerHTML = '✓ Is exam ke sab planned SLO shamil hain';
       return;
     }
@@ -577,15 +580,15 @@ async function checkExamCoverage() {
         ? ' <span style="color:var(--muted)">(' + escHtml(s.slo_code) + ')</span>' : '';
       const qLink = s.slo_id
         ? ' <a href="#" onclick="showSloQuestions(\'' + escAttr(s.slo_id) + '\', this); return false;"'
-          + ' style="color:#1565c0;font-size:11px;text-decoration:underline;">questions dikhao</a>'
+          + ' style="color:var(--brand);font-size:11px;text-decoration:underline;">questions dikhao</a>'
         : '';
       return '<li style="margin-bottom:4px;">' + escHtml(s.slo_text || '(no text)') + codeSpan + qLink +
-             '<div style="display:none;margin:3px 0 2px;font-size:11.5px;color:#333;"></div></li>';
+             '<div style="display:none;margin:3px 0 2px;font-size:11.5px;color:var(--fg);"></div></li>';
     }).join('');
     const extra = remaining.length - shown.length;
     if (extra > 0) listHtml += '<li style="list-style:none;color:var(--muted)">… aur ' + extra + ' zyada</li>';
 
-    box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:#fff8e1;border:1px solid #ffcc80;color:#e65100;';
+    box.style.cssText = 'display:block;margin-top:6px;font-size:12px;padding:8px 10px;border-radius:6px;line-height:1.5;background:var(--yellow-bg);border:1px solid var(--yellow);color:var(--yellow);';
     box.innerHTML = '⚠️ ' + remaining.length + ' planned SLO abhi shamil nahi:' +
       '<ul style="margin:6px 0 0;padding-left:18px;">' + listHtml + '</ul>';
   } catch (e) {
@@ -608,7 +611,7 @@ async function showSloQuestions(sloId, linkEl) {
     const res = await apiFetch('/api/slo/' + encodeURIComponent(sloId) + '/questions');
     const data = await res.json();
     if (!res.ok) {
-      box.innerHTML = '<span style="color:#c62828">' + escHtml(data.detail || 'Load fail hua.') + '</span>';
+      box.innerHTML = '<span style="color:var(--red)">' + escHtml(data.detail || 'Load fail hua.') + '</span>';
       return;
     }
     const qs = data.questions || [];
@@ -617,7 +620,7 @@ async function showSloQuestions(sloId, linkEl) {
       return;
     }
     box.innerHTML = qs.map(q => {
-      const badge = '<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:#eceff1;color:#455a64;">'
+      const badge = '<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--chip-bg);color:var(--muted);">'
         + escHtml(q.status || '—') + '</span>';
       // Hissa 4-D: kis section mein daalna hai — <select> (A/B/C… = section index/letter).
       // Pinned ho to us ki section pre-select; warna default pehli (A). togglePin isi value
@@ -633,13 +636,13 @@ async function showSloQuestions(sloId, linkEl) {
       const on = _pinned.has(q.id);
       const pinBtn = '<button type="button" onclick="togglePin(\'' + escAttr(q.id) + '\', this); return false;"'
         + ' style="margin-left:6px;font-size:10px;padding:1px 7px;border-radius:4px;border:none;cursor:pointer;'
-        + (on ? 'background:#2e7d32;color:#fff;' : 'background:#eceff1;color:#333;') + '">'
+        + (on ? 'background:var(--green);color:#fff;' : 'background:var(--chip-bg);color:var(--fg);') + '">'
         + (on ? '✓ pinned' : 'daalo') + '</button>';
       return '<div style="padding:3px 0;border-top:1px solid rgba(0,0,0,.08);">'
         + escHtml(q.question_en || '(no text)') + ' ' + badge + secSel + pinBtn + '</div>';
     }).join('');
   } catch (e) {
-    box.innerHTML = '<span style="color:#c62828">Masla: ' + escHtml(e.message) + '</span>';
+    box.innerHTML = '<span style="color:var(--red)">Masla: ' + escHtml(e.message) + '</span>';
   }
 }
 
@@ -656,8 +659,8 @@ function togglePin(qid, btnEl) {
   }
   const on = _pinned.has(qid);
   btnEl.textContent = on ? '✓ pinned' : 'daalo';
-  btnEl.style.background = on ? '#2e7d32' : '#eceff1';
-  btnEl.style.color = on ? '#fff' : '#333';
+  btnEl.style.background = on ? 'var(--green)' : 'var(--chip-bg)';
+  btnEl.style.color = on ? '#fff' : 'var(--fg)';
   updatePinnedBadge();
 }
 
@@ -944,7 +947,7 @@ function renderSecCard(sec, i) {
             <option value="EVALUATE"   ${bloomSel('EVALUATE')}>Evaluate</option>
             <option value="CREATE"     ${bloomSel('CREATE')}>Create</option>
           </select>
-          <div class="qtype-hint" id="qtypeHint_${i}" style="font-size:11px;color:#1565c0;margin-top:5px;line-height:1.4;">${qtypeHintHtml(sec.bloom_filter)}</div>
+          <div class="qtype-hint" id="qtypeHint_${i}" style="font-size:11px;color:var(--brand);margin-top:5px;line-height:1.4;">${qtypeHintHtml(sec.bloom_filter)}</div>
         </div>
         <div>
           <label>Language</label>
