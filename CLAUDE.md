@@ -367,8 +367,10 @@ shadowing shared tokens. Do not add to it.
 - **`is-*` / `has-*` state classes are always chained** (`.modal.is-open`). A bare
   `.is-open { }` rule is wrong; it will collide across components.
 - **No CDN, ever.** Offline school PCs. Fonts stay self-hosted in `static/fonts/`.
-- **No `@layer`** until `DEFERRED.md` D1 is resolved. It hard-fails to a fully unstyled
-  page on old browsers — it does not degrade.
+- **`@layer` is adopted** (D1 resolved 2026-07-28, ADR-001 amended). The floor is
+  Edge/Chrome 99 — March 2022 — and Edge auto-updates. Import order alone produces the same
+  cascade, so if any machine ever renders a fully unstyled page, pulling the `@layer`
+  wrapper out of `main.css` is the first thing to try — it is one line, not a rewrite.
 
 ### Inline `style=""`
 
