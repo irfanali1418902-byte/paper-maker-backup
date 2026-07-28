@@ -64,19 +64,28 @@ tags per file, or concatenate at FastAPI startup — regenerated every launch, s
 go stale. **Do not** hand-run a concat script; that reintroduces the stale-artifact failure
 this project explicitly rules out.
 
-## Decision: no `@layer` — for now
+## Decision: adopt `@layer`
 
-Support is genuinely good: Baseline "widely available" since 2024-09-14 (Chrome/Edge 99,
-Firefox 97, Safari 15.4 — all by March 2022), ~94% global on caniuse.
+*Amended 2026-07-28. This ADR initially declined `@layer` pending a browser check; Irfan
+confirmed the client is Microsoft Edge, which resolves the open question. Recorded as an
+amendment rather than a silent edit so the reasoning stays auditable.*
 
-**The failure mode is why we still decline it.** `@layer` does not degrade — it hard-fails. An
-unsupported browser treats it as an unknown at-rule and **discards the entire block**, so the
-page renders completely unstyled. On an offline school PC of unknown vintage, that is a
-catastrophic failure taken on a guess, to buy override convenience we do not currently need.
+Support: Baseline "widely available" since 2024-09-14 (Chrome/Edge 99, Firefox 97,
+Safari 15.4 — all by March 2022), ~94% global on caniuse.
 
-Import order alone gives the same cascade. The tree is identical either way, so this is a
-one-line change in `main.css`, not an architecture fork. Tracked as `DEFERRED.md` D1: adopt
-once someone reads `chrome://version` on a real machine (anything ≥ 99 passes).
+**Decision:** adopt. The floor is Edge 99 — **March 2022** — and Edge auto-updates, so every
+machine in this deployment clears it by years.
+
+**Risk knowingly accepted:** `@layer` does not degrade, it hard-fails. An unsupported browser
+treats it as an unknown at-rule and **discards the entire block**, rendering the page
+completely unstyled. The mitigation is that import order alone produces the same cascade, so
+the tree is valid with or without it — backing it out is one line in `main.css`, not a
+rewrite. **If any machine ever renders an unstyled page, removing the `@layer` wrapper is the
+first thing to try.**
+
+Note the deployment is genuinely multi-machine: `PROGRESS.md` (2026-07-26) records ~20
+teachers connecting over LAN from other PCs to one server. The bet is on Edge's auto-update,
+not on there being a single controlled client.
 
 ## Decision: tokens authored as CSS custom properties, not DTCG JSON
 
@@ -117,4 +126,6 @@ any difference proves the cut was wrong and the task is reverted and redone.
 - Tailwind CSS Play CDN docs — "development purposes only" — https://tailwindcss.com/docs/installation/play-cdn
 
 **Stated uncertainty:** caniuse's 94% is StatCounter-weighted global traffic, a poor proxy for
-one known school PC. The `chrome://version` check is the real test, not the percentage.
+a known deployment. The `@layer` decision rests on Edge's auto-update behaviour, not on that
+percentage. The residual risk is any LAN client running a browser frozen before March 2022 —
+unlikely, unverified, and cheap to reverse.

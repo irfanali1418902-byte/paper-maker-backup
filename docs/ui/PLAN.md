@@ -91,10 +91,12 @@ static/css/
 no build artifact that can go stale. `99-legacy/*` is imported **first** so everything in the
 new tree wins without a single `!important`.
 
-**No `@layer` for now.** It is Baseline-widely-available but it *hard-fails* on old browsers —
-an unsupported browser discards the whole block and renders an unstyled page. The tree behaves
-identically with or without it, so this is a one-line upgrade once someone reads
-`chrome://version` on an actual school PC (anything ≥ 99 is fine). See DEFERRED.md.
+**`@layer` is adopted** (decided 2026-07-28). It is Baseline-widely-available; the floor is
+Edge/Chrome 99 — **March 2022** — and Edge auto-updates, so every machine in this deployment
+clears it by years. Known risk, accepted: `@layer` *hard-fails* rather than degrading, so a
+genuinely ancient browser would render an unstyled page. Mitigation is that the tree behaves
+identically without it, so backing it out is one line in `main.css`. If a teacher's PC ever
+renders unstyled, that is the first thing to remove.
 
 ### Tokens — three tiers
 
@@ -151,6 +153,15 @@ One task = one session = one commit. Task IDs are permanent; do not renumber.
 | UI-000 | Commit dirty tree, tag `ui-baseline`, cut `feat/ui-architecture` | clean starting point |
 | UI-001 | Planning docs: PLAN / STATUS / DEFERRED / ADR-001 + CLAUDE.md §11–12 | this document set |
 | UI-002 | `scripts/css_baseline.py` + `docs/ui/BASELINE.json` + `tests/test_css_architecture.py` | **the ratchet** |
+| UI-003 | Remove dead `primary`/`navy` from brand config | closes DEFERRED D6 |
+
+**UI-003 note.** `config/brand.json` declares `primary #2E5AAC` / `navy #16294A`. Verified
+2026-07-28: **nothing consumes them** — no frontend reads `brand.primary`/`brand.navy`, no test
+references brand at all, and `brand.js` uses only `name`/`full_name`/`tagline`. Removing them
+touches three files (`config/brand.json`, `app/services/brand_service.py` `_DEFAULTS`,
+`app/schemas/responses.py` `BrandResponse`). This is the **one sanctioned backend change** in
+this epic — it removes a competing colour source before tokens land in UI-020. Directed by
+Irfan 2026-07-28.
 
 ### Sprint 1 — Extraction (9 tasks · **zero visual change** · verbatim cut)
 | ID | Page | lines/rules |
@@ -215,9 +226,13 @@ A task is done when **all** are true. "It should work" does not count.
 3. `node --check` passes on the page's inline JS (extract `<script>` to a temp `.js`)
 4. **Ratchet passes**: `python scripts/css_baseline.py --check` — no metric increased
 5. **Frozen inventory diff is empty** (§6)
-6. Browser-verified in **incognito, hard refresh (Ctrl+Shift+R)** — clicked, not just loaded
-7. `docs/ui/STATUS.md` updated **before** the commit
-8. One commit, message `UI-0xx <what>`. **Commit only — never push** (Irfan pushes via GitHub Desktop)
+6. **Independent review agent returns PASS** (see `CLAUDE.md` §12 "Task lifecycle"). A task is
+   never handed to Irfan on a FAIL, and never handed over without review at all.
+7. Irfan browser-verifies in **incognito, hard refresh (Ctrl+Shift+R)** — against a specific
+   click-list the task provides, not a vague "please check"
+8. Only after Irfan says OK: `docs/ui/STATUS.md` updated, **then** commit
+9. One commit, message `UI-0xx <what>`. **Commit only — never push** (Irfan pushes via GitHub Desktop)
+10. A copy-pasteable prompt for the next task's fresh session is emitted
 
 For Sprint 1 tasks additionally: **the rendered page must be visually identical.** It is a
 verbatim cut. Any visual difference means the cut was not verbatim — revert and redo.

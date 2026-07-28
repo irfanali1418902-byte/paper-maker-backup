@@ -22,7 +22,7 @@ because it is what stops a later session from undoing the work.
 
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
-| 0 Guardrails | UI-000..002 | 2/3 | in progress |
+| 0 Guardrails | UI-000..003 | 2/4 | in progress |
 | 1 Extraction | UI-010..018 | 0/9 | not started |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
@@ -38,6 +38,7 @@ because it is what stops a later session from undoing the work.
 | UI-000 | Commit baseline, tag, branch | **done** | `addb2fb`, `985f47b` | tagged `ui-baseline`; tree had been dirty (theme.css Modern rewrite + 7 link lines + untracked mockups) |
 | UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | `6c381fa` | this document set |
 | UI-002 | Ratchet test + BASELINE.json | **next** | — | |
+| UI-003 | Remove dead `primary`/`navy` from brand config | queued | — | verified unused; closes D6. One sanctioned backend change. |
 
 ---
 
@@ -66,7 +67,8 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 | Shell fidelity | **Full mockup shell** — `.app` grid + topbar + grouped nav | 2026-07-28 |
 | Architecture | ITCSS order + BEM naming + small utility layer | ADR-001 |
 | Load mechanism | one `<link>` → `main.css`, `@import` inside | ADR-001 |
-| `@layer` | **not used** — hard-fails on old browsers; revisit after checking a school PC | ADR-001 |
+| `@layer` | **adopted** — floor is Edge/Chrome 99 (Mar 2022), Edge auto-updates | 2026-07-28 |
+| Review gate | every task passes an **independent review agent** before Irfan sees it | 2026-07-28 |
 | Dirty tree | committed as-is, tagged `ui-baseline` | 2026-07-28 |
 | Branching | one epic branch, one commit per task | 2026-07-28 |
 | Push | **never by Claude** — Irfan, via GitHub Desktop | standing |
@@ -77,7 +79,7 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 
 | # | Item | Needed for |
 |---|---|---|
-| B1 | Read `chrome://version` on an actual school PC (need ≥ 99) | whether `@layer` can be adopted — one-line change, not urgent |
+| — | nothing currently blocked | |
 
 ---
 
@@ -86,5 +88,10 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 1. Read this file. Take **only** the task named under NEXT TASK.
 2. Read `CLAUDE.md` §11–12 (rules) and the one page/file that task owns. Nothing else.
 3. State a 2-line plan. Wait for go-ahead.
-4. Implement. Verify per `PLAN.md` §5 Definition of Done.
-5. Update this file — task log row, metrics, NEXT TASK — **then** commit. Never push.
+4. Implement — anchored `Edit`s only, inside the declared scope.
+5. Self-check all gates, then **spawn the independent review agent**. It can FAIL you;
+   on FAIL, fix and re-review. Never hand over a failed or unreviewed task.
+6. On PASS, hand to Irfan with a **specific click-list** for his browser check.
+7. Only after Irfan says OK: update this file (task log, metrics, NEXT TASK), then commit.
+   Never push.
+8. Emit a copy-pasteable prompt for the next task's fresh session.

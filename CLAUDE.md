@@ -429,6 +429,43 @@ suggestions — several encode failures we have already had.
 12. **Do not invent sources, metrics, or history.** If you did not verify it this session,
     say "unverified". A confident wrong number in a planning doc propagates for weeks.
 
+### Task lifecycle — the review gate
+
+Every task follows this. **You do not hand work to Irfan until an independent review
+agent has passed it.** Self-verification is not enough — the session that wrote the code
+is the worst judge of whether it stayed in scope.
+
+```
+1. READ      STATUS.md NEXT TASK + CLAUDE.md + the one file the task owns
+2. PLAN      2 lines. Wait for go-ahead. Do not write before it.
+3. BUILD     anchored Edits only. Stay inside the declared scope.
+4. SELF-CHECK  pytest / ruff / black / node --check / ratchet — all green
+5. REVIEW    spawn the review agent (below). It can FAIL you.
+             On FAIL: fix and re-review. Do NOT hand over a failed task.
+6. HANDOVER  only on PASS. Give Irfan a specific click-list, not "please check".
+7. CLOSE     only after Irfan says OK. Update STATUS.md, then commit.
+8. NEXT      emit a copy-pasteable prompt for the next task's fresh session.
+```
+
+**The review agent** gets a fresh context on purpose — it has no attachment to the code
+and no memory of the rationalisations made while writing it. Spawn it with:
+
+- the task ID and its declared scope, quoted from `docs/ui/PLAN.md`
+- `git diff` for the task
+- instruction to **independently re-run** every gate rather than trust the claim
+
+It must return **PASS or FAIL with evidence**, checking:
+
+1. Gates genuinely pass — it runs them itself, from the project root
+2. Frozen inventory diff is empty (ids / onclick / name / data-* / JS classes)
+3. **The diff matches the declared scope** — anything extra is a FAIL, however good
+4. No `Write` was used on a pre-existing file
+5. Ratchet metrics went down or stayed flat, never up
+6. For Sprint 1 tasks: the CSS was moved **verbatim**, not "improved" in transit
+
+A review agent that says "looks good" without having run the commands has not reviewed
+anything. Its verdict must cite output.
+
 ### Session bookkeeping
 
 13. **Read budget:** `CLAUDE.md` + `docs/ui/STATUS.md` + the one file your task owns.
