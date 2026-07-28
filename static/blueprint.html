@@ -29,36 +29,12 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: var(--ink); background: var(--bg);
-    display: flex; min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+  body { font-family: var(--font-body); color: var(--fg); background: var(--app-bg); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
 
-  /* ---- Sidebar ---- */
-  .app-sidebar {
-    width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
-    padding: 18px 0; position: sticky; top: 0; height: 100vh;
-    display: flex; flex-direction: column;
-  }
-  .brand { padding: 2px 22px 20px; }
-  .brand .name { font-weight: 700; font-size: 15.5px; line-height: 1.15; }
-  .brand small { font-size: 10.5px; color: var(--sidebar-fg); display: block; margin-top: 3px; }
-  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
-  .app-nav a {
-    display: flex; align-items: center; gap: 10px;
-    color: var(--sidebar-fg); font-size: 14px; font-weight: 500;
-    padding: 10px 12px; border-radius: 8px;
-    border-left: 3px solid transparent;
-  }
-  .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
-  .app-nav a.active { background: rgba(255,255,255,.09); color: #fff; border-left-color: var(--sidebar-active); }
-  .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; font-size: 12px; color: var(--sidebar-fg); line-height: 1.6; }
-
-  /* ---- Main ---- */
-  .bp-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1000px; margin: 0 auto; width: 100%; }
+  /* Chrome (.app grid · .brand · .top · .nav · .main) theme.css se aata hai.
+     Yahan sirf blueprint-specific content width. */
+  .main { max-width: 1080px; margin: 0 auto; }
 
   /* ---- Cards ---- */
   .card {
@@ -312,12 +288,24 @@
 </head>
 <body data-page="Blueprint Builder">
 
-<aside class="app-sidebar">
+<div class="app">
   <div class="brand">
-    <div class="name">Parcha Paper Maker</div>
-    <small>Blueprint Builder</small>
+    <div class="logo">P</div>
+    <div>
+      <b class="name">Parcha Paper Maker</b>
+      <small>Blueprint Builder</small>
+    </div>
   </div>
-  <nav class="app-nav">
+
+  <div class="top">
+    <div class="crumbs">Parcha Paper Maker · <b>Blueprint</b></div>
+    <div class="spacer"></div>
+    <span class="chip">Section-by-section paper</span>
+    <div class="avatar">P</div>
+  </div>
+
+  <nav class="nav">
+    <div class="grp">Menu</div>
     <a href="/">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
@@ -339,10 +327,8 @@
       SLO Health
     </a>
   </nav>
-  <div class="sidebar-foot">Section-by-section paper structure — save karke dobara use karo.</div>
-</aside>
 
-<main class="bp-main">
+  <main class="main">
   <div class="pagehead">
     <h1>Blueprint Builder</h1>
     <p>Paper ka structure define karo — sections, topics, types — phir save ya seedha paper banao.</p>
@@ -456,6 +442,7 @@
     <div class="bp-list" id="bpList"></div>
   </div>
 </main>
+</div><!-- /.app -->
 
 <script src="/apiClient.js"></script>
 <script src="/static/js/brand.js"></script>
