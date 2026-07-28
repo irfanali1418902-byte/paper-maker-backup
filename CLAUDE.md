@@ -341,3 +341,102 @@ available), say so explicitly. Don't claim success on faith.
   commit.
 - Never use `--no-verify` to bypass hooks. If a hook fails, fix the
   failure.
+
+---
+
+## 11. Frontend / CSS architecture
+
+Authoritative: `docs/adr/ADR-001-css-architecture.md`. Plan: `docs/ui/PLAN.md`.
+Current state and next task: `docs/ui/STATUS.md`.
+
+The old rule "every page carries its own `<style>` block" is **dead**. It produced 2133
+lines of duplicated CSS across 9 pages, the shell defined 8 times, and 6 pages silently
+shadowing shared tokens. Do not add to it.
+
+### Hard rules
+
+- **No `<style>` block in any page.** All CSS lives under `static/css/`.
+- **One `<link>` per page**, to `/static/css/main.css`. `main.css` owns the `@import`
+  order. Do not add a second stylesheet link to a page.
+- **A raw hex outside `static/css/01-settings/tokens.css` is a CI failure.** Components
+  read Tier 2 semantic tokens (`--color-action`), never Tier 1 primitives, never a literal.
+- **`99-legacy/` is append-never, delete-only.** New styles never land there. When a page's
+  legacy file reaches zero lines, delete the file.
+- **`js-*` classes never appear in a stylesheet.** They are behaviour hooks. Conversely,
+  never `querySelector` a presentational class — that is what welds styling to logic.
+- **`is-*` / `has-*` state classes are always chained** (`.modal.is-open`). A bare
+  `.is-open { }` rule is wrong; it will collide across components.
+- **No CDN, ever.** Offline school PCs. Fonts stay self-hosted in `static/fonts/`.
+- **No `@layer`** until `DEFERRED.md` D1 is resolved. It hard-fails to a fully unstyled
+  page on old browsers — it does not degrade.
+
+### Inline `style=""`
+
+Allowed only for genuinely one-off values. Never for anything that repeats — that is a
+utility or a component. Two traps, both already paid for:
+
+- `style="display:none"` paired with JS `el.style.display = '...'` — **leave it alone.**
+  Converting it to a class breaks the toggle.
+- JS-interpolated values (`style="width:${pct}%"`) become custom properties
+  (`style="--bar-width:${pct}%"`) so CSS keeps ownership of the rule.
+
+---
+
+## 12. Agentic session protocol
+
+This project is built by fresh agent sessions that share no memory. These rules exist so a
+session that knows nothing cannot undo work a previous session did. They are not
+suggestions — several encode failures we have already had.
+
+### Scope
+
+1. **One task per session.** Take only the task named under NEXT TASK in
+   `docs/ui/STATUS.md`. Not the one after it, however small it looks.
+2. **No drive-by fixes.** Found a real bug outside your task? Add a row to
+   `docs/ui/DEFERRED.md` and move on. Writing that row *is* the correct outcome. Fixing it
+   inline makes the diff unreviewable and hides the regression it causes.
+3. **Plan first.** State a 2-line plan and wait for go-ahead before writing. (Matches
+   `docs/SDLC-WORKFLOW.md` §1 step 3.)
+
+### Never rewrite
+
+4. **`Write` is for new files only.** Existing files are changed with anchored `Edit`
+   calls. Overwriting an existing file wholesale is a process violation even when the
+   result looks better — it destroys review-ability and silently drops things you did not
+   know were load-bearing.
+5. **Never edit a file you have not read in this session.** Not "read last time" — this
+   session.
+6. **If you believe a file needs a rewrite, stop and say so.** Do not perform it. Add it
+   to `DEFERRED.md` and let a human scope it as its own task.
+7. **The frozen inventory does not change**: every `id=`, `onclick=`, `name=`, `data-*`,
+   and the JS-load-bearing class list in `docs/ui/PLAN.md` §6. Grep before and after; the
+   diff must be empty. A renamed `id` breaks a handler silently — nothing fails loudly,
+   the button just stops working.
+
+### Never claim what you did not verify
+
+8. **Evidence, not assertion.** "Tests pass" must be accompanied by the command and its
+   output. "It should work" is not a status. (Reinforces §9.)
+9. **Run `pytest` from the project root.** The shell resets its working directory to
+   `C:\Users\MCS` between calls. Running it from there collects the user's home folder and
+   produces ~140 bogus permission errors that look like real failures. `Set-Location`
+   first.
+10. **Frontend changes require a browser.** Incognito, hard refresh (Ctrl+Shift+R), and an
+    actual click on the thing you changed. Type-checking is not use-checking.
+11. **If the plan and the code disagree, stop and ask.** Do not silently reconcile them.
+    The disagreement is information — usually the plan is stale, occasionally the code is
+    wrong, and guessing which destroys the record either way.
+12. **Do not invent sources, metrics, or history.** If you did not verify it this session,
+    say "unverified". A confident wrong number in a planning doc propagates for weeks.
+
+### Session bookkeeping
+
+13. **Read budget:** `CLAUDE.md` + `docs/ui/STATUS.md` + the one file your task owns.
+    **Do not read `PROGRESS.md`** — it is 2000+ lines and `STATUS.md` exists precisely so
+    you do not have to.
+14. **Update `docs/ui/STATUS.md` before committing** — task log row, metrics, and the new
+    NEXT TASK. The next session's entire context is that file; leaving it stale strands
+    whoever comes after you.
+15. **One commit per task**, message `UI-0xx <what>`. Detailed narrative still goes to
+    `PROGRESS.md` (newest first), per the standing rule.
+16. **Never push.** Commit only. Irfan pushes via GitHub Desktop.
