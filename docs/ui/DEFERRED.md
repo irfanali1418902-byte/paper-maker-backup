@@ -34,4 +34,4 @@ Format: `| ID | What | Found in | Why deferred | Proposed home |`
 | ID | What | Resolved by |
 |---|---|---|
 | D1 | `@layer` adoption pending a browser check | **Adopted 2026-07-28.** Floor is Edge/Chrome 99 (Mar 2022) and Edge auto-updates, so the deployment clears it by years. Reversible in one line if anything ever renders unstyled. |
-| D6 | `config/brand.json` `primary`/`navy` don't match the Modern palette | **Promoted to UI-003.** Verified nothing consumes them, so they are deleted rather than reconciled. |
+| D6 | `config/brand.json` `primary`/`navy` don't match the Modern palette | **Done in UI-003** (`2eba2f8`). Deleted rather than reconciled — nothing consumed them, re-verified at implementation: `brand.js` reads only `full_name`/`tagline`, no Python indexes the keys, no test touches the endpoint. The `--navy` declarations in the pages are local CSS vars, not reads of `brand.json`. |

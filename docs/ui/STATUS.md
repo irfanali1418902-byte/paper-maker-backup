@@ -4,16 +4,25 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-28 (UI-002)
+**Last updated:** 2026-07-28 (UI-003)
 
 ---
 
-## NEXT TASK → UI-003
+## NEXT TASK → UI-010
 
-Remove the dead `primary` / `navy` colours from the brand config — `config/brand.json`,
-`brand_service.py` `_DEFAULTS`, `responses.py` `BrandResponse`. Verified unused at UI-001;
-closes DEFERRED D6. **The one sanctioned backend change in this epic** — it is not licence
-to touch any other backend code.
+**Sprint 1 begins. First page: `slo.html`** (93 lines / 53 rules — the smallest, on purpose).
+
+Cut the page's `<style>` block **verbatim** into `static/css/99-legacy/slo.html.css` and link
+it. Not one declaration edited, reordered, or "improved" in transit — the review agent checks
+this specifically (CLAUDE.md §12, review point 6). Zero visual change is the whole deliverable.
+
+Expected ratchet movement, and nothing else: `style_blocks` 9 → 8, `css_lines_in_html`
+2133 → 2040, `legacy_css_lines` 0 → ~93, `total_css_lines` **flat at 2133** — the lines move
+buckets, they do not disappear. `hardcoded_hex` stays 324; those hex values travel with the
+CSS. If `total_css_lines` drops, something was deleted that should have been moved.
+
+Note this task creates `static/css/` and `main.css` does not exist yet, so link
+`99-legacy/slo.html.css` directly for now; UI-020 introduces `main.css` and the import order.
 
 ---
 
@@ -23,8 +32,8 @@ to touch any other backend code.
 
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
-| 0 Guardrails | UI-000..003 | 3/4 | in progress |
-| 1 Extraction | UI-010..018 | 0/9 | not started |
+| 0 Guardrails | UI-000..003 | **4/4** | **done** |
+| 1 Extraction | UI-010..018 | 0/9 | **next** |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
 | 4 Components | UI-040..043 | 0/4 | not started |
@@ -39,7 +48,7 @@ to touch any other backend code.
 | UI-000 | Commit baseline, tag, branch | **done** | `addb2fb`, `985f47b` | tagged `ui-baseline`; tree had been dirty (theme.css Modern rewrite + 7 link lines + untracked mockups) |
 | UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | `6c381fa` | this document set |
 | UI-002 | Ratchet test + BASELINE.json | **done** | `b215666` | 26 tests, 900 passed. 3 extra metrics added (see below). Reviewed twice; 2nd pass found the JS-class check is JS-side only → D11 |
-| UI-003 | Remove dead `primary`/`navy` from brand config | **next** | — | verified unused; closes D6. One sanctioned backend change. |
+| UI-003 | Remove dead `primary`/`navy` from brand config | **done** | `2eba2f8` | closes D6. Re-verified unused at implementation. Also fixed `api/brand.py` docstring; logo.svg's same hex → D13 |
 
 ---
 
