@@ -35,9 +35,9 @@ because it is what stops a later session from undoing the work.
 
 | ID | Task | Status | Commit | Note |
 |---|---|---|---|---|
-| UI-000 | Commit baseline, tag, branch | **done** | — | tree was dirty: theme.css Modern rewrite + 7 link lines |
-| UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | — | this document set |
-| UI-002 | Ratchet test + BASELINE.json | next | — | |
+| UI-000 | Commit baseline, tag, branch | **done** | `addb2fb`, `985f47b` | tagged `ui-baseline`; tree had been dirty (theme.css Modern rewrite + 7 link lines + untracked mockups) |
+| UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | `6c381fa` | this document set |
+| UI-002 | Ratchet test + BASELINE.json | **next** | — | |
 
 ---
 
