@@ -4,15 +4,16 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-28 (UI-001)
+**Last updated:** 2026-07-28 (UI-002)
 
 ---
 
-## NEXT TASK → UI-002
+## NEXT TASK → UI-003
 
-Build the ratchet: `scripts/css_baseline.py` + `docs/ui/BASELINE.json` +
-`tests/test_css_architecture.py`. Nothing visual. This must land before any page is touched,
-because it is what stops a later session from undoing the work.
+Remove the dead `primary` / `navy` colours from the brand config — `config/brand.json`,
+`brand_service.py` `_DEFAULTS`, `responses.py` `BrandResponse`. Verified unused at UI-001;
+closes DEFERRED D6. **The one sanctioned backend change in this epic** — it is not licence
+to touch any other backend code.
 
 ---
 
@@ -22,7 +23,7 @@ because it is what stops a later session from undoing the work.
 
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
-| 0 Guardrails | UI-000..003 | 2/4 | in progress |
+| 0 Guardrails | UI-000..003 | 3/4 | in progress |
 | 1 Extraction | UI-010..018 | 0/9 | not started |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
@@ -37,8 +38,8 @@ because it is what stops a later session from undoing the work.
 |---|---|---|---|---|
 | UI-000 | Commit baseline, tag, branch | **done** | `addb2fb`, `985f47b` | tagged `ui-baseline`; tree had been dirty (theme.css Modern rewrite + 7 link lines + untracked mockups) |
 | UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | `6c381fa` | this document set |
-| UI-002 | Ratchet test + BASELINE.json | **next** | — | |
-| UI-003 | Remove dead `primary`/`navy` from brand config | queued | — | verified unused; closes D6. One sanctioned backend change. |
+| UI-002 | Ratchet test + BASELINE.json | **done** | `b215666` | 26 tests, 900 passed. 3 extra metrics added (see below). Reviewed twice; 2nd pass found the JS-class check is JS-side only → D11 |
+| UI-003 | Remove dead `primary`/`navy` from brand config | **next** | — | verified unused; closes D6. One sanctioned backend change. |
 
 ---
 
@@ -46,15 +47,36 @@ because it is what stops a later session from undoing the work.
 
 Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a reference, not a page):
 
-| metric | baseline | now | target |
-|---|---:|---:|---:|
-| `<style>` blocks in HTML | 9 | 9 | 0 |
-| CSS lines in HTML | 2133 | 2133 | 0 |
-| inline `style=""` attrs | 466 | 466 | ~171 (one-offs only) |
-| hardcoded hex in pages | 324 | 324 | 0 |
-| `99-legacy/` lines | 0 | 0 | 0 (peaks at 2133 after Sprint 1) |
+**Enforced since UI-002.** `python scripts/css_baseline.py --check` fails on any increase,
+and `tests/test_css_architecture.py` fails the suite. Numbers below are no longer maintained
+by hand — run the script.
+
+| metric | key | baseline | now | target |
+|---|---|---:|---:|---:|
+| `<style>` blocks in HTML | `style_blocks` | 9 | 9 | 0 |
+| CSS lines in HTML | `css_lines_in_html` | 2133 | 2133 | 0 |
+| page CSS + `99-legacy/` | `total_css_lines` | 2133 | 2133 | 0 |
+| inline `style=""` attrs | `inline_style_attrs` | 466 | 466 | ~171 (one-offs only) |
+| ⤷ excluding `display:` toggles | `inline_style_non_display` | 385 | 385 | ~171 — **this is the one to drive down** |
+| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | 324 | 0 |
+| hardcoded hex in `style=""` | `hardcoded_hex_inline` | 76 | 76 | 0 |
+| `99-legacy/` lines | `legacy_css_lines` | 0 | 0 | *informational* — peaks ~2133 after Sprint 1 |
+| `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | 269 | *informational* — must grow in Sprint 2 |
+
+**Two of these are deliberately NOT ratcheted.** `99-legacy/` has to climb to ~2133 during
+Sprint 1 and the new ITCSS tree has to grow in Sprint 2, so a downward ratchet on either
+would fail its own migration. `total_css_lines` is ratcheted instead: flat through Sprint 1
+(lines move between buckets), falling in Sprint 6.
+
+**Watch `shared_css_lines` when reviewing.** `total_css_lines` covers page CSS + `99-legacy/`
+only, so moving a page's `<style>` block into `app.css` instead of `99-legacy/` passes the
+ratchet with three metrics falling and nothing removed. A page shrinking while
+`shared_css_lines` jumps by the same amount is debt relocated, not repaid — no automated
+check can tell the difference, so that one is on the reviewer.
 
 **Green baseline at `ui-baseline`:** `pytest -q` = 874 passed · `ruff check .` clean.
+**Green at UI-002:** `pytest -q` = 900 passed (874 + 26) · `ruff check .` clean ·
+`css_baseline.py --check` exit 0.
 
 ---
 
