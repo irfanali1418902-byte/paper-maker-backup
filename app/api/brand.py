@@ -1,4 +1,4 @@
-"""HTTP route for app branding (name, tagline, colours)."""
+"""HTTP route for app branding (name, tagline, logo). No colours — see UI-003."""
 
 from fastapi import APIRouter, HTTPException
 

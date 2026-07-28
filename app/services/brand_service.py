@@ -14,13 +14,17 @@ _BRAND_PATH = Path(__file__).resolve().parents[2] / "config" / "brand.json"
 
 # Safe fallback — brand.json na mile ya kharab ho to yeh chalta hai. Values
 # config/brand.json se match karti hain taake fallback par bhi UI theek dikhe.
+#
+# Colours yahan NAHI aate. UI-003 tak yahan `primary` (#2E5AAC) aur `navy`
+# (#16294A) parhe the — koi unhein parhta nahi tha, aur woh purani Classic
+# navy/gold palette ke the, jabke locked palette Modern hai (indigo #4f46e5 +
+# teal #0ea5a4). Rang ab sirf CSS tokens mein rehte hain, brand config mein
+# nahi — dekho ADR-001 aur CLAUDE.md §11.
 _DEFAULTS: dict = {
     "name": "Parcha",
     "full_name": "Parcha Paper Maker",
     "tagline": "Exam paper generator",
     "logo": "/static/brand/logo.svg",
-    "primary": "#2E5AAC",
-    "navy": "#16294A",
 }
 
 

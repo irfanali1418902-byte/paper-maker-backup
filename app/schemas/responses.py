@@ -362,11 +362,13 @@ class DashboardResponse(BaseModel):
 
 class BrandResponse(BaseModel):
     """App branding read from config/brand.json — consumed by static/js/brand.js
-    to set the document title and sidebar name/tag."""
+    to set the document title and sidebar name/tag.
+
+    No colours here. `primary` / `navy` were dropped in UI-003: nothing read them,
+    and they carried the superseded Classic navy/gold palette. Colours belong to the
+    CSS token layer (ADR-001), not to an API payload."""
 
     name: str
     full_name: str
     tagline: str
     logo: str
-    primary: str
-    navy: str

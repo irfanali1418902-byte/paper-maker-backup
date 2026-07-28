@@ -2,7 +2,5 @@
   "name": "Parcha",
   "full_name": "Parcha Paper Maker",
   "tagline": "Exam paper generator",
-  "logo": "/static/brand/logo.svg",
-  "primary": "#2E5AAC",
-  "navy": "#16294A"
+  "logo": "/static/brand/logo.svg"
 }
