@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaperMaker — UI Mockups</title>
+<style>
+/* =========================================================
+   PaperMaker UI Mockup — 3 style variations, 7 screens
+   Style tokens are driven by [data-style] on <html>.
+   ========================================================= */
+
+/* ---- base reset ---- */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);color:var(--fg);background:var(--app-bg);
+  -webkit-font-smoothing:antialiased;line-height:1.45}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* =========================================================
+   STYLE 1 — CLASSIC (Navy / Gold) : the current app theme
+   ========================================================= */
+html[data-style="classic"]{
+  --font-display:"Source Serif 4",Georgia,serif;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#eef1f6;
+  --panel:#ffffff;
+  --panel-2:#f6f8fc;
+  --fg:#1a2233;
+  --muted:#5c6a83;
+  --line:#dbe2ee;
+  --brand:#132244;        /* navy */
+  --brand-2:#1e3563;
+  --accent:#c8952b;       /* gold */
+  --accent-soft:#f6ecd4;
+  --sidebar-bg:#132244;
+  --sidebar-fg:#c6d1e6;
+  --sidebar-active:#c8952b;
+  --radius:10px;
+  --radius-sm:7px;
+  --shadow:0 1px 2px rgba(19,34,68,.06),0 6px 20px rgba(19,34,68,.06);
+  --topbar-bg:#ffffff;
+  --chip-bg:#eef2f9;
+  --green:#2f9e58;--yellow:#c99400;--red:#cf4436;
+  --green-bg:#e5f5ec;--yellow-bg:#fbf1d4;--red-bg:#fbe6e3;
+}
+
+/* =========================================================
+   STYLE 2 — MODERN CLEAN (airy SaaS, soft indigo/teal)
+   ========================================================= */
+html[data-style="modern"]{
+  --font-display:"Space Grotesk","IBM Plex Sans",sans-serif;
+  --font-body:"Inter",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#f7f8fb;
+  --panel:#ffffff;
+  --panel-2:#fafbfe;
+  --fg:#0f172a;
+  --muted:#64748b;
+  --line:#eaedf3;
+  --brand:#4f46e5;        /* indigo */
+  --brand-2:#6366f1;
+  --accent:#0ea5a4;       /* teal */
+  --accent-soft:#dcf5f4;
+  --sidebar-bg:#ffffff;
+  --sidebar-fg:#475569;
+  --sidebar-active:#4f46e5;
+  --radius:16px;
+  --radius-sm:11px;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 10px 30px rgba(15,23,42,.06);
+  --topbar-bg:#ffffff;
+  --chip-bg:#f1f5f9;
+  --green:#16a34a;--yellow:#d97706;--red:#dc2626;
+  --green-bg:#dcfce7;--yellow-bg:#fef3c7;--red-bg:#fee2e2;
+}
+
+/* =========================================================
+   STYLE 3 — COMPACT DENSE (data-first, dark rail, tight)
+   ========================================================= */
+html[data-style="compact"]{
+  --font-display:"IBM Plex Sans",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#e9ecf1;
+  --panel:#ffffff;
+  --panel-2:#f3f5f8;
+  --fg:#161b22;
+  --muted:#586274;
+  --line:#d5dbe3;
+  --brand:#0b3d3a;        /* deep teal-green */
+  --brand-2:#12524d;
+  --accent:#e07a1f;       /* amber */
+  --accent-soft:#fbe9d6;
+  --sidebar-bg:#12181f;
+  --sidebar-fg:#9aa6b6;
+  --sidebar-active:#e07a1f;
+  --radius:6px;
+  --radius-sm:4px;
+  --shadow:0 1px 2px rgba(0,0,0,.08);
+  --topbar-bg:#ffffff;
+  --chip-bg:#eceff3;
+  --green:#1f8b4c;--yellow:#b07d00;--red:#c53a2c;
+  --green-bg:#e2f2e8;--yellow-bg:#f7edcf;--red-bg:#f7e2df;
+}
+
+/* density knobs */
+html{--gap:18px;--pad:20px;--fs:14.5px;--row:44px}
+html[data-style="compact"]{--gap:10px;--pad:12px;--fs:13px;--row:34px}
+html[data-style="modern"]{--gap:22px;--pad:24px;--fs:15px;--row:48px}
+body{font-size:var(--fs)}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.app{display:grid;grid-template-columns:246px 1fr;grid-template-rows:auto 1fr;
+  grid-template-areas:"brand top" "nav main";height:100vh}
+html[data-style="compact"] .app{grid-template-columns:210px 1fr}
+
+/* brand block */
+.brand{grid-area:brand;background:var(--sidebar-bg);color:#fff;
+  display:flex;align-items:center;gap:11px;padding:16px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08)}
+html[data-style="modern"] .brand{border-bottom:1px solid var(--line)}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);
+  color:#12181f;display:grid;place-items:center;font-weight:800;font-family:var(--font-display);
+  font-size:18px;flex:none}
+html[data-style="modern"] .brand{color:var(--fg)}
+html[data-style="modern"] .brand .logo{color:#fff}
+.brand b{font-family:var(--font-display);font-size:17px;letter-spacing:.2px;line-height:1.05}
+.brand small{display:block;font-weight:400;font-size:10.5px;opacity:.7;letter-spacing:.6px;text-transform:uppercase}
+
+/* topbar */
+.top{grid-area:top;background:var(--topbar-bg);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:14px;padding:0 20px;min-height:56px}
+.top .crumbs{color:var(--muted);font-size:13px}
+.top .crumbs b{color:var(--fg);font-weight:600}
+.top .spacer{flex:1}
+.styleswitch{display:flex;gap:6px;background:var(--chip-bg);padding:4px;border-radius:999px}
+.styleswitch button{padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.styleswitch button.on{background:var(--brand);color:#fff}
+html[data-style="modern"] .styleswitch button.on{background:var(--brand)}
+.top .avatar{width:34px;height:34px;border-radius:50%;background:var(--brand-2);color:#fff;
+  display:grid;place-items:center;font-weight:700;font-size:13px}
+
+/* sidebar nav */
+.nav{grid-area:nav;background:var(--sidebar-bg);padding:12px 10px;overflow:auto}
+.nav .grp{color:var(--sidebar-fg);opacity:.55;font-size:10.5px;letter-spacing:.9px;
+  text-transform:uppercase;padding:14px 12px 6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-sm);
+  color:var(--sidebar-fg);font-size:14px;font-weight:500;margin-bottom:2px}
+html[data-style="compact"] .nav a{padding:7px 10px;font-size:13px}
+.nav a .ic{width:18px;height:18px;flex:none;opacity:.85}
+.nav a:hover{background:rgba(255,255,255,.07)}
+html[data-style="modern"] .nav a:hover{background:var(--panel-2)}
+.nav a.active{background:rgba(255,255,255,.10);color:#fff;font-weight:600;
+  box-shadow:inset 3px 0 0 var(--sidebar-active)}
+html[data-style="modern"] .nav a.active{background:var(--accent-soft);color:var(--brand);
+  box-shadow:inset 3px 0 0 var(--sidebar-active)}
+
+/* main */
+.main{grid-area:main;overflow:auto;padding:var(--pad) 26px 40px}
+.screen{display:none;animation:fade .22s ease}
+.screen.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* headings */
+.pagehead{display:flex;align-items:flex-end;gap:14px;margin:6px 0 var(--gap)}
+.pagehead h1{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:-.2px}
+html[data-style="compact"] .pagehead h1{font-size:20px}
+.pagehead p{color:var(--muted);font-size:13.5px;margin-top:3px}
+.pagehead .spacer{flex:1}
+
+/* generic pieces */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow)}
+.card .ch{padding:14px var(--pad);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card .ch h3{font-size:14px;font-weight:700;font-family:var(--font-display)}
+html[data-style="modern"] .card .ch h3{font-family:var(--font-body);font-weight:700}
+.card .cb{padding:var(--pad)}
+.grid{display:grid;gap:var(--gap)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:1.6fr 1fr}
+@media(max-width:1050px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-sm);
+  font-size:13.5px;font-weight:600;background:var(--brand);color:#fff}
+html[data-style="compact"] .btn{padding:7px 12px;font-size:12.5px}
+.btn:hover{background:var(--brand-2)}
+.btn.gold{background:var(--accent);color:#fff}
+html[data-style="classic"] .btn.gold{color:#2a2410}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--panel-2)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+  font-size:11.5px;font-weight:600;background:var(--chip-bg);color:var(--muted)}
+.chip.gold{background:var(--accent-soft);color:var(--accent)}
+html[data-style="classic"] .chip.gold{color:#8a6410}
+.tag{font-family:var(--font-data);font-size:11px;padding:2px 7px;border-radius:5px;
+  background:var(--accent-soft);color:var(--brand);font-weight:600}
+
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge .dot{width:8px;height:8px;border-radius:50%}
+.badge.g{background:var(--green-bg);color:var(--green)}.badge.g .dot{background:var(--green)}
+.badge.y{background:var(--yellow-bg);color:var(--yellow)}.badge.y .dot{background:var(--yellow)}
+.badge.r{background:var(--red-bg);color:var(--red)}.badge.r .dot{background:var(--red)}
+
+/* stat cards */
+.stat{padding:var(--pad)}
+.stat .lab{color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.stat .num{font-family:var(--font-display);font-size:32px;font-weight:700;line-height:1.1;margin-top:6px}
+html[data-style="compact"] .stat .num{font-size:26px}
+.stat .sub{color:var(--muted);font-size:12.5px;margin-top:4px}
+.stat .bar{height:7px;border-radius:99px;background:var(--panel-2);margin-top:12px;overflow:hidden}
+.stat .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+html[data-style="compact"] table{font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
+  text-transform:uppercase;padding:10px var(--pad);border-bottom:1px solid var(--line);background:var(--panel-2)}
+td{padding:11px var(--pad);border-bottom:1px solid var(--line);vertical-align:middle}
+html[data-style="compact"] td{padding:7px 12px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+
+/* form controls */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+select,input[type=text],input[type=number]{font-family:inherit;font-size:13.5px;color:var(--fg);
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:var(--gap)}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;padding-left:34px}
+.search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:.5}
+
+/* toggle */
+.switch{position:relative;width:42px;height:24px;border-radius:99px;background:var(--line);transition:.2s;flex:none}
+.switch.on{background:var(--accent)}
+.switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch.on i{left:21px}
+
+/* blueprint sections */
+.sec{border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
+.sec .sh{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel-2)}
+.sec .sh b{font-family:var(--font-display);font-size:14px}
+.sec .body{padding:8px 14px}
+.qrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.qrow:last-child{border-bottom:none}
+.qrow .qtxt{flex:1;font-size:13px}
+.pin{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted)}
+.pin.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+html[data-style="classic"] .pin.on{color:#8a6410}
+
+/* shortfall panel */
+.panel-soft{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:14px}
+html[data-style="classic"] .panel-soft{border-color:#e6cf92}
+.panel-soft h4{font-size:13px;margin-bottom:6px;color:var(--brand)}
+.panel-soft ul{margin-left:16px;font-size:13px;color:var(--fg)}
+.panel-soft .note{font-size:11.5px;color:var(--muted);margin-top:8px;font-style:italic}
+
+/* bloom bars */
+.bloom{display:flex;flex-direction:column;gap:10px}
+.bloom .r{display:grid;grid-template-columns:120px 1fr 46px;align-items:center;gap:12px}
+.bloom .r .name{font-size:13px;font-weight:600}
+.bloom .track{height:12px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.bloom .track i{display:block;height:100%;border-radius:99px}
+.bloom .pct{font-family:var(--font-data);font-size:12.5px;text-align:right;color:var(--muted)}
+
+/* print preview */
+.sheet{background:#fff;border:1px solid var(--line);border-radius:6px;padding:26px;
+  box-shadow:var(--shadow);font-family:var(--font-display);color:#111}
+.sheet h5{text-align:center;font-size:16px}
+.sheet .meta{display:flex;justify-content:space-between;font-size:11px;color:#555;
+  border-bottom:1px solid #ccc;padding-bottom:8px;margin:6px 0 14px}
+.sheet ol{margin-left:18px;font-size:13px}
+.sheet ol li{margin-bottom:var(--qgap,10px)}
+
+.range{width:100%}
+small.hint{color:var(--muted);font-size:11.5px}
+
+/* util */
+.row{display:flex;align-items:center;gap:10px}
+.wrap{display:flex;flex-wrap:wrap;gap:8px}
+.mt{margin-top:var(--gap)}
+.muted{color:var(--muted)}
+.right{margin-left:auto}
+svg.ic{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* responsive: collapse sidebar on small */
+@media(max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-areas:"brand" "top" "main"}
+  .nav{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <div class="logo">P</div>
+    <div><b>PaperMaker</b><small>Ameen Islamic Institute</small></div>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="top">
+    <div class="crumbs">Ameen Islamic Institute · <b id="crumb">Dashboard</b></div>
+    <div class="spacer"></div>
+    <div class="styleswitch" id="switch">
+      <button data-s="classic" class="on">Classic</button>
+      <button data-s="modern">Modern</button>
+      <button data-s="compact">Compact</button>
+    </div>
+    <div class="row">
+      <span class="chip">Exam 3 · 2026</span>
+      <div class="avatar">IR</div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="grp">Overview</div>
+    <a data-go="dashboard" class="active">$IC_grid Dashboard</a>
+    <a data-go="coverage">$IC_check Coverage</a>
+    <div class="grp">Build a paper</div>
+    <a data-go="bank">$IC_bank Question Bank</a>
+    <a data-go="blueprint">$IC_layers Blueprint</a>
+    <a data-go="taqseem">$IC_split Exam Taqseem</a>
+    <div class="grp">Settings</div>
+    <a data-go="bloom">$IC_target Bloom Guidance</a>
+    <a data-go="print">$IC_printer Print Settings</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+
+  <!-- ========== DASHBOARD ========== -->
+  <section class="screen show" id="s-dashboard">
+    <div class="pagehead">
+      <div><h1>Dashboard</h1><p>Pre Year 1 · Mathematics · Exam 3</p></div>
+      <div class="spacer"></div>
+      <div class="field" style="min-width:150px">
+        <select><option>Exam 3 (Nov 2026)</option><option>Exam 2</option><option>Exam 1</option></select>
+      </div>
+      <button class="btn gold" data-go="blueprint">$IC_plus New Paper</button>
+    </div>
+
+    <div class="grid g4">
+      <div class="card stat"><div class="lab">SLO Coverage</div><div class="num">100%</div><div class="sub">50 / 50 SLOs tagged</div><div class="bar"><i style="width:100%"></i></div></div>
+      <div class="card stat"><div class="lab">Question Bank</div><div class="num">329</div><div class="sub">299 SLO-tagged · 30 draft</div><div class="bar"><i style="width:91%"></i></div></div>
+      <div class="card stat"><div class="lab">Papers this exam</div><div class="num">6</div><div class="sub">across 4 classes</div><div class="bar"><i style="width:60%"></i></div></div>
+      <div class="card stat"><div class="lab">Teachers active</div><div class="num">18</div><div class="sub">of 20 accounts</div><div class="bar"><i style="width:90%"></i></div></div>
+    </div>
+
+    <div class="grid g2 mt">
+      <div class="card">
+        <div class="ch"><h3>Coverage by subject</h3><span class="right chip">Exam 3</span></div>
+        <div class="cb" style="padding:0">
+          <table>
+            <thead><tr><th>Class · Subject</th><th>SLOs</th><th>Tagged</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Pre Year 1 · Math</td><td>50</td><td>50</td><td><span class="badge g"><span class="dot"></span>100%</span></td></tr>
+              <tr><td>Pre Year 1 · English</td><td>42</td><td>31</td><td><span class="badge y"><span class="dot"></span>74%</span></td></tr>
+              <tr><td>Year 1 · Math</td><td>58</td><td>29</td><td><span class="badge y"><span class="dot"></span>62%</span></td></tr>
+              <tr><td>Year 2 · Urdu</td><td>46</td><td>18</td><td><span class="badge r"><span class="dot"></span>39%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Recent papers</h3></div>
+        <div class="cb">
+          <div class="qrow"><span class="tag">PY1-M</span><span class="qtxt">Term Test — Mathematics</span><span class="chip">2 days ago</span></div>
+          <div class="qrow"><span class="tag">PY1-E</span><span class="qtxt">Quick Quiz — English</span><span class="chip">4 days ago</span></div>
+          <div class="qrow"><span class="tag">Y1-M</span><span class="qtxt">Monthly — Mathematics</span><span class="chip">1 wk ago</span></div>
+          <div style="margin-top:12px"><button class="btn ghost" data-go="blueprint">Open Blueprint →</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== COVERAGE ========== -->
+  <section class="screen" id="s-coverage">
+    <div class="pagehead">
+      <div><h1>Coverage Tracking</h1><p>Which SLOs are represented in the question bank, per exam.</p></div>
+      <div class="spacer"></div>
+      <div class="field" style="min-width:150px"><select><option>Exam 3</option><option>Exam 2</option><option>All exams</option></select></div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card stat"><div class="lab">Fully covered</div><div class="num" style="color:var(--green)">38</div><div class="sub">≥ 100% — green</div></div>
+      <div class="card stat"><div class="lab">Partial</div><div class="num" style="color:var(--yellow)">9</div><div class="sub">60–99% — yellow</div></div>
+      <div class="card stat"><div class="lab">Weak</div><div class="num" style="color:var(--red)">3</div><div class="sub">&lt; 60% — red</div></div>
+    </div>
+
+    <div class="card mt">
+      <div class="ch"><h3>SLO coverage detail</h3><span class="right muted" style="font-size:12px">Unassigned shown separately (null, not 0)</span></div>
+      <div class="cb" style="padding:0">
+        <table>
+          <thead><tr><th>SLO</th><th>Description</th><th>Questions</th><th>Bloom</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag">M-1.04</span></td><td>Count objects up to 10</td><td>12</td><td><span class="chip">Remember</span></td><td><span class="badge g"><span class="dot"></span>100%</span></td><td><button class="btn ghost" style="padding:5px 10px">Show</button></td></tr>
+            <tr><td><span class="tag">M-1.11</span></td><td>Compare more / less</td><td>7</td><td><span class="chip">Understand</span></td><td><span class="badge g"><span class="dot"></span>100%</span></td><td><button class="btn ghost" style="padding:5px 10px">Show</button></td></tr>
+            <tr><td><span class="tag">M-2.03</span></td><td>Simple addition within 5</td><td>4</td><td><span class="chip">Apply</span></td><td><span class="badge y"><span class="dot"></span>72%</span></td><td><button class="btn ghost" style="padding:5px 10px">Show</button></td></tr>
+            <tr><td><span class="tag">M-2.09</span></td><td>Number patterns</td><td>1</td><td><span class="chip">Analyze</span></td><td><span class="badge r"><span class="dot"></span>34%</span></td><td><button class="btn ghost" style="padding:5px 10px">Show</button></td></tr>
+            <tr><td><span class="tag">M-3.01</span></td><td>Recognise shapes</td><td>0</td><td><span class="chip muted">—</span></td><td><span class="badge r"><span class="dot"></span>Unassigned</span></td><td><button class="btn ghost" style="padding:5px 10px">Show</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== QUESTION BANK ========== -->
+  <section class="screen" id="s-bank">
+    <div class="pagehead">
+      <div><h1>Question Bank</h1><p>329 questions · Pre Year 1 Mathematics</p></div>
+      <div class="spacer"></div>
+      <button class="btn ghost">$IC_upload Import .xlsx</button>
+      <button class="btn gold">$IC_plus Add question</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="search"><span class="ic">$IC_search</span><input type="text" placeholder="Search question text…"></div>
+      <select><option>All SLOs</option><option>M-1.04</option><option>M-2.03</option></select>
+      <select><option>All Bloom levels</option><option>Remember</option><option>Understand</option><option>Apply</option></select>
+      <select><option>Any difficulty</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+      <label class="row" style="font-size:12.5px;font-weight:600;color:var(--muted)"><span class="switch"><i></i></span> Show drafts</label>
+    </div>
+
+    <div class="card">
+      <div class="cb" style="padding:0">
+        <table>
+          <thead><tr><th style="width:34px"></th><th>Question</th><th>SLO</th><th>Bloom</th><th>Diff.</th><th>Type</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox"></td><td>How many apples are shown? 🍎🍎🍎</td><td><span class="tag">M-1.04</span></td><td><span class="chip">Remember</span></td><td><span class="chip">Easy</span></td><td>MCQ</td><td><button class="btn ghost" style="padding:5px 10px">Edit</button></td></tr>
+            <tr><td><input type="checkbox"></td><td>Circle the group with <b>more</b> stars.</td><td><span class="tag">M-1.11</span></td><td><span class="chip">Understand</span></td><td><span class="chip">Easy</span></td><td>Circle</td><td><button class="btn ghost" style="padding:5px 10px">Edit</button></td></tr>
+            <tr><td><input type="checkbox"></td><td>2 + 3 = ___</td><td><span class="tag">M-2.03</span></td><td><span class="chip">Apply</span></td><td><span class="chip">Medium</span></td><td>Fill</td><td><button class="btn ghost" style="padding:5px 10px">Edit</button></td></tr>
+            <tr><td><input type="checkbox"></td><td>Continue the pattern: 1, 2, 3, __, __</td><td><span class="tag">M-2.09</span></td><td><span class="chip">Analyze</span></td><td><span class="chip">Hard</span></td><td>Fill</td><td><button class="btn ghost" style="padding:5px 10px">Edit</button></td></tr>
+            <tr style="opacity:.55"><td><input type="checkbox"></td><td>Draw a triangle. <span class="chip gold">Draft</span></td><td><span class="chip muted">untagged</span></td><td><span class="chip muted">—</span></td><td>—</td><td>Draw</td><td><button class="btn ghost" style="padding:5px 10px">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="hint mt">Draft questions never appear in generated papers. Selecting rows enables bulk SLO-tagging.</p>
+  </section>
+
+  <!-- ========== BLUEPRINT ========== -->
+  <section class="screen" id="s-blueprint">
+    <div class="pagehead">
+      <div><h1>Blueprint</h1><p>Assemble a multi-section paper · Pre Year 1 Math · Exam 3</p></div>
+      <div class="spacer"></div>
+      <select><option>Preset: NCE</option><option>Preset: Matric</option><option>Preset: Quick Quiz</option></select>
+      <button class="btn gold" data-go="print">$IC_printer Generate & Print</button>
+    </div>
+
+    <div class="grid g2">
+      <!-- left: sections -->
+      <div>
+        <div class="sec">
+          <div class="sh"><b>Section A</b><span class="chip">Objective</span><span class="chip gold">Bloom: Remember</span><span class="right muted" style="font-size:12px">10 marks</span></div>
+          <div class="body">
+            <div class="qrow"><button class="pin on" title="Pinned to Section A">$IC_pin</button><span class="qtxt">How many apples? 🍎🍎🍎</span><span class="tag">M-1.04</span></div>
+            <div class="qrow"><button class="pin on">$IC_pin</button><span class="qtxt">Count the stars ⭐</span><span class="tag">M-1.04</span></div>
+            <div class="qrow"><button class="pin">$IC_pin</button><span class="qtxt">Circle group with more</span><span class="tag">M-1.11</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sh"><b>Section B</b><span class="chip">Short</span><span class="chip gold">Bloom: Apply</span><span class="right muted" style="font-size:12px">15 marks</span></div>
+          <div class="body">
+            <div class="qrow"><button class="pin on">$IC_pin</button><span class="qtxt">2 + 3 = ___</span><span class="tag">M-2.03</span></div>
+            <div class="qrow"><button class="pin">$IC_pin</button><span class="qtxt">Solve: 4 + 1</span><span class="tag">M-2.03</span></div>
+          </div>
+        </div>
+        <button class="btn ghost">$IC_plus Add section</button>
+        <p class="hint mt">Pins target a specific section. A pinned question is guaranteed to appear in that section; the rest fill automatically from the bank.</p>
+      </div>
+
+      <!-- right: summary + shortfall -->
+      <div>
+        <div class="card">
+          <div class="ch"><h3>Paper summary</h3></div>
+          <div class="cb">
+            <div class="wrap"><span class="chip">2 sections</span><span class="chip">25 marks</span><span class="chip gold">3 pinned</span></div>
+            <div class="bloom mt">
+              <div class="r"><span class="name">Remember</span><div class="track"><i style="width:60%;background:var(--green)"></i></div><span class="pct">60%</span></div>
+              <div class="r"><span class="name">Understand</span><div class="track"><i style="width:20%;background:var(--yellow)"></i></div><span class="pct">20%</span></div>
+              <div class="r"><span class="name">Apply</span><div class="track"><i style="width:20%;background:var(--accent)"></i></div><span class="pct">20%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="ch"><h3>Shortfall diagnostic</h3></div>
+          <div class="cb">
+            <div class="panel-soft">
+              <h4>Section B needs 3 more short questions</h4>
+              <ul>
+                <li>Only 2 "Apply" questions tagged M-2.03 in bank</li>
+                <li>Add questions, or lower the section target to 12 marks</li>
+                <li>Or allow Medium difficulty from adjacent SLO M-2.04</li>
+              </ul>
+              <div class="note">Tajweez — hukm nahi. This is read-only guidance; nothing is changed automatically.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TAQSEEM ========== -->
+  <section class="screen" id="s-taqseem">
+    <div class="pagehead">
+      <div><h1>Exam Taqseem</h1><p>Split SLOs across the year's 8 exams · session starts March</p></div>
+      <div class="spacer"></div>
+      <button class="btn ghost">Reset plan</button>
+      <button class="btn gold">$IC_check Save distribution</button>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>SLO → Exam plan</h3><span class="right chip">Pre Year 1 · Math · 50 SLOs</span></div>
+      <div class="cb" style="padding:0">
+        <table>
+          <thead><tr><th>Seq</th><th>SLO</th><th>Description</th><th>Page</th><th>Assigned exam</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><span class="tag">M-1.01</span></td><td>Numbers 1–3</td><td>4</td><td><select><option>Exam 1</option><option>Exam 2</option></select></td></tr>
+            <tr><td>2</td><td><span class="tag">M-1.04</span></td><td>Count up to 10</td><td>9</td><td><select><option>Exam 1</option><option>Exam 2</option></select></td></tr>
+            <tr><td>3</td><td><span class="tag">M-1.11</span></td><td>Compare more / less</td><td>15</td><td><select><option selected>Exam 2</option><option>Exam 3</option></select></td></tr>
+            <tr><td>4</td><td><span class="tag">M-2.03</span></td><td>Addition within 5</td><td>21</td><td><select><option selected>Exam 3</option><option>Exam 4</option></select></td></tr>
+            <tr><td>5</td><td><span class="tag">M-2.09</span></td><td>Number patterns</td><td>28</td><td><select><option selected>Exam 3</option><option>Exam 4</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="hint mt">Sequence is derived from page number, matching actual teaching order. Move validation prevents assigning a later SLO before an earlier one.</p>
+  </section>
+
+  <!-- ========== BLOOM GUIDANCE ========== -->
+  <section class="screen" id="s-bloom">
+    <div class="pagehead">
+      <div><h1>Bloom's Guidance</h1><p>Suggested cognitive-level mix per class group. Suggestions only — you can override.</p></div>
+      <div class="spacer"></div>
+      <label class="row" style="font-size:13px;font-weight:600"><span class="switch on"><i></i></span> Apply suggestion as default</label>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <div class="ch"><h3>Class group</h3></div>
+        <div class="cb">
+          <div class="wrap">
+            <button class="btn ghost">Pre-Primary</button>
+            <button class="btn">Primary</button>
+            <button class="btn ghost">Middle</button>
+            <button class="btn ghost">Matric</button>
+          </div>
+          <p class="hint mt">Showing suggested distribution for <b>Primary</b>. Higher-order thinking increases with class level.</p>
+          <div class="bloom mt">
+            <div class="r"><span class="name">Remember</span><div class="track"><i style="width:30%;background:var(--green)"></i></div><span class="pct">30%</span></div>
+            <div class="r"><span class="name">Understand</span><div class="track"><i style="width:35%;background:var(--brand-2)"></i></div><span class="pct">35%</span></div>
+            <div class="r"><span class="name">Apply</span><div class="track"><i style="width:25%;background:var(--accent)"></i></div><span class="pct">25%</span></div>
+            <div class="r"><span class="name">Analyze</span><div class="track"><i style="width:10%;background:var(--red)"></i></div><span class="pct">10%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>Override (optional)</h3></div>
+        <div class="cb">
+          <div class="field"><label>Remember</label><input type="range" class="range" value="30"></div>
+          <div class="field mt"><label>Understand</label><input type="range" class="range" value="35"></div>
+          <div class="field mt"><label>Apply</label><input type="range" class="range" value="25"></div>
+          <div class="field mt"><label>Analyze</label><input type="range" class="range" value="10"></div>
+          <div class="panel-soft mt">
+            <h4>Teacher's marzi</h4>
+            <p style="font-size:12.5px">Strict enforcement is off. The app suggests a mix and warns softly if a paper drifts far from it — but never blocks you. Enforcement can be tightened later, ahista ahista.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PRINT SETTINGS ========== -->
+  <section class="screen" id="s-print">
+    <div class="pagehead">
+      <div><h1>Print Settings</h1><p>Per-class layout for browser printing (Ctrl+P). Live preview on the right.</p></div>
+      <div class="spacer"></div>
+      <button class="btn gold">$IC_printer Print preview</button>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <div class="ch"><h3>Layout — Pre Year 1</h3></div>
+        <div class="cb">
+          <div class="field"><label>Font size</label><input type="range" id="fs" class="range" min="11" max="20" value="14"></div>
+          <div class="field mt"><label>Gap between questions</label><input type="range" id="gap" class="range" min="4" max="24" value="10"></div>
+          <div class="field mt"><label>Page margin</label><input type="range" id="mar" class="range" min="10" max="40" value="24"></div>
+          <p class="hint mt">Values are stored per class in <span class="tag">class_print_settings</span>. Margin is applied through the sheet padding — @page can't take CSS variables.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>Live preview</h3><span class="right chip">A4</span></div>
+        <div class="cb">
+          <div class="sheet" id="sheet" style="--qgap:10px;font-size:14px;padding:24px">
+            <h5>Ameen Islamic Institute</h5>
+            <div class="meta"><span>Pre Year 1 · Mathematics</span><span>Exam 3 · 2026</span></div>
+            <b>Section A — Answer all questions</b>
+            <ol>
+              <li>How many apples are shown? 🍎🍎🍎</li>
+              <li>Circle the group with <b>more</b> stars.</li>
+              <li>Write the missing number: 1, 2, __, 4</li>
+              <li>Count and write: ⬛⬛⬛⬛</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<!-- ICON SPRITE (inline defs) -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+<g id="i-grid"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></g>
+<g id="i-check"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></g>
+<g id="i-bank"><path d="M4 7h16M4 12h16M4 17h16"/><rect x="3" y="4" width="18" height="16" rx="2"/></g>
+<g id="i-layers"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></g>
+<g id="i-split"><path d="M3 5h6v6H3zM15 13h6v6h-6zM9 8h6M18 11v2"/></g>
+<g id="i-target"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></g>
+<g id="i-printer"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></g>
+<g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+<g id="i-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></g>
+<g id="i-search"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></g>
+<g id="i-pin"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></g>
+</defs>
+</svg>
+
+<script>
+// icon helper: replace $IC_name tokens rendered in HTML with real svg
+const ICON=n=>`<svg class="ic" viewBox="0 0 24 24" width="18" height="18"><use href="#i-${n}"/></svg>`;
+document.body.innerHTML=document.body.innerHTML
+  .replace(/\$IC_(\w+)/g,(_,n)=>ICON(n));
+
+// --- style switcher ---
+const sw=document.getElementById('switch');
+sw.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.documentElement.setAttribute('data-style',b.dataset.s);
+  sw.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+});
+document.documentElement.setAttribute('data-style','classic');
+
+// --- navigation ---
+const crumbLabels={dashboard:'Dashboard',coverage:'Coverage',bank:'Question Bank',
+  blueprint:'Blueprint',taqseem:'Exam Taqseem',bloom:'Bloom Guidance',print:'Print Settings'};
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  document.getElementById('s-'+id).classList.add('show');
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.go===id));
+  document.getElementById('crumb').textContent=crumbLabels[id];
+  document.getElementById('main').scrollTop=0;
+}
+document.body.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go]'); if(!t)return;
+  e.preventDefault(); go(t.dataset.go);
+});
+
+// --- toggles ---
+document.body.addEventListener('click',e=>{
+  const s=e.target.closest('.switch'); if(!s)return;
+  s.classList.toggle('on');
+});
+
+// --- pins ---
+document.body.addEventListener('click',e=>{
+  const p=e.target.closest('.pin'); if(!p)return;
+  p.classList.toggle('on');
+});
+
+// --- print preview live controls ---
+const sheet=document.getElementById('sheet');
+const bind=(id,fn)=>{const el=document.getElementById(id);el&&el.addEventListener('input',()=>fn(el.value));};
+bind('fs',v=>sheet.style.fontSize=v+'px');
+bind('gap',v=>sheet.style.setProperty('--qgap',v+'px'));
+bind('mar',v=>sheet.style.padding=v+'px');
+</script>
+</body>
+</html>

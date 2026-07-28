@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en" data-style="modern">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Parcha (poora app · reference structure)</title>
+<!-- app.css sirf offline @font-face. Standalone exploration (theme.css link NAHI). -->
+<link rel="stylesheet" href="/static/app.css">
+<style>
+/* =========================================================================
+   PARCHA — poore app ka mockup, reference (papermaker-mockup) structure par:
+   grid = brand · topbar · nav · main; 3-style switch; topbar with avatar.
+   Fonts OFFLINE (IBM Plex Sans / Source Serif) — Inter/Space Grotesk nahi.
+   ========================================================================= */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);color:var(--fg);background:var(--app-bg);-webkit-font-smoothing:antialiased;line-height:1.45}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---- CLASSIC (navy/gold) ---- */
+html[data-style="classic"]{
+  --font-display:"Source Serif 4",Georgia,serif; --font-body:"IBM Plex Sans",system-ui,sans-serif; --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#eef1f6;--panel:#fff;--panel-2:#f6f8fc;--fg:#1a2233;--muted:#5c6a83;--line:#dbe2ee;
+  --brand:#132244;--brand-2:#1e3563;--accent:#c8952b;--accent-soft:#f6ecd4;
+  --sidebar-bg:#132244;--sidebar-fg:#c6d1e6;--sidebar-active:#c8952b;
+  --radius:10px;--radius-sm:7px;--shadow:0 1px 2px rgba(19,34,68,.06),0 6px 20px rgba(19,34,68,.06);
+  --topbar-bg:#fff;--chip-bg:#eef2f9;
+  --green:#2f9e58;--yellow:#c99400;--red:#cf4436;--green-bg:#e5f5ec;--yellow-bg:#fbf1d4;--red-bg:#fbe6e3;
+}
+/* ---- MODERN (light sidebar, indigo brand + teal accent) — DEFAULT ---- */
+html[data-style="modern"]{
+  --font-display:"IBM Plex Sans",system-ui,sans-serif; --font-body:"IBM Plex Sans",system-ui,sans-serif; --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#f7f8fb;--panel:#fff;--panel-2:#fafbfe;--fg:#0f172a;--muted:#64748b;--line:#eaedf3;
+  --brand:#4f46e5;--brand-2:#6366f1;--accent:#0ea5a4;--accent-soft:#dcf5f4;
+  --sidebar-bg:#fff;--sidebar-fg:#475569;--sidebar-active:#4f46e5;
+  --radius:16px;--radius-sm:11px;--shadow:0 1px 2px rgba(15,23,42,.04),0 10px 30px rgba(15,23,42,.06);
+  --topbar-bg:#fff;--chip-bg:#f1f5f9;
+  --green:#16a34a;--yellow:#d97706;--red:#dc2626;--green-bg:#dcfce7;--yellow-bg:#fef3c7;--red-bg:#fee2e2;
+}
+/* ---- COMPACT (dark rail, amber, tight) ---- */
+html[data-style="compact"]{
+  --font-display:"IBM Plex Sans",system-ui,sans-serif; --font-body:"IBM Plex Sans",system-ui,sans-serif; --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  --app-bg:#e9ecf1;--panel:#fff;--panel-2:#f3f5f8;--fg:#161b22;--muted:#586274;--line:#d5dbe3;
+  --brand:#0b3d3a;--brand-2:#12524d;--accent:#e07a1f;--accent-soft:#fbe9d6;
+  --sidebar-bg:#12181f;--sidebar-fg:#9aa6b6;--sidebar-active:#e07a1f;
+  --radius:6px;--radius-sm:4px;--shadow:0 1px 2px rgba(0,0,0,.08);--topbar-bg:#fff;--chip-bg:#eceff3;
+  --green:#1f8b4c;--yellow:#b07d00;--red:#c53a2c;--green-bg:#e2f2e8;--yellow-bg:#f7edcf;--red-bg:#f7e2df;
+}
+html{--gap:18px;--pad:20px;--fs:14.5px}
+html[data-style="compact"]{--gap:10px;--pad:12px;--fs:13px}
+html[data-style="modern"]{--gap:22px;--pad:24px;--fs:15px}
+body{font-size:var(--fs)}
+
+/* LAYOUT: brand · top · nav · main */
+.app{display:grid;grid-template-columns:248px 1fr;grid-template-rows:auto 1fr;grid-template-areas:"brand top" "nav main";height:100vh}
+html[data-style="compact"] .app{grid-template-columns:210px 1fr}
+.brand{grid-area:brand;background:var(--sidebar-bg);color:#fff;display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+html[data-style="modern"] .brand{color:var(--fg);border-bottom:1px solid var(--line)}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-family:var(--font-display);font-size:18px;flex:none}
+.brand b{font-family:var(--font-display);font-size:17px;letter-spacing:.2px;line-height:1.05}
+.brand small{display:block;font-weight:400;font-size:10.5px;opacity:.7;letter-spacing:.6px;text-transform:uppercase}
+
+/* TOPBAR */
+.top{grid-area:top;background:var(--topbar-bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 22px;min-height:58px}
+.top .crumbs{color:var(--muted);font-size:13px}
+.top .crumbs b{color:var(--fg);font-weight:600}
+.top .spacer{flex:1}
+.langsw{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.langsw button{padding:6px 11px;font-size:12px;font-weight:600;color:var(--muted)}
+.langsw button.on{background:var(--brand);color:#fff}
+.langsw button.ur{font-family:"Noto Nastaliq Urdu",serif}
+.styleswitch{display:flex;gap:6px;background:var(--chip-bg);padding:4px;border-radius:999px}
+.styleswitch button{padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.styleswitch button.on{background:var(--brand);color:#fff}
+.top .avatar{width:34px;height:34px;border-radius:50%;background:var(--brand-2);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+
+/* NAV */
+.nav{grid-area:nav;background:var(--sidebar-bg);padding:12px 10px;overflow:auto;border-right:1px solid var(--line)}
+html[data-style="classic"] .nav,html[data-style="compact"] .nav{border-right:none}
+.nav .grp{color:var(--sidebar-fg);opacity:.55;font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;padding:14px 12px 6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-sm);color:var(--sidebar-fg);font-size:14px;font-weight:500;margin-bottom:2px}
+html[data-style="compact"] .nav a{padding:7px 10px;font-size:13px}
+.nav a .ic{width:18px;height:18px;flex:none;opacity:.85}
+.nav a:hover{background:rgba(255,255,255,.07)}
+html[data-style="modern"] .nav a:hover{background:var(--panel-2)}
+.nav a.active{color:#fff;font-weight:600;background:rgba(255,255,255,.10);box-shadow:inset 3px 0 0 var(--sidebar-active)}
+html[data-style="modern"] .nav a.active{background:var(--accent-soft);color:var(--brand);box-shadow:inset 3px 0 0 var(--sidebar-active)}
+
+/* MAIN */
+.main{grid-area:main;overflow:auto;padding:var(--pad) 28px 44px}
+.screen{display:none;animation:fade .22s ease}
+.screen.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pagehead{display:flex;align-items:flex-end;gap:14px;margin:6px 0 var(--gap)}
+.pagehead h1{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:-.2px}
+.pagehead p{color:var(--muted);font-size:13.5px;margin-top:3px;max-width:620px}
+.pagehead .spacer{flex:1}
+
+/* components */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card .ch{padding:14px var(--pad);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card .ch h3{font-size:14px;font-weight:700;font-family:var(--font-display)}
+.card .cb{padding:var(--pad)}
+.grid{display:grid;gap:var(--gap)}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1.6fr 1fr}
+@media(max-width:1050px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;background:var(--brand);color:#fff}
+html[data-style="compact"] .btn{padding:7px 12px;font-size:12.5px}
+.btn:hover{background:var(--brand-2)}
+.btn.gold{background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--panel-2)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--chip-bg);color:var(--muted)}
+.chip.gold{background:var(--accent-soft);color:var(--accent)}
+html[data-style="classic"] .chip.gold{color:#8a6410}
+.tag{font-family:var(--font-data);font-size:11px;padding:2px 7px;border-radius:5px;background:var(--accent-soft);color:var(--brand);font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge .dot{width:8px;height:8px;border-radius:50%}
+.badge.g{background:var(--green-bg);color:var(--green)}.badge.g .dot{background:var(--green)}
+.badge.y{background:var(--yellow-bg);color:var(--yellow)}.badge.y .dot{background:var(--yellow)}
+.badge.r{background:var(--red-bg);color:var(--red)}.badge.r .dot{background:var(--red)}
+.stat{padding:var(--pad)}
+.stat .lab{color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.stat .num{font-family:var(--font-display);font-size:32px;font-weight:700;line-height:1.1;margin-top:6px}
+html[data-style="compact"] .stat .num{font-size:26px}
+.stat .sub{color:var(--muted);font-size:12.5px;margin-top:4px}
+.stat .bar{height:7px;border-radius:99px;background:var(--panel-2);margin-top:12px;overflow:hidden}
+.stat .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+html[data-style="compact"] table{font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;padding:10px var(--pad);border-bottom:1px solid var(--line);background:var(--panel-2)}
+td{padding:11px var(--pad);border-bottom:1px solid var(--line);vertical-align:middle}
+html[data-style="compact"] td{padding:7px 12px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+select,input[type=text],input[type=number]{font-family:inherit;font-size:13.5px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:var(--gap)}
+.search{flex:1;min-width:200px;position:relative}
+.search input{width:100%;padding-left:34px}
+.search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:.5}
+.switch{position:relative;width:42px;height:24px;border-radius:99px;background:var(--line);transition:.2s;flex:none}
+.switch.on{background:var(--accent)}
+.switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch.on i{left:21px}
+.segbtns{display:inline-flex;gap:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:4px}
+.segbtns button{padding:8px 13px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--muted)}
+.segbtns button.on{background:var(--brand);color:#fff}
+.sec{border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
+.sec .sh{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel-2)}
+.sec .sh b{font-family:var(--font-display);font-size:14px}
+.sec .body{padding:8px 14px}
+.qrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.qrow:last-child{border-bottom:none}
+.qrow .qtxt{flex:1;font-size:13px}
+.pin{width:26px;height:26px;border-radius:6px;display:grid;place-items:center;border:1px solid var(--line);color:var(--muted)}
+.pin.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.panel-soft{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:14px}
+.panel-soft h4{font-size:13px;margin-bottom:6px;color:var(--brand)}
+.panel-soft ul{margin-left:16px;font-size:13px;color:var(--fg)}
+.panel-soft .note{font-size:11.5px;color:var(--muted);margin-top:8px;font-style:italic}
+.bloom{display:flex;flex-direction:column;gap:10px}
+.bloom .r{display:grid;grid-template-columns:110px 1fr 46px;align-items:center;gap:12px}
+.bloom .r .name{font-size:13px;font-weight:600}
+.bloom .track{height:11px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.bloom .track i{display:block;height:100%;border-radius:99px}
+.bloom .pct{font-family:var(--font-data);font-size:12.5px;text-align:right;color:var(--muted)}
+.sheet{background:#fff;border:1px solid var(--line);border-radius:6px;padding:26px;box-shadow:var(--shadow);font-family:var(--font-display);color:#111}
+.sheet h5{text-align:center;font-size:16px}
+.sheet .meta{display:flex;justify-content:space-between;font-size:11px;color:#555;border-bottom:1px solid #ccc;padding-bottom:8px;margin:6px 0 14px}
+.sheet ol{margin-left:18px;font-size:13px}.sheet ol li{margin-bottom:10px}
+.imggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1050px){.imggrid{grid-template-columns:repeat(2,1fr)}}
+.imgcard{border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;background:var(--panel)}
+.imgcard .thumb{height:96px;display:grid;place-items:center;font-size:34px;background:var(--accent-soft)}
+.imgcard .meta{padding:9px 11px}.imgcard .meta .t{font-size:12.5px;font-weight:600}.imgcard .meta .s{font-size:11px;color:var(--muted);margin-top:2px}
+.upcard{border:2px dashed var(--line);border-radius:var(--radius-sm);padding:22px;text-align:center;color:var(--muted);font-size:12.5px}
+.upcard .big{font-size:26px;margin-bottom:6px}
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+.col{flex:0 0 210px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px}
+.col.unassigned{background:var(--panel-2);border-style:dashed}
+.col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.col-head .t{font-size:13px;font-weight:700}.col-head .c{font-size:11px;font-weight:700;color:var(--muted);background:var(--chip-bg);padding:1px 7px;border-radius:999px}
+.slochip{border:1px solid var(--line);border-radius:8px;padding:8px 9px;margin-bottom:7px}
+.slochip .top2{display:flex;align-items:center;gap:7px}.slochip .desc{font-size:11.5px;color:var(--muted);margin-top:4px}
+.row{display:flex;align-items:center;gap:10px}.wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mt{margin-top:var(--gap)}.muted{color:var(--muted)}.right{margin-left:auto}
+.summary-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.summary-row:last-child{border-bottom:none}
+small.hint{color:var(--muted);font-size:11.5px}
+svg.ic{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:760px){.app{grid-template-columns:1fr;grid-template-areas:"brand" "top" "main"}.nav{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand"><div class="logo">P</div><div><b>Parcha</b><small>Paper Maker</small></div></div>
+
+  <div class="top">
+    <div class="crumbs">Ameen Islamic Institute · <b id="crumb">My Papers</b></div>
+    <div class="spacer"></div>
+    <div class="langsw"><button class="on">EN</button><button class="ur">اردو</button></div>
+    <div class="styleswitch" id="switch"><button data-s="classic">Classic</button><button data-s="modern" class="on">Modern</button><button data-s="compact">Compact</button></div>
+    <span class="chip">Exam 3 · 2026</span>
+    <div class="avatar">IR</div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <div class="grp">Papers</div>
+    <a data-go="generate">$IC_doc Generate paper</a>
+    <a data-go="mypapers" class="active">$IC_papers My Papers</a>
+    <a data-go="adaptive">$IC_target Adaptive paper</a>
+    <a data-go="blueprint">$IC_layers Blueprint</a>
+    <div class="grp">Content</div>
+    <a data-go="bank">$IC_bank Question Bank</a>
+    <a data-go="library">$IC_image Image Library</a>
+    <a data-go="slo">$IC_check Learning Outcomes</a>
+    <div class="grp">Plan &amp; track</div>
+    <a data-go="taqseem">$IC_split Exam Taqseem</a>
+    <a data-go="health">$IC_pulse SLO Health</a>
+    <a data-go="analytics">$IC_analytics Analytics</a>
+    <div class="grp">Settings</div>
+    <a data-go="settings">$IC_gear School settings</a>
+  </nav>
+
+  <main class="main" id="main">
+
+  <!-- GENERATE -->
+  <section class="screen" id="s-generate">
+    <div class="pagehead"><div><h1>Generate paper</h1><p>AI se bilingual, Bloom-tagged questions banao, phir balanced paper assemble karo.</p></div><div class="spacer"></div><button class="btn ghost">Build from bank</button><button class="btn gold">$IC_doc Generate →</button></div>
+    <div class="grid g2">
+      <div class="card"><div class="ch"><h3>Paper filters</h3></div><div class="cb">
+        <div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Subject</label><select><option>Mathematics</option></select></div><div class="field"><label>Class</label><select><option>Class 8</option></select></div><div class="field"><label>Topic</label><select><option>All topics</option></select></div><div class="field"><label>Exam (taqseem)</label><select><option>Exam 3</option></select></div><div class="field"><label>Questions</label><input type="number" value="20"></div><div class="field"><label>Language</label><select><option>Urdu + English</option></select></div></div>
+        <div class="field mt"><label>Question types</label><div class="wrap"><span class="chip gold">MCQ ✓</span><span class="chip gold">Fill ✓</span><span class="chip">True/False</span><span class="chip gold">Short ✓</span><span class="chip">Essay</span></div></div>
+      </div></div>
+      <div class="card"><div class="ch"><h3>This paper</h3></div><div class="cb">
+        <div class="summary-row"><span>Questions</span><b>20</b></div><div class="summary-row"><span>Marks</span><b>35</b></div><div class="summary-row"><span>Language</span><b>Urdu + English</b></div><div class="summary-row"><span>Bloom mix</span><b>Balanced</b></div>
+        <button class="btn gold mt" style="width:100%;justify-content:center">$IC_doc Generate paper →</button>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- MY PAPERS -->
+  <section class="screen show" id="s-mypapers">
+    <div class="pagehead"><div><h1>My Papers</h1><p>Saved &amp; generated papers — kholo, print, dobara istemaal karo.</p></div><div class="spacer"></div><div class="search" style="max-width:240px"><span class="ic">$IC_search</span><input type="text" placeholder="Paper search…"></div><button class="btn gold">$IC_plus New paper</button></div>
+    <div class="card"><div class="cb" style="padding:0"><table>
+      <thead><tr><th>Paper</th><th>Class · Subject</th><th>Marks</th><th>Banaya</th><th></th></tr></thead><tbody>
+      <tr><td><b>Mid Term Examination</b></td><td>Class 8 · Mathematics</td><td>35</td><td>2 din pehle</td><td class="wrap"><button class="btn ghost sm">Open</button><button class="btn ghost sm">Print</button></td></tr>
+      <tr><td><b>Quick Quiz</b></td><td>Class 7 · English</td><td>15</td><td>4 din pehle</td><td class="wrap"><button class="btn ghost sm">Open</button><button class="btn ghost sm">Print</button></td></tr>
+      <tr><td><b>Monthly Test</b></td><td>Class 8 · Urdu</td><td>25</td><td>1 hafta</td><td class="wrap"><button class="btn ghost sm">Open</button><button class="btn ghost sm">Print</button></td></tr>
+    </tbody></table></div></div>
+  </section>
+
+  <!-- ADAPTIVE -->
+  <section class="screen" id="s-adaptive">
+    <div class="pagehead"><div><h1>Adaptive paper</h1><p>Easy/Hard ratio chuno — app us balance ka paper banata hai.</p></div></div>
+    <div class="grid g2">
+      <div class="card"><div class="ch"><h3>Difficulty balance</h3></div><div class="cb">
+        <div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Subject</label><select><option>Mathematics</option></select></div><div class="field"><label>Class</label><select><option>Class 8</option></select></div></div>
+        <div class="field mt"><label>Easy / Hard ratio</label><div class="segbtns"><button>20/80</button><button>30/70</button><button class="on">50/50</button><button>70/30</button><button>80/20</button></div></div>
+        <button class="btn gold mt">$IC_target Generate Adaptive Paper →</button>
+      </div></div>
+      <div class="card"><div class="ch"><h3>Balance preview</h3></div><div class="cb"><div class="bloom">
+        <div class="r"><span class="name">Easy</span><div class="track"><i style="width:50%;background:var(--green)"></i></div><span class="pct">50%</span></div>
+        <div class="r"><span class="name">Medium</span><div class="track"><i style="width:30%;background:var(--yellow)"></i></div><span class="pct">30%</span></div>
+        <div class="r"><span class="name">Hard</span><div class="track"><i style="width:20%;background:var(--red)"></i></div><span class="pct">20%</span></div>
+      </div></div></div>
+    </div>
+  </section>
+
+  <!-- BLUEPRINT -->
+  <section class="screen" id="s-blueprint">
+    <div class="pagehead"><div><h1>Blueprint</h1><p>Multi-section paper assemble karo · Class 8 Math · Exam 3</p></div><div class="spacer"></div><select><option>Preset: NCE</option><option>Preset: Quick Quiz</option></select><button class="btn gold">$IC_printer Generate &amp; Print</button></div>
+    <div class="grid g2">
+      <div>
+        <div class="sec"><div class="sh"><b>Section A</b><span class="chip">Objective</span><span class="chip gold">Bloom: Remember</span><span class="right muted" style="font-size:12px">10 marks</span></div><div class="body">
+          <div class="qrow"><button class="pin on">$IC_pin</button><span class="qtxt">How many apples? 🍎🍎🍎</span><span class="tag">M-1.04</span></div>
+          <div class="qrow"><button class="pin on">$IC_pin</button><span class="qtxt">Count the stars ⭐</span><span class="tag">M-1.04</span></div>
+          <div class="qrow"><button class="pin">$IC_pin</button><span class="qtxt">Circle group with more</span><span class="tag">M-1.11</span></div>
+        </div></div>
+        <div class="sec"><div class="sh"><b>Section B</b><span class="chip">Short</span><span class="chip gold">Bloom: Apply</span><span class="right muted" style="font-size:12px">15 marks</span></div><div class="body">
+          <div class="qrow"><button class="pin on">$IC_pin</button><span class="qtxt">2 + 3 = ___</span><span class="tag">M-2.03</span></div>
+        </div></div>
+        <button class="btn ghost">$IC_plus Add section</button>
+      </div>
+      <div>
+        <div class="card"><div class="ch"><h3>Paper summary</h3></div><div class="cb"><div class="wrap"><span class="chip">2 sections</span><span class="chip">25 marks</span><span class="chip gold">3 pinned</span></div>
+          <div class="bloom mt"><div class="r"><span class="name">Remember</span><div class="track"><i style="width:60%;background:var(--green)"></i></div><span class="pct">60%</span></div><div class="r"><span class="name">Understand</span><div class="track"><i style="width:20%;background:var(--yellow)"></i></div><span class="pct">20%</span></div><div class="r"><span class="name">Apply</span><div class="track"><i style="width:20%;background:var(--accent)"></i></div><span class="pct">20%</span></div></div>
+        </div></div>
+        <div class="card mt"><div class="ch"><h3>Shortfall diagnostic</h3></div><div class="cb"><div class="panel-soft">
+          <h4>Section B needs 3 more short questions</h4><ul><li>Only 2 "Apply" Qs tagged M-2.03</li><li>Add Qs, ya target 12 marks karo</li></ul><div class="note">Tajweez — hukm nahi. Read-only.</div>
+        </div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUESTION BANK -->
+  <section class="screen" id="s-bank">
+    <div class="pagehead"><div><h1>Question Bank</h1><p>329 questions · Class 8 Mathematics</p></div><div class="spacer"></div><button class="btn ghost">$IC_upload Import .xlsx</button><button class="btn gold">$IC_plus Add question</button></div>
+    <div class="toolbar"><div class="search"><span class="ic">$IC_search</span><input type="text" placeholder="Search question text…"></div><select><option>All SLOs</option></select><select><option>All Bloom</option></select><select><option>Any difficulty</option></select><label class="row" style="font-size:12.5px;font-weight:600;color:var(--muted)"><span class="switch"><i></i></span> Show drafts</label></div>
+    <div class="card"><div class="cb" style="padding:0"><table><thead><tr><th style="width:34px"></th><th>Question</th><th>SLO</th><th>Bloom</th><th>Diff.</th><th>Type</th><th></th></tr></thead><tbody>
+      <tr><td><input type="checkbox"></td><td>How many apples are shown? 🍎🍎🍎</td><td><span class="tag">M-1.04</span></td><td><span class="chip">Remember</span></td><td><span class="chip">Easy</span></td><td>MCQ</td><td><button class="btn ghost sm">Edit</button></td></tr>
+      <tr><td><input type="checkbox"></td><td>Circle the group with <b>more</b> stars.</td><td><span class="tag">M-1.11</span></td><td><span class="chip">Understand</span></td><td><span class="chip">Easy</span></td><td>Circle</td><td><button class="btn ghost sm">Edit</button></td></tr>
+      <tr><td><input type="checkbox"></td><td>2 + 3 = ___</td><td><span class="tag">M-2.03</span></td><td><span class="chip">Apply</span></td><td><span class="chip">Medium</span></td><td>Fill</td><td><button class="btn ghost sm">Edit</button></td></tr>
+      <tr style="opacity:.55"><td><input type="checkbox"></td><td>Draw a triangle. <span class="chip gold">Draft</span></td><td><span class="chip muted">untagged</span></td><td><span class="chip muted">—</span></td><td>—</td><td>Draw</td><td><button class="btn ghost sm">Edit</button></td></tr>
+    </tbody></table></div></div>
+    <p class="hint mt">Draft questions kabhi generated paper mein nahi aate. Rows select karke bulk SLO-tag.</p>
+  </section>
+
+  <!-- IMAGE LIBRARY -->
+  <section class="screen" id="s-library">
+    <div class="pagehead"><div><h1>Image Library</h1><p>Reusable question images — SLO/topic ke saath tagged.</p></div><div class="spacer"></div><button class="btn ghost">Excel meta import</button><button class="btn gold">$IC_plus Upload image</button></div>
+    <div class="grid g3 mt" style="margin-top:0;margin-bottom:var(--gap)">
+      <div class="card"><div class="cb"><div class="upcard"><div class="big">🖼️</div>Nayi image upload</div></div></div>
+      <div class="card"><div class="cb"><div class="upcard"><div class="big">🗂️</div>Bulk upload (ZIP)</div></div></div>
+      <div class="card"><div class="cb"><div class="upcard"><div class="big">📊</div>Excel se meta import</div></div></div>
+    </div>
+    <div class="card"><div class="ch"><h3>Library images</h3><span class="right chip">128 images</span></div><div class="cb"><div class="imggrid">
+      <div class="imgcard"><div class="thumb">🍎</div><div class="meta"><div class="t">apples_count.png</div><div class="s">Math · M-1.04</div></div></div>
+      <div class="imgcard"><div class="thumb">⭐</div><div class="meta"><div class="t">stars_group.png</div><div class="s">Math · M-1.11</div></div></div>
+      <div class="imgcard"><div class="thumb">🔺</div><div class="meta"><div class="t">shapes_set.png</div><div class="s">Math · M-3.01</div></div></div>
+      <div class="imgcard"><div class="thumb">📊</div><div class="meta"><div class="t">bar_chart.png</div><div class="s">Math · M-4.02</div></div></div>
+    </div></div></div>
+  </section>
+
+  <!-- LEARNING OUTCOMES -->
+  <section class="screen" id="s-slo">
+    <div class="pagehead"><div><h1>Learning Outcomes (SLO)</h1><p>Syllabus SLO manage karo, Excel import, aur questions ko SLO se jodo.</p></div><div class="spacer"></div><button class="btn ghost">$IC_upload Excel import</button><button class="btn gold">$IC_plus Add SLO</button></div>
+    <div class="card"><div class="ch"><h3>Questions ko SLO se jodo (bulk-assign)</h3></div><div class="cb"><div class="wrap"><select style="max-width:220px"><option>Target SLO: M-1.04</option></select><span class="chip gold">3 selected</span><button class="btn sm">Assign to SLO</button></div></div></div>
+    <div class="card mt"><div class="ch"><h3>Maujooda SLO</h3><span class="right chip">50 SLOs</span></div><div class="cb" style="padding:0"><table><thead><tr><th>Code</th><th>Description</th><th>Strand</th><th>Page</th><th>Questions</th><th></th></tr></thead><tbody>
+      <tr><td><span class="tag">M-1.04</span></td><td>Count objects up to 10</td><td><span class="chip">Number</span></td><td>9</td><td>12</td><td><button class="btn ghost sm">Edit</button></td></tr>
+      <tr><td><span class="tag">M-1.11</span></td><td>Compare more / less</td><td><span class="chip">Number</span></td><td>15</td><td>7</td><td><button class="btn ghost sm">Edit</button></td></tr>
+      <tr><td><span class="tag">M-3.01</span></td><td>Recognise shapes</td><td><span class="chip">Geometry</span></td><td>28</td><td>0</td><td><button class="btn ghost sm">Edit</button></td></tr>
+    </tbody></table></div></div>
+  </section>
+
+  <!-- TAQSEEM -->
+  <section class="screen" id="s-taqseem">
+    <div class="pagehead"><div><h1>Exam Taqseem</h1><p>SLOs ko saal ke 8 exams par baanto · session March se.</p></div><div class="spacer"></div><button class="btn ghost">Reset plan</button><button class="btn gold">$IC_check Save distribution</button></div>
+    <div class="card"><div class="cb"><div class="board">
+      <div class="col unassigned"><div class="col-head"><span class="t" style="color:var(--yellow)">Unassigned</span><span class="c">2</span></div>
+        <div class="slochip"><div class="top2"><span class="tag">M-3.01</span><span class="badge r" style="margin-left:auto"><span class="dot"></span>Unassigned</span></div><div class="desc">Recognise shapes</div></div>
+        <div class="slochip"><div class="top2"><span class="tag">M-4.02</span></div><div class="desc">Read a bar chart</div></div></div>
+      <div class="col"><div class="col-head"><span class="t">Exam 1</span><span class="c">2</span></div><div class="slochip"><div class="top2"><span class="tag">M-1.01</span></div><div class="desc">Numbers 1–3</div></div><div class="slochip"><div class="top2"><span class="tag">M-1.04</span></div><div class="desc">Count up to 10</div></div></div>
+      <div class="col"><div class="col-head"><span class="t">Exam 2</span><span class="c">1</span></div><div class="slochip"><div class="top2"><span class="tag">M-1.11</span></div><div class="desc">Compare more / less</div></div></div>
+      <div class="col"><div class="col-head"><span class="t">Exam 3</span><span class="c">2</span></div><div class="slochip"><div class="top2"><span class="tag">M-2.03</span></div><div class="desc">Addition within 5</div></div><div class="slochip"><div class="top2"><span class="tag">M-2.09</span></div><div class="desc">Number patterns</div></div></div>
+    </div></div></div>
+    <p class="hint mt">Sequence page number se — teaching order. Move validation later SLO ko pehle jaane se rokta hai.</p>
+  </section>
+
+  <!-- SLO HEALTH -->
+  <section class="screen" id="s-health">
+    <div class="pagehead"><div><h1>SLO Health</h1><p>Coverage, gaps, aur untagged questions — ek nazar mein.</p></div><div class="spacer"></div><div class="field" style="min-width:150px"><select><option>Exam 3</option></select></div></div>
+    <div class="grid g4"><div class="card stat"><div class="lab">Fully covered</div><div class="num" style="color:var(--green)">38</div><div class="sub">≥ 100% — green</div></div><div class="card stat"><div class="lab">Partial</div><div class="num" style="color:var(--yellow)">9</div><div class="sub">60–99%</div></div><div class="card stat"><div class="lab">Weak</div><div class="num" style="color:var(--red)">3</div><div class="sub">&lt; 60%</div></div><div class="card stat"><div class="lab">Untagged Qs</div><div class="num">30</div><div class="sub">SLO tag pending</div></div></div>
+    <div class="card mt"><div class="ch"><h3>Exam coverage detail</h3><span class="right muted" style="font-size:12px">Unassigned = null, 0 nahi</span></div><div class="cb" style="padding:0"><table><thead><tr><th>SLO</th><th>Description</th><th>Questions</th><th>Bloom</th><th>Status</th><th></th></tr></thead><tbody>
+      <tr><td><span class="tag">M-1.04</span></td><td>Count objects up to 10</td><td>12</td><td><span class="chip">Remember</span></td><td><span class="badge g"><span class="dot"></span>100%</span></td><td><button class="btn ghost sm">Show</button></td></tr>
+      <tr><td><span class="tag">M-2.03</span></td><td>Simple addition within 5</td><td>4</td><td><span class="chip">Apply</span></td><td><span class="badge y"><span class="dot"></span>72%</span></td><td><button class="btn ghost sm">Show</button></td></tr>
+      <tr><td><span class="tag">M-2.09</span></td><td>Number patterns</td><td>1</td><td><span class="chip">Analyze</span></td><td><span class="badge r"><span class="dot"></span>34%</span></td><td><button class="btn ghost sm">Show</button></td></tr>
+      <tr><td><span class="tag">M-3.01</span></td><td>Recognise shapes</td><td>0</td><td><span class="chip muted">—</span></td><td><span class="badge r"><span class="dot"></span>Unassigned</span></td><td><button class="btn ghost sm">Show</button></td></tr>
+    </tbody></table></div></div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section class="screen" id="s-analytics">
+    <div class="pagehead"><div><h1>Analytics</h1><p>Uploaded results se real item analysis — Difficulty (P), Discrimination (D), Bloom.</p></div><div class="spacer"></div><button class="btn ghost">$IC_upload Upload Results</button></div>
+    <div class="grid g4"><div class="card stat"><div class="lab">Avg Difficulty</div><div class="num">0.62</div><div class="sub">balanced</div></div><div class="card stat"><div class="lab">Avg Discrimination</div><div class="num">0.38</div><div class="sub">good</div></div><div class="card stat"><div class="lab">Papers</div><div class="num">6</div><div class="sub">Exam 3</div></div><div class="card stat"><div class="lab">Students</div><div class="num">142</div><div class="sub">4 classes</div></div></div>
+    <div class="grid g2 mt">
+      <div class="card"><div class="ch"><h3>Per-question item analysis</h3></div><div class="cb" style="padding:0"><table><thead><tr><th>Q</th><th>P</th><th>D</th><th>Bloom</th><th>Verdict</th></tr></thead><tbody>
+        <tr><td>Q1</td><td>0.82</td><td>0.41</td><td><span class="chip">Remember</span></td><td><span class="badge g"><span class="dot"></span>Good</span></td></tr>
+        <tr><td>Q2</td><td>0.55</td><td>0.36</td><td><span class="chip">Apply</span></td><td><span class="badge g"><span class="dot"></span>Good</span></td></tr>
+        <tr><td>Q3</td><td>0.24</td><td>0.11</td><td><span class="chip">Analyze</span></td><td><span class="badge r"><span class="dot"></span>Review</span></td></tr>
+      </tbody></table></div></div>
+      <div class="card"><div class="ch"><h3>Bloom comparison</h3></div><div class="cb"><div class="bloom"><div class="r"><span class="name">Remember</span><div class="track"><i style="width:65%;background:var(--green)"></i></div><span class="pct">65%</span></div><div class="r"><span class="name">Understand</span><div class="track"><i style="width:20%;background:var(--yellow)"></i></div><span class="pct">20%</span></div><div class="r"><span class="name">Apply</span><div class="track"><i style="width:12%;background:var(--red)"></i></div><span class="pct">12%</span></div></div>
+        <div class="panel-soft mt"><h4>Higher-order thinking kam</h4><div class="note">Apply/Analyze target se neeche — aise Qs add karne ki tajweez.</div></div></div></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="s-settings">
+    <div class="pagehead"><div><h1>School settings</h1><p>Session, per-class layout, aur letterhead — har paper aur print par lagega.</p></div></div>
+    <div class="grid g2">
+      <div>
+        <div class="card"><div class="ch"><h3>Academic Session</h3></div><div class="cb"><div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Session name</label><input type="text" value="2026 — 2027"></div><div class="field"><label>Start month</label><select><option>March</option></select></div><div class="field"><label>Exam count</label><input type="number" value="8"></div></div><button class="btn gold mt">Settings save</button></div></div>
+        <div class="card mt"><div class="ch"><h3>Class Settings — Class 8</h3><span class="right muted" style="font-size:12px">Ctrl+P layout</span></div><div class="cb"><div class="field"><label>Font size — 14px</label><input type="range" min="11" max="20" value="14"></div><div class="field mt"><label>Question gap — 10px</label><input type="range" min="4" max="24" value="10"></div><div class="field mt"><label>Page margin — 24px</label><input type="range" min="10" max="40" value="24"></div><button class="btn ghost mt">Save Class Settings</button></div></div>
+      </div>
+      <div class="card"><div class="ch"><h3>Letterhead preview</h3></div><div class="cb"><div class="field"><label>School name</label><input type="text" value="Ameen Islamic Institute"></div>
+        <div class="sheet mt"><h5>Ameen Islamic Institute</h5><div class="meta"><span>Class 8 · Mathematics</span><span>Exam 3 · 2026</span></div><b>Section A — Answer all questions</b><ol><li>How many apples are shown? 🍎🍎🍎</li><li>Circle the group with more stars.</li><li>Write the missing number: 1, 2, __, 4</li></ol></div>
+      </div></div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<g id="i-grid"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></g>
+<g id="i-check"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></g>
+<g id="i-bank"><path d="M4 7h16M4 12h16M4 17h16"/><rect x="3" y="4" width="18" height="16" rx="2"/></g>
+<g id="i-layers"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></g>
+<g id="i-split"><path d="M3 5h6v6H3zM15 13h6v6h-6zM9 8h6M18 11v2"/></g>
+<g id="i-target"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></g>
+<g id="i-printer"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></g>
+<g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+<g id="i-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></g>
+<g id="i-search"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></g>
+<g id="i-pin"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></g>
+<g id="i-doc"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></g>
+<g id="i-papers"><rect x="4" y="4" width="14" height="16" rx="2"/><path d="M8 2h10a2 2 0 0 1 2 2v14"/></g>
+<g id="i-image"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></g>
+<g id="i-pulse"><path d="M3 12h4l3 8 4-16 3 8h4"/></g>
+<g id="i-analytics"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></g>
+<g id="i-gear"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8Z"/></g>
+</defs></svg>
+
+<script>
+const ICON=n=>`<svg class="ic" viewBox="0 0 24 24" width="18" height="18"><use href="#i-${n}"/></svg>`;
+document.body.innerHTML=document.body.innerHTML.replace(/\$IC_(\w+)/g,(_,n)=>ICON(n));
+
+const sw=document.getElementById('switch');
+sw.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.documentElement.setAttribute('data-style',b.dataset.s);sw.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+
+const labels={generate:'Generate paper',mypapers:'My Papers',adaptive:'Adaptive paper',blueprint:'Blueprint',bank:'Question Bank',library:'Image Library',slo:'Learning Outcomes',taqseem:'Exam Taqseem',health:'SLO Health',analytics:'Analytics',settings:'School settings'};
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));document.getElementById('s-'+id).classList.add('show');document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.go===id));document.getElementById('crumb').textContent=labels[id];document.getElementById('main').scrollTop=0;}
+document.getElementById('nav').addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(!t)return;e.preventDefault();go(t.dataset.go);});
+document.body.addEventListener('click',e=>{const s=e.target.closest('.switch');if(s){s.classList.toggle('on');return;}const p=e.target.closest('.pin');if(p){p.classList.toggle('on');return;}const sb=e.target.closest('.segbtns button');if(sb){sb.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===sb));}});
+document.querySelector('.langsw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+</script>
+</body>
+</html>
