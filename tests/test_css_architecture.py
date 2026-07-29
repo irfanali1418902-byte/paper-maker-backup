@@ -249,7 +249,14 @@ def test_measurement_is_cwd_independent(current, tmp_path):
         os.chdir(original)
 
     assert elsewhere["metrics"] == current["metrics"]
-    assert elsewhere["metrics"]["style_blocks"] > 0, "measured an empty tree"
+    # Canary: prove pages were actually found, not that any particular metric is
+    # non-zero. Every metric here is driven to 0 on purpose -- style_blocks and
+    # css_lines_in_html at the end of Sprint 1, the hex and legacy counts by Sprint 6
+    # -- so anchoring the canary to one makes this test fail the moment the epic
+    # succeeds. It did, at UI-018. The page count is the thing that never legitimately
+    # reaches zero.
+    assert elsewhere["per_page"], "measured an empty tree"
+    assert set(elsewhere["per_page"]) == set(current["per_page"]), "measured a different tree"
 
 
 def test_baseline_json_is_utf8_and_newline_terminated():
