@@ -1,0 +1,277 @@
+  :root {
+    /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
+       hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
+       light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
+    --primary: var(--brand);
+    --primary-hover: var(--brand-2);
+    --navy: var(--brand);
+    --tint: var(--chip-bg);
+    --ink: var(--fg);
+    --ink2: var(--fg);
+    --muted2: var(--muted);
+    --border: var(--line);
+    --surface: var(--panel);
+    --bg: var(--app-bg);
+    --err-bg: var(--red-bg);     --err-tx: var(--red);
+    --ok-bg: var(--green-bg);    --ok-tx: var(--green);
+    --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
+    --radius-btn: 10px;
+    --shadow: 0 2px 12px rgba(22,33,58,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: var(--font-body); color: var(--fg); background: var(--app-bg); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+
+  /* Chrome (.app grid · .brand · .top · .nav · .main) theme.css se aata hai.
+     Yahan sirf blueprint-specific content width. */
+  .main { max-width: 1080px; margin: 0 auto; }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; color: var(--ink2); }
+
+  /* ---- Form elements ---- */
+  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input[type="text"], input[type="number"], select {
+    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
+    border: 1px solid var(--line); border-radius: 10px;
+    font-size: 14.5px; font-family: inherit; background: var(--panel); color: var(--ink);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+
+  .field-row { display: flex; gap: 14px; }
+  .field-row > div { flex: 1; }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--primary); color: #fff; border: none;
+    min-height: 44px; padding: 0 20px; border-radius: var(--radius-btn);
+    font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(46,90,172,.25);
+  }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1.5px solid var(--primary); color: var(--primary);
+    min-height: 44px; padding: 0 20px; border-radius: var(--radius-btn);
+    font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .btn-secondary:hover { background: var(--tint); }
+  .btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+    min-height: 36px; padding: 0 14px; border-radius: 9px;
+    font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+  .btn-danger-sm {
+    background: var(--err-bg); border: 1px solid var(--red); color: var(--err-tx);
+    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .btn-danger-sm:hover { background: var(--red-bg); }
+
+  /* ---- Status banner ---- */
+  .status-bar {
+    padding: 10px 14px; border-radius: 9px; font-size: 13.5px; font-weight: 500;
+    margin-top: 14px; display: none;
+  }
+  .status-bar.ok   { background: var(--ok-bg);   color: var(--ok-tx);   display: block; }
+  .status-bar.err  { background: var(--err-bg);  color: var(--err-tx);  display: block; }
+  .status-bar.warn { background: var(--warn-bg); color: var(--warn-tx); display: block; }
+
+  /* ---- Type checkboxes ---- */
+  .type-checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .type-checks label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13.5px; font-weight: 500; color: var(--ink); cursor: pointer; margin: 0;
+  }
+  .type-checks input[type="checkbox"] {
+    width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--primary); cursor: pointer;
+  }
+
+  /* ---- Topics multi-select ---- */
+  .topic-checks-wrap {
+    margin-top: 8px; max-height: 140px; overflow-y: auto;
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel-2); display: flex; flex-direction: column; gap: 6px;
+  }
+  .topic-checks-wrap .no-topics-msg {
+    font-size: 12.5px; color: var(--muted2); font-style: italic;
+  }
+  .topic-check-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 400; color: var(--ink); cursor: pointer;
+  }
+  .topic-check-row input[type="checkbox"] {
+    width: 15px; height: 15px; min-height: 0; margin: 0; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+  }
+
+  /* ---- Section cards ---- */
+  .sec-list { display: flex; flex-direction: column; gap: 14px; }
+  .sec-card {
+    border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; background: var(--panel-2); position: relative;
+  }
+  .sec-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .sec-num {
+    font-size: 13px; font-weight: 700; color: var(--primary);
+    background: var(--tint); padding: 3px 10px; border-radius: 20px;
+  }
+  .sec-marks-preview {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+  }
+
+  /* ---- Total marks bar ---- */
+  .marks-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--tint); border-radius: 10px;
+    margin-bottom: 18px; font-size: 13.5px; font-weight: 600; color: var(--primary);
+  }
+  .marks-bar span { font-size: 20px; font-weight: 700; }
+
+  /* ---- Saved blueprints list ---- */
+  .bp-list { display: flex; flex-direction: column; gap: 10px; }
+  .bp-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--panel);
+  }
+  .bp-row:hover { border-color: var(--brand-2); }
+  .bp-info { flex: 1; min-width: 0; }
+  .bp-name { font-size: 14px; font-weight: 600; }
+  .bp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .bp-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .list-empty { text-align: center; color: var(--muted2); padding: 30px; font-size: 14px; }
+
+  /* ---- Shortfall warnings ---- */
+  .shortfall-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .shortfall-list li {
+    font-size: 12.5px; color: var(--warn-tx); background: var(--warn-bg);
+    padding: 5px 10px; border-radius: 6px;
+  }
+  /* Per-section shortfall panels (reason + read-only options). Warn tokens only. */
+  .shortfall-panels { margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  .shortfall-panel {
+    background: var(--surface); border-left: 3px solid var(--warn-tx);
+    color: var(--warn-tx); padding: 8px 11px; border-radius: 6px;
+  }
+  .shortfall-panel .sf-head { font-size: 12.5px; font-weight: 700; }
+  .shortfall-panel .sf-reason { font-size: 12.5px; margin-top: 3px; }
+  .shortfall-panel .sf-q { font-size: 12.5px; font-weight: 600; margin-top: 7px; }
+  .shortfall-panel .sf-options { list-style: disc; margin: 3px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .shortfall-panel .sf-options li { margin-top: 2px; }
+  .shortfall-panel .sf-gain { font-weight: 600; }
+
+  /* ---- Bloom guidance panel (Marhala 2B — soft) ---- */
+  .bloom-guide {
+    background: var(--warn-bg); border: 1px solid var(--warn-tx);
+    border-left: 3px solid var(--warn-tx); color: var(--ink);
+    padding: 14px 16px; border-radius: 10px; margin-top: 14px;
+  }
+  .bloom-guide .bg-head { font-size: 13.5px; font-weight: 700; color: var(--warn-tx); }
+  .bloom-guide .bg-nobloom { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .bloom-guide ul.bg-rows { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .bloom-guide ul.bg-rows li { font-size: 12.5px; }
+  .bloom-guide .bg-under { color: var(--err-tx); font-weight: 600; }
+  .bloom-guide .bg-over  { color: var(--muted); }
+  .bloom-guide .bg-fix { margin-top: 10px; display: none; }
+  .bloom-guide .bg-fix.show { display: block; }
+  .bloom-guide .bg-fix ul { list-style: disc; margin: 4px 0 0; padding-left: 20px; font-size: 12.5px; }
+  .bloom-guide .bg-fix a { color: var(--primary); font-weight: 600; text-decoration: underline; }
+  .bloom-guide .bg-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ---- Filter section (new: status/difficulty/bloom/distribution) ---- */
+  .filter-section { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .filter-section-title {
+    font-size: 11px; font-weight: 700; color: var(--muted2);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+  }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-row > div { flex: 1; min-width: 110px; }
+  .filter-row select { min-height: 38px; font-size: 13px; margin-top: 4px; }
+  .filter-row label { font-size: 12px; margin-top: 0; }
+
+  .dist-toggle-row {
+    display: flex; align-items: center; gap: 9px; margin-top: 12px; cursor: pointer;
+  }
+  .dist-toggle-row input[type="checkbox"] {
+    width: 16px; height: 16px; min-height: 0;
+    accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+  }
+  .dist-toggle-row span { font-size: 13px; font-weight: 600; color: var(--ink2); }
+
+  .dist-inputs { margin-top: 10px; }
+  .dist-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+  .dist-field { flex: 1; min-width: 80px; }
+  .dist-field label { font-size: 12px; margin-top: 0; }
+  .dist-field input { min-height: 36px; font-size: 13px; }
+  .dist-note { font-size: 11.5px; color: var(--muted); margin-top: 7px; font-style: italic; }
+
+  /* ========================================================================
+     ROUND 2 FOUNDATION (add-only) — mockup Classic ke layout components.
+     Abhi koi markup in classes ko use nahi karta → koi visual change nahi.
+     Steps 2-5 markup ko in par map karenge (id/onclick untouched rahenge).
+     .card/.ch/.cb, .chip/.tag/.badge, .btn*, .switch, .panel-soft, .tbl
+     pehle se theme.css mein hain — yahan sirf blueprint-specific naye.
+     ======================================================================== */
+
+  /* ---- Card with header/body (.ch/.cb from theme.css) ----
+     Marker class (NOT :has() — purane browsers/print reliability ke liye explicit).
+     blueprint ka apna .card padding/radius sirf yahan neutral; .cb khud pad deta hai.
+     Baaki (bina has-ch) cards apna purana look rakhte hain jab tak unka step na aaye. */
+  .card.has-ch { padding: 0; border-radius: var(--radius); overflow: hidden; }
+
+  /* ---- Page header (mockup .pagehead) ---- */
+  .pagehead { display: flex; align-items: flex-end; gap: 14px; margin: 6px 0 18px; }
+  .pagehead h1 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.2px; color: var(--fg); }
+  .pagehead p { margin: 3px 0 0; color: var(--muted); font-size: 13.5px; }
+  .pagehead .spacer { flex: 1; }
+
+  /* ---- Section card (mockup .sec / .sh / .body) ---- */
+  .sec { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel); }
+  .sec .sh {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line);
+  }
+  .sec .sh b { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+  .sec .body { padding: 8px 14px; }
+
+  /* ---- Question row (mockup .qrow) — flex, dashed divider ---- */
+  .qrow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .qrow:last-child { border-bottom: none; }
+  .qrow .qtxt { flex: 1; font-size: 13px; }
+
+  /* ---- Pin button (mockup .pin / .pin.on) — box-style only; behavior JS se ---- */
+  .pin {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: grid; place-items: center;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+    font-family: inherit; font-size: 12px; cursor: pointer;
+  }
+  .pin.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 760px) {
+    body { flex-direction: column; }
+    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
+    .brand { padding: 0; }
+    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
+    .sidebar-foot { display: none; }
+    .bp-main { padding: 16px 14px; }
+    .field-row { flex-direction: column; gap: 10px; }
+  }
