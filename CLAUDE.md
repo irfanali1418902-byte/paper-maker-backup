@@ -355,13 +355,29 @@ shadowing shared tokens. Do not add to it.
 
 ### Hard rules
 
-- **No `<style>` block in any page.** All CSS lives under `static/css/`.
+**These describe the END STATE, not every intermediate commit.** The epic reaches it through
+`docs/ui/PLAN.md`'s sprints, and three of the rules below are necessarily unmet while that
+migration is in flight — each is marked. **Do not "fix" a marked rule mid-sprint.** A page
+with three `<link>`s or a `99-legacy/` file full of raw hex partway through Sprint 1 is the
+plan working, not a defect; reverting it undoes a completed, reviewed task. `docs/ui/STATUS.md`
+says which sprint is live and what the current numbers should be.
+
+- **No `<style>` block in any page.** All CSS lives under `static/css/`. *(Reached page by
+  page across Sprint 1; `style_blocks` in the ratchet is the live count.)*
 - **One `<link>` per page**, to `/static/css/main.css`. `main.css` owns the `@import`
-  order. Do not add a second stylesheet link to a page.
+  order. Do not add a second stylesheet link to a page. *(**End state — Sprint 3.** During
+  Sprints 1–2 an extracted page carries three: `app.css`, `theme.css`, and its
+  `99-legacy/<page>.css`. The legacy link must stay in the exact slot its `<style>` block
+  occupied — document order is the only thing keeping the render identical.)*
 - **A raw hex outside `static/css/01-settings/tokens.css` is a CI failure.** Components
   read Tier 2 semantic tokens (`--color-action`), never Tier 1 primitives, never a literal.
+  *(**End state — Sprint 5–6.** Extraction relocates hex verbatim, it does not remove it:
+  the ratchet's `total_hardcoded_hex` is deliberately flat at 429 through Sprint 1 and only
+  moves when a colour is genuinely deleted. Not yet enforced by CI.)*
 - **`99-legacy/` is append-never, delete-only.** New styles never land there. When a page's
-  legacy file reaches zero lines, delete the file.
+  legacy file reaches zero lines, delete the file. *(**"New" means newly authored.** Sprint 1
+  creates one file per page there by moving existing CSS in verbatim — that is the sanctioned
+  way in. `legacy_css_lines` climbs to ~2133 by the end of Sprint 1, then burns down to 0.)*
 - **`js-*` classes never appear in a stylesheet.** They are behaviour hooks. Conversely,
   never `querySelector` a presentational class — that is what welds styling to logic.
 - **`is-*` / `has-*` state classes are always chained** (`.modal.is-open`). A bare
