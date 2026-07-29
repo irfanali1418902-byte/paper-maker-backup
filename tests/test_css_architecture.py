@@ -113,6 +113,26 @@ def test_shared_css_is_tracked_but_not_ratcheted(current):
     )
 
 
+def test_total_hardcoded_hex_survives_extraction(current):
+    """The metric that Sprint 1 cannot fake.
+
+    `hardcoded_hex` counts only `<style>` blocks in HTML, so extracting a page drops it
+    without removing a single colour - UI-010 took it 324 -> 298 while all 26 values rode
+    along into 99-legacy/slo.css. `total_hardcoded_hex` sums all three places a hardcoded
+    colour can live, so extraction is flat and only deletion moves it.
+    """
+    metrics = current["metrics"]
+    assert "total_hardcoded_hex" in RATCHETED_METRICS
+    assert "stylesheet_hex" in INFORMATIONAL_METRICS
+    assert metrics["total_hardcoded_hex"] == (
+        metrics["hardcoded_hex"] + metrics["hardcoded_hex_inline"] + metrics["stylesheet_hex"]
+    )
+    assert metrics["stylesheet_hex"] > 0, (
+        "stylesheets exist and contain hex - measuring 0 means the extraction blind spot "
+        "is not actually being watched"
+    )
+
+
 def test_total_css_lines_bounds_the_migration(current):
     """Page CSS + legacy CSS is the honest total - Sprint 1 moves lines between them."""
     metrics = current["metrics"]
@@ -141,35 +161,46 @@ def test_everything_at_once(current, baseline):
 # A guard that cannot fail is decoration. These prove each comparator bites.
 
 
-def test_ratchet_catches_a_metric_increase(current, baseline):
-    tampered = {"metrics": dict(baseline["metrics"])}
-    tampered["metrics"]["hardcoded_hex"] -= 1  # pretend the baseline was one lower
+def test_ratchet_catches_a_metric_increase(current):
+    """Derived from CURRENT, not from the committed baseline.
+
+    The first version subtracted 1 from the baseline and relied on current == baseline.
+    That held only while no task had moved a metric; it broke the moment UI-010 legitimately
+    took hardcoded_hex below the baseline, because 298 > 323 is false. Anchoring the fake
+    baseline one below *current* keeps the comparator under test no matter how far the real
+    numbers have fallen.
+    """
+    tampered = {"metrics": dict(current["metrics"])}
+    tampered["metrics"]["hardcoded_hex"] -= 1
     failures = compare_metrics(current, tampered)
     assert any("hardcoded_hex" in f for f in failures), "an increase slipped through"
 
 
-def test_ratchet_catches_a_renamed_id(current, baseline):
-    page = next(iter(baseline["frozen_inventory"]))
-    tampered = {"frozen_inventory": {p: list(v) for p, v in baseline["frozen_inventory"].items()}}
+def test_ratchet_catches_a_renamed_id(current):
+    # Anchored to current, not the baseline - see test_ratchet_catches_a_metric_increase.
+    page = next(iter(current["frozen_inventory"]))
+    tampered = {"frozen_inventory": {p: list(v) for p, v in current["frozen_inventory"].items()}}
     tampered["frozen_inventory"][page].append('id="a-handler-that-was-renamed-away"')
     failures = compare_inventory(current, tampered)
     assert any("MISSING" in f for f in failures), "a renamed id slipped through"
 
 
-def test_ratchet_catches_a_deleted_duplicate_handler(current, baseline):
+def test_ratchet_catches_a_deleted_duplicate_handler(current):
     """The same onclick legitimately appears on several buttons - deleting one must fail.
 
     693 attributes across the 9 pages are only 641 distinct strings. A set comparison
     would wave this through; the Counter comparison is what catches it.
+
+    Anchored to current on both sides - see test_ratchet_catches_a_metric_increase.
     """
     page, attrs = next(
-        (p, a) for p, a in baseline["frozen_inventory"].items() if len(a) != len(set(a))
+        (p, a) for p, a in current["frozen_inventory"].items() if len(a) != len(set(a))
     )
     duplicated = next(attr for attr in attrs if attrs.count(attr) > 1)
     thinned = list(attrs)
     thinned.remove(duplicated)  # one of N copies, so the attribute is still present
 
-    tampered = {"frozen_inventory": dict(baseline["frozen_inventory"], **{page: attrs})}
+    tampered = {"frozen_inventory": dict(current["frozen_inventory"], **{page: attrs})}
     trimmed = {"frozen_inventory": dict(current["frozen_inventory"], **{page: thinned})}
     failures = compare_inventory(trimmed, tampered)
     assert any("MISSING" in f and duplicated in f for f in failures), (

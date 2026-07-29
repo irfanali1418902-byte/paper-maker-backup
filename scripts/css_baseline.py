@@ -96,9 +96,10 @@ RATCHETED_METRICS = (
     "inline_style_non_display",
     "hardcoded_hex",
     "hardcoded_hex_inline",
+    "total_hardcoded_hex",
 )
 
-INFORMATIONAL_METRICS = ("legacy_css_lines", "shared_css_lines")
+INFORMATIONAL_METRICS = ("legacy_css_lines", "shared_css_lines", "stylesheet_hex")
 
 # JS queries or toggles these classes; a rename breaks them silently.
 # Source of truth: docs/ui/PLAN.md §6.
@@ -142,6 +143,24 @@ def legacy_css_line_count() -> int:
     return sum(
         len(path.read_text(encoding="utf-8").splitlines())
         for path in sorted(LEGACY_DIR.glob("*.css"))
+    )
+
+
+def stylesheet_hex_count() -> int:
+    """Hardcoded hex across **every** stylesheet under ``static/``.
+
+    ``hardcoded_hex`` only sees `<style>` blocks in HTML, which is correct for what it
+    measures - "hex still sitting in a page" - and it legitimately falls to 0 during
+    Sprint 1. But the hex does not disappear when a page is extracted; it rides along
+    into ``99-legacy/<page>.css``. UI-010 proved it: moving slo.html's block dropped
+    ``hardcoded_hex`` 324 -> 298 without one colour being removed.
+
+    So this counts the other side of that move, and ``total_hardcoded_hex`` adds the
+    three buckets together. Extraction is then flat, and only real deletion moves it.
+    """
+    return sum(
+        len(HEX_RE.findall(path.read_text(encoding="utf-8")))
+        for path in sorted(PAGES_DIR.rglob("*.css"))
     )
 
 
@@ -205,6 +224,12 @@ def measure() -> dict:
     totals["legacy_css_lines"] = legacy_css_line_count()
     totals["shared_css_lines"] = shared_css_line_count()
     totals["total_css_lines"] = totals["css_lines_in_html"] + totals["legacy_css_lines"]
+    totals["stylesheet_hex"] = stylesheet_hex_count()
+    # Every place a hardcoded colour can live. Relocation between the three buckets is
+    # flat; only deleting a hex moves this. The one that actually has to reach 0.
+    totals["total_hardcoded_hex"] = (
+        totals["hardcoded_hex"] + totals["hardcoded_hex_inline"] + totals["stylesheet_hex"]
+    )
 
     return {"metrics": totals, "per_page": per_page, "frozen_inventory": inventory}
 
