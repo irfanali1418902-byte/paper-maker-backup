@@ -4,25 +4,35 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-28 (UI-003)
+**Last updated:** 2026-07-29 (UI-010)
 
 ---
 
-## NEXT TASK → UI-010
+## NEXT TASK → UI-011
 
-**Sprint 1 begins. First page: `slo.html`** (93 lines / 53 rules — the smallest, on purpose).
+**`slo-health.html`** (113 lines / 63 rules). Same pattern as UI-010, which is the reference
+implementation — read `static/css/99-legacy/slo.css` and the `slo.html` head before starting.
 
-Cut the page's `<style>` block **verbatim** into `static/css/99-legacy/slo.html.css` and link
-it. Not one declaration edited, reordered, or "improved" in transit — the review agent checks
-this specifically (CLAUDE.md §12, review point 6). Zero visual change is the whole deliverable.
+Cut the `<style>` block **verbatim** into `static/css/99-legacy/slo-health.css` and replace it
+with `<link rel="stylesheet" href="/static/css/99-legacy/slo-health.css">` **in the same head
+position**, after `app.css` and `theme.css`. Cascade order is what makes "zero visual change"
+true — a `<style>` block and a `<link>` share origin and specificity, so document order is the
+only thing holding the result identical.
 
-Expected ratchet movement, and nothing else: `style_blocks` 9 → 8, `css_lines_in_html`
-2133 → 2040, `legacy_css_lines` 0 → ~93, `total_css_lines` **flat at 2133** — the lines move
-buckets, they do not disappear. `hardcoded_hex` stays 324; those hex values travel with the
-CSS. If `total_css_lines` drops, something was deleted that should have been moved.
+Not one declaration edited, reordered, re-indented or "improved" in transit. Both review
+agents byte-compare this (CLAUDE.md §12, review point 6). Extract with a script, not by
+retyping, and normalise CRLF/LF on both sides when you verify.
 
-Note this task creates `static/css/` and `main.css` does not exist yet, so link
-`99-legacy/slo.html.css` directly for now; UI-020 introduces `main.css` and the import order.
+**`git add static/css/` explicitly.** The directory is tracked now, but a new file in it is
+not picked up by staging modified files alone. A commit missing it ships a page linking a
+404 stylesheet that renders unstyled — while every local gate still passes, because the file
+is in your working tree.
+
+Expected movement, and nothing else: `style_blocks` 8 → 7 · `css_lines_in_html` 2040 → ~1929
+· `legacy_css_lines` 91 → ~202 · `total_css_lines` 2131 → **2129** (exactly −2) ·
+`total_hardcoded_hex` **flat at 429** · `shared_css_lines` **flat at 269**.
+`hardcoded_hex` will fall — that is relocation, not progress. If `total_hardcoded_hex` moves
+or `shared_css_lines` rises, the CSS went somewhere it should not have.
 
 ---
 
@@ -33,7 +43,7 @@ Note this task creates `static/css/` and `main.css` does not exist yet, so link
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
-| 1 Extraction | UI-010..018 | 0/9 | **next** |
+| 1 Extraction | UI-010..018 | 1/9 | in progress |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
 | 4 Components | UI-040..043 | 0/4 | not started |
@@ -49,6 +59,7 @@ Note this task creates `static/css/` and `main.css` does not exist yet, so link
 | UI-001 | Planning docs + CLAUDE.md §11–12 | **done** | `6c381fa` | this document set |
 | UI-002 | Ratchet test + BASELINE.json | **done** | `b215666` | 26 tests, 900 passed. 3 extra metrics added (see below). Reviewed twice; 2nd pass found the JS-class check is JS-side only → D11 |
 | UI-003 | Remove dead `primary`/`navy` from brand config | **done** | `2eba2f8` | closes D6. Re-verified unused at implementation. Also fixed `api/brand.py` docstring; logo.svg's same hex → D13 |
+| UI-010 | Extract `slo.html` CSS → `99-legacy/slo.css` | **done** | `cbd567a` | 91 lines moved verbatim, two reviewers byte-compared. Fixed 2 ratchet defects the first real extraction exposed: `hardcoded_hex` blind to `.css` files → added `total_hardcoded_hex`; a ratchet test anchored to `baseline` broke once a metric legitimately moved |
 
 ---
 
@@ -60,22 +71,33 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 and `tests/test_css_architecture.py` fails the suite. Numbers below are no longer maintained
 by hand — run the script.
 
-| metric | key | baseline | now | target |
+| metric | key | `ui-baseline` | now (UI-010) | target |
 |---|---|---:|---:|---:|
-| `<style>` blocks in HTML | `style_blocks` | 9 | 9 | 0 |
-| CSS lines in HTML | `css_lines_in_html` | 2133 | 2133 | 0 |
-| page CSS + `99-legacy/` | `total_css_lines` | 2133 | 2133 | 0 |
+| `<style>` blocks in HTML | `style_blocks` | 9 | **8** | 0 |
+| CSS lines in HTML | `css_lines_in_html` | 2133 | **2040** | 0 |
+| page CSS + `99-legacy/` | `total_css_lines` | 2133 | **2131** | 0 |
 | inline `style=""` attrs | `inline_style_attrs` | 466 | 466 | ~171 (one-offs only) |
 | ⤷ excluding `display:` toggles | `inline_style_non_display` | 385 | 385 | ~171 — **this is the one to drive down** |
-| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | 324 | 0 |
+| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | **298** | 0 — *but see below, this one lies* |
 | hardcoded hex in `style=""` | `hardcoded_hex_inline` | 76 | 76 | 0 |
-| `99-legacy/` lines | `legacy_css_lines` | 0 | 0 | *informational* — peaks ~2133 after Sprint 1 |
+| **hex anywhere** | `total_hardcoded_hex` | 429 | **429** | 0 — **the honest one** |
+| `99-legacy/` lines | `legacy_css_lines` | 0 | **91** | *informational* — peaks ~2133 after Sprint 1 |
+| hex in every `.css` | `stylesheet_hex` | 29 | **55** | *informational* |
 | `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | 269 | *informational* — must grow in Sprint 2 |
 
-**Two of these are deliberately NOT ratcheted.** `99-legacy/` has to climb to ~2133 during
-Sprint 1 and the new ITCSS tree has to grow in Sprint 2, so a downward ratchet on either
-would fail its own migration. `total_css_lines` is ratcheted instead: flat through Sprint 1
-(lines move between buckets), falling in Sprint 6.
+**Three are deliberately NOT ratcheted** (`legacy_css_lines`, `stylesheet_hex`,
+`shared_css_lines`). `99-legacy/` climbs to ~2133 during Sprint 1 and the new tree grows in
+Sprint 2, so a downward ratchet on any of them would fail its own migration.
+
+**`hardcoded_hex` falling is NOT progress during Sprint 1.** It counts only `<style>` blocks
+in HTML, so extraction moves hex out of it and into `stylesheet_hex` untouched — UI-010 took
+it 324 → 298 without removing one colour. It reaches 0 when the last page is extracted, with
+all 324 still in `99-legacy/`. **`total_hardcoded_hex` is the number that has to reach 0**;
+it is flat at 429 through extraction and only moves when a hex is genuinely deleted.
+
+**`total_css_lines` drops exactly 2 per page extracted, not 0.** `css_lines_in_html` counts
+the `<style>` and `</style>` lines; a `.css` file has neither. Expect **2133 → 2115** across
+Sprint 1. A drop larger than 2 on an extraction task means CSS was deleted rather than moved.
 
 **Watch `shared_css_lines` when reviewing.** `total_css_lines` covers page CSS + `99-legacy/`
 only, so moving a page's `<style>` block into `app.css` instead of `99-legacy/` passes the
