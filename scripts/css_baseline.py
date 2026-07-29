@@ -218,7 +218,12 @@ def measure() -> dict:
     for path in page_paths():
         source = path.read_text(encoding="utf-8")
         per_page[path.name] = measure_page(source)
-        inventory[path.name] = sorted(FROZEN_ATTR_RE.findall(source))
+        # Markup only. A page's CSS can carry quoted attribute selectors —
+        # `.modal-overlay[data-open="1"]` — that FROZEN_ATTR_RE cannot tell from a real
+        # attribute. Scanning the raw source counts those as markup, so extracting the
+        # <style> block reads as vanished handlers and fails a correct task. The
+        # inventory is about markup; the CSS half is covered by the verbatim-move check.
+        inventory[path.name] = sorted(FROZEN_ATTR_RE.findall(STYLE_ELEMENT_RE.sub("", source)))
 
     totals = {key: sum(page[key] for page in per_page.values()) for key in measure_page("")}
     totals["legacy_css_lines"] = legacy_css_line_count()
