@@ -4,69 +4,35 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-29 (UI-017)
+**Last updated:** 2026-07-29 (UI-018) — **Sprint 1 complete**
 
 ---
 
-## NEXT TASK → UI-018 — **last of Sprint 1, and the highest-risk page**
+## NEXT TASK → UI-020 — **Sprint 1 is done; foundation starts**
 
-**`print.html`** (469 lines / 179 rules — the `<style>` block is lines 8–476, inner 467).
-The largest block in the project and the last one standing.
+**Sprint 1 is complete.** All nine pages load their CSS from `static/css/99-legacy/`.
+`style_blocks` **0** · `css_lines_in_html` **0** · `hardcoded_hex` **0** ·
+`legacy_css_lines` **2115** across nine files. Not one colour was deleted getting here —
+`total_hardcoded_hex` is still **429**, exactly where it started. The debt is fully
+relocated and none of it is yet repaid. **That is the point.** Sprint 2 begins the
+foundation the burn-down needs; the repayment itself is Sprints 5–6.
 
-**This head has NO `theme.css`.** Line 7 is `app.css`, line 8 is the `<style>` itself. So the
-`<link>` lands at **line 8**, not 9 — and you do **not** add the missing `theme.css`, because
-adding a stylesheet is a visual change. This is D9, and UI-013 already walked into it on
-`landing.html`; `landing.css` is therefore the closest reference for the head shape, while
-`bank.css`/`index.css` are closest in size. Read the actual head before writing anything.
+**UI-020** (`docs/ui/PLAN.md` §Sprint-2): `main.css` + import order + legacy demoted +
+`01-settings` 3-tier tokens (Modern palette). Read PLAN.md and ADR-001 before planning —
+this is the first task that *authors* CSS rather than moving it, so the rules that governed
+Sprint 1 no longer all apply. Expect ADR-001's `@layer` decision (locked 2026-07-28) to
+matter here for the first time.
 
-**Why this one is riskiest.** It is the only page whose CSS decides what comes out of a
-printer, and the teacher prints from the browser (Ctrl+P / `print.html`) — a broken rule here
-is invisible on screen and only shows up on paper. Measured in the block, not taken from
-`PLAN.md`: **3 `@page` rules** and **3 `@media print` blocks**. `PLAN.md` §Sprint-1 says "5
-`@media print`". **Do not silently reconcile that** (§12 rule 11) — count them yourself and,
-if the code is right, say so in the task log rather than editing PLAN.md in passing. There is
-also **1 `setProperty`** call in the page's JS, so a custom property is being driven at
-runtime; find it and confirm the extraction leaves it working.
+**The contract changes shape at UI-020, and the metrics change with it.** Sprint 1's
+invariant was "`total_css_lines` falls by exactly 2, nothing else moves." That is over.
+UI-020 *adds* files under `static/css/`, so **`shared_css_lines` must rise** — it has been
+flat at 269 through nine tasks and a rise was a FAIL every time. From here it is expected.
+Re-read the ratchet's notes below before assuming a moving number is a defect, and set the
+expected movement in the plan **before** writing, so the review agent has something to hold
+you to.
 
-Verified clean in advance: **0 `url()`** in the block, so no relative-path hazard.
-
-**87 raw hex — every remaining one in the project.** After this task `hardcoded_hex` reaches
-**0** and the whole 324 sits in `99-legacy/`, exactly as the metric notes below predict. That
-is the extraction finishing, not colours being deleted: **`total_hardcoded_hex` stays flat at
-429**. Do not tokenise one of them.
-
-Cut the `<style>` block **verbatim** into `static/css/99-legacy/print.css` and replace it
-with `<link rel="stylesheet" href="/static/css/99-legacy/print.css">` **in the block's own
-slot (line 8)**. Cascade order is what makes "zero visual change" true — a `<style>` block and
-a `<link>` share origin and specificity, so document order is the only thing holding the
-result identical.
-
-**The browser check must include an actual print preview**, not just the screen render:
-Ctrl+P and confirm A4 sizing, margins (`@page { margin: 0 }` with the margin carried by
-`.sheet` padding — see the block's own opening comment), and page breaks. A green pytest run
-proves nothing about paper.
-
-Not one declaration edited, reordered, re-indented or "improved" in transit. Both review
-agents byte-compare this (CLAUDE.md §12, review point 6). Extract with a script, not by
-retyping, and normalise CRLF/LF on both sides when you verify.
-
-**`git add static/css/` explicitly.** The directory is tracked now, but a new file in it is
-not picked up by staging modified files alone. A commit missing it ships a page linking a
-404 stylesheet that renders unstyled — while every local gate still passes, because the file
-is in your working tree.
-
-Expected movement, and nothing else: `style_blocks` 1 → **0** · `css_lines_in_html` 469 → **0**
-· `legacy_css_lines` 1648 → **2115** · `total_css_lines` 2117 → **2115** (exactly −2) ·
-`hardcoded_hex` 87 → **0** · `stylesheet_hex` 266 → **353** ·
-`total_hardcoded_hex` **flat at 429** · `shared_css_lines` **flat at 269** ·
-all three inline metrics **flat** (466 / 385 / 76).
-The 87-hex swing between `hardcoded_hex` and `stylesheet_hex` must net to zero. If
-`total_hardcoded_hex` moves or `shared_css_lines` rises, the CSS went somewhere it should
-not have.
-
-**Sprint 1 ends here.** `style_blocks` and `css_lines_in_html` both reach 0, and
-`legacy_css_lines` peaks at 2115 — the debt fully relocated, none of it yet repaid. That
-is the plan working. The burn-down starts in Sprint 2.
+Still true, and still the thing that catches real mistakes: `total_hardcoded_hex` may only
+fall by genuine deletion, and no page may gain a `<style>` block.
 
 ---
 
@@ -77,7 +43,7 @@ is the plan working. The burn-down starts in Sprint 2.
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
-| 1 Extraction | UI-010..018 | 8/9 | in progress |
+| 1 Extraction | UI-010..018 | **9/9** | **done** |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
 | 4 Components | UI-040..043 | 0/4 | not started |
@@ -104,6 +70,8 @@ is the plan working. The burn-down starts in Sprint 2.
 
 | UI-017a | Ratchet — frozen inventory counted CSS attribute selectors as markup | **done** | `6c2829c` | Guardrail fix, no metric movement. `FROZEN_ATTR_RE` ran over the raw page source including `<style>` blocks, so a quoted attribute *selector* (`.modal-overlay[data-open="1"]`) was indistinguishable from a real markup attribute — extracting the block read as vanished handlers and failed two tests on a correct task. index.html had six (`[data-active="1"]` ×5, `[data-open="1"]`). Now scans markup only, via the `STYLE_ELEMENT_RE` that already existed. Effect surgical: index.html 269 → 263, other eight pages byte-identical, no ratcheted metric moved. Reviewer **mutation-tested** it rather than accepting the argument — five renames (`id`, `onclick`, `data-nav`, `data-lang-opt`, a dropped `data-active`) are all still caught — and found the decisive fact: `data-open="1"` never appears in index.html markup at all, JS sets it at runtime and the markup's `data-open="0"` survives in the inventory. Split from UI-017 so a self-referential guardrail change got reviewed on its own, per UI-013a precedent |
 | UI-017 | Extract `index.html` CSS → `99-legacy/index.css` | **done** | `36f3c61` | 337 lines moved verbatim (17681 chars, exact match); `HEAD` reconstructed byte-for-byte at all **130737 bytes**, with all 3 `<script>` blocks (1712 lines) identical. Zero drift on any of 337 lines. All **61 raw hex** moved unconverted (`var(` flat at 87). **Scope trap held**: this page holds 224 of the project's 466 inline `style=""` attrs and 57 of the 76 inline hex — the full inline value sequence is byte-identical, so Sprint 5's work was not started early. The block's `@font-face` uses only `local()` and the block has **0 `url()`**, so relocating the CSS could not break a relative path — worth checking on every future move, since `url()` resolves against the stylesheet, not the document. Exposed the ratchet defect fixed in UI-017a. Reviewer served the app: `/` returns 200 with 0 `<style>` blocks and all three stylesheets 200. Metrics landed exactly as predicted |
+| UI-018a | Ratchet test — re-anchor the cwd-independence canary | **done** | `549d0e3` | Test only, no metric movement. `test_measurement_is_cwd_independent` guards CLAUDE.md §12.9: a cwd-relative glob finds no pages from `C:\Users\MCS` and reports a triumphant zero for every metric. Its "we found pages" canary was `style_blocks > 0` — which Sprint 1 drives to 0 by design, so at UI-018 it fired on success. Re-anchored to `per_page` non-empty **and** the same page set. Reviewer mutation-tested it: with `page_paths()` swapped for a cwd-relative glob the new canary still catches it, and a second mutation (4 of 9 pages found) is caught only by the set-equality half — so that half is load-bearing, not decoration. It also established there is **no surviving metric** fit for the job: the six per-page metrics are all driven to 0 by the plan, and the five tree-level ones read `.css` directly so they stay non-zero with zero pages found — blind to the trap entirely. Page count is the only correct anchor. Same class as the defect UI-010 fixed |
+| UI-018 | Extract `print.html` CSS → `99-legacy/print.css` | **done** | `6075ed0` | **Last extraction of Sprint 1.** 467 lines moved verbatim (20209 chars, sha256 identical both sides); `HEAD` reconstructed byte-for-byte at all **66389 bytes**, the 35711-byte script body identical. Zero drift on any of 467 lines (indent histogram identical). All **87 raw hex** — every one left in the project — moved unconverted, taking `hardcoded_hex` to **0**. **This head has no `theme.css`** (D9), so the `<link>` went to line 8 and none was added; the page carries exactly 2 stylesheets. Print-critical rules verified intact: 1 `@page { size: A4; margin: 0 }`, 2 `@media print`, and the three JS-driven knobs (`--page-margin: 14mm`, `--q-font: 14px`, `--q-gap: 14px`) still defined with their defaults. Reviewer reasoned the cascade explicitly: `setProperty` on `documentElement.style` writes the style attribute, which outranks author *normal* rules regardless of whether they came from a `<style>` or a `<link>` — the move is cascade-neutral. **Corrects a wrong number this board carried**: the UI-017 handoff said "3 `@page` / 3 `@media print`" from a raw grep that counted prose mentions inside CSS comments. Comments stripped, it is **1 and 2**, confirmed by two independent counts. `PLAN.md`'s "5 `@media print`" is wrong too → **D16**, not edited in passing (§12 rule 11). Metrics landed exactly as predicted |
 ---
 
 ## Live metrics — these may only go DOWN
@@ -114,18 +82,18 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 and `tests/test_css_architecture.py` fails the suite. Numbers below are no longer maintained
 by hand — run the script.
 
-| metric | key | `ui-baseline` | now (UI-017) | target |
+| metric | key | `ui-baseline` | now (UI-018) | target |
 |---|---|---:|---:|---:|
-| `<style>` blocks in HTML | `style_blocks` | 9 | **1** | 0 |
-| CSS lines in HTML | `css_lines_in_html` | 2133 | **469** | 0 |
-| page CSS + `99-legacy/` | `total_css_lines` | 2133 | **2117** | 0 |
+| `<style>` blocks in HTML | `style_blocks` | 9 | **0** ✅ | 0 |
+| CSS lines in HTML | `css_lines_in_html` | 2133 | **0** ✅ | 0 |
+| page CSS + `99-legacy/` | `total_css_lines` | 2133 | **2115** | 0 |
 | inline `style=""` attrs | `inline_style_attrs` | 466 | 466 | ~171 (one-offs only) |
 | ⤷ excluding `display:` toggles | `inline_style_non_display` | 385 | 385 | ~171 — **this is the one to drive down** |
-| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | **87** | 0 — *but see below, this one lies* |
+| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | **0** ✅ | 0 — *but see below, this one lies* |
 | hardcoded hex in `style=""` | `hardcoded_hex_inline` | 76 | 76 | 0 |
 | **hex anywhere** | `total_hardcoded_hex` | 429 | **429** | 0 — **the honest one** |
-| `99-legacy/` lines | `legacy_css_lines` | 0 | **1648** | *informational* — peaks ~2133 after Sprint 1 |
-| hex in every `.css` | `stylesheet_hex` | 29 | **266** | *informational* |
+| `99-legacy/` lines | `legacy_css_lines` | 0 | **2115** | *informational* — peaks ~2133 after Sprint 1 |
+| hex in every `.css` | `stylesheet_hex` | 29 | **353** | *informational* |
 | `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | 269 | *informational* — must grow in Sprint 2 |
 
 **Three are deliberately NOT ratcheted** (`legacy_css_lines`, `stylesheet_hex`,
@@ -134,7 +102,7 @@ Sprint 2, so a downward ratchet on any of them would fail its own migration.
 
 **`hardcoded_hex` falling is NOT progress during Sprint 1.** It counts only `<style>` blocks
 in HTML, so extraction moves hex out of it and into `stylesheet_hex` untouched — UI-010..016
-took it 324 → 298 → 273 → 268 → 254 → 211 → 210 → 148 → 87 without removing one colour. It reaches 0 when the last page is
+took it 324 → 298 → 273 → 268 → 254 → 211 → 210 → 148 → 87 → **0** without removing one colour. It reaches 0 when the last page is
 extracted, with
 all 324 still in `99-legacy/`. **`total_hardcoded_hex` is the number that has to reach 0**;
 it is flat at 429 through extraction and only moves when a hex is genuinely deleted.
@@ -171,6 +139,10 @@ and confirmed the new stylesheet returns 200, not 404.
 `css_baseline.py --check` exit 0, both gates run at each of the two commits. UI-017a was
 built and verified on a clean `HEAD` (extraction stashed) so its own commit is green in
 isolation, not only in combination.
+**Green at UI-018a / UI-018:** `pytest -q` = **902 passed** · `python -m ruff check .` clean ·
+`css_baseline.py --check` exit 0. Same clean-`HEAD` treatment for UI-018a. Reviewer served the
+app: `/print.html` 200 with 0 `<style>` blocks, 2 stylesheets, no `theme.css`, and
+`print.css` 200 at 20209 bytes.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.
