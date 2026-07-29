@@ -1,16 +1,16 @@
 {
   "_comment": "Committed CSS-debt baseline for the UI-ARCH epic. Ratcheted metrics may only go DOWN; see scripts/css_baseline.py for how each is measured. Regenerate with: python scripts/css_baseline.py --write",
   "metrics": {
-    "style_blocks": 5,
-    "css_lines_in_html": 1708,
+    "style_blocks": 4,
+    "css_lines_in_html": 1455,
     "inline_style_attrs": 466,
     "inline_style_non_display": 385,
-    "hardcoded_hex": 254,
+    "hardcoded_hex": 211,
     "hardcoded_hex_inline": 76,
-    "legacy_css_lines": 417,
+    "legacy_css_lines": 668,
     "shared_css_lines": 269,
-    "total_css_lines": 2125,
-    "stylesheet_hex": 99,
+    "total_css_lines": 2123,
+    "stylesheet_hex": 142,
     "total_hardcoded_hex": 429
   },
   "per_page": {
@@ -47,11 +47,11 @@
       "hardcoded_hex_inline": 0
     },
     "library.html": {
-      "style_blocks": 1,
-      "css_lines_in_html": 253,
+      "style_blocks": 0,
+      "css_lines_in_html": 0,
       "inline_style_attrs": 48,
       "inline_style_non_display": 40,
-      "hardcoded_hex": 43,
+      "hardcoded_hex": 0,
       "hardcoded_hex_inline": 0
     },
     "print.html": {
