@@ -4,32 +4,38 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-29 (UI-015)
+**Last updated:** 2026-07-29 (UI-016)
 
 ---
 
-## NEXT TASK → UI-016
+## NEXT TASK → UI-017
 
-**`bank.html`** (368 lines / 173 rules — the `<style>` block is lines 9–376, inner 366).
-This head **does** carry `theme.css`, so the `<link>` lands at line 9, same as blueprint,
-library and taqseem. Same pattern as UI-010..015; `library.css` is the closest reference
-implementation — read it and the matching head before starting. At 366 lines this is the
-largest extraction of the sprint so far, ~1.5× UI-014.
+**`index.html`** (339 lines / 187 rules — the `<style>` block is lines 9–347, inner 337).
+This head **does** carry `theme.css`, so the `<link>` lands at line 9, same as bank,
+blueprint, library and taqseem. Same pattern as UI-010..016; `bank.css` is the closest
+reference implementation (same `:root`, same hardcoded palette) — read it and the matching
+head before starting.
 
-**This page is NOT token-clean — the opposite of UI-015.** Where `blueprint.html` aliased
-its `:root` onto `theme.css` tokens, `bank.html` hardcodes: `--primary: #2E5AAC`,
-`--primary-hover: #244a90`, and **62 raw hex in total**. So `hardcoded_hex` drops hard here
-(210 → 148) and `stylesheet_hex` rises by the same 62. That is the extraction working, not a
-cleanup — **`total_hardcoded_hex` must stay flat at 429**. Do not tokenise a single one of
-those 62 on the way through; converting `#2E5AAC` to `var(--brand)` is a real visual change
-inside a task whose entire contract is zero visual change. If a hex genuinely should die,
-that is Sprint 5–6's job.
+**Like `bank.html`, this page is NOT token-clean.** It opens with the same
+`--primary: #2E5AAC` / `--primary-hover: #244a90` block and carries **61 raw hex**, so
+`hardcoded_hex` drops 148 → 87 and `stylesheet_hex` rises by the same 61.
+**`total_hardcoded_hex` must stay flat at 429.** Do not tokenise one of them in transit.
 
-Cut the `<style>` block **verbatim** into `static/css/99-legacy/bank.css` and replace it
-with `<link rel="stylesheet" href="/static/css/99-legacy/bank.css">` **in the same head
+**This page is the inline-`style=""` heavyweight** — 224 of the project's 466 inline style
+attrs and 57 of the 76 inline hex live here. **None of that is in scope for UI-017.** This
+task moves the `<style>` block only; `inline_style_attrs` (466), `inline_style_non_display`
+(385) and `hardcoded_hex_inline` (76) must all come out **flat**. The inline burn-down is
+Sprint 5 (UI-050..052) and it is a much larger job than this one. If they move, the task
+went out of scope.
+
+Cut the `<style>` block **verbatim** into `static/css/99-legacy/index.css` and replace it
+with `<link rel="stylesheet" href="/static/css/99-legacy/index.css">` **in the same head
 position**, after `app.css` and `theme.css`. Cascade order is what makes "zero visual change"
 true — a `<style>` block and a `<link>` share origin and specificity, so document order is the
 only thing holding the result identical.
+
+Note `/` serves this page (D8), so it is the most-used page in the app — the browser check
+matters more here than anywhere else so far.
 
 **Check the head before assuming its shape.** UI-013's page had no `theme.css` at all while
 STATUS.md's boilerplate said "after `app.css` and `theme.css`" — the right move was to keep
@@ -45,11 +51,12 @@ not picked up by staging modified files alone. A commit missing it ships a page 
 404 stylesheet that renders unstyled — while every local gate still passes, because the file
 is in your working tree.
 
-Expected movement, and nothing else: `style_blocks` 3 → 2 · `css_lines_in_html` 1176 → **808**
-· `legacy_css_lines` 945 → **1311** · `total_css_lines` 2121 → **2119** (exactly −2) ·
-`hardcoded_hex` 210 → **148** · `stylesheet_hex` 143 → **205** ·
-`total_hardcoded_hex` **flat at 429** · `shared_css_lines` **flat at 269**.
-The 62-hex swing between `hardcoded_hex` and `stylesheet_hex` must net to zero. If
+Expected movement, and nothing else: `style_blocks` 2 → 1 · `css_lines_in_html` 808 → **469**
+· `legacy_css_lines` 1311 → **1648** · `total_css_lines` 2119 → **2117** (exactly −2) ·
+`hardcoded_hex` 148 → **87** · `stylesheet_hex` 205 → **266** ·
+`total_hardcoded_hex` **flat at 429** · `shared_css_lines` **flat at 269** ·
+all three inline metrics **flat** (466 / 385 / 76).
+The 61-hex swing between `hardcoded_hex` and `stylesheet_hex` must net to zero. If
 `total_hardcoded_hex` moves or `shared_css_lines` rises, the CSS went somewhere it should
 not have.
 
@@ -62,7 +69,7 @@ not have.
 | Sprint | Tasks | Done | State |
 |---|---|---|---|
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
-| 1 Extraction | UI-010..018 | 6/9 | in progress |
+| 1 Extraction | UI-010..018 | 7/9 | in progress |
 | 2 Foundation | UI-020..021 | 0/2 | not started |
 | 3 Shell | UI-030..032 | 0/3 | not started |
 | 4 Components | UI-040..043 | 0/4 | not started |
@@ -85,6 +92,7 @@ not have.
 | UI-013a | `CLAUDE.md` §11 — mark hard rules as end-state | **done** | `4a56b5b` | Docs only, no metric movement. §11's "one `<link>` per page" and "raw hex = CI failure" read as flat rules, but every Sprint 1 page necessarily breaks both in transit — a fresh session could "fix" it mid-sprint and revert a reviewed extraction. Adds an END-STATE preamble and marks the three affected rules with the sprint that retires each. Raised by UI-012's reviewer; committed separately so the extraction diff stayed reviewable |
 | UI-014 | Extract `library.html` CSS → `99-legacy/library.css` | **done** | `19448a6` | 251 lines moved verbatim (11677 chars, exact match); `HEAD` reconstructed byte-for-byte at all **67668 bytes**. Largest extraction so far, 2.5× UI-013 — no re-indent or trailing-whitespace drift on any of the 251 lines. The ~39k script body byte-identical (39296 both sides). Found and deferred **D14** (`.pg-btn` reads `var(--text)`, which is defined nowhere) rather than fixing it. Metrics landed exactly as predicted |
 | UI-015 | Extract `blueprint.html` CSS → `99-legacy/blueprint.css` | **done** | `5c7f752` | 277 lines moved verbatim (13378 chars, exact match); `HEAD` reconstructed byte-for-byte at all **66883 bytes**, the 46511-byte `<script>` body byte-identical. **First already-token-clean page** — its `:root` aliases onto `theme.css` tokens, so the whole block carried exactly one raw hex (`#fff` in `.btn-primary`), left untouched. `hardcoded_hex` therefore moved only 211 → 210, as predicted. Found and deferred **D15** (a `@media (max-width:760px)` block styling `.app-sidebar`/`.app-nav`/`.sidebar-foot`/`.bp-main`, none of which exist anywhere) rather than fixing it. Metrics landed exactly as predicted |
+| UI-016 | Extract `bank.html` CSS → `99-legacy/bank.css` | **done** | `fcdfda1` | 366 lines moved verbatim (18015 chars, sha256 identical both sides); `HEAD` reconstructed byte-for-byte at all **94162 bytes**, the ~1830-line `<script>` body proven untouched. **Largest extraction of the sprint**, ~1.5× UI-014 — reviewer classified drift per line across all 366 and found none, with the indent-depth histogram (`{2: 214, 4: 124}`, 338 indented lines) identical on both sides. All **62 raw hex moved unconverted** in the same order (`var(` flat at 90), the inverse of UI-015's token-clean page. Reviewer additionally served the app and confirmed `/static/css/99-legacy/bank.css` returns **200, text/css, 18015 bytes** — the first live 404-check of the sprint. Frozen inventory 152 → 152. Metrics landed exactly as predicted |
 
 ---
 
@@ -96,18 +104,18 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 and `tests/test_css_architecture.py` fails the suite. Numbers below are no longer maintained
 by hand — run the script.
 
-| metric | key | `ui-baseline` | now (UI-015) | target |
+| metric | key | `ui-baseline` | now (UI-016) | target |
 |---|---|---:|---:|---:|
-| `<style>` blocks in HTML | `style_blocks` | 9 | **3** | 0 |
-| CSS lines in HTML | `css_lines_in_html` | 2133 | **1176** | 0 |
-| page CSS + `99-legacy/` | `total_css_lines` | 2133 | **2121** | 0 |
+| `<style>` blocks in HTML | `style_blocks` | 9 | **2** | 0 |
+| CSS lines in HTML | `css_lines_in_html` | 2133 | **808** | 0 |
+| page CSS + `99-legacy/` | `total_css_lines` | 2133 | **2119** | 0 |
 | inline `style=""` attrs | `inline_style_attrs` | 466 | 466 | ~171 (one-offs only) |
 | ⤷ excluding `display:` toggles | `inline_style_non_display` | 385 | 385 | ~171 — **this is the one to drive down** |
-| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | **210** | 0 — *but see below, this one lies* |
+| hardcoded hex in `<style>` | `hardcoded_hex` | 324 | **148** | 0 — *but see below, this one lies* |
 | hardcoded hex in `style=""` | `hardcoded_hex_inline` | 76 | 76 | 0 |
 | **hex anywhere** | `total_hardcoded_hex` | 429 | **429** | 0 — **the honest one** |
-| `99-legacy/` lines | `legacy_css_lines` | 0 | **945** | *informational* — peaks ~2133 after Sprint 1 |
-| hex in every `.css` | `stylesheet_hex` | 29 | **143** | *informational* |
+| `99-legacy/` lines | `legacy_css_lines` | 0 | **1311** | *informational* — peaks ~2133 after Sprint 1 |
+| hex in every `.css` | `stylesheet_hex` | 29 | **205** | *informational* |
 | `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | 269 | *informational* — must grow in Sprint 2 |
 
 **Three are deliberately NOT ratcheted** (`legacy_css_lines`, `stylesheet_hex`,
@@ -115,8 +123,8 @@ by hand — run the script.
 Sprint 2, so a downward ratchet on any of them would fail its own migration.
 
 **`hardcoded_hex` falling is NOT progress during Sprint 1.** It counts only `<style>` blocks
-in HTML, so extraction moves hex out of it and into `stylesheet_hex` untouched — UI-010..015
-took it 324 → 298 → 273 → 268 → 254 → 211 → 210 without removing one colour. It reaches 0 when the last page is
+in HTML, so extraction moves hex out of it and into `stylesheet_hex` untouched — UI-010..016
+took it 324 → 298 → 273 → 268 → 254 → 211 → 210 → 148 without removing one colour. It reaches 0 when the last page is
 extracted, with
 all 324 still in `99-legacy/`. **`total_hardcoded_hex` is the number that has to reach 0**;
 it is flat at 429 through extraction and only moves when a hex is genuinely deleted.
@@ -146,6 +154,9 @@ Note `ruff` is not on PATH in this environment — use `python -m ruff check .`.
 `css_baseline.py --check` exit 0. Both runs independent.
 **Green at UI-015:** `pytest -q` = **902 passed** · `python -m ruff check .` clean ·
 `css_baseline.py --check` exit 0. Both runs independent (implementer + review agent).
+**Green at UI-016:** `pytest -q` = **902 passed** · `python -m ruff check .` clean ·
+`css_baseline.py --check` exit 0. Both runs independent; the reviewer also served the app
+and confirmed the new stylesheet returns 200, not 404.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.
