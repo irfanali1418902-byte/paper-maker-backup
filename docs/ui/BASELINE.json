@@ -11,7 +11,9 @@
     "shared_css_lines": 269,
     "total_css_lines": 2115,
     "stylesheet_hex": 353,
-    "total_hardcoded_hex": 429
+    "total_hardcoded_hex": 429,
+    "token_hex": 0,
+    "unsanctioned_hex": 429
   },
   "per_page": {
     "bank.html": {

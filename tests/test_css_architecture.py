@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 
 import pytest
 
@@ -114,15 +115,19 @@ def test_shared_css_is_tracked_but_not_ratcheted(current):
 
 
 def test_total_hardcoded_hex_survives_extraction(current):
-    """The metric that Sprint 1 cannot fake.
+    """The metric Sprint 1 cannot fake — still measured, no longer the ratcheted one.
 
     `hardcoded_hex` counts only `<style>` blocks in HTML, so extracting a page drops it
     without removing a single colour - UI-010 took it 324 -> 298 while all 26 values rode
     along into 99-legacy/slo.css. `total_hardcoded_hex` sums all three places a hardcoded
     colour can live, so extraction is flat and only deletion moves it.
+
+    UI-020a moved it to informational and ratcheted `unsanctioned_hex` instead; the sum
+    identity below is unchanged, which is what keeps every number in the Sprint 1 task log
+    comparable.
     """
     metrics = current["metrics"]
-    assert "total_hardcoded_hex" in RATCHETED_METRICS
+    assert "total_hardcoded_hex" in INFORMATIONAL_METRICS
     assert "stylesheet_hex" in INFORMATIONAL_METRICS
     assert metrics["total_hardcoded_hex"] == (
         metrics["hardcoded_hex"] + metrics["hardcoded_hex_inline"] + metrics["stylesheet_hex"]
@@ -130,6 +135,105 @@ def test_total_hardcoded_hex_survives_extraction(current):
     assert metrics["stylesheet_hex"] > 0, (
         "stylesheets exist and contain hex - measuring 0 means the extraction blind spot "
         "is not actually being watched"
+    )
+
+
+def test_unsanctioned_hex_is_the_ratcheted_one(current):
+    """The end state is zero hex OUTSIDE 01-settings/tokens.css, not zero hex.
+
+    ADR-001 and CLAUDE.md §11 both say "a raw hex outside `01-settings/tokens.css` is a CI
+    failure". Tier 1 tokens are raw values by definition, so `total_hardcoded_hex` has a
+    floor of "the palette" and 0 was never reachable. Ratcheting it made UI-020 unwritable:
+    authoring the tokens file at all would push it above 429 and fail the suite. (The
+    projected size of that rise, ~22, is an estimate from the 29 hex in static/theme.css -
+    unverified until UI-020 lands.)
+    """
+    metrics = current["metrics"]
+    assert "unsanctioned_hex" in RATCHETED_METRICS
+    assert "token_hex" in INFORMATIONAL_METRICS
+    assert "total_hardcoded_hex" not in RATCHETED_METRICS
+    assert metrics["unsanctioned_hex"] == metrics["total_hardcoded_hex"] - metrics["token_hex"]
+    assert metrics["unsanctioned_hex"] > 0, (
+        "hex still exists outside tokens.css - measuring 0 here before Sprint 6 means the "
+        "subtraction is eating the whole count, not that the debt is repaid"
+    )
+
+
+def test_token_hex_only_exempts_the_one_sanctioned_file(current, tmp_path, monkeypatch):
+    """The exemption must be that file and nothing else.
+
+    `unsanctioned_hex` is a subtraction, so anything that wrongly counts as `token_hex`
+    silently drains the ratcheted number. Point TOKENS_PATH at a file with a known hex
+    count and check the arithmetic tracks it exactly.
+    """
+    decoy = tmp_path / "tokens.css"
+    decoy.write_text(":root { --a:#123456; --b:#abc; --c:#12345678; }\n", encoding="utf-8")
+
+    monkeypatch.setattr(css_baseline, "TOKENS_PATH", decoy)
+    assert css_baseline.token_hex_count() == 3
+    remeasured = css_baseline.measure()
+
+    # The decoy is outside static/, so it adds nothing to total_hardcoded_hex - the
+    # subtraction shows up undiluted.
+    assert remeasured["metrics"]["total_hardcoded_hex"] == current["metrics"]["total_hardcoded_hex"]
+    # Both sides read the SAME measurement. Comparing against `current` instead would only
+    # hold while the real tokens.css is absent: once it exists with T hex, its values stay
+    # in stylesheet_hex (it is under static/) and so in total_hardcoded_hex, while pointing
+    # TOKENS_PATH at the decoy drops T out of token_hex - so current's unsanctioned is
+    # total-T and remeasured's is total-3, and the difference is T, not 0. That is the
+    # UI-018a defect exactly: an assertion anchored to a number the plan is about to move.
+    # Caught by UI-020a's review agent, which simulated UI-020 by creating the file.
+    assert (
+        remeasured["metrics"]["unsanctioned_hex"]
+        == remeasured["metrics"]["total_hardcoded_hex"] - 3
+    )
+
+
+def test_ratchet_catches_hex_added_outside_the_tokens_file(current):
+    """Guard the guard: the exemption must not have opened a general hex amnesty.
+
+    A raw hex authored into any stylesheet other than 01-settings/tokens.css must still
+    trip the ratchet exactly as it did before UI-020a.
+    """
+    tampered = {"metrics": dict(current["metrics"])}
+    tampered["metrics"]["unsanctioned_hex"] -= 1
+    failures = compare_metrics(current, tampered)
+    assert any(
+        "unsanctioned_hex" in f for f in failures
+    ), "a hex added outside tokens.css slipped through - the exemption is too wide"
+
+
+def test_tokens_file_holds_only_token_hex():
+    """Narrow the new hiding place: tokens.css may hold declarations, not rules.
+
+    Exempting a file from the hex ratchet creates somewhere to launder hex into - the same
+    shape as the app.css hole `shared_css_lines` exists to expose.
+
+    **This narrows the hole, it does not close it, and the limit is line-based.** A line
+    containing `--name:` is exempt in full, whatever else is on it, so a multi-line rule
+    (`.btn {` / `color: #f00;` / `}`) is caught but a one-line or minified equivalent
+    (`--x:#fff; } .btn { color:#f00;`) is not. Nor can it tell a needed primitive from a
+    pointless one. Measured, not assumed - UI-020a's review agent verified both directions.
+
+    That matters concretely: `docs/ui/PLAN.md`'s own tokens example is written as a single
+    `:root { ... }` line, so a session copying its formatting satisfies this vacuously.
+    UI-020 therefore authors tokens.css one declaration per line, which is what makes this
+    check bite at all. See DEFERRED D17.
+
+    Vacuous until UI-020 authors the file. That is deliberate: the guard lands before the
+    thing it guards, so it bites on the very first commit that could abuse it.
+    """
+    if not css_baseline.TOKENS_PATH.is_file():
+        pytest.skip("01-settings/tokens.css does not exist yet (authored in UI-020)")
+
+    offenders = [
+        line.strip()
+        for line in css_baseline.TOKENS_PATH.read_text(encoding="utf-8").splitlines()
+        if css_baseline.HEX_RE.search(line) and not re.search(r"--[\w-]+\s*:", line)
+    ]
+    assert offenders == [], (
+        "hex in tokens.css must sit on a custom-property declaration - these do not, which "
+        "means real rules are being parked in the one hex-exempt file:\n  " + "\n  ".join(offenders)
     )
 
 
