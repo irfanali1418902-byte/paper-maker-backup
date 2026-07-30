@@ -4,11 +4,50 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-30 (UI-020a) — Sprint 1 complete; Sprint 2 foundation starting
+**Last updated:** 2026-07-30 (UI-020) — Sprint 1 complete; Sprint 2 foundation 1/2
 
 ---
 
-## NEXT TASK → UI-020 — **the CSS itself; the ratchet is now ready for it**
+## NEXT TASK → UI-021 — **`02-generic` + `03-elements`; still no page touched**
+
+**UI-021** (`docs/ui/PLAN.md` §Sprint-2): `02-generic` reset + fonts (absorb `app.css`) +
+`03-elements` typography / forms / tables. Same shape as UI-020 — new files under
+`static/css/`, `main.css` gains their `@import`s (uncomment in place, **do not reorder — the
+order is the cascade**), and **no `.html` is touched**, so zero visual risk again.
+
+**What UI-021 must know, carried over from UI-020's two reviews:**
+
+- **`unsanctioned_hex` must stay flat at 429.** Only `01-settings/tokens.css` is exempt. A raw
+  hex anywhere in `02-generic` or `03-elements` fails the ratchet — **including inside a
+  comment**, which already caught UI-020 once (429 → 430, a hex quoted in a Tier 2 comment).
+- **Do NOT rename `--font-display` / `--font-body` / `--font-data`.** They deliberately collide
+  with live `static/theme.css`; `blueprint.css` and `taqseem.css` read those exact names, and
+  the overlap is what keeps the legacy layer resolving after `static/theme.css` dies in UI-064.
+- **A change to `--font-sans` will silently do nothing on 7 pages** until their `theme.css`
+  link goes: a plain `<link>` is unlayered and unlayered normal declarations outrank every
+  `@layer`, so live `theme.css` beats `layer(settings)`. Verify in a browser, not by reading.
+- **`02-generic/fonts.css` introduces the first `url()` in the new tree.** It resolves against
+  the *stylesheet*, not the document — from `static/css/02-generic/` that is `../../fonts/`.
+  Fonts stay self-hosted; no CDN, ever (§11, offline school PCs).
+- **`--font-urdu` was deleted as unconsumed** but `static/theme.css` hardcodes
+  `"Noto Nastaliq Urdu", serif`. When fonts land, Urdu needs a Tier 1 primitive again.
+- **Keep "zero unconsumed primitives" exact.** Add a Tier 1 step only with a Tier 2 consumer in
+  the same commit. The space/radius gaps (`--space-1/-4/-7`, `--radius-1`) are policy, not
+  omissions — 4px / 16px / 32px are in live `theme.css` and will be wanted.
+- One declaration per line in `tokens.css` (D17 — the guard is line-based).
+
+**Before Sprint 3, not before UI-021: the browser session.** Sprint 1's nine extractions have
+never been opened in a browser — `print.html`'s Ctrl+P margin (**~14mm, not 28mm**) is the one
+that matters most. Each extraction has its own commit, so a revert is cheap *now*. Also worth
+two minutes: confirm `edge://version` is **≥ 99**, since ADR-001 accepts `@layer`'s hard-fail
+risk purely on Edge's auto-update and that assumption has never been tested on a school PC.
+
+**Sprint 3 (UI-030..032) is where the traps are: D19 and D20 are one decision.**
+`blueprint.html` and `taqseem.html` are the two pages that actually break.
+
+---
+
+## Previous task → UI-020 — **done; the ratchet was ready for it**
 
 **Sprint 1 is complete.** All nine pages load their CSS from `static/css/99-legacy/`.
 `style_blocks` **0** · `css_lines_in_html` **0** · `hardcoded_hex` **0** ·
@@ -64,7 +103,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 |---|---|---|---|
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
 | 1 Extraction | UI-010..018 | **9/9** | **done** |
-| 2 Foundation | UI-020..021 | 0/2 | not started |
+| 2 Foundation | UI-020..021 | **1/2** | in progress |
 | 3 Shell | UI-030..032 | 0/3 | not started |
 | 4 Components | UI-040..043 | 0/4 | not started |
 | 5 Inline burn-down | UI-050..052 | 0/3 | not started |
@@ -92,7 +131,8 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | UI-017 | Extract `index.html` CSS → `99-legacy/index.css` | **done** | `36f3c61` | 337 lines moved verbatim (17681 chars, exact match); `HEAD` reconstructed byte-for-byte at all **130737 bytes**, with all 3 `<script>` blocks (1712 lines) identical. Zero drift on any of 337 lines. All **61 raw hex** moved unconverted (`var(` flat at 87). **Scope trap held**: this page holds 224 of the project's 466 inline `style=""` attrs and 57 of the 76 inline hex — the full inline value sequence is byte-identical, so Sprint 5's work was not started early. The block's `@font-face` uses only `local()` and the block has **0 `url()`**, so relocating the CSS could not break a relative path — worth checking on every future move, since `url()` resolves against the stylesheet, not the document. Exposed the ratchet defect fixed in UI-017a. Reviewer served the app: `/` returns 200 with 0 `<style>` blocks and all three stylesheets 200. Metrics landed exactly as predicted |
 | UI-018a | Ratchet test — re-anchor the cwd-independence canary | **done** | `549d0e3` | Test only, no metric movement. `test_measurement_is_cwd_independent` guards CLAUDE.md §12.9: a cwd-relative glob finds no pages from `C:\Users\MCS` and reports a triumphant zero for every metric. Its "we found pages" canary was `style_blocks > 0` — which Sprint 1 drives to 0 by design, so at UI-018 it fired on success. Re-anchored to `per_page` non-empty **and** the same page set. Reviewer mutation-tested it: with `page_paths()` swapped for a cwd-relative glob the new canary still catches it, and a second mutation (4 of 9 pages found) is caught only by the set-equality half — so that half is load-bearing, not decoration. It also established there is **no surviving metric** fit for the job: the six per-page metrics are all driven to 0 by the plan, and the five tree-level ones read `.css` directly so they stay non-zero with zero pages found — blind to the trap entirely. Page count is the only correct anchor. Same class as the defect UI-010 fixed |
 | UI-018 | Extract `print.html` CSS → `99-legacy/print.css` | **done** | `6075ed0` | **Last extraction of Sprint 1.** 467 lines moved verbatim (20209 chars, sha256 identical both sides); `HEAD` reconstructed byte-for-byte at all **66389 bytes**, the 35711-byte script body identical. Zero drift on any of 467 lines (indent histogram identical). All **87 raw hex** — every one left in the project — moved unconverted, taking `hardcoded_hex` to **0**. **This head has no `theme.css`** (D9), so the `<link>` went to line 8 and none was added; the page carries exactly 2 stylesheets. Print-critical rules verified intact: 1 `@page { size: A4; margin: 0 }`, 2 `@media print`, and the three JS-driven knobs (`--page-margin: 14mm`, `--q-font: 14px`, `--q-gap: 14px`) still defined with their defaults. Reviewer reasoned the cascade explicitly: `setProperty` on `documentElement.style` writes the style attribute, which outranks author *normal* rules regardless of whether they came from a `<style>` or a `<link>` — the move is cascade-neutral. **Corrects a wrong number this board carried**: the UI-017 handoff said "3 `@page` / 3 `@media print`" from a raw grep that counted prose mentions inside CSS comments. Comments stripped, it is **1 and 2**, confirmed by two independent counts. `PLAN.md`'s "5 `@media print`" is wrong too → **D16**, not edited in passing (§12 rule 11). Metrics landed exactly as predicted |
-| UI-020a | Ratchet — sanction Tier 1 token hex, ratchet `unsanctioned_hex` | **done** | `PENDING` | Guardrail fix, no CSS authored. **UI-020 was literally unwritable before this.** `total_hardcoded_hex` was ratcheted and summed hex across *every* `.css` under `static/` (`rglob`), but Tier 1 tokens are raw hex by definition, so authoring `01-settings/tokens.css` at all pushed 429 → ~451 and failed `test_metric_never_increases`. Meanwhile ADR-001:98–99 and §11 both define the invariant as "a raw hex outside `01-settings/tokens.css` is a CI failure" — the end state has hex *inside* that file, so this board's own target of 0 was unreachable by construction. Adds `token_hex` (that one file) + `unsanctioned_hex` (everything else, **ratcheted**); `total_hardcoded_hex` keeps its exact definition and goes informational, so every number in this log stays comparable. `RATCHETED_METRICS` is 8 both sides — one swapped, none dropped (reviewer AST-parsed both revisions). **First review FAILED it, and was right**: the new exemption-scope test asserted against `current` rather than the re-measurement, so it held only while `tokens.css` was absent and would have failed the suite deterministically on the very next task — the UI-018a defect class exactly. Reproduced at `assert 431 == (429 - 3)` before fixing, then re-verified invariant with a real `tokens.css` at **1, 5, 22 and 40 hex**: `unsanctioned_hex` pinned at **429** every time, and `total_hardcoded_hex` hit exactly **451** at 22, matching the projection. Second reviewer mutation-tested the exemption four ways (3 of 4 broadenings caught → D18) and proved hex outside `tokens.css` still trips the ratchet as the *only* failure, isolated so line counts stayed flat. Two limits recorded rather than oversold: the tokens-file guard is line-based (**D17** — PLAN.md's own tokens example is a single line, so UI-020 must author one declaration per line or the guard is vacuous) and the scope test cannot catch a `TOKENS_PATH.parent` broadening (**D18**) |
+| UI-020a | Ratchet — sanction Tier 1 token hex, ratchet `unsanctioned_hex` | **done** | `4273da6` | Guardrail fix, no CSS authored. **UI-020 was literally unwritable before this.** `total_hardcoded_hex` was ratcheted and summed hex across *every* `.css` under `static/` (`rglob`), but Tier 1 tokens are raw hex by definition, so authoring `01-settings/tokens.css` at all pushed 429 → ~451 and failed `test_metric_never_increases`. Meanwhile ADR-001:98–99 and §11 both define the invariant as "a raw hex outside `01-settings/tokens.css` is a CI failure" — the end state has hex *inside* that file, so this board's own target of 0 was unreachable by construction. Adds `token_hex` (that one file) + `unsanctioned_hex` (everything else, **ratcheted**); `total_hardcoded_hex` keeps its exact definition and goes informational, so every number in this log stays comparable. `RATCHETED_METRICS` is 8 both sides — one swapped, none dropped (reviewer AST-parsed both revisions). **First review FAILED it, and was right**: the new exemption-scope test asserted against `current` rather than the re-measurement, so it held only while `tokens.css` was absent and would have failed the suite deterministically on the very next task — the UI-018a defect class exactly. Reproduced at `assert 431 == (429 - 3)` before fixing, then re-verified invariant with a real `tokens.css` at **1, 5, 22 and 40 hex**: `unsanctioned_hex` pinned at **429** every time, and `total_hardcoded_hex` hit exactly **451** at 22, matching the projection. Second reviewer mutation-tested the exemption four ways (3 of 4 broadenings caught → D18) and proved hex outside `tokens.css` still trips the ratchet as the *only* failure, isolated so line counts stayed flat. Two limits recorded rather than oversold: the tokens-file guard is line-based (**D17** — PLAN.md's own tokens example is a single line, so UI-020 must author one declaration per line or the guard is vacuous) and the scope test cannot catch a `TOKENS_PATH.parent` broadening (**D18**) |
+| UI-020 | `main.css` + import order + legacy demoted + `01-settings` 3-tier tokens | **done** | `PENDING` | **First task in the epic that AUTHORS CSS rather than moving it.** Three new files, 310 insertions, **not one `.html` byte touched** — `main.css` is linked nowhere (verified over HTTP on all nine pages), so this task has zero visual effect by construction and needed no browser check. `main.css` = `@layer legacy, settings, generic, elements, objects, components, utilities` + 11 `@import`s, and **12 code lines total**; the nine `99-legacy/*` come first into the lowest layer, which is what "legacy demoted" means. They are `@import`ed rather than `<link>`ed because **a plain `<link>` is unlayered and unlayered normal declarations outrank every `@layer`** — linking would invert the cascade this file exists to establish. `tokens.css` = 19 Tier 1 primitives, one declaration per line (D17 — PLAN.md's own example is a single line and would satisfy the guard vacuously); `01-settings/theme.css` = 31 Tier 2 roles, **every one a `var()`, zero raw hex**. Reviewers verified 0 dangling refs and **0 unconsumed primitives** — 5 were deleted (`--font-urdu`, `--radius-1`, `--space-1/-4/-7`) to keep that invariant exact, so the space/radius scales have deliberate documented gaps. Palette is 1:1 with `static/theme.css`'s 19 distinct values, nothing invented. **`unsanctioned_hex` flat at 429** — the ratchet UI-020a built did its job on the first try: a hex quoted in a *Tier 2 comment* took it 429 → 430 and was caught before commit. **First review FAILED it** on three false claims in the comments (§12.12): "linked by 8 pages" (it is **7** — D9), "names do NOT collide" (**three do**: `--font-display`/`--font-body`/`--font-data`, and they must NOT be renamed because `blueprint.css`/`taqseem.css` read them), and D19 missing the token half → **D20**. All three measured and fixed, then re-reviewed PASS |
 ---
 
 ## Live metrics — these may only go DOWN
@@ -114,10 +154,10 @@ by hand — run the script.
 | hardcoded hex in `style=""` | `hardcoded_hex_inline` | 76 | 76 | 0 |
 | **hex outside `tokens.css`** | `unsanctioned_hex` | 429 | **429** | 0 — **the honest one** |
 | `99-legacy/` lines | `legacy_css_lines` | 0 | **2115** | *informational* — peaks ~2133 after Sprint 1 |
-| hex in every `.css` | `stylesheet_hex` | 29 | **353** | *informational* |
-| hex in `01-settings/tokens.css` | `token_hex` | 0 | **0** | *informational* — the sanctioned palette |
-| hex anywhere | `total_hardcoded_hex` | 429 | **429** | *informational* since UI-020a |
-| `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | 269 | *informational* — must grow in Sprint 2 |
+| hex in every `.css` | `stylesheet_hex` | 29 | **372** | *informational* |
+| hex in `01-settings/tokens.css` | `token_hex` | 0 | **19** | *informational* — the sanctioned palette |
+| hex anywhere | `total_hardcoded_hex` | 429 | **448** | *informational* since UI-020a |
+| `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | **573** | *informational* — grows through Sprint 2 |
 
 **Five are deliberately NOT ratcheted** (`legacy_css_lines`, `stylesheet_hex`, `token_hex`,
 `total_hardcoded_hex`, `shared_css_lines`). `99-legacy/` climbs to ~2133 during Sprint 1 and
@@ -197,6 +237,13 @@ times: implementer, plus two independent review agents (the first FAILED the tas
 skip is `test_tokens_file_holds_only_token_hex`, vacuous only until `tokens.css` exists — it
 un-skips in UI-020. Project-wide `black --check .` reports ~95 unformatted files, but that is
 **pre-existing at clean `HEAD`** (verified by stashing: identical count), not introduced here.
+**Green at UI-020:** `pytest -q` = **906 passed, 0 skipped** · `python -m ruff check .` clean ·
+`css_baseline.py --check` exit 0. The skip is gone because `test_tokens_file_holds_only_token_hex`
+un-skips once `tokens.css` exists — expect 906/0 from here, not 905/1. Gates run three times
+(implementer + two independent review agents; the first FAILED the task). **Not verified: `@layer`
+parsing in a real browser** — the Chrome extension was not connected for the implementer or either
+reviewer, and all three said so rather than claiming it. No risk today (`main.css` is linked
+nowhere); close it in the pre-Sprint-3 browser session.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.

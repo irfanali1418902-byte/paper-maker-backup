@@ -1,0 +1,97 @@
+/* =========================================================================
+   01-settings/theme.css — TIER 2 SEMANTIC TOKENS
+   Roles, not values. Every declaration here is a var() reference into Tier 1
+   (01-settings/tokens.css). NOT ONE RAW HEX — a literal in this file fails the
+   ratchet on `unsanctioned_hex`, because only tokens.css is exempt.
+   -------------------------------------------------------------------------
+   This is the only tier components are allowed to read. A component that
+   reaches past this into --indigo-600, or writes that indigo as a literal, is
+   the thing ADR-001 exists to prevent: it makes "change the action colour" a
+   find-and-replace instead of a one-line edit.
+
+   (That sentence originally quoted the hex itself. The ratchet failed it —
+   `unsanctioned_hex` 429 -> 430 — and was right to: a copy-pasteable literal in
+   the one tier that must carry none is exactly the seed this rule exists to
+   kill, comment or not. Only tokens.css is exempt.)
+
+   NOT the same file as static/theme.css. That one is the current live
+   stylesheet, still linked by 7 of the 9 pages (print.html and landing.html
+   never loaded it — D9), still holding all 29 of its raw hex; it is deleted in
+   UI-064. This is its replacement, and nothing loads it yet — main.css is not
+   linked into any page until Sprint 3.
+
+   Names are mostly `--color-*` / `--space-*`, which do not collide with the
+   live theme.css's `--brand` / `--fg` / `--line` / `--accent`. THREE NAMES DO
+   COLLIDE, deliberately: --font-display, --font-body and --font-data are
+   declared both here and in static/theme.css. That overlap is load-bearing, not
+   an oversight — blueprint.css and taqseem.css in the legacy layer read those
+   exact names, so reusing them is what keeps the legacy layer resolving after
+   static/theme.css is deleted in UI-064. Do not "fix" it by renaming.
+
+   The values are identical today, so the collision is currently invisible. But
+   know which way it resolves during the Sprint 3 window, because it is the bad
+   way: a plain <link> to static/theme.css is UNLAYERED, and unlayered styles
+   outrank every @layer — so on those 7 pages the live theme.css wins over
+   layer(settings). If UI-021 changes --font-sans here, the change will silently
+   do nothing on those pages until their theme.css link is removed. Verify in a
+   browser, not by reading this file.
+   ========================================================================= */
+
+:root {
+  /* ── surfaces ─────────────────────────────────────────────────────────── */
+  --color-canvas:         var(--slate-050);  /* page background */
+  --color-surface:        var(--white);      /* cards, panels, topbar */
+  --color-surface-sunken: var(--slate-025);  /* table headers, hovers, wells */
+  --color-surface-inset:  var(--slate-100);  /* chips */
+
+  /* ── text ─────────────────────────────────────────────────────────────── */
+  --color-text:        var(--slate-900);
+  --color-text-muted:  var(--slate-500);
+  --color-text-nav:    var(--slate-600);
+  --color-on-action:   var(--white);  /* text/icon on a filled action surface */
+
+  /* ── lines ────────────────────────────────────────────────────────────── */
+  --color-border: var(--slate-200);
+
+  /* ── action (indigo) ──────────────────────────────────────────────────── */
+  --color-action:       var(--indigo-600);
+  --color-action-hover: var(--indigo-500);
+
+  /* ── accent (teal): highlight, focus ring, selected state ─────────────── */
+  --color-accent:      var(--teal-500);
+  --color-accent-soft: var(--teal-050);
+
+  /* ── status ───────────────────────────────────────────────────────────── */
+  --color-success:      var(--green-600);
+  --color-success-soft: var(--green-050);
+  --color-warning:      var(--amber-600);
+  --color-warning-soft: var(--amber-050);
+  --color-danger:       var(--red-600);
+  --color-danger-soft:  var(--red-050);
+
+  /* ── the dark sidebar, still needed ────────────────────────────────────────
+     The Modern direction is a LIGHT sidebar, and the shell built in UI-030 uses
+     it. But static/theme.css's --sidebar-bg is dark and pages that have not been
+     converted still read it, so the primitive stays until Sprint 6 drains them.
+     Named as a role so the eventual deletion is one line here, not a hunt. */
+  --color-sidebar-bg: var(--slate-950);
+
+  /* ── typography roles ─────────────────────────────────────────────────── */
+  --font-display: var(--font-sans);
+  --font-body:    var(--font-sans);
+  --font-data:    var(--font-mono);
+
+  /* ── spacing roles ────────────────────────────────────────────────────── */
+  --space-inset:       var(--space-6);  /* card / panel padding */
+  --space-inset-tight: var(--space-3);
+  --space-gap:         var(--space-5);  /* gap between cards in a grid */
+  --space-gap-tight:   var(--space-2);
+
+  /* ── shape roles ──────────────────────────────────────────────────────── */
+  --radius-control:   var(--radius-2);  /* buttons, inputs, nav items */
+  --radius-container: var(--radius-3);  /* cards, panels, modals */
+  --radius-badge:     var(--radius-pill);
+
+  /* ── elevation roles ──────────────────────────────────────────────────── */
+  --shadow-card: var(--shadow-1);
+}

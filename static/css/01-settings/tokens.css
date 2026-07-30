@@ -1,0 +1,98 @@
+/* =========================================================================
+   01-settings/tokens.css — TIER 1 PRIMITIVES
+   Raw values with no meaning attached. This is the ONE file in the project
+   allowed to hold a raw hex (ADR-001; CLAUDE.md §11).
+   -------------------------------------------------------------------------
+   Nothing here says what a colour is FOR. That is Tier 2's job
+   (01-settings/theme.css), and components read Tier 2 only — never a
+   primitive from this file, never a literal.
+
+   Palette: MODERN — indigo action + teal accent (locked 2026-07-28,
+   docs/ui/STATUS.md "Decisions locked"); the values are --indigo-600 and
+   --teal-500 below. Every value in this file is already in use in
+   static/theme.css today; none is speculative. Adding a primitive with no
+   consumer is how this file becomes a dumping ground, so don't.
+
+   The header deliberately does not quote the hex. It did, and
+   test_tokens_file_holds_only_token_hex failed it — correctly: the guard
+   requires every hex here to sit on a `--name:` declaration, and a value
+   restated in prose is one that can drift from the declaration it describes.
+
+   ONE DECLARATION PER LINE, deliberately. The guard that keeps this file from
+   becoming a hiding place for laundered hex
+   (test_tokens_file_holds_only_token_hex) is line-based: it exempts any line
+   carrying a `--name:` declaration in full. Collapsing these into a single
+   `:root { ... }` line — as docs/ui/PLAN.md §2's example does — would satisfy
+   that guard vacuously and let a real rule ride along undetected. See
+   DEFERRED D17.
+
+   `token_hex` in the ratchet counts exactly this file. `unsanctioned_hex`
+   counts everywhere else and is the number that must reach 0.
+   ========================================================================= */
+
+:root {
+  /* ── neutrals: slate ramp ──────────────────────────────────────────────
+     Named by lightness, not by role. --slate-025 is the faintest tint;
+     --slate-950 is the near-black used by the legacy dark sidebar. */
+  --slate-025: #fafbfe;
+  --slate-050: #f7f8fb;
+  --slate-100: #f1f5f9;
+  --slate-200: #eaedf3;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-900: #0f172a;
+  --slate-950: #0e1729;
+
+  /* pure white. Kept as a primitive because it is a real palette value here,
+     not a fallback: it is the panel surface AND the text colour on top of a
+     filled indigo/teal button. */
+  --white: #ffffff;
+
+  /* ── brand: indigo (primary action) ───────────────────────────────────── */
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+
+  /* ── accent: teal (highlight, focus, selected state) ──────────────────── */
+  --teal-050: #dcf5f4;
+  --teal-500: #0ea5a4;
+
+  /* ── status: traffic-light, each with its tint ────────────────────────────
+     Coverage semantics live in the app, not here: green >=100, amber 60-99,
+     red <60, Unassigned = null. */
+  --green-050: #dcfce7;
+  --green-600: #16a34a;
+  --amber-050: #fef3c7;
+  --amber-600: #d97706;
+  --red-050:   #fee2e2;
+  --red-600:   #dc2626;
+
+  /* ── type ─────────────────────────────────────────────────────────────────
+     IBM Plex, self-hosted in static/fonts/. No CDN, ever — offline school PCs
+     (CLAUDE.md §11). The @font-face rules land in 02-generic/fonts.css in
+     UI-021; these are just the stacks. */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* ── space scale ──────────────────────────────────────────────────────────
+     THE GAPS ARE DELIBERATE. This is not an incomplete scale to be helpfully
+     filled in — a step exists here only once a Tier 2 role consumes it, so the
+     numbering tracks the design system's real vocabulary instead of a
+     speculative ramp. UI-021 adds steps when typography/forms need them.
+     4px, 16px and 32px are all in use in static/theme.css today and will land
+     that way; they are absent here because no Tier 2 role reads them yet. */
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-5: 22px;
+  --space-6: 24px;
+
+  /* ── radii ─────────────────────────────────────────────────────────────────
+     Same rule as the space scale: consumed steps only. */
+  --radius-2: 11px;
+  --radius-3: 16px;
+  --radius-pill: 999px;
+
+  /* ── elevation ────────────────────────────────────────────────────────────
+     rgba(), not hex, because these carry alpha — the ratchet's HEX_RE does not
+     match them and that is correct: they are not palette entries. */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px rgba(15, 23, 42, 0.06);
+}

@@ -1,0 +1,109 @@
+/* =========================================================================
+   main.css — the cascade, declared in one place
+   ITCSS layer order + BEM components + a small utility layer (ADR-001).
+   -------------------------------------------------------------------------
+   NOTHING LINKS THIS FILE YET. The single <link href="/static/css/main.css">
+   per page arrives in Sprint 3 (UI-031 / UI-032); CLAUDE.md §11 marks that rule
+   as END-STATE for exactly this reason. Until then every page still carries its
+   own app.css + theme.css + 99-legacy/<page>.css links, and this file has zero
+   effect on what any teacher sees. That is why UI-020 is a no-visual-change
+   task even though it authors real CSS.
+
+   No build step, no bundler, no npm (ADR-001): the app is launched by school
+   staff via start.bat, and a stale build artifact is a mystery bug nobody on
+   site can diagnose. So the import order below IS the source of truth for the
+   cascade — there is no generated file that can disagree with it.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   LAYER ORDER — declared up front, before any @import.
+   Later layers win, regardless of the order the files actually load in or the
+   specificity of the selectors inside them. That is the whole point: a
+   0,1,0 utility can beat a 0,3,1 legacy selector without one !important.
+
+   `legacy` is FIRST, which is what "legacy demoted" means. Everything the new
+   tree defines outranks the 2115 lines still sitting in 99-legacy/, so pages
+   can be migrated one at a time instead of in a big bang.
+
+   @layer is ADOPTED (D1 resolved 2026-07-28, ADR-001 amended). Floor is
+   Edge/Chrome 99 — March 2022 — and Edge auto-updates. KNOWN RISK: @layer does
+   not degrade, it hard-fails; an unsupported browser discards the whole block
+   and renders the page completely unstyled. The mitigation is that import order
+   alone produces this same cascade, so IF A TEACHER'S PC EVER RENDERS AN
+   UNSTYLED PAGE, DELETING THE `layer(...)` KEYWORDS AND THIS ONE STATEMENT IS
+   THE FIRST THING TO TRY. It is a handful of lines, not a rewrite.
+   ------------------------------------------------------------------------- */
+@layer legacy, settings, generic, elements, objects, components, utilities;
+
+/* -------------------------------------------------------------------------
+   1. LEGACY — the 2115 lines Sprint 1 extracted, held in the lowest layer.
+   Append-never, delete-only. Sprints 4-6 drain these files as each component
+   lands; when one reaches zero lines it is deleted, and its @import here goes
+   with it. Progress on this epic is literally the line count of this block.
+
+   They are imported into layer(legacy) rather than <link>ed because A PLAIN
+   <link> IS UNLAYERED, AND UNLAYERED STYLES BEAT EVERY @layer. Linking them
+   would invert the cascade this file exists to establish.
+
+   ⚠ CROSS-PAGE COLLISION, deliberately left for Sprint 3 — see DEFERRED D19.
+   These nine files were nine separate per-page <style> blocks, so they define
+   the same generic class names (.card, .btn-primary, .modal, .page-head) with
+   different values. Imported together they all apply to every page, and the
+   last import wins for all of them. Harmless right now — nothing loads this
+   file — but UI-031/UI-032 must resolve it before main.css becomes a page's
+   only stylesheet. PLAN.md §2 specifies this import-first design; the collision
+   is a consequence of it, not a deviation from it.
+   ------------------------------------------------------------------------- */
+@import url("99-legacy/bank.css")       layer(legacy);
+@import url("99-legacy/blueprint.css")  layer(legacy);
+@import url("99-legacy/index.css")      layer(legacy);
+@import url("99-legacy/landing.css")    layer(legacy);
+@import url("99-legacy/library.css")    layer(legacy);
+@import url("99-legacy/print.css")      layer(legacy);
+@import url("99-legacy/slo-health.css") layer(legacy);
+@import url("99-legacy/slo.css")        layer(legacy);
+@import url("99-legacy/taqseem.css")    layer(legacy);
+
+/* -------------------------------------------------------------------------
+   2. SETTINGS — design tokens. No selectors that paint anything, just :root.
+   tokens.css (Tier 1 primitives) must precede theme.css (Tier 2 roles), which
+   references it. Custom properties obey the cascade like any other declaration,
+   so a token defined in a later layer beats a legacy :root redefinition —
+   which is how the new palette takes over from the six pages that currently
+   shadow theme.css's token names.
+   ------------------------------------------------------------------------- */
+@import url("01-settings/tokens.css") layer(settings);
+@import url("01-settings/theme.css")  layer(settings);
+
+/* -------------------------------------------------------------------------
+   3-7. The rest of the tree, added by the tasks that author it. Listed here as
+   the declared order, commented out until each file exists — an @import of a
+   missing file is a silent 404 that costs a round trip and buys nothing.
+
+   Do not reorder these when uncommenting. The order is the cascade.
+   ------------------------------------------------------------------------- */
+
+/* UI-021 */
+/* @import url("02-generic/reset.css")        layer(generic); */
+/* @import url("02-generic/fonts.css")        layer(generic); */
+/* @import url("03-elements/typography.css")  layer(elements); */
+/* @import url("03-elements/forms.css")       layer(elements); */
+/* @import url("03-elements/tables.css")      layer(elements); */
+
+/* UI-030 */
+/* @import url("04-objects/shell.css")        layer(objects); */
+/* @import url("04-objects/grid.css")         layer(objects); */
+/* @import url("04-objects/stack.css")        layer(objects); */
+
+/* UI-040..043 */
+/* @import url("05-components/button.css")    layer(components); */
+/* @import url("05-components/card.css")      layer(components); */
+/* @import url("05-components/modal.css")     layer(components); */
+/* @import url("05-components/field.css")     layer(components); */
+/* @import url("05-components/badge.css")     layer(components); */
+/* @import url("05-components/nav.css")       layer(components); */
+/* @import url("05-components/table-data.css") layer(components); */
+
+/* UI-050..052 */
+/* @import url("06-utilities/utilities.css")  layer(utilities); */
+/* @import url("06-utilities/state.css")      layer(utilities); */
