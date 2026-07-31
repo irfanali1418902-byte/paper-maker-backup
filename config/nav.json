@@ -1,0 +1,69 @@
+{
+  "_note": [
+    "UI-030. THE nav, in one place. Nothing reads this file yet — UI-031/UI-032 do,",
+    "when they migrate pages onto 04-objects/shell.css. It exists now so the nine pages",
+    "stop each inventing their own nav, which is how the app reached three different",
+    "versions of it (measured at UI-030: bank/blueprint/library/print carry 5 items,",
+    "index 10, slo/slo-health/taqseem 7, and landing has no nav at all).",
+    "",
+    "Group names, order and item set are the design target's (static/mockup-modern.html",
+    "nav block). Labels, urls, icons and i18n keys are the LIVE app's, not the mockup's —",
+    "e.g. the mockup says 'Generate paper', the pages say 'Generator'. Every icon id was",
+    "verified present in static/icons.svg (all 11) and every url returns 200.",
+    "The mockup's nav is 11 items in 4 groups and this config carries all 11, same groups,",
+    "same order — two labels differ because the live app's differ ('Generator' not 'Generate",
+    "paper', 'More / settings' not 'School settings'). Three of the 11 ('My Papers',",
+    "'Adaptive paper', 'Analytics') looked like mockup fiction and are NOT: they are real SPA",
+    "screens inside index.html. Counted, not estimated — an earlier draft of this line said 12",
+    "and was caught in review. Nothing here is invented.",
+    "",
+    "'url' vs 'screen' is the thing to understand before rendering this.",
+    "A 'url' item is a real page. A 'screen' item exists ONLY inside index.html, shown by",
+    "showScreen(...) with no address of its own — so from slo.html there is no way to link",
+    "to it today. Four items are 'screen'-only — mypapers, adaptive, analytics, settings —",
+    "which is one more than the three listed above as looking like fiction; 'More / settings'",
+    "obviously exists, it just has no address either.",
+    "Inventing a convention for it (/#mypapers, /?screen=...) is a UI-031/UI-032 decision",
+    "with JS attached; it is deliberately NOT decided here. See docs/ui/DEFERRED.md D25.",
+    "'Generator' carries both: it is screen 'generate' on index.html and url '/' elsewhere.",
+    "",
+    "i18n is asymmetric and that is the live state, not an omission here: the four SPA",
+    "items carry data-i18n keys with English+Urdu strings, the six page links carry none.",
+    "'nav.mypapers' is referenced by index.html markup but has NO entry in its translation",
+    "table — a live gap, recorded as docs/ui/DEFERRED.md D24 rather than fixed, since this",
+    "task authors no markup or JS."
+  ],
+  "groups": [
+    {
+      "label": "Papers",
+      "items": [
+        { "label": "Generator", "icon": "i-generator", "url": "/", "screen": "generate", "i18n": "nav.generate" },
+        { "label": "My Papers", "icon": "i-mypapers", "screen": "mypapers", "i18n": "nav.mypapers" },
+        { "label": "Adaptive paper", "icon": "i-adaptive", "screen": "adaptive", "i18n": "nav.adaptive" },
+        { "label": "Blueprint", "icon": "i-blueprint", "url": "/blueprint.html" }
+      ]
+    },
+    {
+      "label": "Content",
+      "items": [
+        { "label": "Question Bank", "icon": "i-bank", "url": "/bank.html" },
+        { "label": "Image Library", "icon": "i-library", "url": "/library.html" },
+        { "label": "Learning Outcomes", "icon": "i-outcomes", "url": "/slo.html" }
+      ]
+    },
+    {
+      "label": "Plan & track",
+      "items": [
+        { "label": "Exam Taqseem", "icon": "i-taqseem", "url": "/taqseem.html" },
+        { "label": "SLO Health", "icon": "i-slo-health", "url": "/slo-health.html" },
+        { "label": "Analytics", "icon": "i-analytics", "screen": "analytics", "i18n": "nav.analytics" }
+      ]
+    },
+    {
+      "label": "Settings",
+      "items": [
+        { "label": "More / settings", "icon": "i-settings", "screen": "settings", "i18n": "nav.settings" }
+      ]
+    }
+  ]
+}

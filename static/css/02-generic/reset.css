@@ -35,10 +35,18 @@
    this file. TWO files are exceptions, not one — landing.css:18 has the
    `html, body` rule with margin only, and print.css has no `html, body` rule at
    all; its body reaches for the viewport a different way (print.css:29-30,
-   `display: flex; min-height: 100vh`). So when UI-030 lands the rule it newly
-   applies to BOTH of those pages, and print.html is the Ctrl+P page under
-   `@page { margin: 0 }` — the one STATUS.md calls the epic's highest visual risk.
-   Counted per file, because this count was wrong ("8 of 9") in the first draft.
+   `display: flex; min-height: 100vh`). Counted per file, because this count was
+   wrong ("8 of 9") in the first draft.
+
+   UPDATE, UI-030: THE RULE NEVER LANDED, AND WILL NOT. This paragraph used to
+   end "when UI-030 lands the rule it newly applies to BOTH of those pages, and
+   print.html is the Ctrl+P page under `@page { margin: 0 }`" — a real risk, and
+   it was avoided by not needing the rule at all. 04-objects/shell.css sizes the
+   shell with `height: 100vh` on `.o-shell`, which resolves against the viewport
+   and needs no percentage chain from `body`; the design target carries both
+   (mockup:16 and :58) and only the second is load-bearing. So nothing in the
+   new tree declares `html, body { height: 100% }`, print.html is untouched, and
+   DEFERRED D21's height half is closed as unnecessary rather than deferred.
 
    ZERO VISUAL EFFECT TODAY. Nothing links main.css until Sprint 3
    (UI-031 / UI-032), so every consequence described above is a Sprint 3

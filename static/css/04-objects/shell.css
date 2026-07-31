@@ -1,0 +1,141 @@
+/* =========================================================================
+   04-objects/shell.css — THE app shell
+   The `brand · top · nav · main` grid, and nothing else. Layout only, zero
+   cosmetics (docs/ui/PLAN.md §2 and the `o-*` row of its naming table): not one
+   background, border, colour, font or shadow appears below. Replaces the shell
+   that 8 of the 9 pages redefine today (PLAN.md §1: `.app-sidebar` 8×,
+   `.app-nav` 7×).
+   -------------------------------------------------------------------------
+   NAMING — `o-shell__*`, NOT `.app` / `.brand` / `.nav` / `.main`.
+   PLAN.md §Sprint-3 describes the design as "the `.app` grid", which is the
+   MOCKUP's class name, not an instruction — PLAN.md:125 governs the name here:
+   `o-*` = layout object, no cosmetics, ever. Taking the prefix is not
+   bookkeeping; it is what makes this file safe. Measured across the nine legacy
+   files, static/theme.css and every page's markup:
+
+     .app      styled in theme.css; in markup on blueprint only
+     .brand    styled in ALL NINE legacy files AND theme.css; markup on all 9
+     .top      styled in theme.css; markup on blueprint only
+     .nav      styled in theme.css; markup on blueprint only
+     .main     styled in blueprint.css + index.css + theme.css; markup on 2
+     .spacer   styled in blueprint.css + theme.css; markup on blueprint
+
+   Every one of those collides. `layer(objects)` outranks `layer(legacy)`, so a
+   rule named `.brand` here would silently take over the brand block on all nine
+   pages the moment they link main.css — the D21 failure mode, at nine-page
+   scale. `o-shell__*` appears nowhere in the project (verified), so this file
+   can only style markup that UI-031/UI-032 deliberately opts in.
+
+   NO `html, body { height: 100% }` HERE, AND THE BOARD'S PREDICTION WAS WRONG.
+   docs/ui/DEFERRED.md D21 says UI-030 "must land it or the shell will not fill
+   the viewport". Measured against the design target, it does not: the mockup
+   carries BOTH `html,body{height:100%}` (:16) and `.app{height:100vh}` (:58),
+   and the second is what makes the shell fill the viewport — the first is
+   redundant to it. `.o-shell` below uses the same `100vh`. That matters because
+   D21's own warning was that landing `height:100%` newly reaches the two legacy
+   files that lack it, one of which is print.css — the Ctrl+P page under
+   `@page { margin: 0 }` that STATUS.md calls the epic's highest visual risk. So
+   the rule is not landed, the risk is not taken, and D21's height half is
+   closed as unnecessary rather than deferred again. If some later task finds a
+   real need for percentage heights inside the shell, it can add it THEN, with
+   print.html open in a browser.
+
+   WHAT THIS FILE DELIBERATELY DOES NOT DO — the shell has no skin. The mockup
+   paints the sidebar and topbar in the same rules that place them
+   (`.brand{background:var(--sidebar-bg)}`, `.nav{background;border-right}`,
+   `.top{background;border-bottom}`); all of that is stripped here, because an
+   object with cosmetics is the thing PLAN.md's naming table forbids. Those
+   declarations belong to 05-components (`nav.css`, and the brand/topbar
+   components) in Sprint 4. Consequence a Sprint 3 session must plan for: on a
+   page whose markup uses `o-shell__*`, the SHAPE is correct and the COLOUR
+   comes from wherever that page's own classes still come from — its
+   99-legacy file, which keeps `.app-sidebar`/`.app-nav` alive in layer(legacy)
+   until Sprint 5-6 drains it. Migrating a page means adding the object classes
+   ALONGSIDE the legacy ones, not swapping them out; dropping the legacy names
+   in UI-031 would ship an unpainted sidebar. Same decision as D19/D20.
+
+   ONE LAYOUT OMISSION, STATED BECAUSE IT IS NOT COSMETIC. The design target
+   collapses the shell on narrow viewports — `@media(max-width:760px)` sets one
+   column, drops `nav` from the grid areas and hides it (mockup:197; static/
+   theme.css:95-98 has the same rule plus a `height: auto` the mockup does not,
+   and there are six more 760px blocks across FIVE of the nine legacy files —
+   five, not six: index.css carries two of them, and an earlier draft of this
+   sentence counted blocks while claiming files). That is pure layout and
+   belongs in this file by
+   every rule above, yet it is NOT here: hiding the nav leaves a migrated page
+   with no way to navigate, because the thing that gives it back — a toggle, a
+   drawer, or a hamburger in the topbar — is a COMPONENT, and none exists in
+   this tree yet (05-components, Sprint 4). Landing the breakpoint alone would
+   be shipping half a mechanism. It goes in with that control, verified at
+   <760px in a browser; DEFERRED D21 already flags the same viewport for a
+   different reason. Recorded here rather than left silent, because everything
+   else this file declines to do is cosmetic and a reader would otherwise
+   conclude the layout is complete.
+
+   ZERO VISUAL EFFECT TODAY. Nothing links main.css until Sprint 3, so every
+   consequence described above is a Sprint 3 consequence, not a UI-030 one.
+   ========================================================================= */
+
+/* The grid. 248px is the design target's sidebar width (mockup:58) and is a
+   structural one-off, not a step in the space scale — same policy as UI-021's
+   optical control padding: a primitive with one consumer and no vocabulary
+   behind it is how 01-settings/tokens.css rots. `100vh` per the header. */
+.o-shell {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "brand top"
+    "nav   main";
+  height: 100vh;
+}
+
+/* Brand block — top-left cell. Placement and internal alignment only; the
+   mockup's background, colour and bottom border are the brand COMPONENT's. */
+.o-shell__brand {
+  grid-area: brand;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 16px 18px;
+}
+
+/* Topbar — the row beside the brand. `min-height`, not `height`: the mockup
+   uses 58px as a floor so a taller control (the language switch, the avatar)
+   grows the bar instead of overflowing it. */
+.o-shell__top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  min-height: 58px;
+}
+
+/* Pushes everything after it to the far end of the topbar. Kept as a shell
+   element rather than a `u-*` utility because 06-utilities does not exist yet
+   (UI-070) and an object may not depend on a layer above it. If a general
+   spacer utility ever lands, this becomes its first duplicate — delete it then;
+   note the legacy layer already has its own `.spacer` (blueprint.css,
+   static/theme.css), which is why this one is namespaced. */
+.o-shell__spacer {
+  flex: 1;
+}
+
+/* Sidebar nav — scrolls independently of main, which is the whole point of the
+   grid: a long nav never pushes the page content. */
+.o-shell__nav {
+  grid-area: nav;
+  padding: 12px 10px;
+  overflow: auto;
+}
+
+/* Main content region — the second independent scroll container. The top inset
+   is the card/panel inset role (24px, the design target's Modern `--pad`); the
+   28px sides and 44px bottom are the target's own values and stay literal, as
+   above. */
+.o-shell__main {
+  grid-area: main;
+  overflow: auto;
+  padding: var(--space-inset) 28px 44px;
+}

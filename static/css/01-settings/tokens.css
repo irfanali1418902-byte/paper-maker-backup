@@ -106,7 +106,12 @@
   /* ── weights ──────────────────────────────────────────────────────────────
      600 and 700 only. 500 is real too (static/theme.css .nav a) but nothing in
      03-elements reads it, and a primitive with no Tier 2 consumer is how this
-     file rots — it lands with the nav in UI-030. Both woff2 weights exist. */
+     file rots. UI-021 predicted it would land "with the nav in UI-030"; UI-030
+     came and correctly did NOT add it, because 04-objects is layout-only
+     (PLAN.md:125) and cannot consume a weight — the nav's TYPE is
+     05-components/nav.css, so 500 lands in UI-040..043. Corrected rather than
+     left, for the reason the space-scale comment below gives. Both woff2
+     weights exist. */
   --weight-semibold: 600;
   --weight-bold: 700;
 

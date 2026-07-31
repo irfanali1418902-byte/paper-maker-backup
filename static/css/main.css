@@ -115,8 +115,27 @@
 @import url("03-elements/forms.css")       layer(elements);
 @import url("03-elements/tables.css")      layer(elements);
 
-/* UI-030 */
-/* @import url("04-objects/shell.css")        layer(objects); */
+/* -------------------------------------------------------------------------
+   5. OBJECTS — layout primitives, `o-*`, no cosmetics ever (PLAN.md:125). The
+   first layer whose class names are INVENTED here rather than inherited from
+   the pages, which is exactly why they are prefixed: `o-shell__*` collides with
+   nothing, whereas every one of the mockup's own shell names is already taken.
+   Three collide with the LEGACY layer, which this layer would silently
+   override: `.brand` in all nine legacy files at once, `.main` in two
+   (blueprint.css, index.css), `.spacer` in one (blueprint.css). The other
+   three — `.app`, `.top`, `.nav` — are in static/theme.css and in no legacy
+   file, which is the different, opposite case described above: unlayered, so
+   they beat this layer rather than lose to it, and they vanish entirely once a
+   page stops linking theme.css. (`.spacer` is in both buckets — theme.css
+   declares it too.) Both kinds are reasons not to take the name. See
+   04-objects/shell.css's header for the per-name measurement. Two earlier
+   drafts of this comment were wrong: the first called all of them a legacy
+   collision, the second put `.spacer` in the theme.css-only group.
+   ------------------------------------------------------------------------- */
+@import url("04-objects/shell.css")        layer(objects);
+
+/* UI-030 authored shell.css only; these two arrive with the components that
+   need them, which is Sprint 4. */
 /* @import url("04-objects/grid.css")         layer(objects); */
 /* @import url("04-objects/stack.css")        layer(objects); */
 
