@@ -45,11 +45,13 @@ a page and someone opens it narrow, the sidebar simply stays. Decide there wheth
 ## Previous task → UI-030 — **`04-objects/shell.css` + nav config; still no page touched**
 
 `.o-shell__*`, layout only, zero cosmetics, plus `config/nav.json` as data that nothing reads
-yet. **First review FAILED it on three claims** (see the task log). The finding worth carrying:
-**every one of the mockup's shell class names is already taken**, and in two different ways —
-`.brand` (nine legacy files) and `.main` (two) would be silently overridden by `layer(objects)`,
-while `.app`/`.top`/`.nav`/`.spacer` sit in unlayered `static/theme.css` and *beat* the new
-layer instead. The `o-*` prefix (`PLAN.md`:125) is what makes the file safe, not tidiness.
+yet. **Two reviews FAILED it**, the second on errors introduced by the first round of fixes
+(see the task log). The finding worth carrying: **every one of the mockup's shell class names is
+already taken**, and in two different ways — `.brand` (nine legacy files), `.main` (two) and
+`.spacer` (one) sit in `layer(legacy)` and would be **silently overridden** by `layer(objects)`,
+while `.app`/`.top`/`.nav` are in unlayered `static/theme.css` and *beat* the new layer instead.
+Three and three. The `o-*` prefix (`PLAN.md`:125) is what makes the file safe, not tidiness —
+and putting `.spacer` on the wrong side of that split is exactly what the second review caught.
 
 **D21's height half is closed as unnecessary, not deferred again.** `html, body { height: 100% }`
 was predicted to be UI-030's to land; it never landed, because `.o-shell` uses `height: 100vh`,
@@ -80,8 +82,10 @@ cheap. Two halves: Irfan in a real browser, and an agent over live HTTP against
 
 - **`print.html` Ctrl+P: margin ~14mm, not 28mm.** Checked on a **real exam paper** (Pre Year 1
   Math), not a blank page — **Urdu, images and page breaks all correct**. This was the epic's
-  highest-risk unknown and it is now closed for Sprint 1's extraction. It is *not* closed for
-  UI-030, which lands `html, body { height: 100% }` on a page that has no such rule today (D21).
+  highest-risk unknown and it is now closed for Sprint 1's extraction. *(This block warned that
+  it was not closed for UI-030, "which lands `html, body { height: 100% }` on a page that has no
+  such rule today". **UI-030 never landed that rule** — `.o-shell` uses `height: 100vh` instead,
+  so print.html was not touched and D21's height half is closed as unnecessary.)*
 - **All nine pages load styled** — `slo`, `slo-health`, `taqseem`, `landing`, `library`,
   `blueprint`, `bank`, `index`, `print`. No unstyled flash, no broken layout.
 
