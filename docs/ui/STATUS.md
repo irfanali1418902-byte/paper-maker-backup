@@ -4,30 +4,18 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-31 (UI-021) — **Sprint 2 complete**; next is the browser session, then Sprint 3
+**Last updated:** 2026-07-31 (browser session) — **Sprint 2 complete**, browser check done; next is UI-030
 
 ---
 
-## NEXT TASK → **the browser session** — *not* a code task, and it comes before UI-030
+## NEXT TASK → **UI-030** — `04-objects/shell.css` + nav config
 
-**Sprint 2 is complete.** `main.css` now carries layers 1–4 (`01-settings` → `03-elements`) and
-is still linked by **no page**, so the whole foundation exists with zero visual effect. The
-next code task is **UI-030** (`04-objects/shell.css` + nav config), but do the browser check
-first — it is cheap now and stops being cheap the moment a page's `<link>` changes.
+**The pre-Sprint-3 browser session is done** (2026-07-31, by Irfan — see the block below).
+Sprint 1's nine extractions are confirmed good in a real browser, including the Ctrl+P page.
+**Sprint 2 is complete.** `main.css` carries layers 1–4 (`01-settings` → `03-elements`) and is
+still linked by **no page**, so the whole foundation exists with zero visual effect.
 
-**What the browser session must cover** (open the app, no code changes):
-
-1. **`print.html` Ctrl+P margin — the epic's highest visual risk.** Expect **~14mm, not 28mm**.
-   Sprint 1's nine extractions have *never* been opened in a browser; each has its own commit,
-   so a revert is still cheap.
-2. **The other eight pages, one load each** — no missing stylesheet, no unstyled flash.
-3. **`edge://version` ≥ 99.** ADR-001 accepts `@layer`'s hard-fail risk purely on Edge's
-   auto-update, and that assumption has never been tested on a school PC.
-4. **`@layer` parses at all.** Never verified in a real browser (UI-020 and UI-021 both said so
-   rather than claiming it — the Chrome extension was not connected for any of the five agents).
-   Zero risk today; it becomes total risk in UI-031.
-
-**Then UI-030** (`docs/ui/PLAN.md`:188): `04-objects/shell.css` + nav config (groups: Papers /
+**UI-030** (`docs/ui/PLAN.md`:188): `04-objects/shell.css` + nav config (groups: Papers /
 Content / Plan & track / Settings). Two things carried over from UI-021 that UI-030 owns:
 
 - **`html, body { height: 100% }` is UI-030's to land** — it is in the design target (`:16`) and
@@ -46,6 +34,47 @@ orphaned tokens, none fallback-protected). Add to that list, all landing in the 
 base type goes **16px → 15px on nine pages** (`typography.css` `body`), `slo`/`slo-health`
 tables take the design target's metrics (`tables.css`), and the button appearance reset is
 still parked in **UI-041** (D22) so it does *not* land with them.
+
+---
+
+## The pre-Sprint-3 browser session — **done 2026-07-31**, with one item still open
+
+Ran after UI-021, before any page's `<link>` changed — the point being that a revert was still
+cheap. Two halves: Irfan in a real browser, and an agent over live HTTP against
+`uvicorn app.main:app` on `127.0.0.1:8000`.
+
+**Closed — Irfan, in the browser:**
+
+- **`print.html` Ctrl+P: margin ~14mm, not 28mm.** Checked on a **real exam paper** (Pre Year 1
+  Math), not a blank page — **Urdu, images and page breaks all correct**. This was the epic's
+  highest-risk unknown and it is now closed for Sprint 1's extraction. It is *not* closed for
+  UI-030, which lands `html, body { height: 100% }` on a page that has no such rule today (D21).
+- **All nine pages load styled** — `slo`, `slo-health`, `taqseem`, `landing`, `library`,
+  `blueprint`, `bank`, `index`, `print`. No unstyled flash, no broken layout.
+
+**Closed — over live HTTP:**
+
+- Nine pages **200**, each with **0 `<style>` blocks** — Sprint 1 verified live, not just on disk.
+- Every referenced stylesheet **200 / `text/css`**; no 404. `landing` and `print` carry 2 sheets
+  (no `theme.css` — D9 live-confirmed), the other seven carry 3.
+- **`main.css` is linked by zero of the nine** — "zero visual effect" is now a measurement.
+- All 16 live `@import`s in `main.css` resolve **200** in their declared layer order.
+- **All nine `woff2` return 200 through the `../../fonts/` relative path.** Better evidence than
+  UI-021's disk check: `url()` actually resolved through the server. The one silent-404 risk the
+  new tree introduced is closed.
+- Dev PC: **Edge 150.0.4078.96, Chrome 150.0.7871.187** — both far past ADR-001's floor of 99.
+
+**STILL OPEN, and do not let this board be read as saying otherwise:**
+
+1. **The school PC's Edge version.** Irfan checks later. ADR-001 accepts `@layer`'s hard-fail
+   risk *purely* on Edge auto-updating, and that is still untested on the machine that matters.
+2. **No browser has ever parsed `main.css`.** "The pages didn't break" does **not** evidence
+   `@layer` working, because no page loads `main.css` — that result is equally consistent with
+   the `@layer` line never having been read. What actually retires the risk is the version
+   numbers above (`@layer` shipped in 99; these are 150), plus the first page that links
+   `main.css` in **UI-031**. Treat the cascade this epic is built on as *unobserved* until then:
+   layer order beating specificity, `layer(elements)` overriding legacy classes, and D19/D20/D21
+   all resolve for the first time on a real page in that task. **Open UI-031 with a browser.**
 
 ---
 
@@ -267,10 +296,11 @@ nowhere); close it in the pre-Sprint-3 browser session.
 **Green at UI-021:** `pytest -q` = **906 passed, 0 skipped** · `python -m ruff check .` clean ·
 `css_baseline.py --check` exit 0, with `shared_css_lines` re-pinned to **1178** in-task. Gates
 run three times (implementer + two independent review agents; the first FAILED the task on
-`font: inherit`). **Still not verified: `@layer` in a real browser** — the Chrome extension was
-connected for none of the five agents across UI-020 and UI-021, and all five said so rather than
-claiming it. Zero risk while `main.css` is linked nowhere; it becomes total risk at UI-031, so
-it is item 4 of the browser session above.
+`font: inherit`). **`@layer` is still unparsed by any browser** — the Chrome extension was
+connected for none of the five agents across UI-020 and UI-021, all five said so rather than
+claiming it, and the browser session did not close it either: no page loads `main.css`, so
+there was nothing to parse. Retired instead by version (Edge/Chrome 150 vs ADR-001's floor of
+99) and finally by UI-031. See the browser-session block above.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.
@@ -298,7 +328,8 @@ did it in-task. Skipping it leaves the next task comparing against numbers two t
 
 | # | Item | Needed for |
 |---|---|---|
-| — | nothing currently blocked | |
+| 1 | **School PC's Edge version** (`edge://version`, needs ≥ 99). Dev PC is 150, but ADR-001 accepts `@layer`'s hard-fail risk purely on Edge auto-updating and the school machines have never been checked. Irfan said 2026-07-31 he would do it later | **UI-031** — the first task that puts `main.css` on a page. Not blocking UI-030, which touches no page |
+| 2 | **`--font-mono` names "IBM Plex Mono" and no such font exists in the repo** (D23). Either commit the two woff2 (~80KB, licence-checked) or drop the family and let `ui-monospace` be the declared intent. Font-asset call, not CSS | a small asset task, or **UI-064** with D13. Nothing is blocked meanwhile — it has silently fallen back since before this epic |
 
 ---
 
