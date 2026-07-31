@@ -67,19 +67,70 @@
   --red-600:   #dc2626;
 
   /* ── type ─────────────────────────────────────────────────────────────────
-     IBM Plex, self-hosted in static/fonts/. No CDN, ever — offline school PCs
-     (CLAUDE.md §11). The @font-face rules land in 02-generic/fonts.css in
-     UI-021; these are just the stacks. */
+     Self-hosted in static/fonts/. No CDN, ever — offline school PCs
+     (CLAUDE.md §11). The @font-face rules are in 02-generic/fonts.css since
+     UI-021; these are just the stacks, and each family name must stay spelled
+     exactly as that file spells it — @font-face cannot read a var().
+
+     --font-mono is the exception and it is honest about it: NOTHING declares an
+     @font-face for "IBM Plex Mono" and no such woff2 is in this repo, so it
+     always falls through to ui-monospace. Pre-existing (static/theme.css's
+     --font-data has said the same since before this epic); recorded as
+     docs/ui/DEFERRED.md D23 rather than fixed, because the fix is a font asset. */
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-nastaliq: "Noto Nastaliq Urdu", serif;
+
+  /* ── type scale ───────────────────────────────────────────────────────────
+     Consumed steps only, same policy as space and radii below — but unlike them
+     this scale currently has NO gaps, because 03-elements consumes all seven.
+     Every value is already in use today; not one is interpolated to round the
+     ramp out. Where each comes from:
+       11.5px  table header caps, hints        static/theme.css .tbl th, .hint
+       12px    field label                     static/theme.css .field label
+       13.5px  inputs, buttons, table cells     static/theme.css inputs, .btn
+       14px    card header h3, nav item        static/theme.css .card > .ch h3
+       15px    body base, Modern direction     static/mockup-modern.html --fs
+       18px    h2                              static/theme.css .brand .logo
+       24px    h1                              static/theme.css .pagehead h1
+     Named by step, not by role: --text-body and friends are Tier 2's job. */
+  --font-size-1: 11.5px;
+  --font-size-2: 12px;
+  --font-size-3: 13.5px;
+  --font-size-4: 14px;
+  --font-size-5: 15px;
+  --font-size-6: 18px;
+  --font-size-7: 24px;
+
+  /* ── weights ──────────────────────────────────────────────────────────────
+     600 and 700 only. 500 is real too (static/theme.css .nav a) but nothing in
+     03-elements reads it, and a primitive with no Tier 2 consumer is how this
+     file rots — it lands with the nav in UI-030. Both woff2 weights exist. */
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── line heights ─────────────────────────────────────────────────────────
+     1.45 is the design target's body value (mockup-modern.html body); 1.1 is the
+     app's existing tight setting for large type (static/theme.css .stat .num,
+     and .brand b at 1.05 is the same intent). */
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.45;
 
   /* ── space scale ──────────────────────────────────────────────────────────
      THE GAPS ARE DELIBERATE. This is not an incomplete scale to be helpfully
      filled in — a step exists here only once a Tier 2 role consumes it, so the
      numbering tracks the design system's real vocabulary instead of a
-     speculative ramp. UI-021 adds steps when typography/forms need them.
-     4px, 16px and 32px are all in use in static/theme.css today and will land
-     that way; they are absent here because no Tier 2 role reads them yet. */
+     speculative ramp. 4px, 16px and 32px are all in use in static/theme.css
+     today and will land that way; they are absent here because no Tier 2 role
+     reads them yet.
+
+     UI-021 predicted it would add steps here and DID NOT — the gaps are still
+     exactly as UI-020 left them. Its control padding (9px 11px) and table cell
+     padding (10px / 11px) are optical one-offs rather than scale steps, so they
+     stayed literal in 03-elements; the one structural value it needed, the card
+     inset, was already --space-inset. Recorded because a stale prediction in a
+     comment is how a later session convinces itself a gap is an omission. */
   --space-2: 8px;
   --space-3: 12px;
   --space-5: 22px;

@@ -76,10 +76,42 @@
      Named as a role so the eventual deletion is one line here, not a hunt. */
   --color-sidebar-bg: var(--slate-950);
 
-  /* ── typography roles ─────────────────────────────────────────────────── */
+  /* ── typography roles ─────────────────────────────────────────────────────
+     The first three names COLLIDE with static/theme.css on purpose — see the
+     header. Do not rename them. --font-paper and --font-urdu are new in UI-021
+     and collide with nothing. */
   --font-display: var(--font-sans);
   --font-body:    var(--font-sans);
   --font-data:    var(--font-mono);
+  --font-paper:   var(--font-serif);     /* exam-paper preview headings */
+  --font-urdu:    var(--font-nastaliq);  /* Urdu / RTL text */
+
+  /* ── type size roles ──────────────────────────────────────────────────────
+     The vocabulary 03-elements reads. Every step in Tier 1's scale has a role
+     here, and of the 13 roles UI-021 ADDS, all are consumed by
+     02-generic/03-elements in this commit except two: --font-paper waits for the
+     paper preview (UI-043) and --font-urdu for the language switch, both of which
+     are components. (Read that as scoped to UI-021's own additions. Counted:
+     UI-020 landed 31 roles, of which the new tree consumes 13, so 18 of ITS roles
+     are still unconsumed — --color-sidebar-bg and --shadow-card among them,
+     because their components arrive in UI-030 and UI-040. This parenthetical said
+     20 in its first draft, which came from subtracting UI-021's consumed count
+     from UI-020's role count — two different sets.) */
+  --text-body:      var(--font-size-5);
+  --text-control:   var(--font-size-3);  /* inputs, table cells, code */
+  --text-label:     var(--font-size-2);
+  --text-micro:     var(--font-size-1);  /* table header caps, small print */
+  --text-heading-1: var(--font-size-7);
+  --text-heading-2: var(--font-size-6);
+  --text-heading-3: var(--font-size-4);  /* h3 and below */
+
+  /* ── weight roles ─────────────────────────────────────────────────────── */
+  --font-weight-strong:  var(--weight-semibold);  /* labels, table headers */
+  --font-weight-heading: var(--weight-bold);
+
+  /* ── leading roles ────────────────────────────────────────────────────── */
+  --leading-body:    var(--line-height-normal);
+  --leading-heading: var(--line-height-tight);
 
   /* ── spacing roles ────────────────────────────────────────────────────── */
   --space-inset:       var(--space-6);  /* card / panel padding */

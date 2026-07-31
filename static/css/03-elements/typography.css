@@ -1,0 +1,103 @@
+/* =========================================================================
+   03-elements/typography.css — bare type elements
+   body, links, headings, small print, monospace. Element selectors ONLY: not one
+   class appears in this file, and none should. Classes are 05-components.
+   -------------------------------------------------------------------------
+   Every value here is Tier 2 (--text-*, --color-*, --font-*, --leading-*), and
+   every one of those roles traces to a value already in use today in
+   static/theme.css or static/mockup-modern.html. Nothing is interpolated to fill
+   a gap in a scale — see 01-settings/tokens.css on why the scales have gaps.
+
+   Sources, so a later session can check rather than trust:
+     body            mockup-modern.html:17 (font-family, colour, background,
+                     font-smoothing, line-height 1.45) + :55, which sets
+                     font-size from the --fs token; its Modern value is 15px, :54
+     a               mockup-modern.html:18; identical in 8 of 9 legacy files
+     h1  24px / 700 / -.2px tracking   theme.css .pagehead h1
+     h2  18px                          theme.css .brand .logo
+     h3+ 14px                          theme.css .card > .ch h3
+     small 11.5px muted                theme.css small.hint, .hint
+
+   The headings are the one place this file goes beyond what the design target
+   states literally: the mockup styles no bare h1/h2/h3 at all, it styles
+   .pagehead h1 and .card .ch h3. The SIZES here are those two real values plus
+   18px, which is also a real value; what is new is attaching them to bare
+   elements. That is this layer's job, and it is why the numbers were not
+   invented to go with it.
+
+   The layer hazard from 02-generic/reset.css applies here too and more sharply:
+   layer(elements) outranks layer(legacy), so `body` below will beat every legacy
+   `body` rule from Sprint 3 onward — including their font-size, which none of
+   them sets (they inherit the browser's 16px). Base type going 16px → 15px on
+   nine pages at once is a real visual change, and it is the design target's
+   value, not a slip. It lands in UI-031/UI-032 with a browser open.
+
+   Zero visual effect today: nothing links main.css until Sprint 3.
+   ========================================================================= */
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-text);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Links inherit their colour and drop the underline — the app has no prose
+   links, only navigation and buttons wearing <a>. 8 of the 9 legacy files
+   declare exactly this. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-heading);
+  line-height: var(--leading-heading);
+}
+
+h1 {
+  font-size: var(--text-heading-1);
+  /* Optical tightening at 24px, straight from theme.css .pagehead h1. A literal
+     rather than a token: the type SCALE is tokenised because it repeats across
+     files, but a per-rule tracking nudge is not a scale, and the architecture
+     forbids exactly one class of literal — a raw hex (ADR-001, CLAUDE.md §11). */
+  letter-spacing: -0.2px;
+}
+
+h2 {
+  font-size: var(--text-heading-2);
+}
+
+/* h3 down share one step. The app's real h3 is a 14px card header; nothing below
+   h3 appears in any page today, so they follow it rather than get invented sizes. */
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--text-heading-3);
+}
+
+small {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+/* The data / monospace role. --font-data resolves through --font-mono, which
+   names "IBM Plex Mono" — a family NO @font-face declares and no woff2 in this
+   repo provides, so it always falls back to ui-monospace. Pre-existing, recorded
+   as docs/ui/DEFERRED.md D23; not fixed here because the fix is a font asset. */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-data);
+  font-size: var(--text-control);
+}

@@ -1,0 +1,70 @@
+/* =========================================================================
+   03-elements/tables.css — bare tables
+   table / th / td / row rules. Element selectors only; the .tbl class in
+   static/theme.css and the domain tables (table.an, .summary-box) are
+   05-components/table-data.css in UI-043.
+   -------------------------------------------------------------------------
+   Sources — 1:1 with the design target, which styles bare tables directly:
+     table            width 100%, border-collapse, 13.5px   mockup:133
+     th               left, muted, 600, 11.5px, .4px caps, 10px + the --pad
+                      inset, bottom border, panel-2 background  mockup:135
+     td               11px + the --pad inset, bottom border, middle  mockup:136
+     tr:last-child td no bottom border                       mockup:138
+     tbody tr:hover   panel-2                                mockup:139
+   static/theme.css carries the same rules scoped to .tbl (:179-183; :184 is
+   .tbl tr.draft, which has no counterpart here). It scopes
+   them BECAUSE it had to: theme.css loads before each page's CSS, so a bare
+   `table` rule there would have been overridden anyway on the pages that define
+   their own tables, and would have hit the ones that do not. This tree has the
+   opposite problem and the opposite freedom — layer(elements) outranks
+   layer(legacy), so bare selectors here reach every table on every page.
+
+   ⚠ THAT IS A REAL SPRINT 3 CHANGE, AND IT IS THE INTENDED ONE. slo.css and
+   slo-health.css each define bare `table` / `th, td` / `th` with different
+   numbers (13px text, 8px 10px cell padding, vertical-align: top, .04em
+   tracking, no th background). From the moment those two pages load main.css
+   alone, THIS file wins and their tables take the design target's metrics:
+   roomier cells, middle-aligned, tinted header row. Unifying them is what the
+   epic is for — PLAN.md §3 — but it is a visual delta, so it belongs in
+   UI-031's browser check, not in a claim made here. Those are the only two
+   pages with bare table rules; every other table in the app is class-scoped.
+
+   Zero visual effect today: nothing links main.css until Sprint 3.
+   ========================================================================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-control);
+}
+
+th {
+  text-align: left;
+  /* Vertical padding is a literal for the same reason as the control padding in
+     forms.css: 10px and 11px are optical, not steps in the space scale. The
+     horizontal value IS a step — it is the card/panel inset, so table cells line
+     up with the content above them. */
+  padding: 10px var(--space-inset);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 11px var(--space-inset);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+/* No rule under the final row — the container's own border closes the table. */
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: var(--color-surface-sunken);
+}

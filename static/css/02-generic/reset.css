@@ -1,0 +1,101 @@
+/* =========================================================================
+   02-generic/reset.css — the low-level reset
+   box-sizing, margin reset, media defaults, and nothing else
+   (docs/ui/PLAN.md §2). No colours, no font stacks, no layout: those are
+   03-elements, 02-generic/fonts.css and 04-objects respectively.
+   -------------------------------------------------------------------------
+   READ THIS BEFORE ADDING A RULE HERE. In an ordinary ITCSS build the reset is
+   the weakest thing in the tree and every component overrides it. IN THIS TREE
+   IT IS NOT. main.css declares
+
+       @layer legacy, settings, generic, elements, objects, components, utilities;
+
+   so layer(generic) OUTRANKS layer(legacy) — and layer order beats selector
+   specificity for normal declarations. A one-element selector in this file
+   therefore overrides the 2115 lines Sprint 1 extracted, class rules included.
+   "Legacy demoted" cuts both ways: it is what lets the new tree win without
+   !important, and it is what makes a careless reset destructive.
+
+   That is why this file is SMALLER than the reset in the design target.
+   static/mockup-modern.html opens with
+
+       * { box-sizing: border-box; margin: 0; padding: 0 }
+
+   and it is right to, because the mockup has no legacy layer beneath it. Ported
+   here verbatim, the `padding: 0` half would outrank index.css:267's
+   `[dir="rtl"] .question-card ul { padding-left: 0; padding-right: 20px; }`
+   and flatten list indentation in Urdu mode. That is a semantic dependency, not
+   a cosmetic one, and no ratchet metric counts it — the ratchet counts lines and
+   hex, not whether a list still reads. So the universal padding kill is NOT
+   ported. See docs/ui/DEFERRED.md D21.
+
+   `html, body { height: 100% }` is not here either, though the mockup (:16) and
+   7 of the 9 legacy files declare it: height is layout, which is
+   04-objects/shell.css in UI-030, not one of the three concerns PLAN.md §2 gives
+   this file. TWO files are exceptions, not one — landing.css:18 has the
+   `html, body` rule with margin only, and print.css has no `html, body` rule at
+   all; its body reaches for the viewport a different way (print.css:29-30,
+   `display: flex; min-height: 100vh`). So when UI-030 lands the rule it newly
+   applies to BOTH of those pages, and print.html is the Ctrl+P page under
+   `@page { margin: 0 }` — the one STATUS.md calls the epic's highest visual risk.
+   Counted per file, because this count was wrong ("8 of 9") in the first draft.
+
+   ZERO VISUAL EFFECT TODAY. Nothing links main.css until Sprint 3
+   (UI-031 / UI-032), so every consequence described above is a Sprint 3
+   consequence, not a UI-021 one.
+   ========================================================================= */
+
+/* Border-box everywhere. All nine legacy files already declare `* { box-sizing:
+   border-box }` with this exact value, so the `*` half changes nothing when they
+   load together — the one rule here with no cascade consequence. The
+   `::before`/`::after` half is NOT covered by their bare `*` (box-sizing is not
+   inherited, and a bare `*` does not match pseudo-elements), so it is new
+   behaviour — harmless only because the tree holds exactly two `::before`
+   rules and no `::after` at all: print.css:77-78, the disclosure triangles on the
+   print settings, which set `content` and a colour and no box. (Counted narrowly
+   on purpose. The tree has five pseudo-element rules in total — bank.css:70 and
+   print.css:76 `::-webkit-details-marker`, bank.css:345 `::placeholder`, two of
+   which do set `display` — but `*::before, *::after` cannot match any of those
+   three, so they are not in this rule's reach. The first draft of this comment
+   said "exactly two pseudo-element rules", which was a wrong generalisation from
+   a grep that only searched for ::before and ::after.) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Margin reset — targeted at block text elements rather than universal, for the
+   reason given in the header. Lists are absent on purpose so their default
+   indentation (and the RTL overrides that assume it) survives. */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Media defaults. `max-width` only, deliberately: `display: block` on img/svg is
+   the usual companion to this rule and it would break the inline icon sprite
+   (static/app.css `.icon`, static/theme.css:211 `svg.ic`) and bank.css:171
+   `.topic-img-thumb`, all of which sit inline inside flex rows.
+
+   The selector list is WIDER than the design target's, which is `img` alone
+   (mockup-modern.html:20) — the one place this file exceeds it rather than
+   trailing it. The three additions are replaced elements with the same
+   overflow problem and no styling of their own anywhere in the app, so nothing
+   can be overridden by them; the value stays 1:1. */
+img,
+picture,
+video,
+canvas {
+  max-width: 100%;
+}

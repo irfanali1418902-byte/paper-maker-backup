@@ -1,0 +1,114 @@
+/* =========================================================================
+   02-generic/fonts.css — @font-face only
+   Absorbs the font half of static/app.css (docs/ui/PLAN.md §2). Three families,
+   nine faces, all self-hosted in static/fonts/.
+   -------------------------------------------------------------------------
+   NO CDN, EVER (CLAUDE.md §11). The school PCs are offline; app.css's own header
+   records why these were pulled off Google Fonts in the first place — when the
+   internet dropped, headings fell back to Times New Roman. Every src below
+   points at a woff2 committed in this repo.
+
+   ⚠ url() RESOLVES AGAINST THE STYLESHEET, NOT THE DOCUMENT. This is the first
+   url() in the new tree, and it is the one thing here that can silently 404.
+   From static/css/02-generic/ the fonts directory is ../../fonts/ — NOT
+   /static/fonts/ as app.css writes it, and NOT fonts/ as it would be from
+   static/. Relative is deliberate over app.css's absolute form: it keeps the
+   tree self-contained, so these paths hold if /static is ever mounted elsewhere.
+   Verified this task by resolving each path on disk, all nine present.
+
+   THIS FILE DOES NOT REPLACE static/app.css YET, and app.css must not be
+   deleted. Two reasons: every one of the nine pages still links it (main.css is
+   linked by none of them until Sprint 3), and app.css also carries the `.icon`
+   sprite rule, which is a component and has no home in the new tree until
+   Sprint 4. Both stylesheets loading at once is harmless — duplicate @font-face
+   rules for the same family/weight resolve to the same file, and a browser only
+   downloads the faces a page actually paints. app.css dies in Sprint 6.
+
+   The stacks that USE these families are tokens, not rules: --font-sans,
+   --font-mono, --font-serif and --font-nastaliq in 01-settings/tokens.css. This
+   file only makes the families available. Note that @font-face's own
+   font-family cannot read a var(), so the family names here are literal by
+   necessity — they are the one place in the tree that has to repeat a token's
+   value, and they must stay spelled exactly as tokens.css spells them.
+   ========================================================================= */
+
+/* ── IBM Plex Sans — the UI face (--font-sans → --font-display / --font-body) ── */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../../fonts/IBMPlexSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../../fonts/IBMPlexSans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../../fonts/IBMPlexSans-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("../../fonts/IBMPlexSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Source Serif 4 — exam-paper preview headings (--font-serif → --font-paper) ──
+   Consumed today by 99-legacy/index.css's .paper-sheet headings and an inline
+   style in index.html, both spelling the stack out by hand. */
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("../../fonts/SourceSerif4-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("../../fonts/SourceSerif4-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  src: url("../../fonts/SourceSerif4-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Noto Nastaliq Urdu — Urdu / RTL (--font-nastaliq → --font-urdu) ───────────
+   The bundled fallback for when Jameel Noori Nastaleeq is not installed on the
+   machine. Only two weights ship; that is app.css's set, carried over unchanged.
+   Note the app's own Urdu stacks fork — static/theme.css and print.css name this
+   family alone, and so does bank.css (:94, :229), while index.css (:36, :169,
+   :179, :256) puts a locally-installed 'Jameel Noori Nastaleeq' in FRONT of it
+   and print.css:182 puts it BEHIND — three different orders across four files.
+   Measured, because the first version of this comment guessed and named the
+   wrong file. tokens.css takes the self-hosted spelling, since that is the one
+   this file can guarantee is present. Reconciling the three orders is a Sprint 5
+   decision, not this file's. */
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  src: url("../../fonts/NotoNastaliqUrdu-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  src: url("../../fonts/NotoNastaliqUrdu-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
