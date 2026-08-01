@@ -4,41 +4,116 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-07-31 (UI-030) — Sprint 3 1/3; next is **UI-031, the first task that touches a page**
+**Last updated:** 2026-08-01 (UI-031a) — Sprint 3 2/3; **one page is live on the new tree**
 
 ---
 
-## NEXT TASK → **UI-031** — migrate the five simple pages onto `main.css`
+## NEXT TASK → **UI-031b** — the remaining four simple pages
 
-**This is the task everything so far has been avoiding, and it is the first one that can break
-a page.** `slo`, `slo-health`, `taqseem`, `landing`, `library` (`docs/ui/PLAN.md`:189). Up to
-now every task has been safe by construction because **no page links `main.css`**; UI-031 is
-where that stops being true, and where D19, D20, D21 and D22 all resolve at once, on a real
-page, for the first time.
+`slo-health`, `taqseem`, `landing`, `library`. **`slo.html` is already done** (UI-031a) and it
+settled the mechanism, so this is repetition with per-page measurement — not a new design.
 
-**Open it with a browser.** Not as a final check — as the working environment. Nothing before
-this point has ever been rendered from the new tree by anything.
+**The shape, decided in UI-031a and not to be relitigated:** each page gets a two-line entry
+file `static/css/pages/<page>.css` — `@import url("../main.css");` then
+`@import url("../99-legacy/<page>.css") layer(legacy);` — and its `<link>` block becomes
+`app.css` + that entry file. `main.css` no longer imports any legacy file. Copy
+`pages/slo.css`, read its header first; it documents why each line is what it is.
 
-What will actually happen the moment a page's only stylesheet is `main.css`:
+**Do them one at a time, with a browser open, and measure per page before writing:**
 
-- **D20 — `blueprint` loses 17 tokens and `taqseem` 20**, none fallback-protected, because the
-  legacy layer reads names that live in `static/theme.css`. Two of the five pages here are
-  fine; those two are not. Either keep the `theme.css` link or ship a compatibility block.
-- **D19 — all nine legacy files load on every page**, and they define the same class names with
-  different values. Last import wins for all of them.
-- **Base type goes 16px → 15px** (`03-elements/typography.css` `body`), and `slo`/`slo-health`
-  tables take the design target's metrics (`tables.css`). Both intended, both visible.
-- **The shell has no skin** — `04-objects/shell.css` is layout-only. A migrated page must carry
-  the `o-shell__*` classes **alongside** its existing `.app-sidebar`/`.app-nav` ones, not
-  instead of them, or the sidebar renders unpainted until Sprint 4's nav component.
-- **`config/nav.json` is unconsumed until this task.** Rendering it is UI-031's call; the four
-  `screen` items have no address, so a non-index page can only render the 7 `url` ones (D25).
-- **`@layer` will be parsed by a browser for the first time.** Edge/Chrome 150 on the dev PC
-  say it works; the school PC is still unchecked (blocked item 1).
+- **D20 is now the live risk, and `taqseem` is the page it hits.** `taqseem.css` reads **20**
+  `static/theme.css` tokens with no fallback (`--brand`, `--fg`, `--app-bg`, `--sidebar-bg`,
+  `--line`, `--panel`, …). The entry-file mechanism does **not** fix that — it stops *other*
+  pages' files leaking in, but `taqseem`'s own file still points at a stylesheet the migration
+  unlinks. Decide there: keep the `theme.css` link for that page, or ship the compatibility
+  block D20 describes. `slo` needed neither (its 17 tokens are all local literals).
+- **Diff every page against BOTH mechanisms**, not just one — see `pages/slo.css`'s
+  "WHAT ACTUALLY CHANGED" block. (1) `static/theme.css` bleed being removed, which is
+  per-page and unpredictable: on `slo` it took a **white slab** out of the navy sidebar and
+  un-flexed 115 badges. (2) The new tree beating `layer(legacy)` — D21, live: `reset.css`
+  zeroes legacy class margins, `typography.css` grows `h1`/`h2`, `forms.css` re-fonts buttons.
+- **`landing.html` has no `theme.css` and no sidebar** (D9) — expect a different delta shape.
+- **`library.css` carries `--text`, which is defined nowhere** (D14). Inert today; confirm it
+  stays inert rather than assuming.
+- **`app.css` stays linked** on every migrated page until Sprint 4 — it owns `.icon`.
+- **Quote FULL PATHS in the handover click-list** (D29). Two files are named `theme.css` and
+  the Network panel shows only the basename; the bare word cost a false alarm on UI-031a.
 
-**Also still open from UI-030:** the `<760px` breakpoint is deliberately not in `shell.css` —
-it hides the nav, and the toggle that gives it back is a Sprint 4 component. If UI-031 migrates
-a page and someone opens it narrow, the sidebar simply stays. Decide there whether that waits.
+**Not carried over from UI-031a, deliberately:** `config/nav.json` was **not** rendered and
+no `o-shell__*` class was added to the markup — the page's own legacy file still lays out and
+paints its sidebar, so the shell object applies to nothing. Sprint 4's nav component is what
+consumes both. Do the same here unless there is a reason not to; adding markup multiplies the
+diff and the frozen-inventory risk across four more pages.
+
+**Still open from UI-030:** the `<760px` breakpoint is not in `shell.css` — it hides the nav
+and the toggle that gives it back is a Sprint 4 component. Untested on a migrated page so far.
+
+---
+
+## Previous task → **UI-031a** — `slo.html` onto the new tree · **the first live page**
+
+**`@layer` has now been parsed by a browser**, and the cascade this epic is built on resolved
+on a real page for the first time. Verified in headless Edge 150 via CDP: the
+`CSSLayerStatementRule` carries all seven names in order, every import lands in its declared
+layer, and `99-legacy/slo.css` arrives in `layer(legacy)` rather than unlayered. Blocked item
+1 (the school PC) is **still open** — this is the dev PC.
+
+**D19 was resolved by changing the load mechanism, and the documented shape would have broken
+the page.** Measured before writing: `main.css` imported all nine legacy files, they import
+alphabetically, so `taqseem.css` is last and won **15 selectors** off `slo` — `:root`,
+`.app-sidebar`, `.brand`, `.brand .name`, `.brand small`, `.app-nav`, `.app-nav a`,
+`.app-nav a.active`, `.sidebar-foot`, `.row`, `body`, `html, body`, `a`, `*`. Every value it
+brought reads a `static/theme.css` token that the same task unlinks, so "drop `theme.css`,
+link `main.css`" would have shipped an **unpainted sidebar and no border colours**, through a
+file belonging to a different page — **D20 arriving by the back door**, on the one page whose
+own tokens are all local literals. So the legacy import moved out of `main.css` and into a
+per-page entry file. `main.css` keeps the layer order and the shared tree and remains the
+single source of the cascade (exactly one layer statement in the document).
+
+**`CLAUDE.md` §11's link rule changed with it** — the `<link>` now goes to
+`/static/css/pages/<page>.css`, not `main.css` directly. Recorded as unplanned in both the
+rule and the file headers.
+
+**Three visible changes nobody predicted, all `static/theme.css` bleed being removed**: the
+`.brand` block had a **white slab** inside the navy sidebar (`theme.css`:62 paints it, because
+there `.brand` is a cell in the `.app` topbar grid and this page has no `.app`); `.bloom` was
+`display:flex` on 115 badges from a **bar-chart component** meant for another page; nav links
+were the wrong grey. All three are fixes, and the first is why D26's first draft was wrong.
+
+**Four rounds of review FAILED this, and the three real failures are one shape: a number
+asserted instead of measured.** (1) D26 computed a contrast ratio against an *assumed* navy
+backdrop — both colours were measured in the browser, the backdrop was not; the real figure is
+**1.70:1 → 3.04:1, an improvement**, not the "6.59 → 3.04 regression" first written. (2) The
+"what changed" block named only one mechanism, missing **D21 firing live** — `reset.css`
+zeroing `.card .hint`'s 16px, `typography.css` taking `h1` to 24px, `forms.css` taking buttons
+off Arial. (3) Four line numbers were inherited rather than checked: `forms.css:58` is the
+input/select/textarea rule and **cannot match a button** (:101-102 does), `:102` is not the
+border (:62 is), `reset.css`'s `margin:0` is at :91. **All three are recorded in the files as
+failed drafts**, so the next session meets the trap, not just the answer. An aggregate
+delta count was **removed rather than corrected**: two independent measurements disagreed
+because they used different property sets, so the files now give affected *elements* per rule,
+which is re-derivable from markup with a grep.
+
+**A hex in a comment tripped the ratchet — and `--write` nearly laundered it.** Quoting two
+border colours in prose took `unsanctioned_hex` **429 → 431**; because `css_baseline.py
+--write` had already run, the raised number was pinned into `BASELINE.json` and `--check` then
+reported OK against the laundered baseline. Fixed by removing the hex and
+`git checkout docs/ui/BASELINE.json` before re-pinning. **Re-pin only after `--check` passes
+against HEAD's baseline, never before.** The reviewer mutation-tested the guard afterwards
+(hex restored → 429 → 431, exit 1).
+
+**Irfan's browser check found a fourth false alarm, and was right to stop on it.** `theme.css`
+appeared in the Network panel with initiator `main.css:87`. **Two different files carry that
+basename**: `/static/theme.css` (13787 B, the old stylesheet, genuinely gone from this page)
+and `/static/css/01-settings/theme.css` (8682 B, the Tier 2 palette, which must load). The
+handover said "theme.css gone" instead of naming the path. **D29** records it; quote full
+paths from here.
+
+**Three visible changes ship with this page and are Irfan's accepted trade** — all with a
+Sprint 4 home, none fixable inside a task scoped to one page's `<link>` block: **D26** the
+sidebar subtitle at 3.04:1 (better than before, still under AA), **D27** `<a class="btn-ghost">`
+losing its blue while `<button class="btn-ghost">` keeps it, **D28** cards visibly tighter —
+headings ~20% bigger with the gap beneath them gone.
 
 ---
 
@@ -189,7 +264,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
 | 1 Extraction | UI-010..018 | **9/9** | **done** |
 | 2 Foundation | UI-020..021 | **2/2** | **done** |
-| 3 Shell | UI-030..032 | **1/3** | in progress |
+| 3 Shell | UI-030..032 | **2/3** | in progress — UI-031 split: **a** (`slo`) done, **b** (four pages) next |
 | 4 Components | UI-040..043 | 0/4 | not started |
 | 5 Inline burn-down | UI-050..052 | 0/3 | not started |
 | 6 Legacy kill | UI-060..064 | 0/5 | not started |
@@ -219,6 +294,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | UI-020a | Ratchet — sanction Tier 1 token hex, ratchet `unsanctioned_hex` | **done** | `4273da6` | Guardrail fix, no CSS authored. **UI-020 was literally unwritable before this.** `total_hardcoded_hex` was ratcheted and summed hex across *every* `.css` under `static/` (`rglob`), but Tier 1 tokens are raw hex by definition, so authoring `01-settings/tokens.css` at all pushed 429 → ~451 and failed `test_metric_never_increases`. Meanwhile ADR-001:98–99 and §11 both define the invariant as "a raw hex outside `01-settings/tokens.css` is a CI failure" — the end state has hex *inside* that file, so this board's own target of 0 was unreachable by construction. Adds `token_hex` (that one file) + `unsanctioned_hex` (everything else, **ratcheted**); `total_hardcoded_hex` keeps its exact definition and goes informational, so every number in this log stays comparable. `RATCHETED_METRICS` is 8 both sides — one swapped, none dropped (reviewer AST-parsed both revisions). **First review FAILED it, and was right**: the new exemption-scope test asserted against `current` rather than the re-measurement, so it held only while `tokens.css` was absent and would have failed the suite deterministically on the very next task — the UI-018a defect class exactly. Reproduced at `assert 431 == (429 - 3)` before fixing, then re-verified invariant with a real `tokens.css` at **1, 5, 22 and 40 hex**: `unsanctioned_hex` pinned at **429** every time, and `total_hardcoded_hex` hit exactly **451** at 22, matching the projection. Second reviewer mutation-tested the exemption four ways (3 of 4 broadenings caught → D18) and proved hex outside `tokens.css` still trips the ratchet as the *only* failure, isolated so line counts stayed flat. Two limits recorded rather than oversold: the tokens-file guard is line-based (**D17** — PLAN.md's own tokens example is a single line, so UI-020 must author one declaration per line or the guard is vacuous) and the scope test cannot catch a `TOKENS_PATH.parent` broadening (**D18**) |
 | UI-020 | `main.css` + import order + legacy demoted + `01-settings` 3-tier tokens | **done** | `01a27f6` | **First task in the epic that AUTHORS CSS rather than moving it.** Three new files, 310 insertions, **not one `.html` byte touched** — `main.css` is linked nowhere (verified over HTTP on all nine pages), so this task has zero visual effect by construction and needed no browser check. `main.css` = `@layer legacy, settings, generic, elements, objects, components, utilities` + 11 `@import`s, and **12 code lines total**; the nine `99-legacy/*` come first into the lowest layer, which is what "legacy demoted" means. They are `@import`ed rather than `<link>`ed because **a plain `<link>` is unlayered and unlayered normal declarations outrank every `@layer`** — linking would invert the cascade this file exists to establish. `tokens.css` = 19 Tier 1 primitives, one declaration per line (D17 — PLAN.md's own example is a single line and would satisfy the guard vacuously); `01-settings/theme.css` = 31 Tier 2 roles, **every one a `var()`, zero raw hex**. Reviewers verified 0 dangling refs and **0 unconsumed primitives** — 5 were deleted (`--font-urdu`, `--radius-1`, `--space-1/-4/-7`) to keep that invariant exact, so the space/radius scales have deliberate documented gaps. Palette is 1:1 with `static/theme.css`'s 19 distinct values, nothing invented. **`unsanctioned_hex` flat at 429** — the ratchet UI-020a built did its job on the first try: a hex quoted in a *Tier 2 comment* took it 429 → 430 and was caught before commit. **First review FAILED it** on three false claims in the comments (§12.12): "linked by 8 pages" (it is **7** — D9), "names do NOT collide" (**three do**: `--font-display`/`--font-body`/`--font-data`, and they must NOT be renamed because `blueprint.css`/`taqseem.css` read them), and D19 missing the token half → **D20**. All three measured and fixed, then re-reviewed PASS |
 | UI-030 | `04-objects/shell.css` + `config/nav.json` | **done** | `704a76a` | **First Sprint 3 task, and still no page touched** — `main.css` is linked by none of the nine (verified live), so this is the last task that is safe by construction. `shell.css` = 6 rules, 23 declarations, `.o-shell__*`, **layout only**: not one background, border, colour, font or shadow, and zero raw hex. **The naming is the finding.** `PLAN.md`:125 gives `o-*` to layout objects, and taking the prefix is what makes the file safe rather than tidy: measured per name, **every one of the mockup's shell class names is already taken, in two different ways.** `.brand` (all nine legacy files), `.main` (blueprint + index) and `.spacer` (blueprint) are in `layer(legacy)`, so a rule of that name here would silently override nine pages at once — D21 at nine-page scale. `.app`, `.top` and `.nav` are in `static/theme.css` and no legacy file, which is the opposite case: unlayered, so they *beat* `layer(objects)` and then vanish when a page drops the link. `o-shell__*` appears nowhere in the project. **D21's height half is CLOSED as unnecessary, not deferred again**: `html, body { height: 100% }` never landed, because `.o-shell` uses `height: 100vh`, which resolves against the viewport and needs no percentage chain from `body` — the design target carries both (`mockup:16` and `:58`) and only the second is load-bearing, so **`print.html`'s Ctrl+P risk is not taken at all**. `--weight-medium` (500) did not land either, against this board's own prediction: a layout-only file cannot consume a weight, so it goes with `05-components/nav.css`. **Both stale predictions were corrected where they were written** (`tokens.css`, `reset.css`), per the rule UI-021 wrote after making the same mistake. `config/nav.json` = 4 groups / 11 items, **measured, not invented**: all 11 icon ids verified in `icons.svg` (an exact set match), all 7 urls 200, all 5 screen values real `showScreen` targets, groups and order 1:1 with the mockup, labels from the live pages. Found **D24** (`nav.mypapers` referenced by markup but in neither i18n table; `syllabus` is an orphaned screen) and **D25** (four nav destinations have no address at all, which is half of why the nav drifted into three versions). One layout omission is stated in the file that omits it: the `<760px` collapse hides the nav, and the control that gives it back is a Sprint 4 component. **TWO reviews FAILED this, and both were right.** The first caught three claims asserted instead of counted: "the mockup's nav is 12 items" (it is **11**, contradicted by the same paragraph two lines up), D25's "missing *exactly* the items that cannot be linked" (false — the 5-item pages also drop `/slo.html` and `/taqseem.html`, which have URLs, so that half **is** arbitrary drift), and `main.css` calling all four names a legacy collision. The second review then caught **two new false claims introduced by those very fixes**: the corrected `main.css` split put `.spacer` in the theme.css-only bucket when `blueprint.css:243` styles it — contradicting this task's own `shell.css`:21 — and the new `<760px` note said "six of the nine legacy files" when it is **five files, six blocks** (`index.css` has two), the same read-the-adjacent-number error as "12 items". Both fixed and re-verified independently. The reviewer also proved the two prose-only edits changed no CSS: `tokens.css` and `reset.css` are byte-identical to `HEAD` with comments stripped |
+| UI-031a | Migrate `slo.html` onto the new tree via `static/css/pages/slo.css` | **done** | _(this commit)_ | **The first page in the epic whose stylesheet is the new tree, and the first time any browser has parsed `@layer`.** Three files: `pages/slo.css` (new, two `@import`s and no rules of its own), `main.css` (the nine legacy `@import`s removed), `slo.html` (three `<link>`s → two: `app.css` + the entry file; **not one other byte** — 22/22 frozen attrs, 48/48 class attrs, `<script>` bodies identical, −53 bytes exactly the link swap). **D19 resolved by moving the legacy import out of `main.css`**, because the documented shape was measured to break the page: nine files import alphabetically, `taqseem.css` is last and won **15 selectors** off `slo` including `:root`, `.app-sidebar` and `.app-nav a`, and every value it brought reads a `static/theme.css` token the task unlinks — an unpainted sidebar via a file belonging to another page (**D20 by the back door**, on the one page whose own 17 tokens are all local literals). `main.css` keeps the layer order and stays the single source of the cascade; `CLAUDE.md` §11's link rule changed with it. **Verified in headless Edge 150 over CDP**, not by reasoning: layer statement with all seven names in order, every import in its declared layer, `99-legacy/slo.css` in `layer(legacy)`, sidebar `rgb(22,41,74)`, `static/theme.css`'s tokens all `<EMPTY>`, icons 17px, and the other eight pages byte-identical. **Four review rounds FAILED it and all three real failures were the same shape — a number asserted rather than measured**: D26's contrast computed against an assumed backdrop (real figure **1.70:1 → 3.04:1, an improvement**, not a regression); the change taxonomy naming only theme.css bleed and missing **D21 firing live**; and four inherited line numbers (`forms.css:58` is the input/select rule and cannot match a button). All three are recorded in the files as failed drafts. An aggregate delta count was **removed rather than corrected** — two measurements disagreed on property set, so the files give affected *elements* per rule, re-derivable with a grep. **A hex quoted in a comment took `unsanctioned_hex` 429 → 431 and `--write` pinned it** before `--check` ran; fixed with `git checkout` on the baseline, then re-pinned — **re-pin only after `--check` passes against HEAD**. Ships with three visible changes, all Sprint 4's to fix: **D26** subtitle at 3.04:1, **D27** ghost `<a>` vs `<button>` in two colours, **D28** cards tighter. Also found **D29**: two files are named `theme.css` and the Network panel shows only the basename — it caused a false alarm at Irfan's browser check, which he stopped on rather than assuming |
 | UI-021 | `02-generic` reset + fonts · `03-elements` typography / forms / tables | **done** | `8ecb3cc` | **Sprint 2 complete.** Five new files (449 lines), `main.css`'s five `@import`s uncommented **in place** — the order is the cascade — and **not one `.html` byte touched**, so zero visual effect again by construction. `shared_css_lines` 573 → **1178**, the only metric that moved; `unsanctioned_hex` **flat at 429** and the new tree carries **zero raw hex**. Tier 1 gained 15 primitives (7 type steps, 2 weights, 2 leadings, `--font-serif`, `--font-nastaliq`) and Tier 2 13 roles, verified **0 dangling refs and 0 unconsumed primitives** — UI-020's invariant held exactly. **It predicted it would add space steps and did NOT**: control padding (9px 11px) and cell padding (10px/11px) are optical one-offs, left literal, and the one structural value needed was already `--space-inset`; the stale prediction was corrected in `tokens.css` rather than left to mislead. All nine `woff2` resolved on disk against `../../fonts/` — `url()` resolves against the *stylesheet*, the first such path in the tree. **The finding that outlives the task is D21: a reset in this tree is not neutral.** `layer(generic)`/`layer(elements)` outrank `layer(legacy)`, so a bare element selector beats a legacy *class* rule; the design target's `* { padding: 0 }` would have flattened `index.css:267`'s RTL list indentation, so the universal padding kill was **not** ported, the margin reset is targeted at block text elements, and `img` gets `max-width` without the usual `display:block` (it would break the inline `.icon` sprite). Each omission is stated in the file that omits it. **D22** parks the button appearance reset for UI-041 — `border:none; background:none; color:inherit` from `layer(elements)` would flatten `.btn-primary`/`.btn-ghost` across eight legacy files. **The first review FAILED it and was right**: the file shipped `font: inherit`, which is not a synonym for `font-family: inherit` — the shorthand also resets size, weight, style, variant, stretch and line-height, dragging every legacy button to 15px/400 and stripping the 600/700 weights they set by class. Fixed to the longhand, then re-reviewed PASS. Review also corrected three counts that were guessed rather than measured (`html, body {height:100%}` is 7 of 9 files, **not 8 — `print.css` is the second exception and it is the Ctrl+P page**; "exactly two pseudo-element rules" was a wrong generalisation from a `::before`-only grep; a Tier 2 comment's "20 unconsumed roles" mixed two different sets). **D23** records that `--font-mono`/`--font-data` name "IBM Plex Mono", which **no `@font-face` declares and no woff2 in the repo provides** — pre-existing since before this epic, always falling through to `ui-monospace`; the fix is a font-asset decision for Irfan, not CSS |
 ---
 
@@ -230,7 +306,7 @@ Verified at `ui-baseline`, real app pages only (`mockup-modern.html` is a refere
 and `tests/test_css_architecture.py` fails the suite. Numbers below are no longer maintained
 by hand — run the script.
 
-| metric | key | `ui-baseline` | now (UI-021) | target |
+| metric | key | `ui-baseline` | now (UI-031a) | target |
 |---|---|---:|---:|---:|
 | `<style>` blocks in HTML | `style_blocks` | 9 | **0** ✅ | 0 |
 | CSS lines in HTML | `css_lines_in_html` | 2133 | **0** ✅ | 0 |
@@ -244,7 +320,7 @@ by hand — run the script.
 | hex in every `.css` | `stylesheet_hex` | 29 | **372** | *informational* |
 | hex in `01-settings/tokens.css` | `token_hex` | 0 | **19** | *informational* — the sanctioned palette |
 | hex anywhere | `total_hardcoded_hex` | 429 | **448** | *informational* since UI-020a |
-| `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | **1351** | *informational* — grows through Sprints 2–4 |
+| `app.css` + `theme.css` + new tree | `shared_css_lines` | 269 | **1527** | *informational* — grows through Sprints 2–4 |
 
 **Five are deliberately NOT ratcheted** (`legacy_css_lines`, `stylesheet_hex`, `token_hex`,
 `total_hardcoded_hex`, `shared_css_lines`). `99-legacy/` climbs to ~2133 during Sprint 1 and
@@ -350,6 +426,20 @@ grep). No `.html` modified, so the frozen inventory diff is empty by constructio
 browser: `@layer` remains unparsed by anything, harmless here because no page links `main.css`,
 and the `height:100vh` / independent-scroll reasoning is specification-level, not observed.
 **UI-031 is the first task that can see any of it.**
+**Green at UI-031a:** `pytest -q` = **906 passed, 0 skipped** · `python -m ruff check .` clean ·
+`css_baseline.py --check` exit 0 · **all eight ratcheted metrics flat**, `unsanctioned_hex`
+**429** · `shared_css_lines` 1351 → **1527**, the only mover, re-pinned in-task. Gates run
+**nine times** (implementer four, review agent five — it **FAILED the task four times**).
+**`@layer` is no longer unverified**: parsed in headless Edge 150 through CDP, layer statement
+and per-file layer assignment both read off the live document. The Chrome extension was not
+connected — Edge headless plus Node's built-in `WebSocket` over CDP was used instead, and
+screenshots came from `msedge --headless=new --screenshot`. The school PC remains unchecked
+(blocked item 1). **Two process hazards recorded rather than dropped:** the review agent ran
+`Get-Process msedge | Stop-Process -Force`, which kills *every* Edge on the machine including
+Irfan's — scope cleanup to your own `--user-data-dir` or PIDs. And `C:` reached **226 MB free**
+during this task, causing a real `OSError: [Errno 28] No space left on device` mid-`pytest`;
+**UI-030's recorded `sqlite3.OperationalError: disk I/O error` "flake" was almost certainly
+this, not a flake.** Freeing headless-browser profiles recovered ~2.3 GB.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.

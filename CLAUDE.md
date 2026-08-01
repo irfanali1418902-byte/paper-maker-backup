@@ -364,11 +364,21 @@ says which sprint is live and what the current numbers should be.
 
 - **No `<style>` block in any page.** All CSS lives under `static/css/`. *(Reached page by
   page across Sprint 1; `style_blocks` in the ratchet is the live count.)*
-- **One `<link>` per page**, to `/static/css/main.css`. `main.css` owns the `@import`
-  order. Do not add a second stylesheet link to a page. *(**End state — Sprint 3.** During
-  Sprints 1–2 an extracted page carries three: `app.css`, `theme.css`, and its
-  `99-legacy/<page>.css`. The legacy link must stay in the exact slot its `<style>` block
-  occupied — document order is the only thing keeping the render identical.)*
+- **One stylesheet `<link>` per page**, to that page's entry file
+  `/static/css/pages/<page>.css`, which is two `@import`s: `main.css`, then the page's own
+  `99-legacy/<page>.css` into `layer(legacy)`. `main.css` owns the layer order and the
+  shared tree. Do not add a second stylesheet link to a page, and never `<link>` a legacy
+  file — a plain `<link>` is unlayered and would outrank the whole new tree.
+  *(**End state — Sprint 3.** During Sprints 1–2 an extracted page carries three:
+  `app.css`, `theme.css`, and its `99-legacy/<page>.css`. The legacy link must stay in the
+  exact slot its `<style>` block occupied — document order is the only thing keeping the
+  render identical. **The entry-file indirection was added in UI-031, not planned:** the
+  original rule said the link went straight to `main.css`, which imported all nine legacy
+  files, and a migrated page therefore loaded all nine — last import winning every shared
+  name, on a page it had nothing to do with (D19/D20, measured on `slo.html`).
+  **`app.css` is a second link on migrated pages until Sprint 4** — it carries the `.icon`
+  sprite rule, which has no home in the new tree until the nav component; both die in
+  UI-064.)*
 - **A raw hex outside `static/css/01-settings/tokens.css` is a CI failure.** Components
   read Tier 2 semantic tokens (`--color-action`), never Tier 1 primitives, never a literal.
   *(**End state — Sprint 5–6.** Extraction relocates hex verbatim, it does not remove it:

@@ -1,0 +1,159 @@
+/* =========================================================================
+   pages/slo.css — the single stylesheet slo.html links (UI-031)
+   Two @imports. No rules of its own, ever.
+   -------------------------------------------------------------------------
+   WHY THIS FILE EXISTS: D19, resolved here.
+
+   main.css used to @import all nine 99-legacy/<page>.css files into
+   layer(legacy). That was correct while no page linked main.css — but the
+   moment it becomes a page's only stylesheet, that page loads all nine, and
+   the nine were nine separate per-page <style> blocks that define the same
+   generic names with different values. Last import wins for all of them.
+
+   Measured on this page before writing a line, at UI-031. The nine import
+   alphabetically, so slo.css is 8th and taqseem.css is 9th — taqseem wins
+   every name they share, and the list is not small:
+
+     :root         taqseem  ->  --ink: var(--fg), --bg: var(--app-bg),
+                                --border: var(--line), --surface: var(--panel),
+                                --primary: var(--brand)
+     .app-sidebar  taqseem  ->  background: var(--sidebar-bg)
+     .app-nav a    taqseem  ->  color: var(--sidebar-fg)
+     .brand, .brand .name, .brand small, .app-nav, .app-nav a:hover,
+     .app-nav a.active, .sidebar-foot, .row, body, html, body, a, *
+
+   Every one of those var() names lives in static/theme.css, which UI-031
+   unlinks. So the documented shape — drop theme.css, link main.css — would
+   have shipped slo.html with an unpainted sidebar and no text/border colours,
+   through a file that has nothing to do with this page. That is D20 arriving
+   by the back door: slo.css itself is clean (all 17 of its tokens are literals
+   in its own :root, zero external var() dependencies — verified), and it still
+   would have broken, because its :root loses to taqseem's.
+
+   THE FIX: main.css keeps the layer order and the shared tree; the legacy
+   file comes in HERE, per page. One page, one legacy file, no bleed.
+
+   ⚠ QUOTE FULL PATHS WHEN YOU HAND THIS OVER — TWO FILES ARE NAMED theme.css.
+   This page drops /static/theme.css (the old live stylesheet: --fg, --brand,
+   --app-bg, --sidebar-bg; 13787 bytes; still linked by the six unmigrated
+   pages, deleted in UI-064). It KEEPS /static/css/01-settings/theme.css (the
+   Tier 2 semantic tokens authored in UI-020: --color-canvas, --color-surface,
+   --color-text; 8682 bytes), which main.css:87 imports into layer(settings)
+   and which carries the entire Modern palette — remove that one and the page
+   loses every new colour it has. A browser's Network panel prints only the
+   basename, so a migrated page reads as though the dropped link is still
+   there. Irfan hit exactly this at UI-031's handover, because the click-list
+   said "theme.css gone" instead of naming the path. In the panel: 8.7 kB is
+   the new one, 13.8 kB the old. See DEFERRED D29.
+
+   Order matters and is not arbitrary:
+
+     1. main.css first. Its `@layer legacy, settings, generic, ...` statement
+        is what creates the layer order, and it must be the first thing the
+        document sees. It stays the single source of truth for the cascade —
+        do not restate the layer list in this file, or there are two.
+     2. 99-legacy/slo.css second, INTO layer(legacy). It must be an @import
+        with the layer() keyword and not a second <link>: a plain <link> is
+        unlayered, and unlayered normal declarations outrank every @layer, so
+        linking it would put legacy on TOP of the new tree and invert the whole
+        cascade main.css exists to establish. Layer `legacy` already exists by
+        the time this line runs (main.css created it), so this joins it rather
+        than appending a new one after `utilities`.
+
+   WHAT ACTUALLY CHANGED ON THE PAGE, measured before vs after in headless
+   Edge 150 across all 921 elements — not predicted, and not only the two rows
+   in DEFERRED.md. Most of the 322 element x property deltas are the two
+   documented ones (base type 16px -> 15px from typography.css, and the table
+   metrics from tables.css: th/td padding 8px 10px -> 10px/11px 24px, th gains
+   the --color-surface-sunken fill). The remainder is TWO mechanisms, not one,
+   and an earlier draft of this block named only the first — which would have
+   sent the next session checking its page against theme.css alone.
+
+   MECHANISM 1 — static/theme.css bleed REMOVED. The unlayered file beat every
+   @layer while it was linked; dropping the link takes its rules off the page
+   and hands each element back to the page's own legacy file:
+
+     .brand      background rgb(255,255,255) -> transparent, display flex ->
+                 block, border-bottom 1px -> 0, text -> white. theme.css:62
+                 gives .brand a WHITE background because there it is a cell in
+                 the .app topbar grid — and this page has no .app, it has
+                 .app-sidebar. So a white slab has been sitting in the navy
+                 sidebar. This is the biggest single change on the page and it
+                 is a fix. It is also the fact that made D26's first draft
+                 wrong: the old subtitle was pale text on WHITE, not on navy.
+     .bloom      display flex -> inline, on all 115 pills. theme.css:171 .bloom
+                 is a bar-CHART component (.bloom .r / .track / .pct) for a
+                 different page; it was flexing this page's pill badge.
+     .app-nav a  rgb(198,210,232) -> rgb(255,255,255), 6 links (the 7th is
+                 .active and was already white): slo.css's own colour,
+                 previously shadowed by unlayered theme.css.
+
+   All three are improvements, and all three are why "unlayered theme.css beats
+   every @layer" is not a footnote. Check them in a browser on every page the
+   rest of UI-031 and UI-032 migrate — theme.css is shadowing each of them in
+   ways only that page's own legacy file can tell you.
+
+   MECHANISM 2 — THE NEW TREE BEATING layer(legacy). This is D21 firing on a
+   real page for the first time, and it is the opposite direction from
+   mechanism 1: an ELEMENT selector in generic/elements outranks a CLASS rule
+   in legacy, because layer order is decided before specificity. Counted as
+   AFFECTED ELEMENTS per rule, before -> after, element-aligned:
+
+     reset.css:79-92   margin:0 on block text elements (the declaration is at
+                       :91) zeroes three legacy class margins outright:
+                         .card .hint   x3   0 0 16px -> 0   <- 16px gap, gone
+                         .card h2      x3   0 0 4px  -> 0
+                         .page-head p  x1   5px 0 0  -> 0
+     typography.css    h1  .page-head h1  x1  22px -> 24px, tracking -0.2px
+       :66-77          h2  .card h2       x3  15px -> 18px
+     typography.css    code/kbd/samp/pre  x5  12.5px -> 13.5px, family
+       :97-103         monospace -> "IBM Plex Mono", ui-monospace, monospace.
+                       D23's FIRST LIVE APPEARANCE: no @font-face declares that
+                       family and no woff2 in the repo provides it, so it falls
+                       through to ui-monospace. Pre-existing, now visible.
+     forms.css:101-102 font-family: inherit takes <button class="btn-ghost">
+                       x2 from ARIAL -> IBM Plex Sans. NOTE the selector: :58
+                       carries the same declaration but its rule is
+                       input/select/textarea and does NOT match a button — an
+                       earlier draft of this block cited :58 and was wrong.
+                       This is the exact declaration UI-021's review corrected
+                       from the `font` shorthand; D22 parks the rest of that
+                       reset for UI-041.
+     forms.css:63      --radius-control on select/input  x5  9px -> 11px
+     forms.css:62      border colour goes from slo.css's own literal to
+                       --color-border, one step lighter. NOTE: the two hex
+                       values are deliberately NOT quoted here. Writing them
+                       took unsanctioned_hex 429 -> 431 and the ratchet caught
+                       it, exactly as it caught a hex quoted in a Tier 2
+                       comment during UI-020. A copy-pasteable literal counts
+                       whether or not it is inside a comment, and only
+                       01-settings/tokens.css is exempt.
+
+   NO AGGREGATE COUNT IS GIVEN ON PURPOSE. An earlier draft said "80
+   instance-deltas"; that figure was inherited from a review's bucket rather
+   than measured, and two independent element x property counts of this same
+   migration disagreed because they included different property sets (border
+   corners, line-height and derived layout all move the total). Affected
+   ELEMENTS per rule, above, is unambiguous and re-checkable. If you want an
+   aggregate, define the property set first.
+
+   NET EFFECT, and the thing to look at rather than the list: headings get
+   ~20% bigger while the space beneath them collapses to zero. Card 1 measures
+   158px -> 143.05px, card 2 224px -> 214.05px, .page-head 52px -> 45.95px.
+   The legacy layer's intra-card spacing is dead on a migrated page and the
+   components that replace it are Sprint 4 — see DEFERRED D28.
+
+   D26 and D27 are two NAMED instances of mechanism 2, not the only ones.
+
+   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and it has
+   to. app.css carries `.icon { width:17px; height:17px }` for the <use> sprite
+   in the nav, and that rule has NO home in the new tree until the nav
+   component in Sprint 4 — 02-generic/fonts.css says so in its own header.
+   Without it the seven nav icons fall back to the SVG default of 300x150.
+   Being unlayered is also load-bearing right now: 99-legacy/landing.css:26
+   sets `.icon { width:22px }`, which arrives layered on any page that imports
+   it, and app.css beats it. app.css dies in Sprint 6 (UI-064) with theme.css.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/slo.css") layer(legacy);

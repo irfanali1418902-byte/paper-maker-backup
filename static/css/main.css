@@ -2,12 +2,18 @@
    main.css — the cascade, declared in one place
    ITCSS layer order + BEM components + a small utility layer (ADR-001).
    -------------------------------------------------------------------------
-   NOTHING LINKS THIS FILE YET. The single <link href="/static/css/main.css">
-   per page arrives in Sprint 3 (UI-031 / UI-032); CLAUDE.md §11 marks that rule
-   as END-STATE for exactly this reason. Until then every page still carries its
-   own app.css + theme.css + 99-legacy/<page>.css links, and this file has zero
-   effect on what any teacher sees. That is why UI-020 is a no-visual-change
-   task even though it authors real CSS.
+   THIS FILE IS LIVE AS OF UI-031, on slo.html — the first page in the epic
+   whose stylesheet is the new tree, and the first time any browser has parsed
+   the @layer statement below. It is reached INDIRECTLY: the page links
+   static/css/pages/slo.css, which imports this file and then its own legacy
+   file (see that file's header for why the indirection exists — D19). The
+   other eight pages still carry their own app.css + theme.css +
+   99-legacy/<page>.css links and are untouched by anything here; they migrate
+   in the rest of UI-031 and in UI-032.
+
+   (This block read "NOTHING LINKS THIS FILE YET" through UI-020..UI-030, which
+   is what made those tasks no-visual-change by construction. That is over.
+   Editing this file now changes what a teacher sees on slo.html.)
 
    No build step, no bundler, no npm (ADR-001): the app is launched by school
    staff via start.bat, and a stale build artifact is a mystery bug nobody on
@@ -38,31 +44,36 @@
 /* -------------------------------------------------------------------------
    1. LEGACY — the 2115 lines Sprint 1 extracted, held in the lowest layer.
    Append-never, delete-only. Sprints 4-6 drain these files as each component
-   lands; when one reaches zero lines it is deleted, and its @import here goes
-   with it. Progress on this epic is literally the line count of this block.
+   lands; when one reaches zero lines it is deleted. Progress on this epic is
+   literally the line count of static/css/99-legacy/.
 
-   They are imported into layer(legacy) rather than <link>ed because A PLAIN
-   <link> IS UNLAYERED, AND UNLAYERED STYLES BEAT EVERY @layer. Linking them
+   THE NINE @import LINES THAT USED TO BE HERE ARE GONE — moved to per-page
+   entry files (static/css/pages/<page>.css) in UI-031. Do not put them back.
+
+   They were here because PLAN.md §2 specifies legacy-first, and that half is
+   unchanged: legacy is still the lowest layer and the new tree still wins
+   without an !important. What changed is WHICH legacy file a page loads.
+   Importing all nine here was harmless only while no page linked main.css.
+   The moment one did, that page got all nine — and the nine were nine separate
+   per-page <style> blocks defining the same generic names (.card, .page-head,
+   .btn-ghost, .app-sidebar, .app-nav a, :root in all nine) with different
+   values, so the LAST import won for all of them (D19). Measured on slo.html
+   at UI-031: taqseem.css, alphabetically last, took :root, .app-sidebar,
+   .app-nav a, .brand, .sidebar-foot and .row off it — and every value it
+   brought reads a static/theme.css token that the same task unlinks, so the
+   page would have rendered with an unpainted sidebar and no border colours
+   through a file belonging to a different page (D20 by the back door).
+
+   So each page now imports its OWN legacy file, into this same layer, from its
+   entry file — see static/css/pages/slo.css, which documents the ordering
+   rules. This file keeps the layer order and the shared tree, which is what it
+   was always for. A page that has not been migrated yet still <link>s its
+   99-legacy/<page>.css directly and is untouched by any of this.
+
+   Either way it must be an @import with layer(), never a <link>: A PLAIN
+   <link> IS UNLAYERED, AND UNLAYERED STYLES BEAT EVERY @layer. Linking legacy
    would invert the cascade this file exists to establish.
-
-   ⚠ CROSS-PAGE COLLISION, deliberately left for Sprint 3 — see DEFERRED D19.
-   These nine files were nine separate per-page <style> blocks, so they define
-   the same generic class names (.card, .btn-primary, .modal, .page-head) with
-   different values. Imported together they all apply to every page, and the
-   last import wins for all of them. Harmless right now — nothing loads this
-   file — but UI-031/UI-032 must resolve it before main.css becomes a page's
-   only stylesheet. PLAN.md §2 specifies this import-first design; the collision
-   is a consequence of it, not a deviation from it.
    ------------------------------------------------------------------------- */
-@import url("99-legacy/bank.css")       layer(legacy);
-@import url("99-legacy/blueprint.css")  layer(legacy);
-@import url("99-legacy/index.css")      layer(legacy);
-@import url("99-legacy/landing.css")    layer(legacy);
-@import url("99-legacy/library.css")    layer(legacy);
-@import url("99-legacy/print.css")      layer(legacy);
-@import url("99-legacy/slo-health.css") layer(legacy);
-@import url("99-legacy/slo.css")        layer(legacy);
-@import url("99-legacy/taqseem.css")    layer(legacy);
 
 /* -------------------------------------------------------------------------
    2. SETTINGS — design tokens. No selectors that paint anything, just :root.
@@ -103,13 +114,16 @@
    file's header states what it deliberately does NOT reset for that reason.
 
    NOT over static/theme.css, though — and the distinction matters for Sprint 3.
-   That file is still a plain <link> on 7 pages, so it is UNLAYERED and beats
+   That file is still a plain <link> on 6 pages, so it is UNLAYERED and beats
    every @layer here, exactly as the legacy note above says. `.tbl` lives there,
    not in layer(legacy), so for as long as a page keeps its theme.css <link> that
    class wins over `table` below; once main.css is a page's only stylesheet,
-   theme.css is not loaded at all and `.tbl` simply stops existing. (Neither
-   applies literally today, since no page links main.css either.) Which way any
-   given rule resolves depends on whether it arrives layered — DEFERRED D19/D20.
+   theme.css is not loaded at all and `.tbl` simply stops existing. BOTH HALVES
+   ARE NOW LIVE, on different pages: slo.html dropped its theme.css link in
+   UI-031 and takes `table` from tables.css below, the other six still keep it.
+   (Was 7 pages until UI-031; print.html and landing.html never had it — D9.)
+   Which way any given rule resolves depends on whether it arrives layered —
+   DEFERRED D19/D20.
    ------------------------------------------------------------------------- */
 @import url("03-elements/typography.css")  layer(elements);
 @import url("03-elements/forms.css")       layer(elements);
@@ -121,8 +135,11 @@
    the pages, which is exactly why they are prefixed: `o-shell__*` collides with
    nothing, whereas every one of the mockup's own shell names is already taken.
    Three collide with the LEGACY layer, which this layer would silently
-   override: `.brand` in all nine legacy files at once, `.main` in two
-   (blueprint.css, index.css), `.spacer` in one (blueprint.css). The other
+   override: `.brand` in all nine legacy files, `.main` in two (blueprint.css,
+   index.css), `.spacer` in one (blueprint.css). Since UI-031 a page loads only
+   its own legacy file, so the blast radius per page is whichever of the nine
+   that page owns — but the name is taken in nine of them, which is what makes
+   it unusable here; the count is the reason, not the mechanism. The other
    three — `.app`, `.top`, `.nav` — are in static/theme.css and in no legacy
    file, which is the different, opposite case described above: unlayered, so
    they beat this layer rather than lose to it, and they vanish entirely once a

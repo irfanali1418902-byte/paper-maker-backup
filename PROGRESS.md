@@ -1,5 +1,62 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-01 — UI-031a: slo.html is the first page on the new CSS tree (@layer live)
+
+**Sprint 3, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. This is the first page in the
+epic whose stylesheet is the new ITCSS tree, and the first time any browser has parsed the
+`@layer` statement the whole architecture rests on.
+
+**What shipped.** `slo.html`'s three `<link>`s became two: `app.css` (it still owns the
+`.icon` sprite until Sprint 4) plus a new entry file `static/css/pages/slo.css`, which is two
+`@import`s and no rules of its own — `../main.css`, then `../99-legacy/slo.css layer(legacy)`.
+`main.css` lost the nine legacy `@import`s it used to carry. Not one other byte of the page
+moved: frozen inventory 22/22, class attributes 48/48, `<script>` bodies identical, −53 bytes
+which is exactly the link swap.
+
+**Why the documented shape was abandoned.** ADR-001 says the `<link>` goes straight to
+`main.css`, which imported all nine `99-legacy/*` files. Measured before writing: they import
+alphabetically, so `taqseem.css` is last and won **15 selectors** off this page — `:root`,
+`.app-sidebar`, `.brand`, `.app-nav a`, `.sidebar-foot`, `.row` and more — and every value it
+brought reads a `static/theme.css` token that the same task unlinks. The by-the-book migration
+would have shipped an unpainted sidebar and no border colours, through a file belonging to a
+different page. That is D19 and D20 arriving together, on the one page whose own 17 tokens are
+all local literals. The legacy import therefore moved out of `main.css` into a per-page entry
+file; `main.css` keeps the layer order and remains the single source of the cascade. Rule
+changed in `CLAUDE.md` §11 and recorded as unplanned.
+
+**Verified in a real browser, not by reasoning.** The Chrome extension was not connected, so
+headless Edge 150 was driven over CDP with Node's built-in WebSocket. Read off the live
+document: the layer statement with all seven names in order, every `@import` in its declared
+layer, `99-legacy/slo.css` in `layer(legacy)` rather than unlayered, sidebar `rgb(22,41,74)`,
+`static/theme.css`'s tokens all empty, icons 17px, and the other eight pages untouched.
+
+**Four review rounds failed it, and the three real failures were one shape: a number asserted
+instead of measured.** A contrast ratio computed against an assumed backdrop (the real figure
+was 1.70:1 → 3.04:1, an *improvement*, because the old sidebar had a white slab in it); a
+"what changed" list naming only one of two mechanisms and missing D21 firing live; and four
+line numbers inherited rather than checked. All three now sit in the files as recorded failed
+drafts, so the next session meets the trap and not just the answer. One aggregate count was
+deleted rather than fixed — two measurements disagreed on which properties to count, so the
+files give affected elements per rule, which anyone can re-derive with a grep.
+
+**Two things worth remembering beyond this task.** Quoting two hex values in a *comment* took
+`unsanctioned_hex` 429 → 431, and because `css_baseline.py --write` had already run, the
+raised number was pinned into `BASELINE.json` and `--check` then passed against the laundered
+baseline — re-pin only *after* `--check` passes against HEAD. And `C:` hit 226 MB free during
+this task, producing a real `No space left on device` mid-pytest; UI-030's recorded sqlite
+"disk I/O error flake" was almost certainly the same thing.
+
+**Ships with three visible changes, all accepted and all homed in Sprint 4:** the sidebar
+subtitle at 3.04:1 (better than before, still under WCAG AA) — D26; `<a class="btn-ghost">`
+losing its blue while `<button class="btn-ghost">` keeps it — D27; and cards visibly tighter,
+headings ~20% bigger with the gap beneath them gone — D28. A fourth item, D29, records that
+two different files are named `theme.css` and the browser's Network panel shows only the
+basename — it caused a false alarm at the browser check.
+
+Gates: `pytest -q` 906 passed · `ruff` clean · ratchet OK, eight ratcheted metrics flat,
+`unsanctioned_hex` 429 · `shared_css_lines` 1351 → 1527, the only mover.
+
+
 ## 2026-07-26 — Concurrency fix: SQLite WAL + busy_timeout (20-teacher concurrent write)
 
 MASLA: 20 teachers ek server se (LAN) ek saath likhte — default DELETE-journal +
