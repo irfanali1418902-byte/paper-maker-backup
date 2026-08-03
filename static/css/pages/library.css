@@ -1,0 +1,40 @@
+/* =========================================================================
+   pages/library.css — the single stylesheet library.html links (UI-031b)
+   Two @imports. No rules of its own, ever.
+   -------------------------------------------------------------------------
+   THE MECHANISM: see pages/slo.css's header (D19/D20) for why the legacy
+   import lives in a per-page entry file, and why line 2 must be an @import
+   carrying layer() rather than a second <link> — a plain <link> is unlayered
+   and would outrank the whole new tree.
+
+   D20 DOES NOT HIT THIS PAGE. Every custom property 99-legacy/library.css
+   reads, other than --text below, is declared in that file's own :root, and
+   none of those names collide with 01-settings/. Unlinking /static/theme.css
+   orphans nothing.
+
+   D14 (`--text` on `.pg-btn`, 99-legacy/library.css:232) STAYS INERT. `--text`
+   is declared nowhere in the project, so /static/theme.css never supplied it
+   either: the declaration was already invalid before this change and still is,
+   and `.pg-btn` inherits its colour in both states. Not this task's to fix
+   (§12.2).
+
+   ⚠ D29 — TWO FILES ARE NAMED theme.css. This page DROPS /static/theme.css
+   and KEEPS /static/css/01-settings/theme.css, which main.css imports into
+   layer(settings) and which carries the Modern palette. Quote FULL PATHS in
+   any handover: a Network panel prints only the basename, so a correctly
+   migrated page reads as though the dropped link is still there. D29 has the
+   file sizes that tell them apart.
+
+   IT ALSO STILL LINKS static/app.css, which owns the `.icon` sprite rule
+   until Sprint 4's nav component. This page's legacy file declares no `.icon`
+   rule, so it has nothing to lose there.
+
+   THE MEASUREMENTS FOR THIS MIGRATION LIVE IN STATUS.md's UI-031b task-log
+   row, not here. That is deliberate: three review rounds failed this task on
+   numbers written into this comment — none of them wrong about the CSS, all
+   of them about figures that cannot be re-derived from a stylesheet. Numbers
+   belong where the board keeps them and where a reviewer can check them.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/library.css") layer(legacy);

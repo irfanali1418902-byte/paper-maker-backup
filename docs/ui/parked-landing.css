@@ -1,0 +1,78 @@
+/* =========================================================================
+   ⚠ PARKED — THIS FILE IS NOT LIVE AND MUST NOT BE MOVED BACK CASUALLY.
+
+   It is a finished, measured UI-031b entry file for landing.html that Irfan
+   HELD on 2026-08-01 rather than shipped. It sits in docs/ because anything
+   under static/css/ counts toward the shared_css_lines metric even when no
+   page links it, and re-pinning BASELINE.json with 55 unlinked lines in it
+   would bury them inside the next task's number.
+
+   WHY IT WAS HELD: the migration is correct and green, but it visibly
+   degrades the app's front door. landing's legacy h1 is the largest in the
+   project and the new tree's h1 is smaller, so the hero headline SHRINKS
+   (two lines -> one) and reset.css zeroes the 12px gap beneath it, leaving
+   the title jammed against the paragraph. Unlike D26/D27/D28 this is not a
+   Sprint 4 tidy-up on an interior page. The real fix is a hero/display type
+   step, which is Sprint 4's typography work — so landing waits for it.
+
+   TO RESUME: move this file back to static/css/pages/landing.css, change
+   landing.html's second <link> from /static/css/99-legacy/landing.css to
+   /static/css/pages/landing.css, and re-measure. The measurement below is
+   still valid as of 2026-08-01; the icon finding in particular is real and
+   will recur.
+   =========================================================================
+
+   pages/landing.css — the single stylesheet landing.html links (UI-031b)
+   Two @imports. No rules of its own, ever.
+   -------------------------------------------------------------------------
+   THE MECHANISM IS NOT RE-ARGUED HERE — read pages/slo.css's header for why
+   the legacy import lives in a per-page entry file (D19/D20) and why line 2
+   must be an @import with layer() rather than a second <link>.
+
+   WHAT MAKES THIS PAGE DIFFERENT, and it is not a footnote:
+
+   1. THIS PAGE NEVER LINKED /static/theme.css (D9). It carried two <link>s,
+      not three, so half of what every other migration does — removing the
+      unlayered theme.css bleed — does not happen here and cannot. Everything
+      that moves on this page moves for ONE reason: the new tree outranking
+      layer(legacy) (D21). If you are diffing this page against slo's or
+      slo-health's change list, that is why the shape differs.
+
+   2. THE ICONS SHRINK, AND THAT IS THIS PAGE'S REAL DELTA. 99-legacy/
+      landing.css:26 declares `.icon { width: 22px; height: 22px }` — the only
+      page in the project that overrides the sprite size. Today it WINS, purely
+      by document order: both it and static/app.css:57 (17px) are unlayered
+      <link>s and this one is second. The moment it moves into layer(legacy),
+      app.css — still unlayered, still linked, because it owns .icon until
+      Sprint 4's nav component — outranks it, and all 11 icons on this page go
+      22px -> 17px. Measured, before and after, not predicted: 11 elements at
+      22px before, 11 at 17px after.
+
+      This was FORESEEN, in pages/slo.css's closing paragraph, which noted that
+      app.css being unlayered is load-bearing "right now" precisely because of
+      landing.css:26. It is the first time the epic has cashed that cheque.
+
+      It is NOT fixed here, and the reason is scope: this task moves a <link>
+      block. Restoring 22px would mean either authoring a rule in the new tree
+      (Sprint 4's nav/icon component owns that) or leaving landing on the old
+      mechanism (which defeats the task). Irfan's call at handover; if the
+      answer is "keep 22px", it belongs to UI-04x with the icon component and
+      it should be recorded there rather than patched here.
+
+   3. NO D20 EXPOSURE. Measured before writing: landing.css declares 12 custom
+      properties and reads 10, and the set it reads but does not declare is
+      EMPTY — so unlinking theme.css orphans nothing, which on this page was
+      never in question anyway since it had no such link. Two are declared and
+      never read (--primary-hover, --radius-btn); pre-existing, left alone.
+      Zero of its names collide with 01-settings/tokens.css or
+      01-settings/theme.css.
+
+   ⚠ FULL PATHS IN THE HANDOVER (D29): this page KEEPS
+   /static/css/01-settings/theme.css (Tier 2 tokens, imported by main.css into
+   layer(settings)) and never had /static/theme.css to lose. On this one page a
+   "theme.css" sighting in the Network panel is CORRECT and expected — the
+   opposite of the false alarm D29 records.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/landing.css") layer(legacy);
