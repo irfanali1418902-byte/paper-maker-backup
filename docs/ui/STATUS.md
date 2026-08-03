@@ -4,16 +4,19 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-08-03 (UI-031b, `library`) — Sprint 3 2/3; **three pages are live on
-the new tree**, `landing` held
+**Last updated:** 2026-08-03 (`taqseem` measured and HELD) — Sprint 3 2/3; **three pages are
+live on the new tree**, `landing` and `taqseem` both held
 
 ---
 
-## NEXT TASK → **`taqseem`, then `landing`** — the two pages UI-031b did not ship
+## NEXT TASK → **Sprint 4 components (UI-040..043)** — both remaining Sprint 3 pages are HELD
 
-**UI-031b is otherwise complete.** `slo` (UI-031a), `slo-health` and `library` are live on the
-new tree. The mechanism is settled; what is left are the two pages that each need a decision
-rather than a repetition, and they are listed in the order they should be taken.
+**Sprint 3's page migrations are done as far as they can go.** `slo` (UI-031a), `slo-health`
+and `library` are live on the new tree. The two that remain — `landing` and `taqseem` — were
+each taken, measured, and **held on Irfan's call**, for the same underlying reason from two
+directions: the new tree does not yet own the components they depend on. Both resume after
+Sprint 4, and **neither should be re-attempted before then**; the measurements are below so
+nobody has to redo them to find that out.
 
 **`landing` is HELD, not pending — do not just migrate it.** It was built, measured and passed
 its gates, then held on Irfan's call because it visibly degrades the app's front door: this
@@ -27,11 +30,51 @@ loses its `.icon` override (22px → 17px on 11 icons) the moment its file becom
 because `app.css` is unlayered and beats it — the first time UI-031a's warning about that
 actually fired.
 
-**`taqseem` was carved out of UI-031b on Irfan's call**, and the reason is D20: it is the one
-page whose legacy file reads `static/theme.css` tokens with no fallback — 20 of them — so its
-migration is a *decision* (keep the link, or ship D20's compatibility block), not a repetition.
-`slo`, `slo-health` and `library` needed neither; do not let three clean pages in a row make
-it look routine. Run the orphan-token check first — it is what tells the two cases apart.
+**`taqseem` is HELD too, and the finding is bigger than the D20 it was carved out for.** It was
+taken as a token problem — its legacy file reads `static/theme.css` tokens with no fallback —
+and that half went exactly as planned: the real count is **26 read-but-never-declared** (this
+board said 20; corrected by measurement), **3** of which (`--font-display`, `--font-body`,
+`--font-data`) Tier 2 already declares under the deliberate collision, leaving **23** for a
+compatibility block. All 23 map 1:1 onto existing Tier 2 roles with **no value change and no
+literal**, declared names collide with `01-settings/` **zero** times, and the block was
+verified in the browser: all 23 resolve, none empty. That file exists and works.
+
+**It was held because the page also borrows RULES from `static/theme.css`, not just tokens —
+and no grep over custom properties can see that.** Measured against the live DOM: **20**
+`static/theme.css` rules match elements on this page and **16 of them are not redeclared
+anywhere in `99-legacy/taqseem.css`** — `.btn`, `.btn.gold`, `.btn.ghost`, `.btn:hover`,
+`.btn:disabled`, `.card`, `.card.has-ch`, `.card > .ch`, `.card > .ch h3`, `.card > .cb`,
+`.pagehead`, `.pagehead h1`, `.pagehead p`, and two `input`/`:focus` rules. Dropping the link
+therefore does not "remove theme.css bleed" here, it **removes the page's buttons and card
+chrome**: measured after the swap, the three `.btn`s fell all the way back to UA default
+(background `rgb(240,240,240)`, 2px border, padding 1px 6px, `display:block`, weight 400,
+radius 0) and `.card`'s `box-shadow` went to `none`. The new tree has no replacement yet —
+`.btn`/`.card` are Sprint 4 components and D22 parks the button reset until UI-041.
+
+**This is a property of `taqseem` alone, and that is why three clean pages made it look
+routine.** Counted per legacy file: `slo` declares 5 `.btn` and 3 `.card` rules of its own,
+`slo-health` 2 and 3, `library` 13 and 3, `blueprint` 10 and 4 — **`taqseem` declares 0 and 0**
+and leaned entirely on the shared stylesheet. The markup uses all of them (`btn gold` ×2,
+`btn ghost`, `card has-ch`, `pagehead`).
+
+**So the check this board prescribed was necessary but NOT sufficient, and that is the lesson
+to carry to `blueprint` and every remaining page.** Two greps over `var()` and `--name:` decide
+the *token* question only. The rule question is a different measurement and needs the DOM:
+parse `static/theme.css`, run each selector through `querySelectorAll` on the live page, and
+subtract the selectors the page's own legacy file redeclares. **Run both before deciding any
+page.** `blueprint` is the next page that will meet this (D20 lists it at 17 orphan tokens) and
+its `.btn`/`.card` counts above say the rule half is probably clean there — *probably* is not
+measured, so measure it.
+
+**The work already done is not wasted, and it is parked exactly like landing's:**
+`docs/ui/parked-taqseem.css` carries the two `@import`s and the 23-token compatibility block,
+ratchet-clean (no raw hex), with the restore instructions in its header — **read that header
+before touching this page.** It sits in `docs/` for the same reason
+`docs/ui/parked-landing.css` does: anything under `static/css/` counts toward
+`shared_css_lines` even when no page links it, so leaving it in place would let the next
+task's `--write` bury 61 unlinked lines inside its own number. `shared_css_lines` is therefore
+back at **1616** and `BASELINE.json` was not re-pinned — nothing shipped. `taqseem.html` is
+untouched at HEAD, still on its three `<link>`s.
 
 **The shape, decided in UI-031a and not to be relitigated:** each page gets a two-line entry
 file `static/css/pages/<page>.css` — `@import url("../main.css");` then
@@ -41,12 +84,21 @@ file `static/css/pages/<page>.css` — `@import url("../main.css");` then
 
 **Do them one at a time, with a browser open, and measure per page before writing:**
 
-- **Run the orphan-token check first — it is two greps and it is what decides the page.**
-  Collect the names the page's `99-legacy/<page>.css` *declares* and the names it *reads via
-  `var()`*; the set it reads but does not declare is the D20 exposure. `slo` **0**,
-  `slo-health` **0**, `taqseem` **20**. Also diff its declared names against
-  `01-settings/tokens.css` + `01-settings/theme.css` together — a shared name means the token
-  changes owner when the tree arrives. Zero collisions on both migrated pages so far.
+- **Run the orphan-token check first — two greps — but know that it decides only HALF the
+  page.** Collect the names the page's `99-legacy/<page>.css` *declares* and the names it
+  *reads via `var()`*; the set it reads but does not declare is the D20 exposure. `slo` **0**,
+  `slo-health` **0**, `library` **0**, `taqseem` **26** (this line said 20 until `taqseem` was
+  measured). Also diff its declared names against `01-settings/tokens.css` +
+  `01-settings/theme.css` together — a shared name means the token changes owner when the tree
+  arrives. Zero collisions on all four pages checked so far.
+- **Then run the orphan-RULE check, which is the half that held `taqseem`.** A page can borrow
+  whole rules from `static/theme.css`, not just token values, and no grep over custom
+  properties will show it. Parse `static/theme.css`, run every selector through
+  `querySelectorAll` against the live page, and subtract the selectors the page's own legacy
+  file redeclares — what is left disappears the moment the link goes. `taqseem`: **16**
+  (`.btn*`, `.card*`, `.pagehead*`, two `input`/`:focus`), which is its whole button and card
+  chrome. Cheap sanity check before the browser work: `.btn`/`.card` rule counts per legacy
+  file — `slo` 5/3, `slo-health` 2/3, `library` 13/3, `blueprint` 10/4, **`taqseem` 0/0**.
 - **Diff every page against BOTH mechanisms**, not just one — see `pages/slo.css`'s
   "WHAT ACTUALLY CHANGED" block. (1) `static/theme.css` bleed being removed, which is
   per-page and unpredictable: on `slo` it took a **white slab** out of the navy sidebar and
@@ -310,7 +362,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
 | 1 Extraction | UI-010..018 | **9/9** | **done** |
 | 2 Foundation | UI-020..021 | **2/2** | **done** |
-| 3 Shell | UI-030..032 | **2/3** | in progress — UI-031: `slo`, `slo-health`, `library` live; **`landing` HELD** (hero regression, resumes after Sprint 4 typography); `taqseem` carved out into its own task |
+| 3 Shell | UI-030..032 | **2/3** | as far as it goes — UI-031: `slo`, `slo-health`, `library` live; **`landing` HELD** (hero regression, resumes after Sprint 4 typography) and **`taqseem` HELD** (16 orphan RULES — its buttons and cards live only in `static/theme.css`; resumes after Sprint 4 components). Both measured, neither to be re-attempted before Sprint 4 |
 | 4 Components | UI-040..043 | 0/4 | not started |
 | 5 Inline burn-down | UI-050..052 | 0/3 | not started |
 | 6 Legacy kill | UI-060..064 | 0/5 | not started |
@@ -343,6 +395,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | UI-031a | Migrate `slo.html` onto the new tree via `static/css/pages/slo.css` | **done** | `f2493a0` | **The first page in the epic whose stylesheet is the new tree, and the first time any browser has parsed `@layer`.** Three files: `pages/slo.css` (new, two `@import`s and no rules of its own), `main.css` (the nine legacy `@import`s removed), `slo.html` (three `<link>`s → two: `app.css` + the entry file; **not one other byte** — 22/22 frozen attrs, 48/48 class attrs, `<script>` bodies identical, −53 bytes exactly the link swap). **D19 resolved by moving the legacy import out of `main.css`**, because the documented shape was measured to break the page: nine files import alphabetically, `taqseem.css` is last and won **15 selectors** off `slo` including `:root`, `.app-sidebar` and `.app-nav a`, and every value it brought reads a `static/theme.css` token the task unlinks — an unpainted sidebar via a file belonging to another page (**D20 by the back door**, on the one page whose own 17 tokens are all local literals). `main.css` keeps the layer order and stays the single source of the cascade; `CLAUDE.md` §11's link rule changed with it. **Verified in headless Edge 150 over CDP**, not by reasoning: layer statement with all seven names in order, every import in its declared layer, `99-legacy/slo.css` in `layer(legacy)`, sidebar `rgb(22,41,74)`, `static/theme.css`'s tokens all `<EMPTY>`, icons 17px, and the other eight pages byte-identical. **Four review rounds FAILED it and all three real failures were the same shape — a number asserted rather than measured**: D26's contrast computed against an assumed backdrop (real figure **1.70:1 → 3.04:1, an improvement**, not a regression); the change taxonomy naming only theme.css bleed and missing **D21 firing live**; and four inherited line numbers (`forms.css:58` is the input/select rule and cannot match a button). All three are recorded in the files as failed drafts. An aggregate delta count was **removed rather than corrected** — two measurements disagreed on property set, so the files give affected *elements* per rule, re-derivable with a grep. **A hex quoted in a comment took `unsanctioned_hex` 429 → 431 and `--write` pinned it** before `--check` ran; fixed with `git checkout` on the baseline, then re-pinned — **re-pin only after `--check` passes against HEAD**. Ships with three visible changes, all Sprint 4's to fix: **D26** subtitle at 3.04:1, **D27** ghost `<a>` vs `<button>` in two colours, **D28** cards tighter. Also found **D29**: two files are named `theme.css` and the Network panel shows only the basename — it caused a false alarm at Irfan's browser check, which he stopped on rather than assuming |
 | UI-031b | Migrate `slo-health.html` onto the new tree via `pages/slo-health.css` | **done** | `8e9b839` | **Second live page, and the first repetition of UI-031a's mechanism — it needed no new decision, which was the thing being tested.** Three files: `pages/slo-health.css` (new, 49 lines, two `@import`s and no rules of its own), `slo-health.html` (three `<link>`s → two: `app.css` + the entry file), `BASELINE.json` (re-pinned). **−53 bytes, all of it the link block**; frozen inventory 19/19, class attrs 74/74, all three `<script>` bodies identical. **D20 does not hit this page, measured not assumed**: the legacy file declares 17 custom properties and reads 15, and the read-but-not-declared set is **empty**, so unlinking `/static/theme.css` orphans nothing; zero of its names collide with `01-settings/tokens.css` + `01-settings/theme.css`. Two are declared and never read (`--ok-bg`, `--primary-hover`) — pre-existing, left alone. **Cascade re-verified on this page in headless Edge 150 over CDP**, by recursing the CSSOM rather than reading the top level: the layer statement carries all seven names in order from `main.css`, all ten `@import`s sit in their declared layer, `99-legacy/slo-health.css` is in `layer(legacy)`, and every stylesheet plus four `woff2` returned 200. **The white slab is not a `slo` quirk — it is a `static/theme.css` fact.** The same `.brand` white background sat inside this page's navy sidebar too, and is gone; screenshots before/after. Also from theme.css: the subtitle's uppercase and letter-spacing. **Two `layer(elements)` element selectors reached past class rules and neither was named in UI-031a's review**: `a { color: inherit }` took all six inactive nav links from the legacy grey to white, so active/inactive now differ only by background and left border; and `small { }` took the sidebar subtitle's size and colour off `.brand small`. **Contrast measured against real backdrops, both directions**: subtitle **2.20:1 → 3.04:1** (an improvement, because the *before* backdrop was the white slab and not the navy — the same trap D26's first draft fell into), still under AA and still D26's to fix; `th` **5.81:1 → 4.60:1**, a fall that clears AA by 0.1. Tables took the design target's metrics (`tables.css` `th`/`td` padding to 24px horizontal, `vertical-align` top → middle on 38 cells, and `tr:last-child td` dropping the rule under the final row on 10 cells — deliberate, `tables.css`:63-66). Cards tighter again: D28, unchanged. **1463 element × property deltas over a property set of 36 fixed before measuring**, on a render first proven deterministic (two before-snapshots, 191 elements, 0 drift). **Stated limit: four cards were in empty states and the `.cov-*` blocks never rendered**, so that part of the page is unmeasured. **Process gaps, recorded rather than papered over: the independent review agent (§12 step 5) did not run on this task, and Irfan committed it himself** — so this row is the implementer's evidence only, not a reviewed result. The commit message says "theme.css link → main.css import"; the link actually goes to the per-page entry file, which is the whole of D19 — message only, code is correct |
 | UI-031b | Migrate `library.html` onto the new tree via `pages/library.css` · `landing` HELD | **done** | `5291bdc` | **Third live page, and the biggest legacy file migrated so far.** `library.html`'s three `<link>`s → two (`app.css` + the entry file), **−53 bytes, all of it the link block**; frozen inventory 93/93, class attrs 94/94, **inline `style=""` 48/48**, all three `<script>` bodies identical. **Measurements, short form:** 2811 element × property deltas over a property set of 35 fixed before measuring, across 659 aligned elements; the page's one big visible change is its **44 `<label>`s** taking `03-elements/forms.css`'s bare `label` rule — 42 change size, 12 go weight 500→600, 2 change colour only — at **15.59:1/16.00:1 → 4.76:1, which still clears AA** (4.5 for normal text at these sizes; a review round called this a failure and was wrong, adjudicated by a later round). **D14 confirmed inert, measured not assumed**: `--text:` is declared nowhere in the project, so `/static/theme.css` never supplied it either — 5 of the 6 `.pg-btn` change colour by ordinary inheritance and the 6th is `.pg-btn.active`, which takes white by class and never reaches the invalid `var()`. D20 does not hit the page. The `static/theme.css` white slab in the sidebar is gone for the **third time in three pages** — treat it as a `theme.css` fact, not a per-page quirk. **EXPECTED ON THE BROWSER CHECK, so nothing here is a surprise: D21/D27/D28 — cards visibly tighter (`reset.css` zeroes legacy class margins), nav links all white (`typography.css`'s `a { color: inherit }` beats `.app-nav a`, so active/inactive now differ only by background and left border), and buttons re-fonted by `forms.css`.** **FOUR review rounds: three FAILED, and not one of them touched the CSS** — every finding was a measurement written into the entry file's comment that could not be re-derived from a stylesheet (a wrong page-count noun, an unreproducible aggregate, a miscounted property set, a wrong line citation, "six `.pg-btn`" when it was five, a font-size pair copied from a reviewer, and a settle-render claim taken from a review agent **without re-measuring it — it did not reproduce**). Irfan's call ended it: **strip the numbers from the comment entirely** and keep them here, where the board keeps every other task's and where a reviewer can check them. The entry file went 141 → 39 lines and passed on the next round. Two process facts worth carrying: writing a colour literal into that comment took `unsanctioned_hex` **429 → 430** and the ratchet caught it pre-review (third time in this epic); and a claim from a review agent is not evidence — verify it like any other number |
+| UI-032 | `taqseem` onto the new tree — **ATTEMPTED, MEASURED, HELD** | **held** | *(uncommitted)* | **Not a migration: a measurement that changed the decision.** The D20 half worked. The orphan-token check gave **26** read-but-never-declared (the board said 20), of which Tier 2 already declares **3** under the deliberate `--font-*` collision, so the entry file carries a **23-token compatibility block** in `@layer legacy` — every one mapping 1:1 onto an existing Tier 2 role, **no value change, no literal, `unsanctioned_hex` flat at 429**, zero declared-name collisions with `01-settings/`. Verified live: all 23 resolve non-empty after the swap, `--color-canvas`/`--color-surface`/`--color-text`/`--color-border`/`--color-action` go `<EMPTY>` → real values, and the three font names resolve from Tier 2 exactly as its header predicts. **What stopped it is the half no grep can see: 20 `static/theme.css` rules match this page's elements and 16 are redeclared nowhere in its own legacy file** — the entire `.btn`/`.card`/`.pagehead` set plus two `input`/`:focus` rules. Swapped and measured: the 3 buttons fell to **UA default** (`rgb(240,240,240)`, 2px border, 1px 6px padding, `display:block`, weight 400, radius 0) and `.card`'s shadow went to `none`. **`taqseem` is the only page this hits** — own-file `.btn`/`.card` rule counts are `slo` 5/3, `slo-health` 2/3, `library` 13/3, `blueprint` 10/4, **`taqseem` 0/0** — which is precisely why three clean pages made it look routine. Measurement quality, for the record: render proven deterministic first (**70 elements, two before-snapshots, 0 drift**), **306 element × property deltas over a property set of 35 fixed before measuring**, across **67 aligned elements** (70 → 69 is the removed `<link>`, itself an element). The swap itself was clean and is the shape the eventual task will take: **−53 bytes, all of it the link block**, frozen attrs 15/15, class attrs 44/44, inline `style=""` 4/4, all three `<script>` bodies identical. **Then reverted on Irfan's call** — `taqseem.html` is at HEAD and the entry file was parked at **`docs/ui/parked-taqseem.css`**, following the `landing` precedent exactly: under `static/css/` its 61 lines counted toward `shared_css_lines` with no page loading them, and `docs/` is outside the metric, so **`shared_css_lines` is back at 1616 and `BASELINE.json` was not re-pinned**. One process note: an invariant check first reported the `<script>` bodies as differing; that was `git show` being decoded with the locale codec against a UTF-8 file (em-dash in the title, Urdu in the scripts), not a real change — `git diff` said 1 insertion / 2 deletions throughout. Decode explicitly before comparing bytes. **Not reviewed by an independent agent** — it never reached that gate, because the task was withdrawn rather than finished |
 | UI-021 | `02-generic` reset + fonts · `03-elements` typography / forms / tables | **done** | `8ecb3cc` | **Sprint 2 complete.** Five new files (449 lines), `main.css`'s five `@import`s uncommented **in place** — the order is the cascade — and **not one `.html` byte touched**, so zero visual effect again by construction. `shared_css_lines` 573 → **1178**, the only metric that moved; `unsanctioned_hex` **flat at 429** and the new tree carries **zero raw hex**. Tier 1 gained 15 primitives (7 type steps, 2 weights, 2 leadings, `--font-serif`, `--font-nastaliq`) and Tier 2 13 roles, verified **0 dangling refs and 0 unconsumed primitives** — UI-020's invariant held exactly. **It predicted it would add space steps and did NOT**: control padding (9px 11px) and cell padding (10px/11px) are optical one-offs, left literal, and the one structural value needed was already `--space-inset`; the stale prediction was corrected in `tokens.css` rather than left to mislead. All nine `woff2` resolved on disk against `../../fonts/` — `url()` resolves against the *stylesheet*, the first such path in the tree. **The finding that outlives the task is D21: a reset in this tree is not neutral.** `layer(generic)`/`layer(elements)` outrank `layer(legacy)`, so a bare element selector beats a legacy *class* rule; the design target's `* { padding: 0 }` would have flattened `index.css:267`'s RTL list indentation, so the universal padding kill was **not** ported, the margin reset is targeted at block text elements, and `img` gets `max-width` without the usual `display:block` (it would break the inline `.icon` sprite). Each omission is stated in the file that omits it. **D22** parks the button appearance reset for UI-041 — `border:none; background:none; color:inherit` from `layer(elements)` would flatten `.btn-primary`/`.btn-ghost` across eight legacy files. **The first review FAILED it and was right**: the file shipped `font: inherit`, which is not a synonym for `font-family: inherit` — the shorthand also resets size, weight, style, variant, stretch and line-height, dragging every legacy button to 15px/400 and stripping the 600/700 weights they set by class. Fixed to the longhand, then re-reviewed PASS. Review also corrected three counts that were guessed rather than measured (`html, body {height:100%}` is 7 of 9 files, **not 8 — `print.css` is the second exception and it is the Ctrl+P page**; "exactly two pseudo-element rules" was a wrong generalisation from a `::before`-only grep; a Tier 2 comment's "20 unconsumed roles" mixed two different sets). **D23** records that `--font-mono`/`--font-data` name "IBM Plex Mono", which **no `@font-face` declares and no woff2 in the repo provides** — pre-existing since before this epic, always falling through to `ui-monospace`; the fix is a font-asset decision for Irfan, not CSS |
 ---
 
@@ -508,6 +561,14 @@ three times**. It also mutation-tested the hex ratchet (a colour literal in the 
 429 → 430, exit 1, then restored byte-identical). `landing` is not in these numbers: it was
 built and green, then held, and its entry file was moved to `docs/ui/parked-landing.css` so
 that 55 lines of CSS no page loads could not be absorbed into this task's re-pin.
+**Green after `taqseem` was held and reverted:** `pytest -q` = **906 passed, 0 skipped** ·
+`python -m ruff check .` clean · `css_baseline.py --check` exit 0 · **all eight ratcheted
+metrics flat**, `unsanctioned_hex` **429**, `shared_css_lines` **flat at 1616** — the entry
+file is parked in `docs/`, which the metric does not count, so nothing unlinked is hiding in
+it. **BASELINE.json was deliberately NOT re-pinned**: nothing shipped, and pinning lines of
+CSS that no page loads is exactly the laundering this board warns about. `taqseem.html` is byte-identical to HEAD. Headless Edge 150 was driven on
+its own `--user-data-dir` (the UI-031a hazard), and the dev server was a local
+`uvicorn app.main:app` on `127.0.0.1:8000`.
 **Re-pin `BASELINE.json` (`css_baseline.py --write`) as part of every extraction task** —
 UI-010..012 did, UI-013 missed it and had to fix it in the close commit; UI-014 and UI-015
 did it in-task. Skipping it leaves the next task comparing against numbers two tasks stale.
