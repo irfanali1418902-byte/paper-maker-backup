@@ -1,0 +1,136 @@
+/* =========================================================================
+   ⚠ PARKED — THIS FILE IS NOT LIVE AND MUST NOT BE MOVED BACK CASUALLY.
+
+   It is the UI-032 entry file for bank.html, held on 2026-08-04. Like
+   parked-landing.css and parked-taqseem.css it sits in docs/ because anything
+   under static/css/ counts toward shared_css_lines even when no page links
+   it, and re-pinning BASELINE.json with these unlinked lines in it would bury
+   them inside the next task's number.
+
+   TO RESTORE: move this file to static/css/pages/bank.css — the two @import
+   paths at the bottom are relative to THAT directory and resolve nowhere from
+   docs/ui/ — then swap bank.html's three <link>s for two:
+   /static/app.css + /static/css/pages/bank.css. That swap is -53 bytes and
+   touches nothing else in the file; it was performed, measured and reverted,
+   so it is known to be exactly the link block.
+
+   WHY IT WAS HELD, and it is NOT either orphan check — both pass, and the
+   page's exposure is zero on both halves: bank borrows nothing from
+   static/theme.css that it does not redeclare or that the new tree does not
+   supply. It was held because of what the NEW TREE does to Urdu question
+   text. 99-legacy/bank.css:229 `.q-text .qt.rtl` sets 'Noto Nastaliq Urdu'
+   and a font-size but NO line-height, so the line box came from the font's
+   own metrics — and 03-elements/typography.css:41's `body { line-height:
+   var(--leading-body) }` sits in layer(elements), beats layer(legacy), and
+   takes it over. Measured on the 24 Urdu-only questions in this DB: the line
+   box falls from the font's natural 38px to 21.75px, a 43% cut, on the one
+   script in the app whose glyphs paint well outside their em box. Nothing
+   clips — no .q-row / .q-text / .qt sets overflow — so the failure mode is
+   overlap, and the row's 14px padding absorbs some of it, which is why this
+   needed eyes and not a number. Irfan looked and called it: Nastaliq gets
+   looked at properly in Sprint 4, not patched in a hurry. This is D21 firing
+   on the first migrated page that actually renders Urdu — print could not
+   exercise it, because no paper in this DB has Urdu question text.
+
+   THE WORK BELOW IS FINISHED AND VERIFIED — it is why the file was kept
+   rather than deleted. Do not re-derive it. The measurements are in
+   docs/ui/STATUS.md's UI-032 task-log row, not here.
+
+   -------------------------------------------------------------------------
+   THE MECHANISM: see pages/slo.css's header (D19/D20) for why the legacy
+   import lives in a per-page entry file, and why line 2 must be an @import
+   carrying layer() rather than a second <link> — a plain <link> is unlayered
+   and would outrank the whole new tree.
+
+   BOTH HALVES OF THE ORPHAN CHECK WERE RUN ON THIS PAGE BEFORE IT WAS
+   TOUCHED. The page's EXPOSURE is zero on both — nothing ends up unsupplied —
+   but "zero exposure" is not "nothing changes", and the three paragraphs below
+   say exactly what does. The checks are re-runnable rather than asserted:
+
+     python scripts/css_orphans.py --names
+     python scripts/css_orphans.py --rules bank --names     # app served
+
+   D20 DOES NOT HIT THIS PAGE'S STYLESHEET. Every custom property
+   99-legacy/bank.css reads is declared in that file's own :root as a literal,
+   and none of those names collide with 01-settings/.
+
+   THE MARKUP IS A DIFFERENT QUESTION, AND THE ANSWER IS NOT ZERO. bank.html:98
+   and :593 set a border colour inline as `var(--line, <fallback>)` — the
+   literal is in the markup and is deliberately NOT copied here, because a
+   copy-pasteable hex counts toward `unsanctioned_hex` even inside a comment
+   and the ratchet caught exactly that while this file was being written, for
+   the fourth time in this epic. `--line` is declared only by
+   /static/theme.css — 99-legacy/bank.css declares it zero times. Measured on
+   those two elements: the border goes from theme.css's value to that inline
+   fallback. It is harmless BECAUSE the fallback is there, which is the same
+   shape D9 records for print's --accent —
+   not because nothing was orphaned. `scripts/css_orphans.py` parses
+   99-legacy/*.css and never reads the markup, so it cannot see this class of
+   read at all — that blind spot is D32. All nine pages were then swept rather
+   than this one argued about: nothing already shipped is affected, `index` is
+   clean despite holding most of the project's inline style attributes, and the
+   one page it changes is `blueprint`, which reads nine theme.css-only tokens
+   inline with no fallback and is already HELD. D32 has the list.
+
+   THE RULE HALF — the half that held taqseem and blueprint, and the half no
+   grep over custom properties can see. Measured against this page's live DOM,
+   six of /static/theme.css's rules reach it and they split three ways:
+
+     redeclared (3)  bank.css declares them itself, so the link takes nothing.
+                     :80's input/select/textarea block is one of them.
+     PARTIAL (2)     .brand and .brand small. bank.css declares the SELECTOR
+                     but not every PROPERTY theme.css put on it, so dropping
+                     the link DOES remove declarations here — the white slab
+                     and the subtitle's uppercase/letter-spacing/opacity. A
+                     selector-level reading calls this clean and is wrong;
+                     that is exactly why the check grew a partial column.
+     orphan (1)      :focus-visible, which 03-elements/forms.css declares, so
+                     the new tree supplies it.
+
+   So the page's rule EXPOSURE is zero — nothing ends up unsupplied — but two
+   rules change, and both are visible. They are listed below, not glossed.
+
+   ⚠ D29 — TWO FILES ARE NAMED theme.css. This page DROPS /static/theme.css
+   and KEEPS /static/css/01-settings/theme.css, which main.css imports into
+   layer(settings) and which carries the Modern palette. Quote FULL PATHS in
+   any handover: a Network panel prints only the basename, so a correctly
+   migrated page reads as though the dropped link is still there. D29 has the
+   file sizes that tell them apart.
+
+   IT ALSO STILL LINKS static/app.css, which owns the `.icon` sprite rule
+   until Sprint 4's nav component. This page's legacy file declares no `.icon`
+   rule of its own, so it has nothing to lose there.
+
+   WHAT THE MIGRATION ACTUALLY DID, measured before vs after in headless Edge
+   151 while it was applied. None of it is a surprise, and all of it will be
+   true again whenever this page resumes — so it is the browser check-list for
+   that day, not a record of something shipped. The Urdu line box in the
+   banner above belongs to this list and is the item that stopped it:
+
+     - The /static/theme.css white slab on `.brand` goes, for the fourth page
+       running — treat it as a theme.css fact, not a per-page quirk. `.brand`
+       also re-stacks (display flex -> block), which is a layout change and not
+       only a colour one.
+     - D26, on `.brand small`: the subtitle loses theme.css's uppercase,
+       letter-spacing and opacity, and lands on the same sub-AA ratio D26
+       already records for every migrated page. No new row — D26 owns it — but
+       the browser-checker meets it here, so it is named.
+     - D21, the new tree beating layer(legacy). This page's own bare `label`
+       rule at 99-legacy/bank.css:78 is in layer(legacy) and
+       03-elements/forms.css:47 is in layer(elements), which wins: the label's
+       size, weight and colour come from the new tree, while `display` and
+       `margin-top` stay legacy's because forms.css does not set them. The two
+       labels this takes below AA are D31.
+     - Nav links go white and the canvas changes tint, both from the new tree.
+       See also D27/D28.
+
+   THE MEASUREMENTS FOR THIS MIGRATION LIVE IN STATUS.md's UI-032 task-log
+   row, not here. That is deliberate: three review rounds failed UI-031b on
+   numbers written into its entry-file comment — none of them wrong about the
+   CSS, all of them about figures that cannot be re-derived from a stylesheet.
+   Numbers belong where the board keeps them and where a reviewer can check
+   them.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/bank.css") layer(legacy);
