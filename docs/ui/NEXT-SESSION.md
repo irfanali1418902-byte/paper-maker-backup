@@ -4,15 +4,46 @@
 > no copy-paste handover. **Read `docs/ui/STATUS.md` first — it is the SOURCE OF TRUTH.**
 > This file only says *what to do next and what not to do*; every number lives in STATUS.md.
 >
-> **Updated 2026-08-04 — qadam 1 (the TOKEN half) is DONE.** Its results are below and the
-> check is now a script. What remains of UI-032's measurement is the RULE half.
+> **Updated 2026-08-04 — qadam 1 (TOKEN) and qadam 2 (RULE) are BOTH DONE.** Both checks are
+> scripts now and both have been run on all four pages. **UI-032's measurement is finished;
+> nothing was migrated.** Every number is in STATUS.md's NEXT TASK block. What remains is a
+> decision on `blueprint` and then three migrations.
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
 ---
 
-## What happened last session
+## THE NEXT SESSION'S TASK
 
+**Measurement is over. Do these two things, in this order:**
+
+1. **`blueprint` — take the DECISION to Irfan first, before writing any file.** It measured
+   **20 orphan rules and they are the entire application shell** (`.app` grid, `.top`, `.nav`,
+   `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`), *plus* 21 orphan tokens — the first
+   page exposed on **both** halves at once. **It is bigger than `taqseem`**: `taqseem` lost its
+   buttons and card chrome, `blueprint` would lose the grid that puts the page together.
+   Nothing in the new tree replaces those rules (`04-objects/shell.css` uses `o-shell__*` names
+   the markup does not carry), so this is Sprint 4's shell/nav work — **HELD-shaped, not a
+   migration.** Treat it like `taqseem`: Irfan decides, and if held, park it and move on.
+2. **Then migrate `bank`, `index`, `print` — these three are clear.** Rule exposure is **0 / 3
+   / 0** and token exposure is **0 / 0 / 0**. `index`'s three are `.tag` (×2), `.row`,
+   `.summary-row:last-child`, each with a named near-miss in `index.css`. `print` is 0 by D9
+   (it never linked the file). Read the `partial` column in STATUS.md before each one — a page
+   that redeclares a *selector* may not redeclare the *properties* (the white-slab `.brand`,
+   `index`'s `.summary-row` border), and the before/after diff is what settles those.
+
+Rules 1–5 at the bottom of this file still apply, **except** that rule 1's "migrate nothing"
+was scoped to the measurement task and is now spent for `bank`/`index`/`print`. It still holds
+for `blueprint`, `landing` and `taqseem`.
+
+---
+
+## What happened in the sessions before this one
+
+**2026-08-04 (qadam 1 + 2):** both orphan checks were turned into `scripts/css_orphans.py` and
+run over every page. No CSS, HTML or `<link>` was touched. Commits `64484d9` and `8adcf17`.
+
+**2026-08-03 (UI-031c):**
 `taqseem` was taken as UI-031c, fully measured, and then **HELD on Irfan's call** — it is not a
 failure and not a pending migration. Its finished entry file is parked at
 `docs/ui/parked-taqseem.css` (read its header before ever touching that page). Everything is
@@ -27,14 +58,15 @@ that.
 
 ---
 
-## UI-032 — the four pages still on their old `<link>`s. **MIGRATE NOTHING.**
+## UI-032 — the four pages still on their old `<link>`s · **MEASURED, NOTHING MIGRATED**
 
 **`blueprint`, `bank`, `index`, `print`** (three of nine pages are live on the new tree —
 `slo`, `slo-health`, `library`; `landing` and `taqseem` are HELD).
 
-**The task is measurement, not migration.** Both checks over all four pages, changing no
-file, so it is known up front which pages are repetitions of `slo`/`slo-health`/`library`
-and which are decisions like `taqseem`.
+**The measurement task is complete.** Both checks ran over all four pages, changing no file, so
+it is now known which pages are repetitions of `slo`/`slo-health`/`library` (`bank`, `index`,
+`print`) and which is a decision like `taqseem` (`blueprint`). The two sections below are the
+record of how, and stay here so the checks can be re-run rather than re-invented.
 
 ### Check 1 — orphan TOKEN · **DONE 2026-08-04, and it is a script now**
 
@@ -92,54 +124,79 @@ the board correctly calls that page 0.
 `app.css` declares **0** custom properties, so `/static/theme.css` is the only supplier in
 play. `python scripts/css_baseline.py --check` → ratchet OK, nothing moved.
 
-### Check 2 — orphan RULE · **STILL TO DO. This is the half that decides UI-032.**
+### Check 2 — orphan RULE · **DONE 2026-08-04, and it is a `--rules` mode now**
 
-**A clean token result is half a page's answer, not a page's answer** — `taqseem` passed
-check 1 and still could not ship. Do not read the three zeros above as three safe pages
-until this check has run on them.
+```
+uvicorn app.main:app                                        # 127.0.0.1:8000, first
+python scripts/css_orphans.py --rules blueprint bank index print --paper-id <id> --names
+```
 
-Worth adding to `css_orphans.py` as a `--rules` mode rather than doing it by hand, so the
-result is re-runnable like check 1.
+It does what this file described by hand: parses `static/theme.css`, runs every selector
+through `querySelectorAll` against the **live** page in headless Edge, and subtracts what the
+page's own `99-legacy/<page>.css` redeclares. It drives the browser through
+`scripts/css_rules_probe.mjs`. 118 rule blocks probed (`:root` excluded — that is the token
+half's). **Re-run it rather than trusting any number written down.**
 
-1. parse `static/theme.css` (the **old** stylesheet, full path — see the D29 warning below)
-2. run **every** selector through `querySelectorAll` against the **live** page
-3. subtract the selectors the page's own `99-legacy/<page>.css` redeclares
-4. **what is left disappears the moment the `<link>` goes**
+**The four verdicts — full table, per-page detail and the `partial` column are in STATUS.md's
+NEXT TASK block:**
 
-Cheap sanity signal before the browser work — own-file `.btn`/`.card` rule counts:
-`slo` 5/3 · `slo-health` 2/3 · `library` 13/3 · `blueprint` 10/4 · **`taqseem` 0/0**.
+| page | rules match / redecl / partial / **orphan** | **EXPOSURE** | verdict |
+|---|---:|---:|---|
+| `blueprint` | 29 / 6 / 3 / **20** | **20** | **DECISION** |
+| `bank` | 6 / 3 / 2 / **1** | **0** | repetition |
+| `index` | 11 / 2 / 4 / **5** | **3** | repetition |
+| `print` | 5 / 0 / 2 / **3** | **0** by D9 | safe by construction |
 
-Serve the app for this: `uvicorn app.main:app` on `127.0.0.1:8000`.
+**The method was validated against `taqseem` before any new page was believed** — 21/17 where
+UI-031c measured 20/16 by hand, the whole difference being `:focus-visible`, a state-only rule
+a `querySelectorAll` method can only report as universal. It is its own column and is never a
+page's finding. Drift was 0 on all four across two probes, and a fresh-launch second run
+reproduced every count.
+
+Two things this check taught, both worth keeping:
+
+- **Selector equality is not property equality**, and that error reports a page *clean*. The
+  `partial` column is the fix — it is what caught the white-slab `.brand` on all four pages,
+  independently, and `index.css`:144's `.summary-row` missing its `border-bottom`.
+- **`input[type=text]` vs `input[type="text"]`** — theme.css writes attribute values unquoted,
+  the legacy files quote them. Un-normalised, one rule reads as two: `blueprint` 21 → 20 and
+  `bank` 2 → 1.
 
 **D29 — quote FULL PATHS, never the basename.** Two different files are called `theme.css`:
 `/static/theme.css` (the old stylesheet being removed) and
 `/static/css/01-settings/theme.css` (the Tier 2 palette, which must load). The bare word
 already cost one false alarm.
 
-### What to produce
+### What was produced · **DONE**
 
-**A table of all four pages, both checks side by side**, and the verdict per page:
-*repetition* (safe, same shape as `slo-health`/`library`) or *decision* (needs Irfan, like
-`taqseem`). Say explicitly which parts of a page did **not** render and so were not measured.
-
-**Results go into the NEXT TASK block of `docs/ui/STATUS.md`** — that is where this board
-keeps every other measurement, and where a reviewer can check it.
+The table of all four pages with both checks side by side, a verdict each, and what did **not**
+render, is **in the NEXT TASK block of `docs/ui/STATUS.md`** — that is where this board keeps
+every measurement and where a reviewer can check it. Committed as `8adcf17` (qadam 2), on top
+of `64484d9` (qadam 1). Nothing was migrated and no page's `<link>` was touched.
 
 ### What is already known about each page (detail in STATUS.md)
 
 - **`blueprint`** — **21** orphan tokens, 19 needing a compat block (STATUS.md and D20 both
-  say 17; that was an estimate, now measured). Its own file declares 10 `.btn` + 4 `.card`
-  and it is the one page carrying its own `.pagehead` rules, so the rule half is *probably*
-  clean — **probably is not measured.**
-- **`bank`** — largest legacy file (366 lines, 62 raw hex). Token half now checked: **0
-  exposure**, it declares its own 19. Rule half **never checked**.
+  said 17; that was an estimate, now measured). **This entry used to predict the rule half was
+  *probably* clean, because its own file declares 10 `.btn` + 4 `.card` and it is the one page
+  carrying its own `.pagehead` rules. That prediction was wrong** — measured, it is 20 orphan
+  rules and they are the whole shell. `blueprint.css` declares no `.app`, `.nav`, `.top`,
+  `.ch`, `.cb` or `.chip` rule at all (grep, not inference). Corrected here rather than left,
+  per the rule UI-021 wrote about stale predictions. Its 19 tokens are still an exact subset of
+  `taqseem`'s 23, so `docs/ui/parked-taqseem.css`'s compat block already covers them.
+- **`bank`** — largest legacy file (366 lines, 62 raw hex), 5378 elements live, and **both
+  halves measured clean**: 0 token exposure (declares its own 19) and 0 rule exposure (only 6
+  of 118 rules reach it; the single orphan is `:focus-visible`, which `03-elements/forms.css`
+  declares). A repetition of `slo-health`/`library`.
 - **`index`** — SPA, 7 screens via `showScreen()`, 224 of the project's 466 inline `style=""`.
-  Token half **0**. The rule check must reach all seven screens, not just the default one —
-  `querySelectorAll` only sees what is in the DOM. **Do not start Sprint 5's inline burn-down
-  here.**
-- **`print`** — no `/static/theme.css` already (D9), only 2 `<link>`s, and token exposure
-  measured at **0** — but it is the **Ctrl+P page**, the highest-consequence one in the epic.
-  Re-check on a real exam paper (Urdu, images, page breaks), never a blank page.
+  Token half **0**, rule exposure **3**. **All seven screens were measured**, not the default
+  one — the DOM grows 508 → 771 across them. **Do not start Sprint 5's inline burn-down here.**
+- **`print`** — no `/static/theme.css` already (D9), only 2 `<link>`s, and **both halves 0** —
+  its three matching rules are already inert because the file is not linked, so a migration
+  cannot change them. Measured on a **real 25-question paper** (25 with images, 27 `<img>`,
+  555 elements), never a blank page — but it is still the **Ctrl+P page**, the
+  highest-consequence one in the epic. **One gap: no paper in this DB has Urdu question text**,
+  so the Urdu half was not exercised; Urdu here can only come from the header and labels.
 
 ---
 
