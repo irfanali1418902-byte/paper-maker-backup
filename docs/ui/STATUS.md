@@ -4,8 +4,9 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-08-03 (`taqseem` measured and HELD) — Sprint 3 2/3; **three pages are
-live on the new tree**, `landing` and `taqseem` both held
+**Last updated:** 2026-08-04 (UI-032's measurement — both checks, all four pages, nothing
+migrated) — Sprint 3 2/3; **three pages are live on the new tree**, `landing` and `taqseem`
+both held, and **`blueprint` now measures like a fourth held page**
 
 ---
 
@@ -24,25 +25,174 @@ and sent the next session to Sprint 4. That was wrong — it read the two HELD p
 remainder and missed the four unmigrated ones. Corrected here rather than left, per the rule
 UI-021 wrote about stale predictions.)*
 
-**Take the four one at a time, and run BOTH checks on each before deciding anything** — the
-orphan-token check *and* the orphan-rule check below. `taqseem` is the reason the second one
-exists: it passed the token check and still could not ship. Cheapest useful first move is to
-run both over all four pages in one pass, without migrating any, so it is known up front which
-are repetitions and which are decisions. What is already known about each:
+**BOTH CHECKS HAVE NOW BEEN RUN ON ALL FOUR PAGES, and neither is prose any more — both are
+`scripts/css_orphans.py`.** No file was migrated and no page's `<link>` was touched — the only
+things this measurement wrote are the script, its browser driver, and this block. Re-run rather
+than trusting the tables below; that is why it was written as a script and not as prose:
 
-- **`blueprint`** — D20 gives it **17** orphan tokens, none fallback-protected. Its own legacy
-  file declares 10 `.btn` and 4 `.card` rules and it is the one page that already carries
-  `.pagehead` rules of its own, so the *rule* half is probably clean — **probably is not
-  measured.** Also the first already-token-clean page (UI-015): its `:root` aliases onto
-  `static/theme.css` tokens, which is exactly the D20 shape.
-- **`bank`** — the largest legacy file (366 lines, 62 raw hex) and **never checked** for either
-  exposure.
+```
+python scripts/css_orphans.py --names                       # tokens (check 1)
+uvicorn app.main:app                                        # then, in another shell
+python scripts/css_orphans.py --rules blueprint bank index print --paper-id <id> --names
+```
+
+`--rules` parses `static/theme.css`, runs every selector through `querySelectorAll` against
+the live page in headless Edge (its own `--user-data-dir`, killed by the pid it spawned — the
+UI-031a hazard), and subtracts what the page's own `99-legacy/<page>.css` redeclares. It
+drives the browser through `scripts/css_rules_probe.mjs`.
+
+### The result — four pages, both checks, one table
+
+| page | theme? | tokens: supplied / compat | rules: match / redecl / partial / **orphan** | rule EXPOSURE | verdict |
+|---|---|---:|---:|---:|---|
+| `blueprint` | yes | 21 / 19 | 29 / 6 / 3 / **20** | **20** (19 + `:focus-visible`) | **DECISION** |
+| `bank` | yes | 0 / 0 | 6 / 3 / 2 / **1** | **0** — the one orphan is `:focus-visible`, which `03-elements/forms.css` declares | repetition |
+| `index` | yes | 0 / 0 | 11 / 2 / 4 / **5** | **3** — `input[type=number]` and `:focus-visible` are both in `forms.css` | repetition, with a 4-item list |
+| `print` | **no** | 0 / 0 | 5 / 0 / 2 / **3** | **0** by D9 — the file is not linked, so all three already fail to apply today | safe by construction |
+
+Measured at 1280×900 in **Edge 151** (this board said 150; the dev PC has moved). Every page
+was probed **twice with no action in between and drift was 0 on all four**, and a second full
+run from a fresh browser launch reproduced every number *and* every element count
+(235 / 5378 / 508 / 555) — the determinism check UI-031b established, applied here to the
+counts rather than to a diff. `static/theme.css` is **119 rule blocks**; the `:root` block is
+excluded because everything in it is the token half's, leaving **118** probed.
+
+**The unit is the rule block (`{}`), not the selector**, so these numbers are comparable with
+`taqseem`'s hand measurement — `input[type=text], input[type=number], input[type=search],
+select, textarea` is five selectors and one rule. **The method was validated against
+`taqseem` before any new page was believed**: it reports 21 matched / 17 orphan where UI-031c
+measured 20 / 16, and the whole of the difference is `:focus-visible`, a state-only rule with
+no elements of its own that a `querySelectorAll` method can only report as universal and a
+hand method never listed. Subtract it and the two agree exactly, including the redeclared
+count. It is broken out as its own `state` column for that reason, and it applies identically
+to all nine pages, so it is real but it is never a page's finding.
+
+### `blueprint` — **this board's "probably clean" was wrong, and it is worse than `taqseem`**
+
+**The prediction is corrected where it was made, not only here.** This block used to read: *its
+own legacy file declares 10 `.btn` and 4 `.card` rules and it is the one page that already
+carries `.pagehead` rules of its own, so the rule half is probably clean — probably is not
+measured.* Measured: **20 orphan rules**, and they are the **entire application shell** —
+
+`.app` (the grid itself: `grid-template-areas`, `grid-template-columns/rows`, `height:100vh`),
+`.top` · `.top .crumbs` · `.top .crumbs b` · `.top .spacer` · `.top .avatar`,
+`.nav` · `.nav .grp` · `.nav a` (×5) · `.nav a .icon` (×5) · `.nav a:hover` · `.nav a.active`,
+`.brand .logo` · `.brand b` · `.brand small`, `.card > .ch` · `.card > .ch h3` · `.card > .cb`,
+`.chip`, and `:focus-visible`.
+
+Two more (`.app`, `.nav` inside `@media (max-width: 760px)`) are also redeclared nowhere; they
+are reported separately because a page measured at one width cannot count them.
+`blueprint.css` declares **no** `.app`, `.nav`, `.top`, `.ch`, `.cb` or `.chip` rule at all —
+verified by grep, not inferred — its only mention of that shell is the dead
+`@media` block D15 already records, which styles `.app-sidebar`/`.app-nav`, classes the markup
+does not have. **Nothing in the new tree replaces them either**: `04-objects/shell.css` uses
+`o-shell__*` names, which `blueprint.html`'s markup does not use, and none of the twenty
+selectors above appears anywhere under `static/css/` outside `99-legacy/`.
+
+**So `taqseem` lost its buttons and card chrome; `blueprint` would lose the grid that puts the
+page together.** It is also the **first page exposed on both halves at once** — 21 orphan
+tokens (19 needing a compat block) *and* 20 orphan rules. Both of its halves are already
+solved on paper: `docs/ui/parked-taqseem.css`'s compatibility block covers its 19 tokens
+(finding 4 of the token check), and the rule half needs Sprint 4's shell/nav components, which
+is the same thing `taqseem` is waiting for. **Treat it as HELD-shaped work, not as a
+migration**, and take it to Irfan before writing any entry file.
+
+### `bank` — the largest legacy file is the cleanest page
+
+366 lines, 5378 elements live, and only **6** of `static/theme.css`'s 118 rules reach it at
+all. One is orphaned (`:focus-visible`) and `03-elements/forms.css` declares it, so **the rule
+exposure is 0**. `bank.css`:80 declares `input[type="text"], input[type="number"], select,
+textarea` itself. Both halves are clean; this is a repetition of `slo-health`/`library`.
+
+Its two `partial` rules are the already-accepted deltas, below.
+
+### `index` — repetition, with four named items
+
+Three real orphan rules: **`.tag`** (×2), **`.row`** (×1), **`.summary-row:last-child`** (×1).
+Each has a near-miss in `index.css` that does *not* cover it — `.brand .tag`:53 and
+`.topbar .tag`:317 carry colour and size but not the chip's background, padding, radius or
+family; `.topbar .row`:311 is more specific than theme's `.row` and already wins today. The
+other two orphans (`input[type=number]`, `:focus-visible`) are in `forms.css`.
+
+**All seven screens were measured**, not just the default one: `showScreen()` was driven
+through `generate`, `mypapers`, `analytics`, `adaptive`, `results`, `settings`, `syllabus`, and
+the counts are the union. The DOM grows **508 → 771** elements across them, so this matters.
+
+### `print` — 0 by measurement, not by assumption
+
+Three rules match its elements, and **all three are already inert**, because `print.html` does
+not link `/static/theme.css` (D9 — the script measures the link rather than assuming it). A
+migration cannot change them. Measured on a **real exam paper** (25 questions, 25 with images,
+27 `<img>`, 555 elements), never a blank page. **One gap, stated rather than papered over:
+none of the 21 papers in this DB has any Urdu question text**, so the Urdu half of that
+instruction was not exercised — Urdu on this page can only come from the header and labels.
+
+### `partial` — the column that caught what selector-equality gets wrong
+
+A page redeclaring a *selector* does not mean it redeclares the *properties*. That direction of
+error is the dangerous one, because it reports a page clean:
+
+- **`.brand` is partial on all four pages** — theme.css:62 gives it `background`,
+  `border-bottom`, `grid-area`, and the page's own rule does not. **This is the white slab**,
+  removed on `slo`, `slo-health` and `library`, and the check found it independently rather
+  than being told. Same for **`.brand small`** on `bank` and `print` (`text-transform`,
+  `letter-spacing`, `opacity`) — the uppercase `slo-health` lost.
+- **`index.css`:144 `.summary-row` has no `border-bottom`**, so the dashed rule between the
+  rows goes with the link. A selector-only check calls that page clean.
+- `blueprint` and `index` also lose `.main`'s `grid-area`, `overflow` and `padding`, and
+  `blueprint` `.pagehead p`'s `margin-top`/`max-width`.
+
+These are per-selector, so a property could still arrive from a *different* legacy selector
+matching the same element. The check is deliberately conservative in that direction; the
+migration task's before/after diff is what settles each one.
+
+### Two bugs in the script, both of which moved real numbers
+
+Recorded because both were found by cross-checking a result against the files, which is the
+only reason the table above is not wrong:
+
+1. **`input[type=text]` vs `input[type="text"]`.** `static/theme.css` writes the attribute
+   value unquoted and both `forms.css` and the legacy files quote it. Normalised naively the
+   same rule reads as two, and a page reports an orphan it does not have: **`blueprint` 21 → 20
+   and `bank` 2 → 1** once attribute quotes were normalised away.
+2. **No property-level check at all**, which produced the false *safe* described above. The
+   `partial` column is the fix.
+
+### What did NOT render, and why it does not move the numbers
+
+`blueprint` was measured in its default empty state — no class/subject/exam chosen, `#secList`
+holding one empty-state child and `#bpList` two — so its section builder never rendered. That
+is **not** a lower bound on its theme.css exposure, and this was measured rather than assumed:
+**`blueprint`'s JavaScript assigns no `static/theme.css` class at all.** 44 class tokens were
+extracted from its script (the control that proves the extraction works), and the intersection
+with theme.css's class names is empty; its one dynamically-built class resolves to
+`bg-under`/`bg-over`/`''`. The same holds for `bank` (26 tokens) and `print` (42). `index` has
+six — `card`, `bar`, `num`, `sub`, `ur`, `urdu` — of which `card` is already counted and the
+rest are inert: `.stat .bar`/`.stat .num`/`.stat .sub` need a `.stat` ancestor and
+`.langsw button.ur` a `.langsw`, and neither class exists on any of the four pages. All nine
+dynamic class sites across the four pages were read individually; every value is a page-local
+name (`q-bad`, `q-review`, `q-good`, `qt rtl`, `img-sm`, `type-badge`).
+
+`bank`'s modals are in the DOM but closed (`[data-open="1"]` is 0), and `index` carries one
+closed modal — `querySelectorAll` sees them either way.
+
+**Worth knowing for Sprint 6:** `static/theme.css`'s whole component library matches **zero**
+elements on all four pages — `.sec`, `.qrow`, `.pin`, `.switch`, `.segbtns`, `.bloom`, `.stat`,
+`.badge`, `.tbl`, `.grid`, `.toolbar`, `.field`, `.panel-soft`, `.langsw` — including the block
+commented "section builder (blueprint)". It was written for the mockup, not for the live pages.
+
+### What is otherwise still true of each page
+
+- **`blueprint`** — the first already-token-clean page (UI-015): its `:root` aliases onto
+  `static/theme.css` tokens, which is exactly the D20 shape. Its own file declares 10 `.btn`
+  and 4 `.card` rules, and it does carry its own `.pagehead` — none of which was enough, see
+  above.
+- **`bank`** — 366 lines, 62 raw hex.
 - **`index`** — an SPA: 7 screens via `showScreen()`, sidebar with `onclick` rather than
   `href`, and 224 of the project's 466 inline `style=""` attrs. Sprint 5's burn-down is NOT to
   be started here; the inline values must come out byte-identical.
-- **`print`** — already has no `/static/theme.css` (D9) and only 2 `<link>`s, so its D20
-  exposure is small, but it is the **Ctrl+P page** and the highest-consequence one in the
-  epic. Re-check on a real exam paper (Urdu, images, page breaks), not a blank page.
+- **`print`** — only 2 `<link>`s, and it is the **Ctrl+P page**, the highest-consequence one
+  in the epic. Whatever else is true, its output is re-checked on a real exam paper.
 
 **`landing` is HELD, not pending — do not just migrate it.** It was built, measured and passed
 its gates, then held on Irfan's call because it visibly degrades the app's front door: this
@@ -91,9 +241,17 @@ to carry to `blueprint` and every remaining page.** Two greps over `var()` and `
 the *token* question only. The rule question is a different measurement and needs the DOM:
 parse `static/theme.css`, run each selector through `querySelectorAll` on the live page, and
 subtract the selectors the page's own legacy file redeclares. **Run both before deciding any
-page.** `blueprint` is the next page that will meet this (D20 lists it at 17 orphan tokens) and
-its `.btn`/`.card` counts above say the rule half is probably clean there — *probably* is not
-measured, so measure it.
+page.** That measurement is now `scripts/css_orphans.py --rules`, and it has been run on all
+four remaining pages — see the NEXT TASK block above.
+
+**This paragraph used to end: *"`blueprint` is the next page that will meet this (D20 lists it
+at 17 orphan tokens) and its `.btn`/`.card` counts above say the rule half is probably clean
+there — probably is not measured, so measure it."* It was measured, and the prediction was
+wrong in both halves.** Its tokens are **21**, not 17, and its rule half is not clean but
+**20 orphan rules — the whole application shell**, `.app` grid included. The `.btn`/`.card`
+counts were a real signal about buttons and cards and said nothing about the shell, which is
+the part `blueprint` borrows. `taqseem` 0/0 was the loudest case of a general fact, not the
+only case. Detail and the full list are in the NEXT TASK block.
 
 **The work already done is not wasted, and it is parked exactly like landing's:**
 `docs/ui/parked-taqseem.css` carries the two `@import`s and the 23-token compatibility block,
@@ -391,7 +549,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | 0 Guardrails | UI-000..003 | **4/4** | **done** |
 | 1 Extraction | UI-010..018 | **9/9** | **done** |
 | 2 Foundation | UI-020..021 | **2/2** | **done** |
-| 3 Shell | UI-030..032 | **2/3** | in progress — **UI-032 (`blueprint`, `bank`, `index`, `print`) is NOT started**; those four are still on their old `<link>`s. UI-031: `slo`, `slo-health`, `library` live; **`landing` HELD** (hero regression, resumes after Sprint 4 typography) and **`taqseem` HELD** as UI-031c (16 orphan RULES — its buttons and cards live only in `static/theme.css`; resumes after Sprint 4 components). Both measured, neither to be re-attempted before Sprint 4 |
+| 3 Shell | UI-030..032 | **2/3** | in progress — **UI-032's MEASUREMENT is done (both checks, all four pages, 2026-08-04) but no page is migrated**; those four are still on their old `<link>`s. Verdicts: `bank` and `index` are repetitions, `print` is 0 by D9, and **`blueprint` measures like a fourth held page** — 21 orphan tokens *and* 20 orphan rules, the whole `.app`/`.top`/`.nav` shell, so it needs Irfan and Sprint 4's components, not an entry file. UI-031: `slo`, `slo-health`, `library` live; **`landing` HELD** (hero regression, resumes after Sprint 4 typography) and **`taqseem` HELD** as UI-031c (16 orphan RULES — its buttons and cards live only in `static/theme.css`; resumes after Sprint 4 components). Both measured, neither to be re-attempted before Sprint 4 |
 | 4 Components | UI-040..043 | 0/4 | not started |
 | 5 Inline burn-down | UI-050..052 | 0/3 | not started |
 | 6 Legacy kill | UI-060..064 | 0/5 | not started |
