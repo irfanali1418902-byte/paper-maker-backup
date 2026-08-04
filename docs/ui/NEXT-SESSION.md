@@ -4,10 +4,10 @@
 > no copy-paste handover. **Read `docs/ui/STATUS.md` first — it is the SOURCE OF TRUTH.**
 > This file only says *what to do next and what not to do*; every number lives in STATUS.md.
 >
-> **Updated 2026-08-04 — qadam 1 (TOKEN) and qadam 2 (RULE) are BOTH DONE.** Both checks are
-> scripts now and both have been run on all four pages. **UI-032's measurement is finished;
-> nothing was migrated.** Every number is in STATUS.md's NEXT TASK block. What remains is a
-> decision on `blueprint` and then three migrations.
+> **Updated 2026-08-04 — qadam 1 (TOKEN) and qadam 2 (RULE) are BOTH DONE, and `blueprint` is
+> HELD on Irfan's call.** Both checks are scripts now and both have been run on all four pages.
+> **UI-032's measurement is finished; nothing was migrated.** Every number is in STATUS.md's
+> NEXT TASK block. What remains is three migrations: `bank`, `index`, `print`.
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
@@ -15,22 +15,26 @@
 
 ## THE NEXT SESSION'S TASK
 
-**Measurement is over. Do these two things, in this order:**
+**Measurement is over and `blueprint`'s decision has been taken. Migrate `bank`, `index`,
+`print` — one at a time, with a browser open, and stop for a "go" before each.**
 
-1. **`blueprint` — take the DECISION to Irfan first, before writing any file.** It measured
-   **20 orphan rules and they are the entire application shell** (`.app` grid, `.top`, `.nav`,
-   `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`), *plus* 21 orphan tokens — the first
-   page exposed on **both** halves at once. **It is bigger than `taqseem`**: `taqseem` lost its
-   buttons and card chrome, `blueprint` would lose the grid that puts the page together.
-   Nothing in the new tree replaces those rules (`04-objects/shell.css` uses `o-shell__*` names
-   the markup does not carry), so this is Sprint 4's shell/nav work — **HELD-shaped, not a
-   migration.** Treat it like `taqseem`: Irfan decides, and if held, park it and move on.
-2. **Then migrate `bank`, `index`, `print` — these three are clear.** Rule exposure is **0 / 3
-   / 0** and token exposure is **0 / 0 / 0**. `index`'s three are `.tag` (×2), `.row`,
-   `.summary-row:last-child`, each with a named near-miss in `index.css`. `print` is 0 by D9
-   (it never linked the file). Read the `partial` column in STATUS.md before each one — a page
-   that redeclares a *selector* may not redeclare the *properties* (the white-slab `.brand`,
-   `index`'s `.summary-row` border), and the before/after diff is what settles those.
+**`blueprint` is HELD** (Irfan's call, 2026-08-04) — **do not migrate it, do not re-measure
+it.** It measured 20 orphan rules that are the entire application shell (`.app` grid, `.top`,
+`.nav`, `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`) *plus* 21 orphan tokens, the first
+page exposed on both halves at once. `taqseem` lost its buttons; `blueprint` would lose the
+grid that puts the page together. The rule half is Sprint 4's shell/nav work and the token half
+is already covered by `docs/ui/parked-taqseem.css`'s block, so it is a scheduling hold, not an
+unsolved problem. **The decision was taken before any entry file was written, so nothing is
+parked for it and `blueprint.html` is untouched at HEAD.** Three pages are now held —
+`landing`, `taqseem`, `blueprint` — and none of them is a pending migration.
+
+**The three that are clear:** rule exposure **0 / 3 / 0**, token exposure **0 / 0 / 0**.
+`index`'s three are `.tag` (×2), `.row`, `.summary-row:last-child`, each with a named near-miss
+in `index.css`. `print` is 0 by D9 (it never linked the file) but it is still the Ctrl+P page —
+check its output on a real exam paper. **Read the `partial` column in STATUS.md before each
+one**: a page that redeclares a *selector* may not redeclare the *properties* (the white-slab
+`.brand`, `index`'s `.summary-row` border), and the before/after diff is what settles those.
+Copy `pages/slo.css` and read its header first.
 
 Rules 1–5 at the bottom of this file still apply, **except** that rule 1's "migrate nothing"
 was scoped to the measurement task and is now spent for `bank`/`index`/`print`. It still holds
