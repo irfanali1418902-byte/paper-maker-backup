@@ -9,6 +9,50 @@
 
 ---
 
+## 🛑 THE DECIDING TEST FOR `print` HAS NOT BEEN RUN — do this before anything else
+
+**The margin / space-token test was never done.** `print`'s findings below are labelled F1, F2
+and F3, and **F1 is the ink-colour change — it is NOT margins.** Do not read "F1 done" as
+"margins checked". **Nothing in this file's F1/F2/F3 covers the page-margin architecture.**
+
+**Why this is the decisive one and the ink colour is not:** a printed exam paper's margins are
+what make it usable — hole-punch edge, binding, the guarantee that nothing is cut off by the
+printer. `99-legacy/print.css`:1-2 says in its own comment that the margin is **single-sourced**:
+`@page` carries `margin: 0` and **all** of the page margin comes from `.sheet`'s
+`padding: var(--page-margin)` (14mm). That comment also records that it was **once double** —
+`@page` 14mm plus `.sheet` 14mm = 28mm — so this page has already been broken this way once.
+
+**What WAS verified (do not redo):**
+
+- `@page { size: A4; margin: 0 }` (`print.css`:3) is present and the migration does not touch it.
+- The three knobs resolve identically before and after — `--page-margin: 14mm`, `--q-font: 14px`,
+  `--q-gap: 14px`. `setVar()` writes them onto `documentElement.style`, an inline declaration
+  outranking every layer.
+
+**What was NOT verified — this is the actual gap:**
+
+- **The before/after diff showed `padding-top`, `padding-right`, `padding-bottom` and
+  `padding-left` each changing on 12 element-instances, and WHICH elements those are was never
+  identified.** If any of them is `.sheet` or sits on the margin chain, the printed margin moved
+  and nobody has looked.
+- Whether `02-generic/reset.css` or the new tree's space tokens reach `.sheet`, `.print-main` or
+  any ancestor carrying the page margin.
+- Whether `@page`'s own declarations interact with cascade layers once the legacy file is
+  imported into `layer(legacy)` rather than linked unlayered.
+- Whether the margin survives a **real printer**, not just `Page.printToPDF` — the PDF was
+  produced with `marginTop/Bottom/Left/Right: 0` and `preferCSSPageSize: true`, which is the
+  right setting for measuring CSS but is not proof of what a physical print does.
+
+**How to run it:** migrate the page (the entry file is parked and the swap is one line), then
+measure `.sheet`'s computed `padding` and box in **print media** before and after, identify all
+48 padding deltas by element, and produce the PDF both ways. **Then check a real print preview
+at the physical page edges**, not just that the pages count the same.
+
+**`print` does not ship until this is done and looks right.** The Ctrl+P check that already
+happened confirmed the paper's *content* was correct; it was not a margin measurement.
+
+---
+
 ## ⚠ READ THIS FIRST — the tree is clean, and that is deliberate
 
 `print` was migrated, measured, and **Irfan checked it in a real Ctrl+P print preview on two
@@ -59,7 +103,7 @@ slab, no `.tag` chip, no `.summary-row` rule. Everything that moves is the new t
   by dividing a document height by 1123. That is the literal Ctrl+P answer.
 - **Load the webfont before believing any Urdu line box.** See F2 below; this one bit.
 
-### F1 — the printed page's ink colour changes on every element
+### F1 — the printed page's ink colour changes on every element · **NOT margins**
 
 `rgb(26,26,26)` → `rgb(15,23,42)`. `99-legacy/print.css`:26's `body { color: … }` loses to
 `03-elements/typography.css`'s `body { color: var(--color-text) }` in `layer(elements)`.
@@ -208,7 +252,7 @@ Sprint 4 task**, because the plan as written does not cover three of the five he
 
 | # | task | rough size | blocked by |
 |---|---|---|---|
-| **1** | **Finish `print`** — restore the parked entry file, one-line swap, gates, **review agent**, STATUS.md, re-pin. **Closes Sprint 3.** | ~15 min | the review agent needs API budget — this is what stopped the last session |
+| **1** | **Finish `print`** — **first run the margin / space-token test at the top of this file**, then restore the parked entry file, one-line swap, gates, **review agent**, STATUS.md, re-pin. **Closes Sprint 3.** | ~15 min + the margin test | the margin test is unrun and is the deciding one; the review agent also needs API budget |
 | **2** | **Close Sprint 4's scope gap (D34)** — give IDs to nav components, the Nastaliq/leading decision, and the display/hero type step, and settle the order | ~20 min, docs only | nothing |
 | **3** | **Fix D32** — teach `css_orphans.py` to read markup, then re-run the nine-page table | ~30 min, one script | nothing |
 | **4** | **UI-041** button + chip/tag/badge | Sprint 4 | 2 |
