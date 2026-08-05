@@ -12,9 +12,23 @@ the new tree and all six others are HELD**: `landing`, `taqseem`, `blueprint`, `
 
 ---
 
-## NEXT TASK → **UI-044 part 2** (the print-media half, D36). Part 1 has landed.
+## NEXT TASK → **UI-044b** (the print-media half, D36). **UI-044a is done.**
 
-### UI-044 part 1 — **Nastaliq leading. Shipped 2026-08-05. `bank` measured clean and stays HELD.**
+### UI-044a — **Nastaliq leading. Committed 2026-08-05. PREPARED, NOT LIVE.**
+
+> **READ THIS BEFORE ANYTHING ELSE IN THIS SECTION.** The rule is in the tree and imported by
+> `main.css`, and **it currently reaches nothing.** Measured, not reasoned:
+>
+> | page | links `main.css`? | `.q-text .qt.rtl` elements |
+> |---|---|---:|
+> | `bank` | **no** — HELD at HEAD on its three `<link>`s | **24** |
+> | `taqseem` | **no** — HELD at HEAD | 0 (it has no Urdu at all) |
+> | `slo`, `slo-health`, `library` | **yes** | **0** |
+>
+> **So the rule loads on three pages that have no Urdu, and the one page with 24 Urdu elements
+> never loads it. Net effect on every page today: zero.** This is deliberate — foundation
+> first, the shape UI-021 used — but it must not be read as "bank is fixed". **It activates the
+> moment `bank` migrates, and not before.**
 
 **What shipped, and it is the first thing ever to land in `layer(components)`:**
 `05-components/urdu.css` with one rule — `.q-text .qt.rtl { line-height: var(--leading-nastaliq) }` —
@@ -79,20 +93,32 @@ match them — but that was proven rather than argued.
 
 ### `bank` stays HELD — and its original hold reason is now resolved
 
-**`bank`'s recorded hold was the Urdu line-height, and this task fixes it.** It is held on
-Irfan's call pending **D31** — the two `<label>`s in `.urdu-toggle-row` at 4.44:1 against AA's
-4.5:1 — whose home is **UI-042** (`field` component). Note what the board says about that: D31
-was flagged at handover and `PLAN.md`:210 lists UI-042 as releasing **no held page**, so this is
-a new and more conservative hold than the one recorded, not the continuation of an old one.
-**It is not a button/card hold** — that is `taqseem`'s blocker, not `bank`'s.
+**`bank`'s recorded hold was the Urdu line-height, and UI-044a solves it — but solves it in a
+file `bank` does not yet load.** It stays HELD on Irfan's call pending **D31** — the two
+`<label>`s in `.urdu-toggle-row` at 4.44:1 against AA's 4.5:1 — whose home is **UI-042**
+(`field` component). Note what the board says about that: D31 was flagged at handover and
+`PLAN.md`:210 lists UI-042 as releasing **no held page**, so this is a new and more
+conservative hold than the one recorded, not the continuation of an old one.
 
-### What UI-044 has NOT done yet
+**Two labels on the board have been kept accurate rather than copied from the brief, because
+they would contradict the code:**
+
+- **The token is `normal`, not `2.0`.** `01-settings/tokens.css` reads
+  `--line-height-nastaliq: normal`, which is **38px** at 15px and restores HEAD exactly. `2.0`
+  would be **30px**, a 21% tightening that has never been rendered or looked at. Switching is
+  one value in that file if it is ever wanted.
+- **`taqseem` is not part of this.** Its legacy file contains zero `Nastaliq` / `urdu` / `.rtl`
+  matches, so it has no Urdu overlap to fix and this rule cannot affect it. Its blocker is
+  `.btn`/`.card`/`.pagehead` — **UI-041 + UI-040**, not UI-043, which is tables and domain
+  components and releases no held page.
+
+### What UI-044a has NOT done yet
 
 - **D33 — `print.css`:126 `.letterhead .school-ur` is untouched.** `print.html` is HELD and
   unmigrated, so it does not link `main.css` and a rule here cannot reach it. **When `print`
   migrates, add its selector to `05-components/urdu.css`** — the file's header says so.
-- **D36 — the print pagination regression is untouched.** That is UI-044 **part 2**, the
-  print-media leading half, and it is the next task. It cannot be solved by moving
+- **D36 — the print pagination regression is untouched.** That is **UI-044b**, the print-media
+  leading half, and it is the next task. It cannot be solved by moving
   `--leading-body`: the three live pages inherit that same 1.45 and would move with it.
 - **`taqseem` has no Urdu at all** (measured — zero `Nastaliq`/`urdu`/`.rtl` matches in its
   legacy file), so nothing in this task touches it.
@@ -109,16 +135,17 @@ pages each releases.** Three IDs are new. The full table and the per-page blocke
 
 | order | ID | releases |
 |---:|---|---|
-| **1** | **UI-044** — type + leading, incl. **the Nastaliq leading decision** | `bank`, `print` · settles **D33**, **D36** |
+| **1a** | **UI-044a** ✅ done — Nastaliq leading | **prepared, not live**; activates when `bank` migrates |
+| **1b** | **UI-044b** — print-media leading | `print` · settles **D36** |
 | **2** | **UI-045** — display / hero type step | `landing` |
 | **3** | UI-041 — button + chip/tag/badge | needed by `taqseem`, `index`; completes neither alone |
 | **4** | **UI-046** — nav + shell components | `blueprint`, completes `index` |
 | **5** | UI-040 — card + pagehead | completes `taqseem` |
 | 6–7 | UI-042 modal/field · UI-043 tables/domain | no held page waits on either |
 
-**UI-044 and UI-045 go first because together they release three of the six, and each completes
-its pages outright.** They touch the same two files (`03-elements/typography.css` and
-`01-settings/`) and should be taken back to back. **UI-044 is the single highest-value task in
+**UI-044b and UI-045 go next because together they release two more of the six, and each
+completes its pages outright.** They touch the same two files (`03-elements/typography.css` and
+`01-settings/`) and should be taken back to back. **UI-044 (a+b) is the single highest-value task in
 the epic right now**: `bank`'s hold and `print`'s D33 are one problem in two places, and D36
 comes from the same leading change, so one task settles all three.
 
@@ -156,8 +183,8 @@ and `main.css`:42 puts `legacy` first and weakest. See D35 for the full settleme
 papers hold at 6 and 7. This is **D21/F3's line-height growth crossing an A4 boundary**, not a
 margin fault — and it is exactly what F3 predicted and could not measure ("one paper's margin,
 not a guarantee"). **The consequence is physical: one more sheet per exam, per student**, on
-the Ctrl+P page. **`print`'s blocker is now the leading decision — UI-044 — the same one
-`bank` and D33 wait on.**
+the Ctrl+P page. **`print`'s blocker is now the leading decision — UI-044b — and D33 waits on
+UI-044a's file, which already exists.**
 
 ### The margin test — **BOTH halves are now run**, and the margin is clean
 

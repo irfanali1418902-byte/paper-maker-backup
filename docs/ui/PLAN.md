@@ -202,7 +202,8 @@ waiting on something below. **A task is not done until the pages it owns are mig
 
 | order | ID | Task | Releases |
 |---:|---|---|---|
-| **1** | **UI-044** | **type + leading** — body leading, and **the Nastaliq leading decision** | `bank`, `print` · settles **D33**, **D36** |
+| **1a** | **UI-044a** ✅ **DONE 2026-08-05** | **Nastaliq leading** — `--line-height-nastaliq` + `05-components/urdu.css` | **PREPARED, NOT LIVE** — proof-tested on `bank`, activates when `bank` migrates |
+| **1b** | **UI-044b** | **print-media leading** — the half `--leading-body` cannot solve | `print` · settles **D36** |
 | **2** | **UI-045** | **display / hero type step** — the scale step above `h1` | `landing` |
 | **3** | UI-041 | `button` (`.btn-primary`/`.btn-ghost` 5× → BEM `.button`) + chip / tag / badge | needed by `taqseem`, `index` |
 | **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | `blueprint`, and completes `index` |
@@ -210,19 +211,27 @@ waiting on something below. **A task is not done until the pages it owns are mig
 | 6 | UI-042 | `modal` (4×) + `field` / form-row (4×) | no held page — settles D26/D27/**D31** |
 | 7 | UI-043 | tables + status-bar + domain components (sec/qrow/pin, board/col, imgcard, stat, bloom, sheet) | no held page |
 
-**UI-044 and UI-045 are the foundation and go first, together releasing three of the six.**
+**UI-044a landed as FOUNDATION-FIRST, not as a page release.** The rule and its token are in
+the tree and imported by `main.css`, but they reach **nothing**: the only page carrying
+`.q-text .qt.rtl` elements is `bank`, which is HELD at HEAD and does not link `main.css`, while
+the three pages that do link it carry zero Urdu. It was proof-tested through a temporary swap —
+`bank` migrated, measured, reverted — so the value is settled and measured *before* the
+migration that will need it, exactly the shape UI-021 used. **Nothing activates until `bank`
+migrates.**
+
+**UI-044b and UI-045 are the foundation and go next, together releasing two more of the six.**
 They are listed separately because they are separately reviewable, but they touch the same two
 files (`03-elements/typography.css` and `01-settings/`) and should be taken back to back; doing
 either one alone leaves the other's pages held.
 
-**UI-044 is the single highest-value task in the sprint.** `bank`'s hold and `print`'s D33 are
+**UI-044 (a+b) is the single highest-value task in the sprint.** `bank`'s hold and `print`'s D33 are
 **one problem in two places** — Nastaliq inheriting `body { line-height: var(--leading-body) }`
 from `layer(elements)` — and whoever takes one must take the other or they will diverge. D36
 (`print` gaining a page) comes from the *same* leading change, so it is the third thing this
 task settles.
 
 **Why UI-041 is third and not first.** It is needed by two pages and **completes neither on its
-own**: `taqseem` also needs UI-040, and `index` also needs UI-046's shell layout. UI-044/045
+own**: `taqseem` also needs UI-040, and `index` also needs UI-046's shell layout. UI-044a/b and UI-045
 each complete their pages outright, which is why they outrank it.
 
 **Nothing here depends on `--space-*`.** An earlier plan for this sprint assumed a space-token
@@ -235,8 +244,8 @@ schedule work for it.
 | page | the actual blocker | released by |
 |---|---|---|
 | `landing` | hero headline shrinks; `reset.css` zeroes the gap under it | **UI-045** |
-| `bank` | Urdu line-height 38px → 21.75px on 24 questions | **UI-044** |
-| `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044** |
+| `bank` | Urdu line-height 38px → 21.75px on 24 questions — **fixed by UI-044a, which is prepared and not yet live** | **UI-044a** (done) + Irfan's call on **D31** → UI-042 |
+| `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** |
 | `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |
 | `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 **+** UI-046 |
 | `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | **UI-046** |
