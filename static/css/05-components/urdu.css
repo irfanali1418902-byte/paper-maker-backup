@@ -1,0 +1,51 @@
+/* =========================================================================
+   05-components/urdu.css — leading for Nastaliq text
+   UI-044. The first file in layer(components).
+   -------------------------------------------------------------------------
+   WHY THIS FILE EXISTS, AND WHY IT IS NOT IN 03-elements.
+
+   03-elements/typography.css:41 declares `body { line-height: var(--leading-body) }`.
+   It sits in layer(elements), which outranks layer(legacy), so it takes the line
+   height of every legacy rule that does not declare one of its own — including
+   99-legacy/bank.css:229 `.q-text .qt.rtl`, which sets 'Noto Nastaliq Urdu' and a
+   font-size and NO line-height. Measured on the 24 Urdu-only questions in this
+   database: the line box falls from the font's natural 38px to 21.75px, a 43% cut,
+   on the one script in the app whose glyphs paint well outside their em box.
+   Nothing clips (no .q-row / .q-text / .qt sets overflow), so the failure mode is
+   overlap. That is why bank.html was HELD on 2026-08-04.
+
+   The fix cannot go where the problem is. 99-legacy/ is APPEND-NEVER, delete-only
+   (CLAUDE.md:387), so the missing declaration cannot simply be added to bank.css.
+   It cannot go in 03-elements either: those three files are element selectors only,
+   by their own contract — "not one class appears in this file, and none should.
+   Classes are 05-components." `.qt.rtl` is a class. So it lands here, in the layer
+   that outranks elements without touching it.
+
+   THE APP ALREADY HAD A NASTALIQ LEADING; IT JUST WAS NOT A TOKEN. Ten Nastaliq
+   rules exist across three legacy files and EIGHT declare their own line-height:
+   1.7 (print.css:182 .qtext-ur, index.css:257 body.lang-ur .h1), 1.8
+   (print.css:280 .field-group .urdu-input), 1.9 (bank.css:94 .urdu-mode,
+   index.css:258 body.lang-ur .app-nav a) and 2.0 (index.css:36 .urdu, .ur). Only
+   TWO declare none — bank.css:229, fixed below, and print.css:126
+   .letterhead .school-ur, which is DEFERRED D33 and is NOT fixed here because
+   print.html is HELD and unmigrated: it does not link main.css, so a rule here
+   would not reach it. When print migrates, add its selector to this file.
+
+   WHY `normal` AND NOT 1.9. The value restores exactly what a teacher sees on
+   bank.html today (38px at 15px — measured at HEAD, not assumed), so unholding the
+   page is a migration and not a redesign. 1.9 would give 28.5px, which is
+   consistent with .urdu-mode but is a real 25% tightening of live text, and that is
+   a design decision rather than a migration one. Switching later is a single value
+   in 01-settings/tokens.css — that is what the token below is for.
+
+   SCOPE, and it was measured rather than reasoned. The selector is bank's own, as
+   narrow as the legacy rule it repairs. The three pages that are LIVE on this tree
+   today — slo, slo-health, library — carry ZERO Urdu: `.q-text`, `.qt` and `.rtl`
+   appear in none of their markup or legacy CSS, and their measured Urdu element
+   count is 0. Adding this file leaves all three byte-for-byte identical in
+   computed style; that is a gate this task re-runs after every rule, not a claim.
+   ========================================================================= */
+
+.q-text .qt.rtl {
+  line-height: var(--leading-nastaliq);
+}

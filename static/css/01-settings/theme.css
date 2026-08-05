@@ -112,6 +112,7 @@
   /* ── leading roles ────────────────────────────────────────────────────── */
   --leading-body:    var(--line-height-normal);
   --leading-heading: var(--line-height-tight);
+  --leading-nastaliq: var(--line-height-nastaliq);  /* Urdu — 05-components/urdu.css */
 
   /* ── spacing roles ────────────────────────────────────────────────────── */
   --space-inset:       var(--space-6);  /* card / panel padding */

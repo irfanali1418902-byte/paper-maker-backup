@@ -156,6 +156,15 @@
 /* @import url("04-objects/grid.css")         layer(objects); */
 /* @import url("04-objects/stack.css")        layer(objects); */
 
+/* -------------------------------------------------------------------------
+   5. COMPONENTS. First file lands in UI-044: the Nastaliq leading that
+   03-elements/typography.css's `body` rule takes from the legacy Urdu rules
+   that declare none. It is here rather than in 03-elements because that layer
+   is element-selectors-only by contract, and here rather than in 99-legacy
+   because that tree is append-never. See 05-components/urdu.css's header.
+   ------------------------------------------------------------------------- */
+@import url("05-components/urdu.css")      layer(components);
+
 /* UI-040..043 */
 /* @import url("05-components/button.css")    layer(components); */
 /* @import url("05-components/card.css")      layer(components); */

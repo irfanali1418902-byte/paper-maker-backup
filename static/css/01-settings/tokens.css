@@ -121,6 +121,14 @@
      and .brand b at 1.05 is the same intent). */
   --line-height-tight: 1.1;
   --line-height-normal: 1.45;
+  /* Nastaliq sets its own. The keyword, not a ratio, and that is the point: Noto
+     Nastaliq Urdu paints well outside its em box and its natural metrics give 38px
+     at 15px — a 2.53x multiplier where Latin's is ~1.3x — so any ratio borrowed
+     from the Latin scale crushes it. Consumed by --leading-nastaliq (UI-044). The
+     app's own legacy files declare 1.7-2.0 for Urdu, all of them TIGHTER than the
+     font asks for; keeping `normal` here preserves what bank.html renders today
+     and leaves the tightening as a design decision rather than a migration one. */
+  --line-height-nastaliq: normal;
 
   /* ── space scale ──────────────────────────────────────────────────────────
      THE GAPS ARE DELIBERATE. This is not an incomplete scale to be helpfully

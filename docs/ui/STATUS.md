@@ -12,7 +12,93 @@ the new tree and all six others are HELD**: `landing`, `taqseem`, `blueprint`, `
 
 ---
 
-## NEXT TASK → **UI-044** (type + leading). UI-032 is closed; **all six unmigrated pages are HELD.**
+## NEXT TASK → **UI-044 part 2** (the print-media half, D36). Part 1 has landed.
+
+### UI-044 part 1 — **Nastaliq leading. Shipped 2026-08-05. `bank` measured clean and stays HELD.**
+
+**What shipped, and it is the first thing ever to land in `layer(components)`:**
+`05-components/urdu.css` with one rule — `.q-text .qt.rtl { line-height: var(--leading-nastaliq) }` —
+plus `--line-height-nastaliq: normal` (Tier 1) and `--leading-nastaliq` (Tier 2), and the import
+in `main.css`. **No page's `<link>` block was touched and no page was migrated.**
+
+**Why it is in `05-components` and not where the problem is.** `03-elements/typography.css`:41's
+`body { line-height: var(--leading-body) }` is in `layer(elements)` and takes the leading of any
+legacy rule that declares none — including `99-legacy/bank.css`:229 `.q-text .qt.rtl`, which sets
+Nastaliq and a size and no line-height. The fix cannot go in `99-legacy/` (append-never,
+CLAUDE.md:387) and cannot go in `03-elements/` (element selectors only, by those files' own
+contract — `.qt.rtl` is a class). `layer(components)` outranks `layer(elements)` without editing it.
+
+**The app already had a Nastaliq leading; it was not a token.** Ten Nastaliq rules across three
+legacy files, **eight of which declare their own line-height** — 1.7, 1.7, 1.8, 1.9, 1.9, 2.0.
+**Only two declare none**, and they are exactly the two known defects: `bank.css`:229 (fixed here)
+and `print.css`:126 `.letterhead .school-ur` (**D33 — NOT fixed here**, see below).
+
+**`normal` was chosen over a ratio, and the choice was measured both ways.** At 15px the font's
+own metrics give **38px** — a 2.53× multiplier where Latin's is ~1.3×. Every ratio the app
+already uses for Urdu (1.7–2.0) is *tighter* than the font asks for. `normal` restores exactly
+what `bank.html` renders at HEAD today, so unholding the page stays a migration rather than a
+redesign. **A/B'd in the browser against 2.6**: 39px vs 38px — **1px per line**, 24px across the
+whole 24-question list, which is the useful finding: `normal` and 2.6 are effectively the same
+place. **2.0 was never rendered** and would be 30px, a 21% tightening; switching later is one
+value in `01-settings/tokens.css`, which is what the token is for.
+
+**`bank`'s Urdu, measured in three states** (headless Edge 151, 1280×900, webfont awaited, drift 0):
+
+| state | `line-height` | line box |
+|---|---|---|
+| **A** — HEAD, what a teacher sees today | `normal` | **38px** |
+| **B** — migrated, no rule (the state it was HELD on) | 21.75px | 21.75px |
+| **C** — migrated + this rule | `normal` | **38px** |
+
+**C equals A exactly.** Irfan confirmed it in the browser on the Urdu questions
+(سیب گنو اور نمبر لکھو) — no overlap, Nastaliq intact.
+
+**The rule's isolated effect (B vs C, both migrated, only the rule differing): 74 elements.**
+`line-height` on **24** — precisely the 24 Urdu-only questions — and `height` on 74, being those
+24 plus their `.q-text`, `.q-row` and two containers. **Nothing else moved**: no colour, no
+font-size, no padding, no margin, no width, and **435 English `.qt` elements were untouched, 0
+of 435.**
+
+### The live-page regression gate — **128,862 comparisons, 0 deltas**
+
+Irfan's condition on this task: `typography.css` and its neighbours reach all nine pages, so the
+three pages **live on the new tree today** must not move. Measured HEAD vs the shipping state
+over a property set of 18 fixed before measuring:
+
+| page | aligned elements | only-HEAD | only-new | **deltas** |
+|---|---:|---:|---:|---:|
+| `slo` | 930 | 0 | 0 | **0** |
+| `slo-health` | 190 | 0 | 0 | **0** |
+| `library` | 661 | 0 | 0 | **0** |
+| `bank` (HELD, at HEAD) | 5378 | 0 | 0 | **0** |
+
+Drift 0 on all four. **"Byte-identical" is not the test and cannot be** — the CSS files themselves
+change; zero element × property deltas is the measurable equivalent, and that is what passed.
+The three live pages carry **zero Urdu elements** (measured, not assumed), so the selector cannot
+match them — but that was proven rather than argued.
+
+### `bank` stays HELD — and its original hold reason is now resolved
+
+**`bank`'s recorded hold was the Urdu line-height, and this task fixes it.** It is held on
+Irfan's call pending **D31** — the two `<label>`s in `.urdu-toggle-row` at 4.44:1 against AA's
+4.5:1 — whose home is **UI-042** (`field` component). Note what the board says about that: D31
+was flagged at handover and `PLAN.md`:210 lists UI-042 as releasing **no held page**, so this is
+a new and more conservative hold than the one recorded, not the continuation of an old one.
+**It is not a button/card hold** — that is `taqseem`'s blocker, not `bank`'s.
+
+### What UI-044 has NOT done yet
+
+- **D33 — `print.css`:126 `.letterhead .school-ur` is untouched.** `print.html` is HELD and
+  unmigrated, so it does not link `main.css` and a rule here cannot reach it. **When `print`
+  migrates, add its selector to `05-components/urdu.css`** — the file's header says so.
+- **D36 — the print pagination regression is untouched.** That is UI-044 **part 2**, the
+  print-media leading half, and it is the next task. It cannot be solved by moving
+  `--leading-body`: the three live pages inherit that same 1.45 and would move with it.
+- **`taqseem` has no Urdu at all** (measured — zero `Nastaliq`/`urdu`/`.rtl` matches in its
+  legacy file), so nothing in this task touches it.
+
+`BASELINE.json` re-pinned: `shared_css_lines` **1616 → 1685**. `unsanctioned_hex` flat at 429 —
+no hex reached the new files.
 
 ### Sprint 4 is re-scoped and re-ordered — **D34 resolved 2026-08-05, docs only**
 
