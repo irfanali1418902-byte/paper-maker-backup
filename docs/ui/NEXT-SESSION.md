@@ -1,271 +1,234 @@
 # NEXT SESSION — start here
 
-> Written at the end of the `taqseem`/UI-031c session (2026-08-03) so the next session needs
-> no copy-paste handover. **Read `docs/ui/STATUS.md` first — it is the SOURCE OF TRUTH.**
-> This file only says *what to do next and what not to do*; every number lives in STATUS.md.
->
-> **Updated 2026-08-05 — `index` is HELD too, and `print` is the only page left.** `bank` and
-> `index` were each taken, migrated, measured in a browser and **reverted**; both entry files
-> are parked. `blueprint` was held on the checks alone. **Nothing is migrated on the new tree
-> beyond the original three.** Every number is in STATUS.md's NEXT TASK block and its UI-032
-> rows. What remains is **one** migration: `print`.
+> **Updated 2026-08-05, end of the `print` session.** Read `docs/ui/STATUS.md` first — it is
+> the SOURCE OF TRUTH for every committed number. **This file is the exception right now:**
+> the `print` work below is **measured but UNCOMMITTED**, so STATUS.md does not yet contain
+> any of it. If this file and STATUS.md disagree about `print`, this file is newer.
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
 ---
 
-## THE NEXT SESSION'S TASK
+## ⚠ READ THIS FIRST — the tree is clean, and that is deliberate
 
-**Migrate `print` — with a browser open, and stop for a "go" before each step.** Five of nine
-pages are HELD and three are live; `print` is the one that is left.
+`print` was migrated, measured, and **Irfan checked it in a real Ctrl+P print preview on two
+real papers and said it was correct and should ship.** It was then **reverted anyway**, and
+nothing was committed. That is not a failure and `print` is **not HELD** — it is the one page
+in this epic that passed everything and simply ran out of session.
 
-### Read this before you start, because it has now happened four times
+**Why it was not committed:** the independent review agent (§12 step 5) was spawned and **died
+part-way through on an API monthly spend limit**. §12 says self-verification is not enough, and
+this would have been a *shipping* change, so it was stopped rather than committed unreviewed.
 
-**Passing both orphan checks is necessary and NOT sufficient.** `taqseem` passed the token
-check and was held on rules. `blueprint` failed both halves at once. **`bank` passed BOTH with
-zero exposure and was still held** — on Urdu line-height. **`index` passed both and was held
-too** — on Urdu *font-family* and on `.main` losing its padding. Do not read "0 / 0" as "safe";
-read it as "nothing is *unsupplied*", which is a smaller claim than it looks.
+**State right now:**
 
-**And do not assume the previous page's failure is the failure to look for.** `index` was
-approached as "is this bank's line-height problem again?", and the answer was no — its Urdu
-elements all carry a `line-height`. The property that actually broke was `font-family`, from a
-different rule in the same file, and only a full before/after diff over a wide property set
-surfaced it. **Read the whole diff, not the rows you expected to find.**
+| | |
+|---|---|
+| `static/print.html` | **at HEAD** — its two original `<link>`s |
+| `static/css/pages/print.css` | **removed** — parked at `docs/ui/parked-print.css` |
+| `docs/ui/STATUS.md`, `DEFERRED.md`, `BASELINE.json` | **at HEAD** — all reverted |
+| ratchet | `shared_css_lines` back at **1616**, `unsanctioned_hex` **429**, OK |
+| this file | **the only modification in the tree, and it is uncommitted** |
 
-### The HELD pages you must not touch
-
-**`blueprint`** (held 2026-08-04) — 20 orphan rules that are the entire application shell
-(`.app` grid, `.top`, `.nav`, `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`) *plus* 21
-orphan tokens, *plus* — found later, D32 — **nine more theme.css-only tokens read from inline
-`style=""` with no fallback**, which the stylesheet-only check could never see. `taqseem` lost
-its buttons; `blueprint` would lose the grid. Sprint 4's shell/nav work. **Nothing is parked
-for it** — the decision came before any entry file was written — and `blueprint.html` is
-untouched at HEAD.
-
-**`bank`** (held 2026-08-04) — both checks clean, held on Urdu. `99-legacy/bank.css`:229
-`.q-text .qt.rtl` sets Nastaliq and a size but **no `line-height`**, so
-`03-elements/typography.css`:41's `body { line-height: var(--leading-body) }` in
-`layer(elements)` takes it: **38px → 21.75px** on the 24 Urdu-only questions. Nothing clips
-(no `overflow` anywhere on that row), so the failure mode is overlap. Its finished entry file
-is parked at **`docs/ui/parked-bank.css`** — read its header before ever touching this page —
-and `bank.html` is back on its three `<link>`s at HEAD.
-
-**`index`** (held 2026-08-05) — both checks clean on their own halves (token 0, rule 3), held on
-two things neither measures. **The Urdu language toggle loses Nastaliq**: `03-elements/forms.css`
-:101 `button { font-family: inherit }` is in `layer(elements)` and `99-legacy/index.css`:34
-`.urdu, .ur` is in `layer(legacy)`, so the bare element rule wins and `index.html`:21's اردو
-button renders in the body's Latin sans — D22's button reset, landing on the control a teacher
-uses to switch the app to Urdu. **And `.main` loses `overflow: auto` and its
-`var(--pad) 28px 44px` padding** (`static/theme.css`:89; `index.css`:73 sets only flex
-properties): the content area measured 28px left, 32px up, 56px wider on every screen. Its
-finished entry file is parked at **`docs/ui/parked-index.css`** — read its header before ever
-touching this page — and `index.html` is back on its three `<link>`s at HEAD.
-
-Five pages are held in total (`landing`, `taqseem`, `blueprint`, `bank`, `index`) and **none of
-them is a pending migration.**
-
-**Two things `index` learned that outlive it**, both in STATUS.md's UI-032 row:
-
-- **One of that page's 224 inline `style=""` attrs is load-bearing.** `index.html`:443's Urdu
-  school-name field keeps Nastaliq *only* because the family is inline, which outranks every
-  layer. D32's sweep was right that the inline `var()` reads are clean — that is a different
-  question from whether an inline attribute is holding something up. **Sprint 5 must move that
-  family into CSS before it burns the attributes down.**
-- **If you reuse the contrast method from D31: it does NOT composite translucent layers.** The
-  ancestor walk stops at the first background with alpha > 0. That was exact on `bank` (both
-  backdrops opaque) and will be wrong anywhere a translucent surface sits between the text and
-  its paint. Composite before quoting a ratio.
-
-### `print` — the only one left, and the one to take the most care over
-
-0 by D9 (it never linked `/static/theme.css`, so its three matching rules are already inert),
-but it is the **Ctrl+P page**, the highest-consequence one in the epic. Check its output on a
-real exam paper, never a blank one. Known gap: **no paper in this DB has Urdu question text**,
-so the Urdu half cannot be exercised here — which is exactly why `bank` was the first page to
-surface the Nastaliq problem.
-
-**Two specific things to check on this page, because they are what held the last two:** whether
-any `<button>` on it carries a font it needs (`forms.css`:101 takes those, and this page's Urdu
-comes from the header and labels rather than question text), and whether anything relies on a
-`static/theme.css` layout property the page's own file does not restate. Neither orphan check
-reports either one.
-
-Rules 1–5 at the bottom of this file still apply, **except** that rule 1's "migrate nothing"
-was scoped to the measurement task and is now spent for `print`. It still holds for
-`blueprint`, `bank`, `index`, `landing` and `taqseem`.
+**So the first thing to decide next session is not technical: does `print` ship?** Everything
+needed to answer it is below. If yes, the work is ~15 minutes (restore the parked file, swap
+one line, re-run gates, run the review agent, write STATUS.md, re-pin BASELINE).
 
 ---
 
-## What happened in the sessions before this one
+## THE `print` FINDINGS — measured this session, none of it yet on the board
 
-**2026-08-04 (qadam 1 + 2):** both orphan checks were turned into `scripts/css_orphans.py` and
-run over every page. No CSS, HTML or `<link>` was touched. Commits `64484d9` and `8adcf17`.
+### What the migration is
 
-**2026-08-03 (UI-031c):**
-`taqseem` was taken as UI-031c, fully measured, and then **HELD on Irfan's call** — it is not a
-failure and not a pending migration. Its finished entry file is parked at
-`docs/ui/parked-taqseem.css` (read its header before ever touching that page). Everything is
-committed. `taqseem.html` is untouched at HEAD; `BASELINE.json` was not re-pinned, because
-nothing shipped.
+**One line.** `print.html` is the only page in the epic with just two `<link>`s and it **never
+linked `/static/theme.css`** (D9). So the swap is its legacy link → the entry file; `app.css`
+stays. **−4 bytes, one hunk**, both `<script>` blocks byte-identical (35610 bytes, sha256
+`b049c24d8fa93e06`), frozen inventory diff empty (id 53/53, onclick 21/21, name 1/1, data 5/5,
+class 142/142).
 
-The reason it was held is the whole point of the next task: **it passed the token check and
-still could not ship**, because it borrows 16 whole *rules* (`.btn*`, `.card*`, `.pagehead*`,
-two `input`/`:focus`) from `static/theme.css` that its own legacy file redeclares nowhere.
-Dropping the link removed its buttons and card chrome. No grep over custom properties can see
-that.
+**Because there is no theme.css to unlink, mechanism 1 does not exist on this page** — no white
+slab, no `.tag` chip, no `.summary-row` rule. Everything that moves is the new tree beating
+`layer(legacy)`, i.e. **D21 on its own for the first time in the epic**.
+
+### The method changed for this page, and it should stay changed
+
+- **Measure in PRINT media** (`Emulation.setEmulatedMedia({media:'print'})`). Screen media does
+  not even apply this page's two `@media print` blocks (`99-legacy/print.css`:215 and :375), so
+  a screen measurement describes a page nobody prints.
+- **Measure pagination by producing the PDF** (`Page.printToPDF`) and counting its pages — not
+  by dividing a document height by 1123. That is the literal Ctrl+P answer.
+- **Load the webfont before believing any Urdu line box.** See F2 below; this one bit.
+
+### F1 — the printed page's ink colour changes on every element
+
+`rgb(26,26,26)` → `rgb(15,23,42)`. `99-legacy/print.css`:26's `body { color: … }` loses to
+`03-elements/typography.css`'s `body { color: var(--color-text) }` in `layer(elements)`.
+**400+ printed elements**, near-neutral black → slate-900 blue-black. This is the single most
+widespread change and it is on the artefact a teacher hands out.
+
+### F2 — the Urdu that matters, and the Urdu that only looked like it mattered
+
+**`.school-ur` IS exposed. It shipped-nothing only because the field is empty.**
+`99-legacy/print.css`:126 `.letterhead .school-ur` sets `"Noto Nastaliq Urdu"` at 19px and **no
+`line-height`**, and no ancestor supplies one (`body`:24, `.sheet`:112, `.letterhead`:118 were
+each read — none declares it). So it inherits, and `03-elements/typography.css`:41's
+`body { line-height: var(--leading-body) }` takes it. Measured in print media with the webfont
+loaded first: **`normal` → 27.55px while the glyph line rect stays 47px** — a 47px ink extent
+in a 28px box. **This is exactly the mechanism `bank` was HELD for**, on the Ctrl+P page.
+
+It is invisible today only because **`school_name_ur` is empty in this DB**. **The moment any
+school fills that field in, every printed letterhead overlaps.** This needs a DEFERRED row of
+its own when the work is committed (it was drafted as D33 and reverted with everything else).
+
+**The header Urdu Irfan saw is NOT Nastaliq, and that is why it was fine.** `Name / نام:`,
+`Class / جماعت:`, `Date / تاریخ:` and `تمام سوالات کے جواب دیں۔` live in `.label` and
+`.instructions`, mixed-script spans with **no Urdu class**; both compute to
+`"IBM Plex Sans", system-ui, sans-serif`, so the Arabic run takes a **system naskh fallback with
+Latin-like metrics**. Measured, same string, same size: **16px line box under its own stack
+against 30px forced into Noto Nastaliq Urdu.** Bank's mechanism needs a 2.47× box to overflow a
+1.45 leading; a ~1.3× face fits.
+
+**Two things that are NOT the explanation, both checked because a wrong reason on the board
+becomes the next session's premise:**
+
+- **`!important` is not protecting the Urdu.** `99-legacy/print.css` has exactly **five**
+  `!important` declarations — `:217`, `:218`, `:376`, `:377`, `:378` — and **all five are
+  `display: none`**, hiding the sidebar and `.no-print`/modal chrome in print. None touches a
+  font, a line-height, or anything Urdu.
+- **There is no `print.js` in this project.** The render and knob-injection flow is
+  `print.html`'s own inline `<script>`: `setVar`:514, `renderQuestion`:651, `renderSection`:714.
+  The migration did not touch it, and that was proven by hashing, not asserted.
+
+### F3 — the new tree's reset/elements layer opens up every line box
+
+`line-height` `normal` → a resolved value on **465 element-instances**. `.qhead` 19 → 21.75px
+(×25), `.options` 40 → 43.69px (×7), each `.question` ~2.75px taller. Base size 16 → 15px where
+it is inherited — **`.qtext-en` does not move**, because it is pinned by `var(--q-font)`.
+
+**Pagination held: 7 pages before, 7 after**, on the 25-question paper; the sheet grew
+6324 → 6425px (+1.6%) without spilling. **That is one paper's margin, not a guarantee.** Nothing
+measured how near any other paper sits to a page boundary, and a paper closer to one could
+cross it.
+
+### The print knobs are cascade-neutral, confirmed live
+
+`--page-margin: 14mm`, `--q-font: 14px`, `--q-gap: 14px` read identically before and after.
+`setVar()` writes them onto `documentElement.style`, an inline declaration that outranks every
+layer — UI-018's reasoning, now measured rather than argued.
+
+### One check came back clean
+
+`03-elements/forms.css`:101's `button { font-family: inherit }` — the rule that took `index`'s
+Urdu language toggle — has **no print-visible target here**. All 40 buttons sit inside
+`.no-print` chrome and all but two already resolve to the body sans.
+
+### Measurement quality, for whoever writes the STATUS.md row
+
+2827 element × property deltas over a **property set of 58 fixed before measuring**, across 549
+aligned elements, **0 paths in only one snapshot**, print-media drift **0**, Edge 151 at
+1280×900, on a real 25-question paper (25 with images, 27 `<img>`, **555 elements —
+independently reproducing the qadam-2 probe's 555**).
+
+**A measurement defect was caught and fixed mid-session, and it is worth repeating as a rule:**
+the first reading of the `.school-ur` box said **22px** and was wrong — text was injected and
+measured in the same tick, before the `font-display: swap` webfont had arrived, so the number
+described a Latin serif fallback. Awaiting `document.fonts.load()` for the real family and size
+gives **47px**. It would have understated the exact thing `bank` was held on. **Never measure a
+webfont's line box without awaiting the font.**
+
+### Gates, as of the reverted state
+
+pytest **906 passed**, ruff clean, ratchet OK, `unsanctioned_hex` flat at **429** (no hex
+reached the entry file's comment — the failure this epic has hit four times).
+
+**Do NOT run `pre-commit run --all-files`.** Its black hook **reformats** rather than checks and
+takes ~96 unrelated Python files out of scope. It happened this session and had to be reverted
+with `git checkout -- app tests scripts config`. The repo's black state at HEAD is
+non-conformant for those files; that is pre-existing and is not this epic's to fix.
 
 ---
 
-## UI-032 — the four pages still on their old `<link>`s · **MEASURED, NOTHING MIGRATED**
+## Test data — what exists, measured, not assumed
 
-**`blueprint`, `bank`, `index`, `print`** (three of nine pages are live on the new tree —
-`slo`, `slo-health`, `library`; `landing` and `taqseem` are HELD).
+**URL form:** `http://127.0.0.1:8000/static/print.html?paper_id=<UUID>`
+The param is **`paper_id`**, not `id`, and IDs are **UUIDs, not numbers**. Using `?id=` renders
+a blank page (0 questions, 1-page PDF) — this cost time twice.
 
-**The measurement task is complete.** Both checks ran over all four pages, changing no file, so
-it is now known which pages are repetitions of `slo`/`slo-health`/`library` (`bank`, `index`,
-`print`) and which is a decision like `taqseem` (`blueprint`). The two sections below are the
-record of how, and stay here so the checks can be re-run rather than re-invented.
+| purpose | paper | |
+|---|---|---|
+| text-only, best for the F1 ink change | `0d04c750-ddaa-406a-a9bb-a154cf487c9d` | 20 Q · 2 sections · 0 images · **3 pages** |
+| images + blueprint sections | `a5015cda-8269-4e96-8e87-82da9ccf091f` | 20 Q · 2 sections · 19 images · **6 pages** |
+| longest, pagination test | `9ade2655-21e6-449d-943a-ae875542012e` | 25 Q · 1 section · 25 images · **7 pages** |
 
-### Check 1 — orphan TOKEN · **DONE 2026-08-04, and it is a script now**
+**There is no Urdu paper, and one cannot be picked — it has to be built.** Measured this
+session: **all 22 papers contain zero of the bank's 24 Urdu questions** (the board's older text
+says 21 papers; it is 22). Those 24 are **Pre Year 1 / Mathematics**, short-answer, all with
+images, one per "Introduction of number N" topic, and their `question_en` is **empty** — they
+are Urdu-only.
 
-```
-python scripts/css_orphans.py --names
-```
+**`school_name_ur` and `address_ur` are both empty**, which is why `.school-ur` renders nothing.
+**To see F2 in a real print preview, that field must be filled** (`index.html` → Settings →
+School Name (Urdu)). That is a data change and is Irfan's call, not a session's.
 
-`scripts/css_orphans.py` does what this file previously described as "two greps": per page
-it collects the names `99-legacy/<page>.css` declares (`--name:`) and reads (`var(--name)`),
-and reports the difference. **Re-run it rather than trusting the table below** — that is why
-it was written as a script and not prose (the epic's most repeated failure is a number
-asserted instead of measured).
+---
 
-```
-page        theme?  decl  reads  orphan  supplied  covered  compat  dead  fallbk  collide
-bank           yes    19     19       0         0        0       0     0       0        0
-blueprint      yes    18     37      21        21        2      19     0       0        0
-index          yes    27     21       0         0        0       0     0       0        0
-landing         no    12     10       0         0        0       0     0       0        0
-library         no    19     20       1         0        0       0     1       0        0
-print           no    12     13       1         0        0       0     1       0        0
-slo             no    17     15       0         0        0       0     0       0        0
-slo-health      no    17     15       0         0        0       0     0       0        0
-taqseem        yes    15     29      26        26        3      23     0       0        0
-```
+## If `print` ships next session
 
-`supplied` is the real D20 exposure: read here, not declared here, declared in
-`/static/theme.css`, **and that file actually linked by this page**. `compat` is how many
-tokens the entry file's compatibility block needs; `covered` is the ones Tier 2 already
-declares. `collide` (a name declared both here and by the new tree) is **0 on all nine**.
+1. Move `docs/ui/parked-print.css` → `static/css/pages/print.css` (read its header first).
+2. `print.html`: second `<link>` → `/static/css/pages/print.css`. One line, −4 bytes.
+3. Gates: pytest, ruff, `scripts/css_baseline.py --check`.
+4. **Run the review agent and let it finish.** That is the step that stopped this session.
+5. STATUS.md: close UI-032, `print` live, four of nine pages migrated, Sprint 3 complete, and
+   the five HELD pages become Sprint 4's input. Add the `.school-ur` DEFERRED row.
+6. `--check` must pass against HEAD **before** `--write` (UI-031a's rule). Expect
+   `shared_css_lines` 1616 → 1722 and nothing else.
 
-**Validated against three already-measured pages before any new number was believed:**
-`taqseem` 26 / 3 / **23** — matching UI-031c's hand measurement and the block actually
-written in `docs/ui/parked-taqseem.css`; `slo-health` declares 17, reads 15, orphans 0;
-`library`'s single orphan is `--text`, declared nowhere in the project (D14), which is why
-the board correctly calls that page 0.
+## If it does not ship
 
-**Four findings:**
+Leave the file parked and say why on the board. Nothing is broken either way — the page is at
+HEAD and the ratchet is at baseline.
 
-1. **`blueprint` is 21, not 17.** D20's 17 was an estimate never re-measured — the same
-   shape as `taqseem`'s "20", which measured 26. All 21 names are declared zero times in
-   `blueprint.css`, verified separately by grep.
-2. **`bank` and `index` have zero token exposure.** `bank` is the largest legacy file (366
-   lines) and had never been checked either way; it declares its own 19. `index` declares
-   27, reads 21.
-3. **`print` is zero, for two independent reasons.** Its one orphan `--accent` is read with
-   a fallback at all four sites (`var(--accent, #0e4d3c)`), *and* `print.html` never linked
-   `/static/theme.css` at all (D9) — so it already resolves to the fallback today and a
-   migration cannot change it. Only four pages link that file: `bank`, `blueprint`, `index`,
-   `taqseem`.
-4. **`blueprint`'s 19 are an exact subset of `taqseem`'s 23** — the difference is `--shadow`
-   and the three `--sidebar-*`. So `docs/ui/parked-taqseem.css`'s compatibility block
-   already covers `blueprint`; it does not need a new one authored.
+---
 
-`app.css` declares **0** custom properties, so `/static/theme.css` is the only supplier in
-play. `python scripts/css_baseline.py --check` → ratchet OK, nothing moved.
+## ⚠ This file is uncommitted
 
-### Check 2 — orphan RULE · **DONE 2026-08-04, and it is a `--rules` mode now**
+Everything above exists **only in the working tree**. Nothing was committed this session,
+because nothing shipped. **If this handoff should survive, it needs a docs-only commit** —
+otherwise a `git checkout` or a fresh clone loses it, and the `print` measurements would have
+to be redone from scratch. The measurement scripts themselves lived in a session scratchpad and
+are already gone; the method is described above precisely enough to rebuild them.
 
-```
-uvicorn app.main:app                                        # 127.0.0.1:8000, first
-python scripts/css_orphans.py --rules blueprint bank index print --paper-id <id> --names
-```
+---
 
-It does what this file described by hand: parses `static/theme.css`, runs every selector
-through `querySelectorAll` against the **live** page in headless Edge, and subtracts what the
-page's own `99-legacy/<page>.css` redeclares. It drives the browser through
-`scripts/css_rules_probe.mjs`. 118 rule blocks probed (`:root` excluded — that is the token
-half's). **Re-run it rather than trusting any number written down.**
+## The five HELD pages — unchanged, and none is a pending migration
 
-**The four verdicts — full table, per-page detail and the `partial` column are in STATUS.md's
-NEXT TASK block:**
+`landing`, `taqseem`, `blueprint`, `bank`, `index`. All at HEAD, entry files parked in
+`docs/ui/` (except `blueprint`, for which none was written). Full detail in STATUS.md.
 
-| page | rules match / redecl / partial / **orphan** | **EXPOSURE** | verdict |
-|---|---:|---:|---|
-| `blueprint` | 29 / 6 / 3 / **20** | **20** | **DECISION** |
-| `bank` | 6 / 3 / 2 / **1** | **0** | repetition |
-| `index` | 11 / 2 / 4 / **5** | **3** | repetition |
-| `print` | 5 / 0 / 2 / **3** | **0** by D9 | safe by construction |
+| page | held on | needs |
+|---|---|---|
+| `landing` | hero headline shrinks, `reset.css` zeroes the gap under it | a display/hero type step — **owned by no UI-04x task yet** |
+| `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 button + card |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | shell/nav components |
+| `bank` | Urdu line-height 38px → 21.75px on 24 questions | **the Nastaliq leading decision — same problem as F2 above** |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 button reset + shell layout |
 
-**The method was validated against `taqseem` before any new page was believed** — 21/17 where
-UI-031c measured 20/16 by hand, the whole difference being `:focus-visible`, a state-only rule
-a `querySelectorAll` method can only report as universal. It is its own column and is never a
-page's finding. Drift was 0 on all four across two probes, and a fresh-launch second run
-reproduced every count.
-
-Two things this check taught, both worth keeping:
-
-- **Selector equality is not property equality**, and that error reports a page *clean*. The
-  `partial` column is the fix — it is what caught the white-slab `.brand` on all four pages,
-  independently, and `index.css`:144's `.summary-row` missing its `border-bottom`.
-- **`input[type=text]` vs `input[type="text"]`** — theme.css writes attribute values unquoted,
-  the legacy files quote them. Un-normalised, one rule reads as two: `blueprint` 21 → 20 and
-  `bank` 2 → 1.
-
-**D29 — quote FULL PATHS, never the basename.** Two different files are called `theme.css`:
-`/static/theme.css` (the old stylesheet being removed) and
-`/static/css/01-settings/theme.css` (the Tier 2 palette, which must load). The bare word
-already cost one false alarm.
-
-### What was produced · **DONE**
-
-The table of all four pages with both checks side by side, a verdict each, and what did **not**
-render, is **in the NEXT TASK block of `docs/ui/STATUS.md`** — that is where this board keeps
-every measurement and where a reviewer can check it. Committed as `8adcf17` (qadam 2), on top
-of `64484d9` (qadam 1). Nothing was migrated and no page's `<link>` was touched.
-
-### What is already known about each page (detail in STATUS.md)
-
-- **`blueprint`** — **21** orphan tokens, 19 needing a compat block (STATUS.md and D20 both
-  said 17; that was an estimate, now measured). **This entry used to predict the rule half was
-  *probably* clean, because its own file declares 10 `.btn` + 4 `.card` and it is the one page
-  carrying its own `.pagehead` rules. That prediction was wrong** — measured, it is 20 orphan
-  rules and they are the whole shell. `blueprint.css` declares no `.app`, `.nav`, `.top`,
-  `.ch`, `.cb` or `.chip` rule at all (grep, not inference). Corrected here rather than left,
-  per the rule UI-021 wrote about stale predictions. Its 19 tokens are still an exact subset of
-  `taqseem`'s 23, so `docs/ui/parked-taqseem.css`'s compat block already covers them.
-- **`bank`** — largest legacy file (366 lines, 62 raw hex), 5378 elements live, and **both
-  halves measured clean**: 0 token exposure (declares its own 19) and 0 rule exposure (only 6
-  of 118 rules reach it; the single orphan is `:focus-visible`, which `03-elements/forms.css`
-  declares). A repetition of `slo-health`/`library`.
-- **`index`** — SPA, 7 screens via `showScreen()`, 224 of the project's 466 inline `style=""`.
-  Token half **0**, rule exposure **3**. **All seven screens were measured**, not the default
-  one — the DOM grows 508 → 771 across them. **Do not start Sprint 5's inline burn-down here.**
-- **`print`** — no `/static/theme.css` already (D9), only 2 `<link>`s, and **both halves 0** —
-  its three matching rules are already inert because the file is not linked, so a migration
-  cannot change them. Measured on a **real 25-question paper** (25 with images, 27 `<img>`,
-  555 elements), never a blank page — but it is still the **Ctrl+P page**, the
-  highest-consequence one in the epic. **One gap: no paper in this DB has Urdu question text**,
-  so the Urdu half was not exercised; Urdu here can only come from the header and labels.
+**`bank`'s hold and `print`'s F2 are one problem in two places.** Whichever Sprint 4 task takes
+the Nastaliq leading decision should take both, or they will diverge.
 
 ---
 
 ## Rules for this session (Irfan's, not negotiable)
 
-1. **Migrate nothing. Change no file** except writing the results into `docs/ui/STATUS.md`.
-2. **Stop before every step and ask for a one-word "go".** "What should I do next?" is not
+1. **Stop before every step and ask for a one-word "go".** "What should I do next?" is not
    permission.
-3. **Never push.** Irfan pushes from GitHub Desktop. Commit locally only, and only when asked.
-4. **Measure, never assert.** The single most repeated failure on this epic is a number
-   written down instead of measured — including backdrops for contrast ratios.
-5. Do **not** re-attempt `landing`, `taqseem`, `blueprint`, `bank` or `index`. All five are
-   HELD until Sprint 4.
+2. **Never push.** Irfan pushes from GitHub Desktop. Commit locally only, and only when asked.
+3. **Measure, never assert.** The single most repeated failure on this epic is a number — or a
+   causal explanation — written down instead of measured. This session added two more instances:
+   a webfont line box read before the font loaded, and `!important` credited with protecting
+   Urdu it does not touch.
+4. Do **not** re-attempt `landing`, `taqseem`, `blueprint`, `bank` or `index`. All five are HELD
+   until Sprint 4.
+5. Do not start Sprint 5's inline burn-down anywhere. Note that `index.html`:443's Urdu field
+   keeps its Nastaliq **only** via an inline `style=""` — one of those 224 attributes is
+   accidentally load-bearing.

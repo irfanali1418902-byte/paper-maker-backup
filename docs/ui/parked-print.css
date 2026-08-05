@@ -1,0 +1,125 @@
+/* =========================================================================
+   ⚠ PARKED — THIS FILE IS NOT LIVE. It is NOT held for a defect.
+
+   It is the UI-032 entry file for print.html. The migration was performed,
+   measured in print media, and CHECKED BY IRFAN IN A REAL PRINT PREVIEW on
+   two real papers — he found the output correct and said ship. It was then
+   reverted anyway, unshipped, because the session ended before the decision
+   was committed: the independent review agent (§12 step 5) died part-way on
+   an API spend limit, so the gate was never satisfied, and Irfan chose to
+   stop rather than commit an unreviewed shipping change. THE PAGE IS NOT
+   HELD AND NOTHING IS WRONG WITH THIS FILE. See docs/ui/NEXT-SESSION.md.
+
+   It sits in docs/ because anything under static/css/ counts toward
+   shared_css_lines even when no page links it.
+
+   TO RESTORE: move this file to static/css/pages/print.css — the two @import
+   paths at the bottom are relative to THAT directory and resolve nowhere
+   from docs/ui/ — then change print.html's SECOND <link> (it has only two,
+   and app.css stays) from /static/css/99-legacy/print.css to
+   /static/css/pages/print.css. That swap is -4 bytes, one line, and it was
+   performed and reverted, so it is known to be exactly that.
+
+   -------------------------------------------------------------------------
+   THE MECHANISM IS NOT RE-EXPLAINED HERE. Read pages/slo.css's header first:
+   D19/D20, why the legacy file is imported per page rather than from
+   main.css, why line 2 must be an @import carrying layer() and not a second
+   <link> (a plain <link> is unlayered and would put legacy on TOP of the
+   whole new tree), and why main.css must come first.
+
+   THIS PAGE IS THE ONE EXCEPTION IN THE EPIC, AND IT CHANGES WHAT TO EXPECT.
+   print.html never linked /static/theme.css (D9), so unlike every page
+   migrated before it there is NO theme.css bleed to remove — mechanism 1 does
+   not exist here. Everything that moves on this page moves for one reason
+   only: the new tree beating layer(legacy), which is D21. The white slab,
+   the .tag chip, the .summary-row rule — none of those are even possible
+   here. Both orphan checks are 0 for exactly this reason, and 0 here means
+   something weaker than it looks: it means the file this page does not link
+   cannot orphan anything.
+
+   ⚠ TWO FILES ARE NAMED theme.css — quote full paths (D29). This page never
+   had /static/theme.css and still does not. It GAINS
+   /static/css/01-settings/theme.css, the Tier 2 palette main.css imports into
+   layer(settings), which is new paint arriving rather than old paint leaving.
+
+   -------------------------------------------------------------------------
+   WHAT THIS PAGE IS FOR, AND WHAT MUST BE CHECKED ON IT
+
+   It is the Ctrl+P page — the highest-consequence one in this epic. Its
+   product is not a screen, it is an A4 PDF, so every measurement runs under
+   print media (Emulation.setEmulatedMedia) and pagination is measured by
+   producing the PDF and counting its pages, never by dividing a height.
+   Measuring this page in screen media does not even apply its two
+   @media print blocks (99-legacy/print.css:215 and :375).
+
+   THE PRINT-CRITICAL DECLARATIONS THIS FILE MUST NOT DISTURB, all in
+   99-legacy/print.css and all still in layer(legacy) after this import:
+     :3    @page { size: A4; margin: 0 }
+     :215  @media print — hides the sidebar and .no-print chrome
+     :375  the second @media print block
+     :19   --page-margin: 14mm   :20 --q-font: 14px   :21 --q-gap: 14px
+   The three knobs are written by print.html's own setVar() onto
+   documentElement.style, which is an INLINE declaration and outranks every
+   @layer. The migration is cascade-neutral for them — the same reasoning
+   UI-018 recorded when the block was extracted.
+
+   -------------------------------------------------------------------------
+   URDU, and this is where the risk on this page actually is.
+
+   Three Urdu rules, and they are not alike:
+     :180  .qtext-ur            line-height 1.7   — declares its own, safe
+     :278  .field-group .urdu-input  line-height 1.8 — declares its own, safe
+     :126  .letterhead .school-ur    NO line-height  — inherits
+
+   .school-ur is the school's Urdu name in the letterhead of every printed
+   paper, and neither it nor any ancestor declares a line-height: body:24,
+   .sheet:112 and .letterhead:118 were each read, and none does. So it
+   inherits, and 03-elements/typography.css:41's
+   `body { line-height: var(--leading-body) }` sits in layer(elements) and
+   beats layer(legacy). That is bank's mechanism exactly, on this page's
+   letterhead.
+
+   MEASURED IN PRINT MEDIA, with the webfont loaded before the box was
+   believed: 19px Noto Nastaliq Urdu at line-height normal gives a 47px line
+   box, against 29px for the 22px Latin .school-en beside it — Nastaliq's
+   multiplier is 2.47x where Latin's is 1.3x, which is the whole reason this
+   rule is exposed and the Latin one is not.
+
+   THE FIRST MEASUREMENT OF THAT BOX SAID 22px AND WAS WRONG. Text was
+   injected and read in the same tick, before the swap-loaded webfont had
+   arrived, so the number described a Latin serif fallback. Awaiting
+   document.fonts.load() for the real family and size gives 47. Recorded
+   because it would have understated the exact thing bank was held on.
+
+   THE DATA GAP, stated rather than papered over. Neither Urdu path can be
+   exercised from this database:
+     - school_name_ur and address_ur are both empty, so .school-ur renders
+       nothing;
+     - all 22 papers were checked and every one contains zero of the 24
+       Urdu questions in the bank, so .qtext-ur is not in the DOM at all.
+   The 47px above was measured by injecting text into the real element in a
+   throwaway headless tab. No database value was changed to obtain it, and
+   no assertion is made here about what a real Urdu paper does — that needs
+   a real Urdu paper.
+
+   -------------------------------------------------------------------------
+   ONE CHECK THAT CAME BACK CLEAN, measured rather than assumed: the
+   03-elements/forms.css:101 `button { font-family: inherit }` rule that took
+   index.html's Urdu language toggle has no print-visible target here. All
+   40 buttons on this page sit inside .no-print chrome, and every one of them
+   already resolves to the body sans except two that are on Arial.
+
+   THE MEASUREMENTS FOR THIS MIGRATION LIVE IN STATUS.md's UI-032 task-log
+   row, not here — numbers belong where the board keeps them and where a
+   reviewer can check them, which is the rule three review rounds wrote onto
+   UI-031b.
+
+   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and here it
+   is load-bearing for Urdu specifically — app.css:45-54 carries the two
+   @font-face rules for Noto Nastaliq Urdu, and nothing in the new tree
+   declares them. app.css dies in Sprint 6 (UI-064); those @font-face rules
+   need a home before it does.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/print.css") layer(legacy);
