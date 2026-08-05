@@ -4,32 +4,96 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-08-04 (UI-032 — both checks on all four pages, then `bank` taken,
-migrated, measured and **REVERTED**; **`blueprint` and `bank` both HELD on Irfan's call**) —
-Sprint 3 2/3; **three pages are live on the new tree**, and **four are now HELD**: `landing`,
-`taqseem`, `blueprint` and `bank`. The two that remain migratable are `index` and `print`.
+**Last updated:** 2026-08-05 (UI-032 — **`print` HELD on Irfan's call**; the migration was
+never performed this session, so the page is untouched at HEAD) — **three pages are live on
+the new tree and all six others are HELD**: `landing`, `taqseem`, `blueprint`, `bank`,
+`index` and now `print`. **No page remains migratable, and Sprint 3 closes incomplete at
+3 of 9.**
 
 ---
 
-## NEXT TASK → **UI-032** — migrate `print`. **`blueprint`, `bank` and `index` are HELD.**
+## NEXT TASK → **Sprint 4.** UI-032 is closed; **all six unmigrated pages are HELD.**
+
+### `print` — **HELD (2026-08-05), on Irfan's call.** Nothing was swapped, nothing reverted
+
+**`print` is the sixth held page and the only one held without its migration ever being
+performed in the session that held it.** The entry file stays parked at
+`docs/ui/parked-print.css`; `print.html` is untouched at HEAD on its two original `<link>`s;
+`static/css/pages/print.css` was never created. **There was therefore nothing to revert** —
+`git status` was clean before this docs-only commit and `git diff` against the previous
+commit touches nothing under `static/`. `shared_css_lines` stays at **1616** and
+`BASELINE.json` is **not** re-pinned, for the same reason `taqseem`'s hold did not re-pin it:
+nothing shipped.
+
+**The hold is Irfan's call and it is the safe direction** — a held page ships nothing. What
+it rests on is a reported regression that **this session could not reproduce from the repo**,
+and that gap is recorded as **D35** rather than written up here as a measurement. Reported:
+a right margin moving **48px → 24px** and a `.count-grid` collapsing on Q10, caused by the
+`--space-*` scale in `layer(settings)` losing to a legacy unlayered `:root`. Checked against
+this branch: **`.count-grid` exists nowhere in the repo**; **no legacy file reads `--space-*`**
+(zero matches across all nine); and `main.css`:42 puts `legacy` **first and weakest** with
+`settings` above it, which is the opposite of the stated direction — and after a migration the
+legacy file arrives inside `layer(legacy)`, not unlayered. D35 carries the full evidence and
+the cheapest way to settle it.
+
+### What WAS measured this session — the margin test's BEFORE half, and it is real
+
+The deciding test `NEXT-SESSION.md` recorded as unrun was **half** run: the BEFORE state is
+now measured properly, in **print media**, and the AFTER half was never taken because the swap
+never happened. **These numbers stand on their own and should not be re-measured:**
+
+| | |
+|---|---|
+| browser | `Edg/151.0.4129.59` — the board's "Edge 151" confirmed |
+| papers | `0d04c750` 20Q · `a5015cda` 20Q/19 images · `9ade2655` 25Q/25 images — real papers, never a blank page |
+| media / fonts | `print` / `loaded` — `document.fonts.ready` awaited before any box was believed |
+| drift | **0** on all three, two snapshots with no action between |
+| `@page` | `@page { size: a4; margin: 0px }`, **unlayered**, from `99-legacy/print.css` |
+| `html` / `body` / `.print-main` | padding, margin and border-width all **0 0 0 0** |
+| **`.sheet`** | padding **52.9134px** on all four sides = **exactly 14mm** |
+| knobs | `--page-margin: 14mm`, `--q-font: 14px`, `--q-gap: 14px`, all on `documentElement.style` |
+| sheet height | 6323.81px — independently reproducing the earlier session's 6324 |
+| elements | **555** on `9ade2655` — independently reproducing the qadam-2 probe's 555 |
+
+**So `print.css`:1-2's single-source claim is no longer a comment, it is measured**: the whole
+printed page margin is `.sheet`'s padding and every ancestor above it is zero. **There is no
+48px or 24px anywhere on that chain** — `.print-main`'s 24px is screen-only and `print.css`:219
+zeroes it in print media.
+
+**One number on the board is wrong and is corrected here rather than left.**
+`NEXT-SESSION.md`'s test-data table gives `0d04c750` as **3 pages**; measured by producing the
+PDF, it is **2**. The other two reproduce exactly (`a5015cda` 6, `9ade2655` 7). This is the
+HEAD state, so it is not a migration effect — the table's number was simply wrong.
+
+**What is still NOT measured, and stays the deciding test for whenever `print` resumes:** the
+AFTER half. Nobody has yet identified, by element, the 12 instances × 4 sides = 48 padding
+deltas the earlier session counted and did not name; nor produced the PDF both ways; nor
+checked a **real printer** rather than `Page.printToPDF`. The BEFORE half above is the baseline
+that test now diffs against.
 
 **Three of nine pages are live on the new tree, not seven.** `slo` (UI-031a), `slo-health` and
-`library` (UI-031b) are migrated. **Five wait on Sprint 4**, each taken, measured and **HELD on
-Irfan's call**: `landing` and `taqseem`, then `blueprint` (2026-08-04, on the checks alone,
-before any entry file was written), then `bank` (2026-08-04) and `index` (2026-08-05), both of
-which were migrated, measured in a browser and **reverted**. Their blocks are below, and
-**every one of the five is back at HEAD**: `blueprint`, `bank` and `index` carry their three
-`<link>`s including `/static/theme.css`. **`print` is the only page never touched** and still
-links its legacy file directly. That is what is left of UI-032 (`PLAN.md`:190), it is still
-Sprint 3, and Sprint 4 does **not** start until it lands.
+`library` (UI-031b) are migrated. **Six now wait on Sprint 4**, each **HELD on Irfan's call**:
+`landing` and `taqseem`, then `blueprint` (2026-08-04, on the checks alone, before any entry
+file was written), then `bank` (2026-08-04) and `index` (2026-08-05), both of which were
+migrated, measured in a browser and **reverted**, and finally `print` (2026-08-05), which was
+**never swapped in the session that held it**. Their blocks are below, and **every one of the
+six is at HEAD**: `blueprint`, `bank` and `index` carry their three `<link>`s including
+`/static/theme.css`; `print` carries its two and still links its legacy file directly.
 
-**What UI-032 now means: `print`, and nothing else.** Both orphan checks said all three of
+**UI-032 is closed and Sprint 3 ends at 3 of 9, not 4.** `print` was the last page that could
+have landed in it; with that page held there is nothing left in the task, so Sprint 4 starts
+from six held pages rather than five. **Read `D34` before planning it** — three of those six
+need work no Sprint 4 task ID currently owns, and `print` does not change that count.
+
+**What UI-032 meant at the time: `print`, and nothing else.** Both orphan checks said all three of
 `bank`/`index`/`print` were repetitions of `slo-health`/`library` — rule exposure
 **0 / 3 / 0**, token exposure **0 / 0 / 0** — and **two of the three were taken on that basis
 and neither could ship.** **Read that as the warning it is: passing both checks is necessary
-and not sufficient, for the fourth time in this epic** (`taqseem` on rules, `blueprint` on both
-halves at once, `bank` on Urdu line-height, `index` on Urdu font-family and `.main`'s padding —
-the last two measured by neither check).
+and not sufficient, for the fifth time in this epic** (`taqseem` on rules, `blueprint` on both
+halves at once, `bank` on Urdu line-height, `index` on Urdu font-family and `.main`'s padding,
+and now `print` — the last three measured by neither check). **`print` is the extreme case:
+both its checks are 0, its migration was measured and approved on sight in a real Ctrl+P
+preview, and it is still held.**
 
 **`index` is HELD (2026-08-05).** Its entry file is parked at `docs/ui/parked-index.css` and
 `index.html` is back on its three `<link>`s at HEAD. Two regressions stopped it, and both are
@@ -57,8 +121,11 @@ that gave it its own visual box. **The delta table alone did not say that.** It 
 lesson `bank` wrote: the numbers say what moved, and only eyes say whether the page is still
 right.
 
-**Five of nine pages are now HELD** — `landing`, `taqseem`, `blueprint`, `bank`, `index` — and
-none of them is a pending migration. `print` is the only page left in UI-032.
+**Six of nine pages are now HELD** — `landing`, `taqseem`, `blueprint`, `bank`, `index` and
+`print` — and none of them is a pending migration. **UI-032 has nothing left in it.**
+(This line read "Five of nine … `print` is the only page left in UI-032" until `print` was
+held on 2026-08-05. Corrected where it was written, per the rule UI-021 wrote about stale
+counts — the epic's most-repeated failure is a number carried instead of re-counted.)
 
 **`bank` is HELD, and the reason is not either orphan check.** Its entry file is parked at
 `docs/ui/parked-bank.css` and `bank.html` is back on its three `<link>`s at HEAD. What stopped
@@ -106,7 +173,7 @@ drives the browser through `scripts/css_rules_probe.mjs`.
 | `blueprint` | yes | 21 / 19 | 29 / 6 / 3 / **20** | **20** (19 + `:focus-visible`) | **HELD** |
 | `bank` | yes | 0 / 0 | 6 / 3 / 2 / **1** | **0** — the one orphan is `:focus-visible`, which `03-elements/forms.css` declares | repetition — **yet HELD**, on something neither check measures |
 | `index` | yes | 0 / 0 | 11 / 2 / 4 / **5** | **3** — `input[type=number]` and `:focus-visible` are both in `forms.css` | repetition — **yet HELD**, on two things neither check measures |
-| `print` | **no** | 0 / 0 | 5 / 0 / 2 / **3** | **0** by D9 — the file is not linked, so all three already fail to apply today | safe by construction |
+| `print` | **no** | 0 / 0 | 5 / 0 / 2 / **3** | **0** by D9 — the file is not linked, so all three already fail to apply today | clean on both checks — **yet HELD** (2026-08-05), like `bank` and `index` before it |
 
 Measured at 1280×900 in **Edge 151** (this board said 150; the dev PC has moved). Every page
 was probed **twice with no action in between and drift was 0 on all four**, and a second full
