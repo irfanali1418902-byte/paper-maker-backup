@@ -123,3 +123,60 @@
 
 @import url("../main.css");
 @import url("../99-legacy/print.css") layer(legacy);
+
+/* =========================================================================
+   UI-044b — D36. THE PRINTED PAGE COUNT.
+
+   THIS FILE NO LONGER HOLDS ONLY TWO @import LINES, AND THAT IS A DELIBERATE
+   DEVIATION FROM THE SHAPE pages/slo.css DOCUMENTS. The reason is scope: this
+   is a page-scoped fix and putting it in the shared tree would change three
+   pages that are LIVE today. Both halves of that were measured, not argued —
+   see below. If a future task moves this into 03-elements, it must re-measure
+   the live pages' PRINT output, not just their screen output.
+
+   WHAT IT FIXES. 99-legacy/print.css's `body` declares neither a line-height
+   nor a font-size, so it inherited the browser's `normal`/16px. Once this page
+   loads main.css, 03-elements/typography.css:41's
+   `body { line-height: var(--leading-body) }` sits in layer(elements), beats
+   layer(legacy), and every line box on the printed paper opens up. Measured on
+   three real papers: the sheet grows 1.6-6.0%, and the 20-question text-only
+   paper 0d04c750 CROSSES AN A4 BOUNDARY — 2 printed pages become 3. That is
+   DEFERRED D36. The consequence is physical: one more sheet of paper per exam,
+   per student.
+
+   F3 predicted this and could not measure it — "pagination held: 7 pages
+   before, 7 after ... that is one paper's margin, not a guarantee. Nothing
+   measured how near any other paper sits to a page boundary, and a paper
+   closer to one could cross it." Three papers were enough to find one.
+
+   WHY line-height ONLY, AND NOT font-size. Both were measured, on all three
+   papers. Restoring the leading alone gives 2/6/7 — HEAD's counts exactly.
+   Adding `font-size: medium` alongside it gives 2/6/7 as well, i.e. it changes
+   nothing, so it is not here. The smaller rule is the one that ships.
+
+   WHAT THIS DOES NOT CLAIM. The sheet does not return to HEAD's height, only
+   to HEAD's page count. Measured: HEAD 2170.81px, migrated 2300.69px, with
+   this rule 2168.61px — 2.2px SHORTER than HEAD, because the base font-size
+   stays at the new tree's 15px. The page count is what a teacher holds in
+   their hand, and that is what this restores; "identical to HEAD" would be
+   the wrong claim and is not made.
+
+   WHY layer(components) AND NOT UNLAYERED. A bare rule here would be
+   unlayered and would beat every @layer, which is exactly the hazard this
+   file's own header warns about two screens up. Declaring it in `components`
+   keeps it inside the cascade main.css defines — above `elements`, where it
+   needs to be to win, and below `utilities`, where a later override could
+   still reach it.
+
+   WHAT IT DOES TO THE THREE LIVE PAGES: NOTHING, and that is the whole point
+   of putting it here. Measured with the rule in the shared tree instead, as
+   the alternative: slo's printed output went from 22 pages to 20 and all three
+   live pages' print-media body leading changed from 21.75px to normal. In THIS
+   file it reaches print.html alone.
+   ========================================================================= */
+
+@layer components {
+  @media print {
+    body { line-height: normal; }
+  }
+}

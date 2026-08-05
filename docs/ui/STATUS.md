@@ -12,7 +12,75 @@ the new tree and all six others are HELD**: `landing`, `taqseem`, `blueprint`, `
 
 ---
 
-## NEXT TASK → **UI-044b** (the print-media half, D36). **UI-044a is done.**
+## NEXT TASK → **UI-045** (display / hero type step) or **UI-041** (button). **UI-044a and UI-044b are both done.**
+
+### UI-044b — **print-media leading. D36 solved 2026-08-05. PREPARED, NOT LIVE.**
+
+> **Like UI-044a, this ships nothing today.** The rule lives in **`docs/ui/parked-print.css`**,
+> which is `print`'s parked entry file — `print` is HELD, `static/css/pages/print.css` does not
+> exist, and the file is not under `static/` at all. **Ratchet impact is literally zero**
+> (`shared_css_lines` 1685 → 1685) and no page can reach it. **It activates in the same commit
+> that migrates `print`, and not before.**
+
+**The rule:**
+
+```css
+@layer components {
+  @media print {
+    body { line-height: normal; }
+  }
+}
+```
+
+**What it fixes.** `99-legacy/print.css`'s `body` declares neither a line-height nor a font-size,
+so it inherited the browser's `normal`/16px. Once the page loads `main.css`,
+`03-elements/typography.css`:41's `body { line-height: var(--leading-body) }` sits in
+`layer(elements)`, beats `layer(legacy)`, and every line box on the printed paper opens up —
+which is D36.
+
+**Both candidate fixes were measured on all three papers, not reasoned about:**
+
+| | `0d04c750` | `a5015cda` | `9ade2655` |
+|---|---:|---:|---:|
+| HEAD | 2 | 6 | 7 |
+| migrated, no rule — **D36** | **3** | 6 | 7 |
+| `line-height: normal` | **2** ✅ | 6 | 7 |
+| `line-height` **+** `font-size: medium` | 2 | 6 | 7 |
+
+**Adding `font-size` changes nothing, so it is not in the rule.** The smaller fix ships.
+
+**What this does NOT claim.** The sheet returns to HEAD's **page count**, not HEAD's height:
+2170.81px at HEAD, 2300.69px broken, **2168.61px fixed** — 2.2px *shorter* than HEAD, because
+the base font-size stays at the new tree's 15px. The page count is what a teacher holds; that is
+what is restored, and "identical to HEAD" would be the wrong claim.
+
+### Why the rule is in the entry file and not in `03-elements` — measured, and it changed the answer
+
+The architecturally tidy home is `03-elements/typography.css`: it is an element rule and fits
+that file's contract. **It was measured there first, and the three LIVE pages moved.** Their
+print output had never been measured before this task — the earlier gates were screen-only:
+
+| live page, **print media** | HEAD | rule in shared tree | rule in entry file |
+|---|---|---|---|
+| `slo` | 21.75px, **22 pages** | `normal`, **20 pages** | **21.75px, 22 pages — 0 deltas** |
+| `slo-health` | 21.75px, 2 pages | `normal`, 2 pages | **21.75px, 2 pages — 0 deltas** |
+| `library` | 21.75px, 6 pages | `normal`, 6 pages | **21.75px, 6 pages — 0 deltas** |
+
+**`slo`'s printed output would have gone from 22 sheets to 20.** "Nobody prints `slo-health`" was
+an available assumption and this epic's most repeated failure is exactly that shape, so it was
+measured instead. Irfan chose the entry file on those numbers.
+
+**The deviation this creates is recorded rather than hidden.** `pages/*.css` entry files are
+documented as exactly two `@import` lines; this one now carries a rule. The trade is stated in
+the file's own header: a page-scoped fix that cannot touch a live page, at the cost of a type
+decision living in a page file — so **`bank` or `index`, if either is ever printed after
+migrating, will hit the same bug and need the same rule.** Whoever moves this into the shared
+tree must re-measure the live pages' **print** output, not just their screen output.
+
+**`@layer components`, not unlayered.** A bare rule in an entry file would be unlayered and beat
+every `@layer` — the hazard that file's own header warns about. Declaring it in `components` puts
+it above `elements`, where it must be to win, and below `utilities`, where a later override can
+still reach it.
 
 ### UI-044a — **Nastaliq leading. Committed 2026-08-05. PREPARED, NOT LIVE.**
 
