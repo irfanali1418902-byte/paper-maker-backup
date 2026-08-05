@@ -4,11 +4,11 @@
 > no copy-paste handover. **Read `docs/ui/STATUS.md` first — it is the SOURCE OF TRUTH.**
 > This file only says *what to do next and what not to do*; every number lives in STATUS.md.
 >
-> **Updated 2026-08-04 — both orphan checks are DONE and scripted, and `blueprint` AND `bank`
-> are both HELD on Irfan's call.** `bank` was taken, migrated, measured and reverted; its entry
-> file is parked. **Nothing is migrated on the new tree beyond the original three.** Every
-> number is in STATUS.md's NEXT TASK block and its UI-032 rows. What remains is two migrations:
-> `index`, then `print`.
+> **Updated 2026-08-05 — `index` is HELD too, and `print` is the only page left.** `bank` and
+> `index` were each taken, migrated, measured in a browser and **reverted**; both entry files
+> are parked. `blueprint` was held on the checks alone. **Nothing is migrated on the new tree
+> beyond the original three.** Every number is in STATUS.md's NEXT TASK block and its UI-032
+> rows. What remains is **one** migration: `print`.
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
@@ -16,19 +16,24 @@
 
 ## THE NEXT SESSION'S TASK
 
-**Migrate `index`, then `print` — one at a time, with a browser open, and stop for a "go"
-before each.** Four of nine pages are HELD and three are live; these two are what is left.
+**Migrate `print` — with a browser open, and stop for a "go" before each step.** Five of nine
+pages are HELD and three are live; `print` is the one that is left.
 
-### Read this before you start, because it has now happened three times
+### Read this before you start, because it has now happened four times
 
 **Passing both orphan checks is necessary and NOT sufficient.** `taqseem` passed the token
 check and was held on rules. `blueprint` failed both halves at once. **`bank` passed BOTH with
-zero exposure and was still held** — on Urdu line-height, which neither check measures, and
-which only showed up because the before/after diff was read past its top rows and then taken to
-a real browser. Do not read "0 / 0" as "safe"; read it as "nothing is *unsupplied*", which is a
-smaller claim than it looks.
+zero exposure and was still held** — on Urdu line-height. **`index` passed both and was held
+too** — on Urdu *font-family* and on `.main` losing its padding. Do not read "0 / 0" as "safe";
+read it as "nothing is *unsupplied*", which is a smaller claim than it looks.
 
-### The two HELD pages you must not touch
+**And do not assume the previous page's failure is the failure to look for.** `index` was
+approached as "is this bank's line-height problem again?", and the answer was no — its Urdu
+elements all carry a `line-height`. The property that actually broke was `font-family`, from a
+different rule in the same file, and only a full before/after diff over a wide property set
+surfaced it. **Read the whole diff, not the rows you expected to find.**
+
+### The HELD pages you must not touch
 
 **`blueprint`** (held 2026-08-04) — 20 orphan rules that are the entire application shell
 (`.app` grid, `.top`, `.nav`, `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`) *plus* 21
@@ -46,29 +51,33 @@ untouched at HEAD.
 is parked at **`docs/ui/parked-bank.css`** — read its header before ever touching this page —
 and `bank.html` is back on its three `<link>`s at HEAD.
 
-Four pages are held in total (`landing`, `taqseem`, `blueprint`, `bank`) and **none of them is
-a pending migration.**
+**`index`** (held 2026-08-05) — both checks clean on their own halves (token 0, rule 3), held on
+two things neither measures. **The Urdu language toggle loses Nastaliq**: `03-elements/forms.css`
+:101 `button { font-family: inherit }` is in `layer(elements)` and `99-legacy/index.css`:34
+`.urdu, .ur` is in `layer(legacy)`, so the bare element rule wins and `index.html`:21's اردو
+button renders in the body's Latin sans — D22's button reset, landing on the control a teacher
+uses to switch the app to Urdu. **And `.main` loses `overflow: auto` and its
+`var(--pad) 28px 44px` padding** (`static/theme.css`:89; `index.css`:73 sets only flex
+properties): the content area measured 28px left, 32px up, 56px wider on every screen. Its
+finished entry file is parked at **`docs/ui/parked-index.css`** — read its header before ever
+touching this page — and `index.html` is back on its three `<link>`s at HEAD.
 
-### `index` — what is already known, so you do not re-measure it
+Five pages are held in total (`landing`, `taqseem`, `blueprint`, `bank`, `index`) and **none of
+them is a pending migration.**
 
-- **Token exposure 0, rule exposure 3**: `.tag` (×2), `.row`, `.summary-row:last-child`, each
-  with a named near-miss in `index.css` that does *not* cover it. Detail in STATUS.md.
-- **Its 224 inline `style=""` attrs — the project's largest share — are CLEAN.** D32's sweep
-  checked every page's inline `var()` reads against its own legacy `:root` plus the new tree:
-  `index` reads nothing it cannot supply. That is a volume risk for Sprint 5, not an exposure
-  risk for this task. **Do not start Sprint 5's inline burn-down here.**
-- **Seven screens via `showScreen()`**, and the DOM grows **508 → 771** across them.
-  `querySelectorAll` sees only what is in the DOM, so drive every screen and union the counts —
-  `scripts/css_rules_probe.mjs` already does this if you pass `screens`.
-- **Read the `partial` column in STATUS.md first.** `index.css`:144's `.summary-row` has no
-  `border-bottom`, so the dashed rule between rows goes with the link, and a selector-only
-  check calls the page clean. Same trap as the white-slab `.brand`.
+**Two things `index` learned that outlive it**, both in STATUS.md's UI-032 row:
+
+- **One of that page's 224 inline `style=""` attrs is load-bearing.** `index.html`:443's Urdu
+  school-name field keeps Nastaliq *only* because the family is inline, which outranks every
+  layer. D32's sweep was right that the inline `var()` reads are clean — that is a different
+  question from whether an inline attribute is holding something up. **Sprint 5 must move that
+  family into CSS before it burns the attributes down.**
 - **If you reuse the contrast method from D31: it does NOT composite translucent layers.** The
   ancestor walk stops at the first background with alpha > 0. That was exact on `bank` (both
   backdrops opaque) and will be wrong anywhere a translucent surface sits between the text and
   its paint. Composite before quoting a ratio.
 
-### `print` — last, and with the most care
+### `print` — the only one left, and the one to take the most care over
 
 0 by D9 (it never linked `/static/theme.css`, so its three matching rules are already inert),
 but it is the **Ctrl+P page**, the highest-consequence one in the epic. Check its output on a
@@ -76,9 +85,15 @@ real exam paper, never a blank one. Known gap: **no paper in this DB has Urdu qu
 so the Urdu half cannot be exercised here — which is exactly why `bank` was the first page to
 surface the Nastaliq problem.
 
+**Two specific things to check on this page, because they are what held the last two:** whether
+any `<button>` on it carries a font it needs (`forms.css`:101 takes those, and this page's Urdu
+comes from the header and labels rather than question text), and whether anything relies on a
+`static/theme.css` layout property the page's own file does not restate. Neither orphan check
+reports either one.
+
 Rules 1–5 at the bottom of this file still apply, **except** that rule 1's "migrate nothing"
-was scoped to the measurement task and is now spent for `index` and `print`. It still holds for
-`blueprint`, `bank`, `landing` and `taqseem`.
+was scoped to the measurement task and is now spent for `print`. It still holds for
+`blueprint`, `bank`, `index`, `landing` and `taqseem`.
 
 ---
 
@@ -252,4 +267,5 @@ of `64484d9` (qadam 1). Nothing was migrated and no page's `<link>` was touched.
 3. **Never push.** Irfan pushes from GitHub Desktop. Commit locally only, and only when asked.
 4. **Measure, never assert.** The single most repeated failure on this epic is a number
    written down instead of measured — including backdrops for contrast ratios.
-5. Do **not** re-attempt `landing` or `taqseem`. Both are HELD until Sprint 4.
+5. Do **not** re-attempt `landing`, `taqseem`, `blueprint`, `bank` or `index`. All five are
+   HELD until Sprint 4.

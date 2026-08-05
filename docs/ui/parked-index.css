@@ -1,0 +1,97 @@
+/* =========================================================================
+   ⚠ PARKED — THIS FILE IS NOT LIVE AND MUST NOT BE MOVED BACK CASUALLY.
+
+   It is the UI-032 entry file for index.html, held on 2026-08-05. Like
+   parked-landing.css, parked-taqseem.css and parked-bank.css it sits in docs/
+   because anything under static/css/ counts toward shared_css_lines even when
+   no page links it, and re-pinning BASELINE.json with these unlinked lines in
+   it would bury them inside the next task's number.
+
+   TO RESTORE: move this file to static/css/pages/index.css — the two @import
+   paths at the bottom are relative to THAT directory and resolve nowhere from
+   docs/ui/ — then swap index.html's three <link>s for two:
+   /static/app.css + /static/css/pages/index.css. That swap touches nothing
+   else in the file; it was performed, measured and reverted, so it is known to
+   be exactly the link block.
+
+   -------------------------------------------------------------------------
+   WHY IT WAS HELD, and it is NEITHER orphan check — both pass (token 0, rule
+   3, and all three of those have a named near-miss in the page's own file).
+   It was held on TWO regressions the checks cannot see, and both of them are
+   Sprint 4 component work rather than anything wrong with this page:
+
+   1. THE URDU LANGUAGE TOGGLE LOSES NASTALIQ. 03-elements/forms.css:101
+      `button { font-family: inherit }` is in layer(elements) and
+      99-legacy/index.css:34 `.urdu, .ur { font-family: 'Jameel Noori
+      Nastaleeq', 'Noto Nastaliq Urdu', serif }` is in layer(legacy). Layer
+      order is decided before specificity, so the bare element rule wins and
+      index.html:21's اردو button renders in the body's Latin sans. This is
+      the D22 button reset arriving through the one declaration forms.css's
+      own header calls harmless — and it lands on the control a teacher uses
+      to put the app into Urdu.
+
+      NOTE WHAT SAVED THE OTHER ONE, because Sprint 5 needs to know: the Urdu
+      school-name field at index.html:443 keeps its Nastaliq only because it
+      carries the family in an INLINE style="", which outranks every layer.
+      One of this page's 224 inline attributes is accidentally load-bearing.
+      Burning it down without moving the family into CSS first would take the
+      settings field the same way the toggle went.
+
+   2. `.main` LOSES ITS PADDING AND ITS SCROLL CONTAINER. static/theme.css:89
+      `.main { grid-area: main; overflow: auto; padding: var(--pad) 28px 44px }`
+      is dropped with the link, and 99-legacy/index.css:73's own `.main` sets
+      only `flex: 1; min-width: 0; display: flex; flex-direction: column`.
+      Measured: the content area moves 28px left and 32px up and grows 56px
+      wider on every screen. `grid-area: main -> auto` is inert here (this
+      page's shell is `.shell { display: flex }`, not the `.app` grid theme.css
+      wrote that rule for), but the padding and `overflow: auto` are not.
+
+      ON SCREEN this reads worse than the numbers do: with the top padding
+      gone the heading collides with the .tag chip, which is regression 2
+      compounding with the .tag change below — by then the chip has lost the
+      background and radius that gave it a box of its own. The delta table did
+      not say that. Eyes did.
+
+   Both belong to Sprint 4's component families — the button reset is D22 /
+   UI-041 and the shell/nav layout is the same work blueprint is waiting on —
+   so this is a scheduling hold, not an unsolved problem. Irfan looked at both
+   and called it, on the bank and taqseem precedent.
+
+   -------------------------------------------------------------------------
+   THE MECHANISM: see pages/slo.css's header (D19/D20) for why the legacy
+   import lives in a per-page entry file, and why line 2 must be an @import
+   carrying layer() rather than a second <link> — a plain <link> is unlayered
+   and would outrank the whole new tree.
+
+   ⚠ TWO FILES ARE NAMED theme.css — quote full paths (D29). This page drops
+   /static/theme.css, the old live stylesheet. It KEEPS
+   /static/css/01-settings/theme.css, the Tier 2 palette main.css imports into
+   layer(settings).
+
+   BOTH HALVES OF THE ORPHAN CHECK WERE RUN BEFORE THIS PAGE WAS TOUCHED, and
+   they are re-runnable rather than asserted:
+
+     python scripts/css_orphans.py --names
+     python scripts/css_orphans.py --rules index --paper-id <id> --names
+
+   D20 DOES NOT HIT THIS PAGE'S STYLESHEET. index.css declares 27 custom
+   properties and reads 21, all of them its own, so no compatibility block is
+   needed and none is written below.
+
+   THE SEVEN SCREENS. This page is an SPA: showScreen() drives `generate`,
+   `mypapers`, `analytics`, `adaptive`, `results`, `settings`, `syllabus`, and
+   querySelectorAll sees only what is in the DOM. Every measurement here drove
+   all seven and unioned the result — the DOM grows 508 -> 783 across them.
+
+   INLINE STYLES ARE NOT THIS TASK. 224 of the project's 466 inline style=""
+   attributes are on this page. Sprint 5 owns them; see regression 1 above for
+   why that burn-down is not the mechanical job it looks like.
+
+   THE MEASUREMENTS FOR THIS MIGRATION LIVE IN STATUS.md's UI-032 task-log
+   row, not here — numbers belong where the board keeps them and where a
+   reviewer can check them, which is the rule three review rounds wrote onto
+   UI-031b.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/index.css") layer(legacy);
