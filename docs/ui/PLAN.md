@@ -189,13 +189,60 @@ Irfan 2026-07-28.
 | UI-031 | Migrate simple pages: slo, slo-health, taqseem, landing, library |
 | UI-032 | Migrate complex: blueprint, bank, index (SPA `showScreen` handlers), print |
 
-### Sprint 4 — Components, by duplication count (4 tasks)
-| ID | Task |
-|---|---|
-| UI-040 | `card` (6×) + unify `.page-head` → `.card`/`pagehead` (4×) |
-| UI-041 | `button` (`.btn-primary`/`.btn-ghost` 5× → BEM `.button`) + chip / tag / badge |
-| UI-042 | `modal` (4×) + `field` / form-row (4×) |
-| UI-043 | tables + status-bar + domain components (sec/qrow/pin, board/col, imgcard, stat, bloom, sheet) |
+### Sprint 4 — Components, **ordered by held pages unblocked** (7 tasks)
+
+**This table was re-scoped and re-ordered by D34 (resolved 2026-08-05). It used to hold four
+tasks ordered by duplication count, and that ordering would have ended Sprint 4 with three of
+the six held pages still held**, because no ID owned nav/shell, the Nastaliq leading decision,
+or the display/hero type step. Three IDs are new (UI-044..046) and the order is now "how many
+held pages does this task release", not "how many duplicates does it remove".
+
+Sprint 3 closed at **3 of 9 pages migrated**. The other six are HELD and every one of them is
+waiting on something below. **A task is not done until the pages it owns are migrated.**
+
+| order | ID | Task | Releases |
+|---:|---|---|---|
+| **1** | **UI-044** | **type + leading** — body leading, and **the Nastaliq leading decision** | `bank`, `print` · settles **D33**, **D36** |
+| **2** | **UI-045** | **display / hero type step** — the scale step above `h1` | `landing` |
+| **3** | UI-041 | `button` (`.btn-primary`/`.btn-ghost` 5× → BEM `.button`) + chip / tag / badge | needed by `taqseem`, `index` |
+| **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | `blueprint`, and completes `index` |
+| **5** | UI-040 | `card` (6×) + unify `.page-head` → `.card`/`pagehead` (4×) | completes `taqseem` |
+| 6 | UI-042 | `modal` (4×) + `field` / form-row (4×) | no held page — settles D26/D27/**D31** |
+| 7 | UI-043 | tables + status-bar + domain components (sec/qrow/pin, board/col, imgcard, stat, bloom, sheet) | no held page |
+
+**UI-044 and UI-045 are the foundation and go first, together releasing three of the six.**
+They are listed separately because they are separately reviewable, but they touch the same two
+files (`03-elements/typography.css` and `01-settings/`) and should be taken back to back; doing
+either one alone leaves the other's pages held.
+
+**UI-044 is the single highest-value task in the sprint.** `bank`'s hold and `print`'s D33 are
+**one problem in two places** — Nastaliq inheriting `body { line-height: var(--leading-body) }`
+from `layer(elements)` — and whoever takes one must take the other or they will diverge. D36
+(`print` gaining a page) comes from the *same* leading change, so it is the third thing this
+task settles.
+
+**Why UI-041 is third and not first.** It is needed by two pages and **completes neither on its
+own**: `taqseem` also needs UI-040, and `index` also needs UI-046's shell layout. UI-044/045
+each complete their pages outright, which is why they outrank it.
+
+**Nothing here depends on `--space-*`.** An earlier plan for this sprint assumed a space-token
+layer fix was the foundation; **D35 measured that mechanism and it does not exist on this
+branch** — no legacy file reads `--space-*` and the printed margin does not move. Do not
+schedule work for it.
+
+**Per-page map — the six HELD pages and what releases each:**
+
+| page | the actual blocker | released by |
+|---|---|---|
+| `landing` | hero headline shrinks; `reset.css` zeroes the gap under it | **UI-045** |
+| `bank` | Urdu line-height 38px → 21.75px on 24 questions | **UI-044** |
+| `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044** |
+| `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 **+** UI-046 |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | **UI-046** |
+
+**Run D32 before UI-046.** `blueprint` is the page whose exposure number D32 moves, so measuring
+it with a fixed `css_orphans.py` is cheaper than unholding it twice.
 
 ### Sprint 5 — Inline `style=""` burn-down (3 tasks)
 | ID | Task |

@@ -12,7 +12,35 @@ the new tree and all six others are HELD**: `landing`, `taqseem`, `blueprint`, `
 
 ---
 
-## NEXT TASK → **Sprint 4.** UI-032 is closed; **all six unmigrated pages are HELD.**
+## NEXT TASK → **UI-044** (type + leading). UI-032 is closed; **all six unmigrated pages are HELD.**
+
+### Sprint 4 is re-scoped and re-ordered — **D34 resolved 2026-08-05, docs only**
+
+`PLAN.md`'s Sprint 4 was four tasks ordered by duplication count, and **three of the six held
+pages were waiting on work no task ID owned.** It is now **seven tasks ordered by how many held
+pages each releases.** Three IDs are new. The full table and the per-page blocker map live in
+`PLAN.md` §Sprint 4 — this is the summary:
+
+| order | ID | releases |
+|---:|---|---|
+| **1** | **UI-044** — type + leading, incl. **the Nastaliq leading decision** | `bank`, `print` · settles **D33**, **D36** |
+| **2** | **UI-045** — display / hero type step | `landing` |
+| **3** | UI-041 — button + chip/tag/badge | needed by `taqseem`, `index`; completes neither alone |
+| **4** | **UI-046** — nav + shell components | `blueprint`, completes `index` |
+| **5** | UI-040 — card + pagehead | completes `taqseem` |
+| 6–7 | UI-042 modal/field · UI-043 tables/domain | no held page waits on either |
+
+**UI-044 and UI-045 go first because together they release three of the six, and each completes
+its pages outright.** They touch the same two files (`03-elements/typography.css` and
+`01-settings/`) and should be taken back to back. **UI-044 is the single highest-value task in
+the epic right now**: `bank`'s hold and `print`'s D33 are one problem in two places, and D36
+comes from the same leading change, so one task settles all three.
+
+**Run D32 before UI-046** — `blueprint` is the page whose exposure number it moves.
+
+**Nothing in Sprint 4 is scheduled for `--space-*`.** An earlier plan treated a space-token
+layer fix as the foundation that would open several pages at once; **D35 measured it and the
+mechanism does not exist on this branch.** See D35.
 
 ### `print` — **HELD (2026-08-05), on Irfan's call.** Nothing was swapped, nothing reverted
 
@@ -25,22 +53,31 @@ commit touches nothing under `static/`. `shared_css_lines` stays at **1616** and
 `BASELINE.json` is **not** re-pinned, for the same reason `taqseem`'s hold did not re-pin it:
 nothing shipped.
 
-**The hold is Irfan's call and it is the safe direction** — a held page ships nothing. What
-it rests on is a reported regression that **this session could not reproduce from the repo**,
-and that gap is recorded as **D35** rather than written up here as a measurement. Reported:
-a right margin moving **48px → 24px** and a `.count-grid` collapsing on Q10, caused by the
-`--space-*` scale in `layer(settings)` losing to a legacy unlayered `:root`. Checked against
-this branch: **`.count-grid` exists nowhere in the repo**; **no legacy file reads `--space-*`**
-(zero matches across all nine); and `main.css`:42 puts `legacy` **first and weakest** with
-`settings` above it, which is the opposite of the stated direction — and after a migration the
-legacy file arrives inside `layer(legacy)`, not unlayered. D35 carries the full evidence and
-the cheapest way to settle it.
+**The hold is Irfan's call and it is the safe direction** — a held page ships nothing. **The
+reason it was held turned out not to be the reason it should stay held, and both halves of
+that are now measured.**
 
-### What WAS measured this session — the margin test's BEFORE half, and it is real
+**The reported mechanism is retired — D35.** A right margin moving 48px → 24px and a
+`.count-grid` collapsing on Q10, blamed on `--space-*` in `layer(settings)` losing to a legacy
+unlayered `:root`. The swap was performed, the AFTER half measured in print media on three real
+papers, and the tree reverted. **The margin does not move**: `.sheet` padding is 52.9134px on
+all four sides before *and* after, every ancestor is 0 both ways, and **zero box deltas land on
+the margin chain**. `.count-grid` exists nowhere in the repo, no legacy file reads `--space-*`,
+and `main.css`:42 puts `legacy` first and weakest. See D35 for the full settlement.
 
-The deciding test `NEXT-SESSION.md` recorded as unrun was **half** run: the BEFORE state is
-now measured properly, in **print media**, and the AFTER half was never taken because the swap
-never happened. **These numbers stand on their own and should not be re-measured:**
+**But a real regression was found in the same run — D36, and it justifies the hold.**
+`0d04c750` goes **2 → 3 printed pages**, its sheet growing +129.9px (**+6.0%**). The other two
+papers hold at 6 and 7. This is **D21/F3's line-height growth crossing an A4 boundary**, not a
+margin fault — and it is exactly what F3 predicted and could not measure ("one paper's margin,
+not a guarantee"). **The consequence is physical: one more sheet per exam, per student**, on
+the Ctrl+P page. **`print`'s blocker is now the leading decision — UI-044 — the same one
+`bank` and D33 wait on.**
+
+### The margin test — **BOTH halves are now run**, and the margin is clean
+
+The deciding test `NEXT-SESSION.md` recorded as unrun has been run end to end: BEFORE at HEAD,
+then the one-line swap, then AFTER in **print media**, then revert. **These numbers stand on
+their own and should not be re-measured:**
 
 | | |
 |---|---|
@@ -60,16 +97,27 @@ printed page margin is `.sheet`'s padding and every ancestor above it is zero. *
 48px or 24px anywhere on that chain** — `.print-main`'s 24px is screen-only and `print.css`:219
 zeroes it in print media.
 
-**One number on the board is wrong and is corrected here rather than left.**
-`NEXT-SESSION.md`'s test-data table gives `0d04c750` as **3 pages**; measured by producing the
-PDF, it is **2**. The other two reproduce exactly (`a5015cda` 6, `9ade2655` 7). This is the
-HEAD state, so it is not a migration effect — the table's number was simply wrong.
+**A number on the board disagreed with HEAD, and the disagreement turned out to be the finding.**
+`NEXT-SESSION.md`'s test-data table gives `0d04c750` as **3 pages**; at HEAD it is **2**, and
+**migrated it is 3**. The table's figure was almost certainly recorded from the *migrated* state
+in the first `print` session — so it was never a typo, it was **D36 showing up a session early
+and being read as test data.** The other two reproduce exactly (`a5015cda` 6, `9ade2655` 7).
 
-**What is still NOT measured, and stays the deciding test for whenever `print` resumes:** the
-AFTER half. Nobody has yet identified, by element, the 12 instances × 4 sides = 48 padding
-deltas the earlier session counted and did not name; nor produced the PDF both ways; nor
-checked a **real printer** rather than `Page.printToPDF`. The BEFORE half above is the baseline
-that test now diffs against.
+**The 48 padding deltas are named, and they are harmless.** All 12 elements × 4 sides are form
+controls taking `03-elements/forms.css`:68's `padding: 9px 11px` — `#ef_question_en`,
+`#ef_question_ur`, `#ef_correct_en`, `#ef_correct_ur`, `#ef_marks`, `#ef_answer_lines`,
+`#ef_image_size`, `#efStripSearch`, `#efStripQType`, `#libPickerSearch`, `#libPickerQType`,
+`#libPickerSize`. Every one sits inside the edit modal, topic strip or library picker, i.e.
+`.no-print` chrome, so **their effect on the printed artefact is zero.**
+
+**`@page` survives the layer import**, verified two independent ways: an import-aware CSSOM walk
+finds `@page { size: a4; margin: 0px }` at `layer=legacy`, and all six PDFs carry an identical
+A4 MediaBox (594.96 × 841.92) — had it stopped applying, `preferCSSPageSize` would have fallen
+back to Letter.
+
+**What is still NOT checked:** a **real printer**. Everything above is `Page.printToPDF`, which
+is the right tool for measuring CSS and is not proof of what a physical print does. Check a real
+print preview at the page edges before `print` is ever unheld.
 
 **Three of nine pages are live on the new tree, not seven.** `slo` (UI-031a), `slo-health` and
 `library` (UI-031b) are migrated. **Six now wait on Sprint 4**, each **HELD on Irfan's call**:
