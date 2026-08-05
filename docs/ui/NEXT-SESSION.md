@@ -78,7 +78,8 @@ in a 28px box. **This is exactly the mechanism `bank` was HELD for**, on the Ctr
 
 It is invisible today only because **`school_name_ur` is empty in this DB**. **The moment any
 school fills that field in, every printed letterhead overlaps.** This needs a DEFERRED row of
-its own when the work is committed (it was drafted as D33 and reverted with everything else).
+**recorded as D33** — it is a real finding whether or not `print` ships, because the CSS fact is
+true today; only the "live defect" framing depends on shipping.
 
 **The header Urdu Irfan saw is NOT Nastaliq, and that is why it was fine.** `Name / نام:`,
 `Class / جماعت:`, `Date / تاریخ:` and `تمام سوالات کے جواب دیں۔` live in `.label` and
@@ -197,6 +198,37 @@ because nothing shipped. **If this handoff should survive, it needs a docs-only 
 otherwise a `git checkout` or a fresh clone loses it, and the `print` measurements would have
 to be redone from scratch. The measurement scripts themselves lived in a session scratchpad and
 are already gone; the method is described above precisely enough to rebuild them.
+
+---
+
+## THE ROADMAP FROM HERE — written 2026-08-05, nothing started
+
+Ordered by dependency, not by `PLAN.md`'s duplication count. **Read D34 before starting any
+Sprint 4 task**, because the plan as written does not cover three of the five held pages.
+
+| # | task | rough size | blocked by |
+|---|---|---|---|
+| **1** | **Finish `print`** — restore the parked entry file, one-line swap, gates, **review agent**, STATUS.md, re-pin. **Closes Sprint 3.** | ~15 min | the review agent needs API budget — this is what stopped the last session |
+| **2** | **Close Sprint 4's scope gap (D34)** — give IDs to nav components, the Nastaliq/leading decision, and the display/hero type step, and settle the order | ~20 min, docs only | nothing |
+| **3** | **Fix D32** — teach `css_orphans.py` to read markup, then re-run the nine-page table | ~30 min, one script | nothing |
+| **4** | **UI-041** button + chip/tag/badge | Sprint 4 | 2 |
+| **5** | **UI-040** card + pagehead | Sprint 4 | 2 |
+| **6** | Re-migrate **`taqseem`** and **`index`** — entry files are parked and already measured | ~15 min each | 4, 5 |
+| **7** | **nav components** (needs an ID — D34) → unblocks **`blueprint`** | Sprint 4 | 2, and 3 first |
+| **8** | **type + leading** (needs an ID — D34) → unblocks **`landing`** and **`bank`**, and settles **D33** | Sprint 4 | 2 |
+
+**Two things worth knowing before picking one:**
+
+- **#1 is the only item blocked on anything outside the repo.** #2 and #3 need no review agent and
+  are independent of whether `print` ships, so they are the cheapest things to do if budget is the
+  constraint.
+- **#4 is placed before #5 deliberately, against `PLAN.md`'s order.** Buttons open three pages
+  (`taqseem`, `index`, part of `blueprint`); cards open two. If only one Sprint 4 task gets done,
+  it should be the button one.
+
+**Do #3 before #7.** `blueprint` is the page whose exposure number D32 moves — it reads nine
+theme.css-only tokens from inline `style=""` with no fallback, which the current script cannot
+see — so measuring it with a fixed script is cheaper than unholding it twice.
 
 ---
 
