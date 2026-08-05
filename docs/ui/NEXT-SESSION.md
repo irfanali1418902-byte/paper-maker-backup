@@ -4,10 +4,11 @@
 > no copy-paste handover. **Read `docs/ui/STATUS.md` first — it is the SOURCE OF TRUTH.**
 > This file only says *what to do next and what not to do*; every number lives in STATUS.md.
 >
-> **Updated 2026-08-04 — qadam 1 (TOKEN) and qadam 2 (RULE) are BOTH DONE, and `blueprint` is
-> HELD on Irfan's call.** Both checks are scripts now and both have been run on all four pages.
-> **UI-032's measurement is finished; nothing was migrated.** Every number is in STATUS.md's
-> NEXT TASK block. What remains is three migrations: `bank`, `index`, `print`.
+> **Updated 2026-08-04 — both orphan checks are DONE and scripted, and `blueprint` AND `bank`
+> are both HELD on Irfan's call.** `bank` was taken, migrated, measured and reverted; its entry
+> file is parked. **Nothing is migrated on the new tree beyond the original three.** Every
+> number is in STATUS.md's NEXT TASK block and its UI-032 rows. What remains is two migrations:
+> `index`, then `print`.
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
@@ -15,30 +16,69 @@
 
 ## THE NEXT SESSION'S TASK
 
-**Measurement is over and `blueprint`'s decision has been taken. Migrate `bank`, `index`,
-`print` — one at a time, with a browser open, and stop for a "go" before each.**
+**Migrate `index`, then `print` — one at a time, with a browser open, and stop for a "go"
+before each.** Four of nine pages are HELD and three are live; these two are what is left.
 
-**`blueprint` is HELD** (Irfan's call, 2026-08-04) — **do not migrate it, do not re-measure
-it.** It measured 20 orphan rules that are the entire application shell (`.app` grid, `.top`,
-`.nav`, `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`) *plus* 21 orphan tokens, the first
-page exposed on both halves at once. `taqseem` lost its buttons; `blueprint` would lose the
-grid that puts the page together. The rule half is Sprint 4's shell/nav work and the token half
-is already covered by `docs/ui/parked-taqseem.css`'s block, so it is a scheduling hold, not an
-unsolved problem. **The decision was taken before any entry file was written, so nothing is
-parked for it and `blueprint.html` is untouched at HEAD.** Three pages are now held —
-`landing`, `taqseem`, `blueprint` — and none of them is a pending migration.
+### Read this before you start, because it has now happened three times
 
-**The three that are clear:** rule exposure **0 / 3 / 0**, token exposure **0 / 0 / 0**.
-`index`'s three are `.tag` (×2), `.row`, `.summary-row:last-child`, each with a named near-miss
-in `index.css`. `print` is 0 by D9 (it never linked the file) but it is still the Ctrl+P page —
-check its output on a real exam paper. **Read the `partial` column in STATUS.md before each
-one**: a page that redeclares a *selector* may not redeclare the *properties* (the white-slab
-`.brand`, `index`'s `.summary-row` border), and the before/after diff is what settles those.
-Copy `pages/slo.css` and read its header first.
+**Passing both orphan checks is necessary and NOT sufficient.** `taqseem` passed the token
+check and was held on rules. `blueprint` failed both halves at once. **`bank` passed BOTH with
+zero exposure and was still held** — on Urdu line-height, which neither check measures, and
+which only showed up because the before/after diff was read past its top rows and then taken to
+a real browser. Do not read "0 / 0" as "safe"; read it as "nothing is *unsupplied*", which is a
+smaller claim than it looks.
+
+### The two HELD pages you must not touch
+
+**`blueprint`** (held 2026-08-04) — 20 orphan rules that are the entire application shell
+(`.app` grid, `.top`, `.nav`, `.brand .logo/b/small`, `.card > .ch/.cb`, `.chip`) *plus* 21
+orphan tokens, *plus* — found later, D32 — **nine more theme.css-only tokens read from inline
+`style=""` with no fallback**, which the stylesheet-only check could never see. `taqseem` lost
+its buttons; `blueprint` would lose the grid. Sprint 4's shell/nav work. **Nothing is parked
+for it** — the decision came before any entry file was written — and `blueprint.html` is
+untouched at HEAD.
+
+**`bank`** (held 2026-08-04) — both checks clean, held on Urdu. `99-legacy/bank.css`:229
+`.q-text .qt.rtl` sets Nastaliq and a size but **no `line-height`**, so
+`03-elements/typography.css`:41's `body { line-height: var(--leading-body) }` in
+`layer(elements)` takes it: **38px → 21.75px** on the 24 Urdu-only questions. Nothing clips
+(no `overflow` anywhere on that row), so the failure mode is overlap. Its finished entry file
+is parked at **`docs/ui/parked-bank.css`** — read its header before ever touching this page —
+and `bank.html` is back on its three `<link>`s at HEAD.
+
+Four pages are held in total (`landing`, `taqseem`, `blueprint`, `bank`) and **none of them is
+a pending migration.**
+
+### `index` — what is already known, so you do not re-measure it
+
+- **Token exposure 0, rule exposure 3**: `.tag` (×2), `.row`, `.summary-row:last-child`, each
+  with a named near-miss in `index.css` that does *not* cover it. Detail in STATUS.md.
+- **Its 224 inline `style=""` attrs — the project's largest share — are CLEAN.** D32's sweep
+  checked every page's inline `var()` reads against its own legacy `:root` plus the new tree:
+  `index` reads nothing it cannot supply. That is a volume risk for Sprint 5, not an exposure
+  risk for this task. **Do not start Sprint 5's inline burn-down here.**
+- **Seven screens via `showScreen()`**, and the DOM grows **508 → 771** across them.
+  `querySelectorAll` sees only what is in the DOM, so drive every screen and union the counts —
+  `scripts/css_rules_probe.mjs` already does this if you pass `screens`.
+- **Read the `partial` column in STATUS.md first.** `index.css`:144's `.summary-row` has no
+  `border-bottom`, so the dashed rule between rows goes with the link, and a selector-only
+  check calls the page clean. Same trap as the white-slab `.brand`.
+- **If you reuse the contrast method from D31: it does NOT composite translucent layers.** The
+  ancestor walk stops at the first background with alpha > 0. That was exact on `bank` (both
+  backdrops opaque) and will be wrong anywhere a translucent surface sits between the text and
+  its paint. Composite before quoting a ratio.
+
+### `print` — last, and with the most care
+
+0 by D9 (it never linked `/static/theme.css`, so its three matching rules are already inert),
+but it is the **Ctrl+P page**, the highest-consequence one in the epic. Check its output on a
+real exam paper, never a blank one. Known gap: **no paper in this DB has Urdu question text**,
+so the Urdu half cannot be exercised here — which is exactly why `bank` was the first page to
+surface the Nastaliq problem.
 
 Rules 1–5 at the bottom of this file still apply, **except** that rule 1's "migrate nothing"
-was scoped to the measurement task and is now spent for `bank`/`index`/`print`. It still holds
-for `blueprint`, `landing` and `taqseem`.
+was scoped to the measurement task and is now spent for `index` and `print`. It still holds for
+`blueprint`, `bank`, `landing` and `taqseem`.
 
 ---
 
