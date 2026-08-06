@@ -86,12 +86,30 @@ async function evaluate(sid, expr) {
 // PROPERTY SET FIXED HERE, before anything is measured — the rule pages/slo.css wrote after
 // two counts of the same migration disagreed. Type and box, since a leading change moves
 // both: the line box itself and everything laid out below it.
+//
+// UI-041 ADDED THE SECOND GROUP, and the reason is worth keeping. The original 18 are a
+// TYPE probe: font, colour, background-colour and the box. A button component moves none
+// of those first — it moves BORDER, RADIUS, SHADOW and CURSOR. Measured on the live pages
+// at HEAD: library.css:86 .btn-ghost is `border: 1px solid #D6DEEA; border-radius: 9px`,
+// library.css:76 .btn-primary is `border: none; border-radius: 12px; min-height: 44px` plus
+// a box-shadow, slo.css:57 .btn-ghost is `1px solid var(--border)`. With the original set,
+// a rule that flattened all 63 of library's buttons to borderless would have reported ZERO
+// deltas, because background-color and color do not move when only the border does. The
+// gate would have passed a regression. Do not shrink this list back.
 const SNAP = String.raw`(() => {
   const PROPS = [
     'font-size','line-height','font-family','font-weight','letter-spacing',
     'margin-top','margin-right','margin-bottom','margin-left',
     'padding-top','padding-right','padding-bottom','padding-left',
     'color','background-color','width','height','display',
+    // UI-041 — what a button component actually changes.
+    'border-top-width','border-right-width','border-bottom-width','border-left-width',
+    'border-top-style','border-right-style','border-bottom-style','border-left-style',
+    'border-top-color','border-right-color','border-bottom-color','border-left-color',
+    'border-top-left-radius','border-top-right-radius',
+    'border-bottom-right-radius','border-bottom-left-radius',
+    'box-shadow','cursor','opacity','min-height','min-width','white-space',
+    'column-gap','row-gap','align-items','justify-content',
   ];
   const path = (el) => {
     const parts = [];

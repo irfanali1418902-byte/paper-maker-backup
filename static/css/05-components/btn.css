@@ -1,0 +1,116 @@
+/* =========================================================================
+   05-components/btn.css — the button component (UI-041)
+   PREPARED, NOT LIVE. Nothing on any page carries these classes yet.
+   -------------------------------------------------------------------------
+   THIS FILE IS IMPORTED BY main.css AND REACHES ALL THREE LIVE PAGES
+   (slo, slo-health, library) — AND CHANGES NOTHING ON THEM. That is not a
+   hope, it is the shape of the selectors: every rule below is a `.btn--*`
+   class, and `.btn--` appears in ZERO markup in this repo. A rule that
+   matches no element cannot move a computed style. Measured before and
+   after with scripts/css_type_probe.mjs over 44 properties: 0 element x
+   property deltas on all three pages. Same shape as 05-components/urdu.css,
+   which has been imported since UI-044a and still paints nothing.
+
+   THERE IS DELIBERATELY NO BARE `.btn { }` RULE, AND REMOVING THAT
+   CONSTRAINT BREAKS A LIVE PAGE. slo.html carries class="btn" on two real
+   buttons (#importBtn, #assignBtn), drawn by 99-legacy/slo.css:50 in
+   layer(legacy). This file is in layer(components), which outranks legacy —
+   so a bare `.btn` here would repaint those two buttons the moment it
+   landed. The skeleton therefore lives on the modifier list. The class API
+   is `class="btn btn--primary"`; the bare `btn` is inert until Sprint 6
+   drains the legacy files, at which point a bare block rule becomes safe.
+
+   NO ELEMENT SELECTOR APPEARS IN THIS FILE, AND 03-elements/forms.css WAS
+   NOT TOUCHED BY UI-041. That is D22: the design target's button reset
+   (border/background/color to none/inherit) still cannot land, because it
+   would flatten every legacy button drawn by class in layer(legacy) — 63 of
+   them on library alone — and a `.btn--*` component does not win those back,
+   since they carry `.btn-primary`/`.btn-ghost`, not `.btn--primary`. D22
+   stays parked until the legacy files drain. Note the two names differ by
+   one hyphen; that is load-bearing, not a typo.
+
+   WHY ONLY TWO VARIANTS. Thirteen button shapes were measured across the
+   nine pages. Two roles account for all of them: a filled action and an
+   outlined secondary. The rest are size and context variations of those two
+   (modal footers, a feedback bar on a dark surface, small row actions) plus
+   danger, which is a colour swap. Two variants is the scoped decision, not
+   the measured ceiling — see docs/ui/STATUS.md for the full inventory and
+   the four shapes that will need a home before bank and blueprint migrate.
+
+   PROVENANCE OF EVERY NUMBER — 99-legacy/bank.css:139 and :149, read, not
+   invented. Colour comes from Tier 2 rather than from bank's own values,
+   which is what bank itself does: it writes `background: var(--primary)`,
+   not a literal. Where the token scale has no member, bank's measured pixel
+   value is kept and the divergence is recorded here:
+
+     primary  min-height 44px, padding 0 20px      kept as measured
+     ghost    min-height 36px, padding 0 14px      kept as measured
+     radius   bank 10px / 9px  -> --radius-control  (11px, +1 / +2)
+     size     bank 14.5 / 13px -> --text-body /
+                                  --text-control    (15px / 13.5px, +0.5)
+     gap      bank 8px / 7px   -> --space-gap-tight (8px, exact / +1)
+     weight   bank 700 / 600   -> the two weight tokens, exact
+
+   ONE THING BANK HAS THAT THIS DOES NOT: an action-tinted drop shadow on
+   the filled button. There is no Tier 2 token for it, and inventing a tint
+   would be inventing a design decision. The button ships flat and the gap
+   is recorded in STATUS.md, to be settled by whoever migrates bank.
+
+   No raw hex appears anywhere in this file, including these comments. That
+   check has failed four times on this epic, always through a comment.
+   ========================================================================= */
+
+/* The skeleton. On the modifier list, never on a bare `.btn` — see header.
+   `font-family: inherit` is here so the component works identically on an
+   <a> and a <button>; 03-elements/forms.css:101 only reaches the latter.
+   The explicit `color` on each variant below is also what settles D27: an
+   <a class="btn--ghost"> and a <button class="btn--ghost"> paint the same,
+   which the legacy classes do not manage today. */
+.btn--primary,
+.btn--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-gap-tight);
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn--primary {
+  min-height: 44px;
+  padding: 0 20px;
+  border: none;
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-heading);
+}
+
+.btn--primary:hover {
+  background: var(--color-action-hover);
+}
+
+.btn--ghost {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-control);
+  font-weight: var(--font-weight-strong);
+}
+
+.btn--ghost:hover {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+
+/* Both legacy families agree on this one: half opacity, no pointer.
+   bank.css:147 and :156 read the same way. */
+.btn--primary:disabled,
+.btn--ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

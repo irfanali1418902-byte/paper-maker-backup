@@ -165,8 +165,16 @@
    ------------------------------------------------------------------------- */
 @import url("05-components/urdu.css")      layer(components);
 
+/* UI-041 — the button component. PREPARED, NOT LIVE: it reaches all three
+   live pages from here and matches zero elements on them, because every
+   selector in it is `.btn--*` and no markup in this repo carries that. Same
+   shape as urdu.css above. The file is btn.css, not the button.css this line
+   used to name commented-out — the component's class is `.btn--primary`, and
+   the file is named for the class. Read its header before adding a bare
+   `.btn` rule to it; doing so repaints two live buttons on slo.html. */
+@import url("05-components/btn.css")       layer(components);
+
 /* UI-040..043 */
-/* @import url("05-components/button.css")    layer(components); */
 /* @import url("05-components/card.css")      layer(components); */
 /* @import url("05-components/modal.css")     layer(components); */
 /* @import url("05-components/field.css")     layer(components); */
