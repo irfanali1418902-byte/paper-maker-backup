@@ -1,31 +1,49 @@
 # NEXT SESSION — start here
 
-> **Updated 2026-08-05 (second update), after `print` was HELD.** Read `docs/ui/STATUS.md`
-> first — it is the SOURCE OF TRUTH, and it now contains the `print` decision and the margin
-> test's BEFORE numbers. **The exception note that used to be here is gone**: everything below
-> is committed, and STATUS.md no longer trails this file.
+> **Updated 2026-08-06, after UI-044a and UI-044b.** Read `docs/ui/STATUS.md` first — it is
+> the SOURCE OF TRUTH and it is current. This file is the orientation layer: what is done,
+> what is next, and the traps. **The probes that produced every number are now repo files —
+> see `docs/ui/PROBES.md`.**
 
 **Branch:** `feat/ui-architecture` · **Working dir:** `C:\PaperMaker\paper-maker-mvp`
 
 ---
 
-## ✅ `print` IS HELD (2026-08-05). Sprint 3 closes at 3 of 9. Start at D34.
+## ▶ START HERE — **UI-045** (hero type, releases `landing`) or **UI-041** (button)
 
-**Irfan held `print` on a reported space-token regression** — a right margin moving 48px → 24px
-and a `.count-grid` collapsing on Q10. **That report is now retired: D35.** The swap was
-performed, AFTER measured, the tree reverted, and **the margin does not move** — `.sheet` is
-52.9134px (14mm) on all four sides both ways and no box delta lands on the margin chain.
-`.count-grid` exists nowhere in the repo and no legacy file reads `--space-*`.
-**Do not schedule Sprint 4 work for space tokens.**
+Sprint 3 closed at **3 of 9** migrated. Six pages are HELD. **UI-044a and UI-044b are both
+done and NEITHER SHIPPED A VISIBLE CHANGE** — read the next section before assuming any page
+was fixed.
 
-**The hold still stands, on a different and now-measured reason: D36.** `0d04c750` goes
-**2 → 3 printed pages** (+6.0% sheet height) — D21/F3's line-height growth crossing an A4
-boundary. One more sheet per exam, per student, on the Ctrl+P page. **`print`'s blocker is now
-UI-044, the leading decision**, the same one `bank` and D33 wait on.
+| done | what | where it lives | live? |
+|---|---|---|---|
+| **UI-044a** | Nastaliq leading — `.q-text .qt.rtl { line-height: var(--leading-nastaliq) }` | `05-components/urdu.css` (in `static/`) | **no** — only `bank` has those elements and it is HELD at HEAD, so it never loads the file |
+| **UI-044b** | print leading — `@media print { body { line-height: normal } }` | `docs/ui/parked-print.css` | **no** — not under `static/` at all |
+
+**Both are PREPARED, NOT LIVE, and that is deliberate** (foundation-first, the shape UI-021
+used). Each was proof-tested through a temporary swap — migrate the page, measure, revert —
+so the values are settled before the migration that needs them. **Neither is a page release.**
+
+## ✅ `print` — HELD, and the reason changed once already
+
+It was held on a reported `--space-*` margin regression. **That report is retired: D35** — the
+swap was performed, AFTER measured, the tree reverted, and the printed margin does not move at
+all (`.sheet` is 52.9134px = 14mm on all four sides both ways, zero box deltas on the margin
+chain). `.count-grid` exists nowhere in the repo and no legacy file reads `--space-*`.
+**Do not schedule any Sprint 4 work for space tokens.**
+
+**The same run found the real regression, D36** — `0d04c750` goes 2 → 3 printed pages — and
+**UI-044b has now solved it**, in `docs/ui/parked-print.css`, proof-tested at 2 / 6 / 7. D36
+stays OPEN because the fix is not live; **move it to Resolved in the commit that migrates
+`print`, not before.**
+
+**The hold was right and its stated reason was wrong.** That is the lesson worth carrying:
+hold a page on a measurement, not on a description.
 
 **State:** the tree is at HEAD. `static/css/pages/print.css` does not exist, the entry file is
-parked at `docs/ui/parked-print.css`, `shared_css_lines` is 1616 and `BASELINE.json` is not
-re-pinned. The swap-and-revert left nothing behind — `git status` clean, ratchet flat.
+parked at `docs/ui/parked-print.css`, `shared_css_lines` is **1685** and `BASELINE.json` is
+pinned there. Every swap-and-revert this epic has done left nothing behind — `git status`
+clean, ratchet flat.
 
 ## 🛑 THE DECIDING TEST — **both halves are now run**
 
@@ -59,44 +77,20 @@ topic strip, library picker) — **zero effect on the printed artefact.**
 
 **What is still NOT done:** a **real printer**. Everything above is `Page.printToPDF`, the right
 tool for measuring CSS and not proof of a physical print. Check a real print preview at the page
-edges before `print` is unheld — and re-run the harness after UI-044 to confirm all three papers
-return to HEAD's page counts (**2 / 6 / 7**).
+edges before `print` is unheld. UI-044b has already restored the page counts to **2 / 6 / 7**
+in the parked entry file; re-run `scripts/css_print_probe.mjs` when the migration lands to
+confirm it still holds.
 
-**Why this is the decisive one and the ink colour is not:** a printed exam paper's margins are
-what make it usable — hole-punch edge, binding, the guarantee that nothing is cut off by the
-printer. `99-legacy/print.css`:1-2 says in its own comment that the margin is **single-sourced**:
-`@page` carries `margin: 0` and **all** of the page margin comes from `.sheet`'s
-`padding: var(--page-margin)` (14mm). That comment also records that it was **once double** —
-`@page` 14mm plus `.sheet` 14mm = 28mm — so this page has already been broken this way once.
+**Why margins were the decisive question at all:** a printed exam paper's margins are what make
+it usable — hole-punch edge, binding, the guarantee that nothing is cut off. `print.css`:1-2
+records that the margin is **single-sourced** (`@page` at 0, all of it from `.sheet`'s
+`padding: var(--page-margin)`) and that it was **once double** — `@page` 14mm plus `.sheet`
+14mm = 28mm — so this page has been broken this way before. It is now measured and it holds.
 
-**What WAS verified (do not redo):**
-
-- `@page { size: A4; margin: 0 }` (`print.css`:3) is present and the migration does not touch it.
-- The three knobs resolve identically before and after — `--page-margin: 14mm`, `--q-font: 14px`,
-  `--q-gap: 14px`. `setVar()` writes them onto `documentElement.style`, an inline declaration
-  outranking every layer.
-
-**What was NOT verified — this is the actual gap:**
-
-- **The before/after diff showed `padding-top`, `padding-right`, `padding-bottom` and
-  `padding-left` each changing on 12 element-instances, and WHICH elements those are was never
-  identified.** If any of them is `.sheet` or sits on the margin chain, the printed margin moved
-  and nobody has looked.
-- Whether `02-generic/reset.css` or the new tree's space tokens reach `.sheet`, `.print-main` or
-  any ancestor carrying the page margin.
-- Whether `@page`'s own declarations interact with cascade layers once the legacy file is
-  imported into `layer(legacy)` rather than linked unlayered.
-- Whether the margin survives a **real printer**, not just `Page.printToPDF` — the PDF was
-  produced with `marginTop/Bottom/Left/Right: 0` and `preferCSSPageSize: true`, which is the
-  right setting for measuring CSS but is not proof of what a physical print does.
-
-**How to run it:** migrate the page (the entry file is parked and the swap is one line), then
-measure `.sheet`'s computed `padding` and box in **print media** before and after, identify all
-48 padding deltas by element, and produce the PDF both ways. **Then check a real print preview
-at the physical page edges**, not just that the pages count the same.
-
-**`print` does not ship until this is done and looks right.** The Ctrl+P check that already
-happened confirmed the paper's *content* was correct; it was not a margin measurement.
+*(A block here used to list "what was NOT verified" — the unnamed 48 padding deltas, whether
+the reset reached `.sheet`, whether `@page` survives the layer import, and how to run the test.
+All of it is done and the answers are above. Removed rather than left, because it contradicted
+the paragraph 20 lines above it.)*
 
 ---
 
@@ -125,8 +119,9 @@ description rather than a measurement.
 | ratchet | `shared_css_lines` **1616**, `unsanctioned_hex` **429**, OK |
 | the swap-and-revert | left nothing behind — `git status` clean, every ratchet metric flat |
 
-**The decision has been made: `print` does not ship until UI-044 settles D36.** Start at
-**UI-044**; D34 is closed and Sprint 4's order is in `PLAN.md`.
+**The decision has been made: `print` does not ship until D36's fix is actually live** — it is
+written and proof-tested in `docs/ui/parked-print.css`, and it activates with the migration.
+Start at **UI-045** or **UI-041**; D34 is closed and Sprint 4's order is in `PLAN.md`.
 
 ---
 
@@ -277,7 +272,7 @@ School Name (Urdu)). That is a data change and is Irfan's call, not a session's.
 
 `print` is HELD (D35). The file stays parked and the page stays at HEAD. **Whoever unholds it:**
 
-1. **Land UI-044 first.** D36 is the blocker and it is a leading decision, not a `print` fix.
+1. **The D36 fix is already in the parked entry file** (UI-044b) and needs no new decision.
 2. **Re-run the margin harness** and confirm all three papers return to HEAD's page counts
    (**2 / 6 / 7**). A leading fix that leaves `0d04c750` at 3 has not settled D36. The margin
    itself is already proven clean (D35) and does not need re-measuring.
@@ -290,6 +285,21 @@ School Name (Urdu)). That is a data change and is Irfan's call, not a session's.
 8. **Check a real print preview at the physical page edges**, not just that the pages count the
    same. `Page.printToPDF` is the right tool for measuring CSS and is not proof of a physical
    print.
+
+---
+
+## THE PROBES ARE NOW REPO FILES — `docs/ui/PROBES.md`
+
+Every number on this board was produced by one of five CDP drivers, and they now live in
+`scripts/` instead of a session scratchpad. **This epic lost a set of measurement scripts
+exactly that way once** — the first `print` session wrote them to a scratchpad and the next
+session had only the prose method. Read `docs/ui/PROBES.md` before measuring anything; it
+lists what each probe answers, what is hardcoded in it (Edge's path, the base URL, three
+database-specific paper UUIDs), and the eight rules they encode — each of which exists
+because getting it wrong once put a wrong number on this board.
+
+**When a page migrates, add it to the page list in `css_type_probe.mjs` and
+`css_print_probe.mjs`.** Otherwise the regression gate silently stops covering it.
 
 ---
 
@@ -307,7 +317,7 @@ the summary. The roadmap below now follows that order.
 
 | # | task | rough size | blocked by |
 |---|---|---|---|
-| **1** | **UI-044** type + leading, incl. the Nastaliq leading decision → releases **`bank`** and **`print`**, settles **D33** | Sprint 4 | nothing |
+| ~~1~~ | ~~**UI-044a/b** type + leading~~ — **DONE 2026-08-05/06**, both prepared-not-live | — | — |
 | **2** | **UI-045** display / hero type step → releases **`landing`** | Sprint 4 | take with #1 — same two files |
 | **3** | **Fix D32** — teach `css_orphans.py` to read markup, then re-run the nine-page table | ~30 min, one script | nothing |
 | **4** | **UI-041** button + chip/tag/badge — needed by `taqseem` and `index`, completes neither alone | Sprint 4 | nothing |
@@ -344,15 +354,16 @@ see — so measuring it with a fixed script is cheaper than unholding it twice.
 | `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | shell/nav components |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions | **the Nastaliq leading decision — same problem as F2 above** |
 | `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 button reset + shell layout |
-| `print` | **D36** — `0d04c750` gains a printed page, 2 → 3 (+6.0% sheet height) | **UI-044** — same leading decision as `bank` |
+| `print` | **D36** — `0d04c750` gains a printed page, 2 → 3 (+6.0% sheet height) | **fix written (UI-044b), not live** — activates on migration |
 
 **`print` was held for one reason and stays held for another, and the swap is worth remembering.**
 It was held on a reported `--space-*` margin regression; that report is **retired (D35)** — the
 margin does not move at all. The run that retired it found **D36** instead, a real pagination
 regression from D21/F3's line-height growth. **The hold was right; the stated reason was not.**
 
-**Three of the six pages now converge on UI-044** — `bank` (Urdu line-height), `print` (D36, and
-D33's `.school-ur`), and the leading half of what `landing` needs. That is why it is first.
+**UI-044a/b are done and released no page.** `bank`'s Urdu leading and `print`'s D36 are both
+solved in files those pages do not yet load; `landing` still needs UI-045's hero step. The next
+task that actually releases a page is **UI-045** (`landing`).
 
 **`bank`'s hold and `print`'s F2 are one problem in two places.** Whichever Sprint 4 task takes
 the Nastaliq leading decision should take both, or they will diverge.
