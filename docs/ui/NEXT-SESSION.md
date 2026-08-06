@@ -9,7 +9,30 @@
 
 ---
 
-## ▶ START HERE — **UI-045** (hero type, releases `landing`) or **UI-041** (button)
+## ▶ START HERE — **UI-045** (display / hero type step). It releases `landing`.
+
+**This was asked directly on 2026-08-06 and the answer is UI-045**, on the ordering rule this
+sprint was re-scoped around: *which task completes a page by itself.*
+
+| candidate | completes, on its own |
+|---|---|
+| **UI-045** — hero / display type | **`landing`** — one small task, one page released |
+| UI-041 — button + chip/tag/badge | **nothing.** `taqseem` also needs UI-040; `index` also needs UI-046 |
+| UI-041 **+** UI-040 | `taqseem` only — two tasks, one page |
+
+**`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +
+status-bar + domain components, it is order 7, and it releases **no held page**. The "button/card
+opens 4 pages" count does not hold: the widest single lever is UI-041, and it completes nothing
+alone.
+
+**`urdu.css` has nothing to do with button/card, and this is the trap worth knowing.**
+`taqseem` carries **zero** Urdu — no `Nastaliq`, `urdu` or `.rtl` match anywhere in its legacy
+file — so `05-components/urdu.css` can never affect it. **`bank` is the only page that
+activates that file**, and `bank` does not need button or card: its technical blocker (the Urdu
+line-height) is already solved by UI-044a. It is HELD purely on Irfan's call pending **D31**,
+whose home is UI-042. **So the shortest path to seeing `urdu.css` live is `bank`'s migration —
+a decision, not a task.**
+
 
 Sprint 3 closed at **3 of 9** migrated. Six pages are HELD. **UI-044a and UI-044b are both
 done and NEITHER SHIPPED A VISIBLE CHANGE** — read the next section before assuming any page
