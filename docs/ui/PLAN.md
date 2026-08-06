@@ -205,7 +205,7 @@ waiting on something below. **A task is not done until the pages it owns are mig
 | **1a** | **UI-044a** ✅ **DONE 2026-08-05** | **Nastaliq leading** — `--line-height-nastaliq` + `05-components/urdu.css` | **PREPARED, NOT LIVE** — proof-tested on `bank`, activates when `bank` migrates |
 | **1b** | **UI-044b** | **print-media leading** — the half `--leading-body` cannot solve | `print` · settles **D36** |
 | **2** | **UI-045** | **display / hero type step** — the scale step above `h1` | `landing` |
-| **3** | UI-041 | `button` (`.btn-primary`/`.btn-ghost` 5× → BEM `.button`) + chip / tag / badge | needed by `taqseem`, `index` |
+| **3** | UI-041 ✅ **DONE 2026-08-06** | `button` — `.btn--primary` / `.btn--ghost` in `05-components/btn.css`. **Not** `.button`, and **no** chip/tag/badge: `.tag` is live on `slo-health` and JS-queried as the brand tagline, `.chip` on `taqseem` is a domain block for UI-043 | **PREPARED, NOT LIVE** — releases nothing. Needed by `taqseem` (with UI-040). **NOT by `index`** — see below |
 | **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | `blueprint`, and completes `index` |
 | **5** | UI-040 | `card` (6×) + unify `.page-head` → `.card`/`pagehead` (4×) | completes `taqseem` |
 | 6 | UI-042 | `modal` (4×) + `field` / form-row (4×) | no held page — settles D26/D27/**D31** |
@@ -247,7 +247,7 @@ schedule work for it.
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions — **fixed by UI-044a, which is prepared and not yet live** | **UI-044a** (done) + Irfan's call on **D31** → UI-042 |
 | `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** |
 | `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |
-| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 **+** UI-046 |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-046 only.** This row said "UI-041 + UI-046" and UI-041 measured it false on 2026-08-06: `index`'s 29 buttons are `.gen-btn`/`.ghost-btn` from `99-legacy/index.css`:115/:123 and survive migration untouched — it never used `.btn` at all. Its button-shaped blocker is the `forms.css` reset, which is **D22**, and D22 is parked precisely because no component can unpark it |
 | `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | **UI-046** |
 
 **Run D32 before UI-046.** `blueprint` is the page whose exposure number D32 moves, so measuring

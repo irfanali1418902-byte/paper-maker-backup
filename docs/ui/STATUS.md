@@ -14,7 +14,22 @@ foundation `taqseem` needs, and `taqseem` also needs UI-040.
 
 ## NEXT TASK → **UI-045** (display / hero type step). **UI-041, UI-044a and UI-044b are all done — and all three shipped nothing visible.**
 
-### UI-041 — **the button component. Committed 2026-08-06. PREPARED, NOT LIVE.**
+### UI-041 — **the button component. Committed 2026-08-06. PREPARED, NOT LIVE. ⚠ RE-REVIEW PENDING — run it before anything else.**
+
+> **THIS TASK IS NOT SIGNED OFF, AND IT IS COMMITTED ANYWAY — deliberately, so a very long
+> session could end on a clean tree.** Two review rounds ran. Round 1 returned **FAIL** (three
+> blocking findings), round 2 returned **FAIL** (one blocking finding). **Every finding from
+> both rounds has been remediated and the fixes are in the commits below — but round 3 was
+> never run**, so the last recorded verdict on this task is FAIL.
+>
+> **DoD #6 is therefore not met.** Do not treat UI-041 as done, do not build UI-040 or the
+> `taqseem` migration on top of it, and do not let the "PREPARED, NOT LIVE" framing suggest it
+> is finished. **Run the re-review first** — the diff is `a420ee0` plus the follow-up commit,
+> seven files, and round 2's own report is the checklist. Nothing on any live page can move
+> while it waits: `.btn--` matches zero elements, re-measured at every step.
+>
+> **The remediation was doc- and comment-only in round 2** — no CSS rule changed — which is why
+> a fresh session can verify it cheaply.
 
 > **Like UI-044a, this ships nothing today.** `static/css/05-components/btn.css` is imported by
 > `main.css` and therefore reaches all three live pages — and **matches zero elements on them**.
@@ -22,9 +37,12 @@ foundation `taqseem` needs, and `taqseem` also needs UI-040.
 > **It activates when a page migrates and its markup is re-classed, not before.**
 
 **Two variants, and the file is honest that two is a scoping decision rather than the measured
-ceiling.** Thirteen distinct button shapes were measured across the nine pages; two roles cover
-them — a filled action and an outlined secondary — with the remainder being size and context
-variants of those two, plus danger.
+ceiling.** **21 button classes** across the nine legacy files plus `theme.css`;
+two roles cover the bulk — a filled action and an outlined secondary — with the remainder being
+size and context variants of those two, plus danger. *(This said "thirteen shapes" until review
+could not reproduce it. The counting rule is now written out in `btn.css`'s header — distinct
+base class names, deduped across files, pseudo-classes and compound/contextual variants folded
+into their base. Count the compounds separately and it is 30, so the rule is the number.)*
 
 ```
 .btn--primary    filled    --color-action / --color-on-action
@@ -42,14 +60,20 @@ variants of those two, plus danger.
 | `git diff` on `03-elements/forms.css` | **empty — D22 stays parked** |
 | raw hex in `btn.css`, comments included | **0**; `unsanctioned_hex` flat at **429** |
 
-**THE PROBE'S PROPERTY SET WAS EXTENDED FIRST, AND THAT IS THE REAL FINDING OF THIS TASK.** The
-gate measured 18 properties — font, colour, background-colour and the box — and **none of them is
-what a button component changes**. `library.css`:86 gives `.btn-ghost` a 1px border and a 9px
-radius; `library.css`:76 gives `.btn-primary` a shadow and a 44px min-height. A rule that
-flattened all 63 of `library`'s buttons to borderless would have moved **no** measured property
-and **the gate would have reported zero deltas and passed a regression.** Border width/style/
-colour, the four radii, box-shadow, cursor, opacity, min-height/width, white-space, gaps and
-flex alignment are now in the set — 44 properties. Do not shrink it back.
+**THE PROBE'S PROPERTY SET WAS EXTENDED FIRST — and the first version of this paragraph
+justified it with the one example that does not hold.** It said a rule flattening `library`'s
+buttons to borderless would have reported zero deltas under the old 18 properties. **Review
+mutation-tested that in-browser and it is false**: `box-sizing` is `border-box` globally
+(`02-generic/reset.css`:73), so removing a 1px border changes used `width`/`height` — both in
+the original set — on the button and on its flex siblings. `button { border: none }` moves
+**172** of the old properties on `library`; the narrower `.btn-primary,.btn-ghost { border:
+none }` moves **18**.
+
+**The extension is still right, on the three things that genuinely are invisible.** Same
+mutation test, same page: `border-radius: 0` → **0 deltas**, `box-shadow: none` → **0**,
+`cursor: default` → **0**. `library.css`:86 gives `.btn-ghost` a 9px radius and `library.css`:76
+gives `.btn-primary` a shadow and a 10px radius — a component that changed any of them would
+have passed the gate silently. The set is now 44 properties. Do not shrink it back.
 
 **There is deliberately no bare `.btn { }` rule, and adding one breaks a live page.** `slo.html`
 carries `class="btn"` on `#importBtn` and `#assignBtn`, drawn by `99-legacy/slo.css`:50 in
@@ -72,8 +96,12 @@ the file header: radius 10/9px → `--radius-control` (11px), size 14.5/13px →
   Tier 2 token for a tinted shadow and inventing the tint would be inventing a design decision.
   Whoever migrates `bank` settles it.
 - **Four shapes have no home yet**: `secondary` (blueprint, a 1.5px accent-bordered button),
-  `danger` (bank + blueprint, a small red-tinted row action), the `accent`/gold fill
-  (`taqseem`, 2 instances, from `theme.css`), and an on-dark ghost (bank's feedback bar).
+  `danger`, the `accent`/gold fill (`taqseem`, 2 instances, from `theme.css`), and an on-dark
+  ghost (bank's feedback bar).
+- **`danger` is not a held-page-only problem — it is on a LIVE page.** This board said
+  "bank + blueprint"; review found `99-legacy/library.css`:94 declares `.btn-danger` too and
+  `library` renders one per row (24 at the time of measurement). So the first page that will
+  need a danger variant is one already on the new tree, not one of the six held.
 - **The size grid does not fit two pages.** Roles repeat at several sizes — ghost min-height is
   36px on bank and blueprint, **40px on library, 48px on index**; primary is 44px but **52px on
   index**. A four-step grid (24/36/44/52) covers everything except library's 40 and index's 48.
@@ -93,6 +121,61 @@ measured this session, `slo.html`'s `<a class="btn-ghost">` is `rgb(15,23,42)` a
 sibling `<button>`'s `rgb(46,90,172)`, and **`library` has the same split** (`rgb(15,23,42)` vs
 `rgb(22,33,58)`) — an instance D27 predicted and no one had measured. Both clear when those
 pages are re-classed, not before.
+
+#### F2 — a focus ring was added on 2026-08-06 and **removed the same day**. The premise was wrong.
+
+The rule was `.btn--primary:focus-visible, .btn--ghost:focus-visible { outline: 2px solid
+var(--color-action); outline-offset: 2px }`, and the comment defending it claimed **"no legacy
+button in this repo declares a focus style at all"**, calling it the file's one invented
+decision.
+
+**That claim is false and review caught it.** `03-elements/forms.css`:106 already carries a bare
+`:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px }` in
+`layer(elements)` — **live on all three live pages since UI-021** — ported from
+`static/theme.css`:212, which still carries the same rule on the four pages that link it.
+Buttons already have a ring everywhere except `landing` and `print`.
+
+**So the rule was not adding accessibility, it was changing a colour — and adding a second ring
+colour to the same screen.** A `0,2,0` selector in `layer(components)` beats `forms.css`'s
+`0,1,0` in `layer(elements)`, so any re-classed page would have shown **buttons ringed indigo
+while every other focusable element stayed teal**. Measured on `slo.html` before removal: the
+same button reads `rgb(14,165,164)` as `btn` and `rgb(79,70,229)` as `btn btn--primary`.
+**That is D27's defect — one control, two appearances — in a different place**, which is why the
+rule is gone rather than documented and kept.
+
+**Recorded rather than quietly dropped, because the mistake is the reusable part**: a component
+in `layer(components)` silently outranks the element layer, so "adding" a style to a component
+is often overriding one the tree already has. The geometry was never invented either — 2px with
+a 2px offset is the tree's existing convention, which the removed comment did not know it was
+restating. If a button-specific ring is ever wanted it needs a Tier 2 focus token and a decision
+about the whole tree's ring colour, not a component override.
+
+`btn.css` therefore ships **no focus rule**, and the file says so in place of the removed one.
+
+#### F1 — token fallbacks: proposed, measured, and declined. **D37**
+
+The proposal was `var(--color-action, <hex>)` on every component token, so a button could not
+go unpainted if a token failed to resolve. **Two things stopped it, and the second is the one
+worth carrying.**
+
+First, mechanically: a raw hex in `05-components/` takes `unsanctioned_hex` from 429 to 430 and
+**fails the ratchet test** — PLAN §2 is explicit that this is a test and not a review
+convention. (The hex named in the request, a dark green, is also not `bank`'s value: `bank.css`
+:141 reads `var(--primary)` and `--primary` is the blue that computes to `rgb(46,90,172)`.)
+
+Second, and this is why it became a D row rather than a workaround: **the failure it defends
+against cannot happen in the direction feared.** `main.css`:42 orders the layers
+`legacy, settings, …` — settings comes *after* legacy, so legacy cannot shadow a settings
+token. Measured: **none of the 12 tokens `btn.css` reads is defined in any legacy file or in
+`theme.css`**, and two of them demonstrably resolve on all three live pages right now — body
+15px (`--text-body`) and `slo`'s anchor `rgb(15,23,42)` (`--color-text`). Body's 21.75px line
+box shows `--leading-body` resolving too, but that is a settings token outside `btn.css`'s
+twelve; an earlier draft counted it as a third and review caught it. **`D35` is the row that already retired this
+exact mechanism** — it reported a `--space-*` regression attributed to settings losing to a
+legacy unlayered `:root`, and the swap-and-measure found the printed margin does not move at
+all. **Do not cite D35 as a precedent for adding fallbacks; it is the precedent for not
+adding them.** Full reasoning and the two bleed directions that ARE real — unlayered
+`theme.css`, and inline `style` on `documentElement` — are in **D37**.
 
 ### UI-044b — **print-media leading. D36 solved 2026-08-05. PREPARED, NOT LIVE.**
 
@@ -1079,7 +1162,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | UI-032 | `bank` onto the new tree — **ATTEMPTED, MEASURED, HELD** | **held** | `5749f32` | **The cleanest page on both orphan checks, and it still could not ship — the third time in this epic that passing every prescribed check was necessary and not sufficient.** The swap itself was exactly the shape the board predicts: `bank.html`'s three `<link>`s → two, **−53 bytes, one hunk, nothing else in the file moved** (frozen inventory 152/152, class attrs 125/125, inline `style=""` 90/90, `<script>` bodies identical), plus a two-`@import` entry file with no rules of its own. Both halves measured **0 exposure**: the legacy file declares its own 19 tokens as literals with zero collisions against `01-settings/`, and of the six `static/theme.css` rules that reach the page **3 are redeclared** by `bank.css` itself (`:80`'s input/select/textarea block among them), **2 are PARTIAL** (`.brand`, `.brand small` — the white slab and the uppercase subtitle, properties that do go) and **1 is orphan** (`:focus-visible`, which `03-elements/forms.css` supplies). **What stopped it is measured by neither check: Urdu.** `99-legacy/bank.css`:229 `.q-text .qt.rtl` sets `'Noto Nastaliq Urdu'` and a size but **no `line-height`**, so the line box came from the font's metrics; `03-elements/typography.css`:41's `body { line-height: var(--leading-body) }` is in `layer(elements)`, beats `layer(legacy)`, and takes it — **38px → 21.75px on the 24 Urdu-only questions in this DB, a 43% cut**, on the one script whose glyphs paint far outside their em box. **Nothing clips** (no `overflow` on `.q-row`/`.q-text`/`.qt`), so the failure mode is overlap and the row's 14px padding absorbs part of it — which is exactly why this was taken to a real browser instead of settled from the number. **Irfan looked and held it**: Nastaliq gets a proper look in Sprint 4. D21 firing on the **first migrated page that actually renders Urdu**; `print` could not exercise it (no paper in this DB has Urdu question text). **Measurement quality:** render proven deterministic first — two full page loads per state, **5378/5378 before and 5377/5377 after, 5370 body nodes both, key-drift 0 and value-drift 0** — the 5378 independently reproducing `css_orphans --rules`' own count, and the −1 being the removed `<link>`, itself an element. **16360 element × property deltas over a property set of 35 fixed before measuring**, across 5370 aligned elements (0 before-only, 0 after-only), in **Edge 151** at 1280×900. Every delta resolves to theme.css bleed removed or the new tree beating `layer(legacy)`; nothing collapsed to zero size, no text went invisible, no control lost its box. Named changes for whenever this page resumes: the **white slab gone for the fourth page running** (and `.brand` re-stacks, flex → block, a layout change and not only a colour one), `.brand small` losing theme.css's uppercase/letter-spacing/opacity onto D26's sub-AA ratio, **59 labels** taking `forms.css`'s bare `label` over `bank.css`:78's, **4 nav links + their icons going white** (`typography.css`'s `a { color: inherit }`, the identical `slo-health` finding), the canvas changing tint, and inputs taking `--color-border`, `--radius-sm` and the new padding. **Tokens: 12 measured live + 7 derived statically**, stated that way rather than as "19 measured" — the 7 unprobed ones are error/success-path colours no snapshot could reach because those paths did not run. **Three findings went to the board rather than being fixed (§12.2): D31** (`--color-text-muted` crosses AA on a *tinted* surface — 57 labels on white pass at 4.76:1, the 2 in `.urdu-toggle-row` fail at 4.44:1; backdrops measured by ancestor walk, not assumed, per D26's failure); **D32** (the token check reads stylesheets and never the markup — found via `bank.html`'s inline `var(--line, …)`, then swept across all nine pages: nothing shipped is affected, `index` is clean despite holding 224 of the project's inline styles, and **`blueprint` reads nine theme.css-only tokens inline with no fallback**, so its exposure was understated and its hold is the more obviously right call); and a **D30 update** (3 pages now link `/static/theme.css`, 5 are unmigrated — the two counts have drifted two apart). **The independent review FAILED this task and was right**, on four blocking findings: the entry file asserted "the rules that reach it are redeclared … takes nothing away", which is the exact selector-vs-property error the `partial` column exists to catch and which the same file contradicted twelve lines later; "orphans no token" was true of the stylesheet and false of the page; the Urdu line box was sitting in the implementer's own delta table and written down nowhere; and the entry file pointed at a STATUS.md row that did not yet exist. All four are fixed here. **The ratchet also caught a hex literal quoted in the entry file's comment — `unsanctioned_hex` 429 → 430 — for the fourth time in this epic**; the literal was removed and the file now says so in place. **Parked at `docs/ui/parked-bank.css`**, following `landing` and `taqseem` exactly: under `static/css/` its lines count toward `shared_css_lines` with no page loading them, so `shared_css_lines` is **back at 1616** and `BASELINE.json` was not left re-pinned — nothing shipped. `bank.html` is untouched at HEAD on its three `<link>`s |
 | UI-032 | `index` onto the new tree — **ATTEMPTED, MEASURED, HELD** | **held** | *(this commit)* | **The fourth page in a row where both prescribed checks passed their own halves and something neither one measures stopped the page.** Token exposure **0** (27 declared, 21 read, all its own — no compatibility block needed and none written), rule exposure **3**, each with a named near-miss in `index.css`. The swap itself was the shape the board predicts: three `<link>`s → two, plus a two-`@import` entry file with no rules of its own. **Two regressions held it, and both are Sprint 4 component families. (1) The Urdu language toggle loses Nastaliq:** `03-elements/forms.css`:101 `button { font-family: inherit }` sits in `layer(elements)` and `99-legacy/index.css`:34 `.urdu, .ur` in `layer(legacy)`; layer order is decided before specificity, so the bare element rule wins and `index.html`:21's اردو button renders in the body's Latin sans — **D22's button reset arriving through the one declaration `forms.css`'s own header calls harmless**, landing on the control a teacher uses to put the app into Urdu. **(2) `.main` loses its padding and its scroll container:** `static/theme.css`:89 gives it `overflow: auto` and `padding: var(--pad) 28px 44px`, `index.css`:73's own `.main` sets only `flex`/`min-width`/`display`/`flex-direction`, and the content area measured **28px left, 32px up, 56px wider** on every screen (`grid-area: main → auto` is inert — this page's shell is `.shell { display: flex }`, not the `.app` grid that rule was written for). **This is NOT the `bank` finding repeating**: `index`'s Urdu paths both carry a `line-height` (`.urdu` sets `2` itself; `.paper-sheet`:165 sets `1.55` on the ancestor of `.ph-ur`/`.q-ur`), so `typography.css`:41's `body` rule cannot reach them — the property that broke here is `font-family`, and the first pass at this page looked only at line-height and would have missed it. **Measurement quality:** render proven deterministic first (default view snapshotted twice, no action between, **drift 0**); **32941 element × property deltas over a property set of 58 fixed before measuring**, across **5592 aligned elements** over all seven `showScreen()` screens plus the default view, **0 paths in only one snapshot**, in Edge 151 at 1280×900. Element counts fall by exactly 1 per screen — the removed `<link>`, itself an element, the same −1 `taqseem` and `bank` recorded. Other measured changes, so this page is not re-measured when it resumes: **`.summary-row` loses its dashed rule ×24** (the `partial` column being right, and predicted here before the swap rather than found by it), **`.tag` loses its chip ×16** (background → transparent, all four radii 5px → 0), **the white slab gone for the fifth page running**, base type 16 → 15px and `line-height` `normal` → 21.75px on **3978** instances, nav icons 19 → 17px. **One inline style is accidentally load-bearing and Sprint 5 must know before it starts:** the Urdu school-name field at `index.html`:443 keeps Nastaliq only because the family is in an inline `style=""`, which outranks every layer — burning the 224 inline attributes down without moving that family into CSS first takes the settings field the same way the toggle went. **One gap stated rather than papered over, exactly as `print`'s is: the `.paper-sheet` live preview did not render in either snapshot**, so `.ph-ur`:169 and `.q-ur`:179 were not exercised in the browser; what is verified is that their ancestor declares `line-height: 1.55`, which is a reading of the cascade and not a measurement of the page. **Reverted on Irfan's call** — `index.html` is at HEAD on its three `<link>`s and the entry file is parked at **`docs/ui/parked-index.css`**, following `landing`/`taqseem`/`bank` exactly: under `static/css/` its lines count toward `shared_css_lines` with no page loading them, and `docs/` is outside the metric. **Ratchet re-run after the revert: every metric +0, `shared_css_lines` at 1616, so `BASELINE.json` was not re-pinned — nothing shipped.** **Not reviewed by an independent agent** — the task was withdrawn rather than finished, the same gate `taqseem` and the UI-032 measurement never reached |
 | UI-021 | `02-generic` reset + fonts · `03-elements` typography / forms / tables | **done** | `8ecb3cc` | **Sprint 2 complete.** Five new files (449 lines), `main.css`'s five `@import`s uncommented **in place** — the order is the cascade — and **not one `.html` byte touched**, so zero visual effect again by construction. `shared_css_lines` 573 → **1178**, the only metric that moved; `unsanctioned_hex` **flat at 429** and the new tree carries **zero raw hex**. Tier 1 gained 15 primitives (7 type steps, 2 weights, 2 leadings, `--font-serif`, `--font-nastaliq`) and Tier 2 13 roles, verified **0 dangling refs and 0 unconsumed primitives** — UI-020's invariant held exactly. **It predicted it would add space steps and did NOT**: control padding (9px 11px) and cell padding (10px/11px) are optical one-offs, left literal, and the one structural value needed was already `--space-inset`; the stale prediction was corrected in `tokens.css` rather than left to mislead. All nine `woff2` resolved on disk against `../../fonts/` — `url()` resolves against the *stylesheet*, the first such path in the tree. **The finding that outlives the task is D21: a reset in this tree is not neutral.** `layer(generic)`/`layer(elements)` outrank `layer(legacy)`, so a bare element selector beats a legacy *class* rule; the design target's `* { padding: 0 }` would have flattened `index.css:267`'s RTL list indentation, so the universal padding kill was **not** ported, the margin reset is targeted at block text elements, and `img` gets `max-width` without the usual `display:block` (it would break the inline `.icon` sprite). Each omission is stated in the file that omits it. **D22** parks the button appearance reset for UI-041 — `border:none; background:none; color:inherit` from `layer(elements)` would flatten `.btn-primary`/`.btn-ghost` across eight legacy files. **The first review FAILED it and was right**: the file shipped `font: inherit`, which is not a synonym for `font-family: inherit` — the shorthand also resets size, weight, style, variant, stretch and line-height, dragging every legacy button to 15px/400 and stripping the 600/700 weights they set by class. Fixed to the longhand, then re-reviewed PASS. Review also corrected three counts that were guessed rather than measured (`html, body {height:100%}` is 7 of 9 files, **not 8 — `print.css` is the second exception and it is the Ctrl+P page**; "exactly two pseudo-element rules" was a wrong generalisation from a `::before`-only grep; a Tier 2 comment's "20 unconsumed roles" mixed two different sets). **D23** records that `--font-mono`/`--font-data` name "IBM Plex Mono", which **no `@font-face` declares and no woff2 in the repo provides** — pre-existing since before this epic, always falling through to `ui-monospace`; the fix is a font-asset decision for Irfan, not CSS |
-| UI-041 | `05-components/btn.css` — the button component | **done** | *(this commit)* | **PREPARED, NOT LIVE — the urdu.css shape.** Two variants (`.btn--primary`, `.btn--ghost`), imported by `main.css`, reaching all three live pages and **matching zero elements on them**: `.btn--` is in no markup in the repo. Proven both ways — markup count **0/0/0**, and `css_type_probe.mjs` before vs after over **44 properties × 7,159 elements returned 0 deltas**, `driftCount` 0 on every run. The five legacy files holding `.btn-primary`/`.btn-ghost` were **never opened** (`git diff` empty) and neither was `03-elements/forms.css` — **D22 stays parked**, because a `.btn--*` component cannot win back buttons that carry `.btn-primary`. `shared_css_lines` 1685 → **1809**, the only metric that moved; `unsanctioned_hex` **flat at 429**, zero raw hex in the file including its comments. **The task's real finding is the gate, not the component**: the probe measured 18 properties and none of them is what a button changes — border, radius, shadow and cursor were all outside the set, so a rule flattening `library`'s 63 buttons to borderless would have passed with "zero deltas". The set is now 44. **No bare `.btn { }` rule, deliberately**: `slo.html` has `class="btn"` ×2 from `99-legacy/slo.css`:50 in `layer(legacy)`, and `layer(components)` outranks it — the skeleton sits on the modifier list instead, API `class="btn btn--primary"`. Colour from Tier 2, geometry measured from `bank.css`:139/:149, every scale divergence recorded in the file header. **Released no held page and never could**: `taqseem` is the only one whose buttons this unblocks and it also needs UI-040; **`index` is NOT unblocked** — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, and its real blocker is the reset D22 parks. Four shapes still uncovered (secondary, danger, accent/gold, on-dark) and the size grid misses `library`'s 40px and `index`'s 48px |
+| UI-041 | `05-components/btn.css` — the button component | **committed · RE-REVIEW PENDING** | `a420ee0` + *(this commit)* | **PREPARED, NOT LIVE — the urdu.css shape.** Two variants (`.btn--primary`, `.btn--ghost`), imported by `main.css`, reaching all three live pages and **matching zero elements on them**: `.btn--` is in no markup in the repo. Proven both ways — markup count **0/0/0**, and `css_type_probe.mjs` before vs after over **44 properties × 7,159 elements returned 0 deltas**, `driftCount` 0 on every run. The five legacy files holding `.btn-primary`/`.btn-ghost` were **never opened** (`git diff` empty) and neither was `03-elements/forms.css` — **D22 stays parked**, because a `.btn--*` component cannot win back buttons that carry `.btn-primary`. `shared_css_lines` 1685 → **1868**, the only metric that moved — it was 1809 at the first commit and grew twice as two review rounds turned findings into comments, so treat `BASELINE.json` as the authority rather than this figure; `unsanctioned_hex` **flat at 429**, zero raw hex in the file including its comments. **The probe's property set was extended, and the first justification for it was wrong** — it claimed a borderless-button regression would have shown zero deltas under the old 18 properties, and review mutation-tested that: `button { border: none }` moves **172** of the old properties on `library`, because `box-sizing: border-box` (`02-generic/reset.css`:73) makes a dropped border change used `width`/`height`, both of which were already in the set. **The extension is still right, on the three things that genuinely are invisible to the old 18** — same test, same page: `border-radius: 0` → 0 deltas, `box-shadow: none` → 0, `cursor: default` → 0, and `library.css`:76/:86 use all three. The set is now 44. **No bare `.btn { }` rule, deliberately**: `slo.html` has `class="btn"` ×2 from `99-legacy/slo.css`:50 in `layer(legacy)`, and `layer(components)` outranks it — the skeleton sits on the modifier list instead, API `class="btn btn--primary"`. Colour from Tier 2, geometry measured from `bank.css`:139/:149, every scale divergence recorded in the file header. **Released no held page and never could**: `taqseem` is the only one whose buttons this unblocks and it also needs UI-040; **`index` is NOT unblocked** — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, and its real blocker is the reset D22 parks. Four shapes still uncovered (secondary, danger, accent/gold, on-dark) and the size grid misses `library`'s 40px and `index`'s 48px |
 
 ---
 

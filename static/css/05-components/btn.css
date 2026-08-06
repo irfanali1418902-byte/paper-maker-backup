@@ -23,25 +23,49 @@
    NO ELEMENT SELECTOR APPEARS IN THIS FILE, AND 03-elements/forms.css WAS
    NOT TOUCHED BY UI-041. That is D22: the design target's button reset
    (border/background/color to none/inherit) still cannot land, because it
-   would flatten every legacy button drawn by class in layer(legacy) — 63 of
-   them on library alone — and a `.btn--*` component does not win those back,
+   would flatten every legacy button drawn by class in layer(legacy) — on
+   library that is 63 elements carrying a legacy `.btn*` class, 69 including
+   the JS-rendered `.pg-btn` pagination, and 71 `<button>` elements in all;
+   the row actions are rendered per record, SO ALL THREE NUMBERS MOVE WITH
+   THE DATABASE and none of them is a constant — and a `.btn--*` component
+   does not win those back,
    since they carry `.btn-primary`/`.btn-ghost`, not `.btn--primary`. D22
    stays parked until the legacy files drain. Note the two names differ by
    one hyphen; that is load-bearing, not a typo.
 
-   WHY ONLY TWO VARIANTS. Thirteen button shapes were measured across the
-   nine pages. Two roles account for all of them: a filled action and an
-   outlined secondary. The rest are size and context variations of those two
+   WHY ONLY TWO VARIANTS. 21 button classes, and THE COUNTING RULE IS STATED
+   HERE because the number is meaningless without it — an earlier draft said
+   "thirteen shapes", review could not reproduce it, and its dedupe rule was
+   never written down. The rule: distinct BASE button class names across the
+   nine legacy files plus theme.css, deduped across files, folding every
+   pseudo-class (:hover, :disabled, :not) and every compound or contextual
+   variant (.filter-bar .btn-ghost, .pg-btn.active, .actions .gen-btn, and
+   theme.css's .btn.gold/.ghost/.sm/.block) into its base, and counting
+   `.segbtns button` as one. That gives: btn, btn-primary, btn-ghost,
+   btn-danger, btn-danger-sm, btn-secondary, btn-edit, btn-cancel, btn-save,
+   btn-bar-action, btn-bar-cancel, btn-fb-save, btn-fb-cancel, btn-file-label,
+   btn-img-remove, pg-btn, gen-btn, ghost-btn, edit-btn, suggest-btn,
+   segbtns button = 21. Count the compounds separately and it is 30; drop
+   `.segbtns button` and it is 20.
+
+   Two ROLES account for the bulk of the 21 — a filled action and an outlined
+   secondary — with the rest being size and context variations of those two
    (modal footers, a feedback bar on a dark surface, small row actions) plus
    danger, which is a colour swap. Two variants is the scoped decision, not
    the measured ceiling — see docs/ui/STATUS.md for the full inventory and
-   the four shapes that will need a home before bank and blueprint migrate.
+   the shapes that need a home before bank and blueprint migrate.
 
    PROVENANCE OF EVERY NUMBER — 99-legacy/bank.css:139 and :149, read, not
-   invented. Colour comes from Tier 2 rather than from bank's own values,
-   which is what bank itself does: it writes `background: var(--primary)`,
-   not a literal. Where the token scale has no member, bank's measured pixel
-   value is kept and the divergence is recorded here:
+   invented. Colour comes from Tier 2 rather than from bank's own values.
+   **That is only half of what bank does, and the first draft of this comment
+   overstated it**: the filled button reads a token (`background:
+   var(--primary)`, bank.css:141) but the GHOST is literal — a white fill and
+   a light-grey border, both written straight into bank.css:151. So the ghost
+   is a colour divergence as well as a pixel one: its border becomes
+   --color-border, whose Tier 1 primitive is a lighter grey than bank's. That
+   is a real appearance change at migration and it belongs in this list, not
+   only the pixel rows. Where the token scale has no member, bank's measured
+   pixel value is kept and the divergence is recorded here:
 
      primary  min-height 44px, padding 0 20px      kept as measured
      ghost    min-height 36px, padding 0 14px      kept as measured
@@ -107,10 +131,45 @@
   color: var(--color-action);
 }
 
-/* Both legacy families agree on this one: half opacity, no pointer.
-   bank.css:147 and :156 read the same way. */
+/* Disabled. THE FILLED HALF IS MEASURED, THE GHOST HALF IS A CHOICE, and an
+   earlier version of this comment claimed both were measured — it cited
+   "bank.css:147 and :156", but :156 is a blank line and there is no
+   `.btn-ghost:disabled` rule anywhere in this repo. What is actually there:
+   bank.css:147 gives the filled button `opacity: .5; cursor: not-allowed`.
+   Bank is HELD, so that rule is not live; the LIVE evidence is library.css
+   :84, which is the same `.5` / `not-allowed`, and slo.css:56, which is `.5`
+   but `cursor: default`. (library.css:237's `.pg-btn:disabled` is a third
+   live rule, at `.4` / `default` — pagination, not a button variant this
+   file covers.) Disabled opacity across the nine files ranges .4/.5/.55/.6.
+   So .5 is the common value, `not-allowed` is the spelling two of the three
+   live rules use, and the ghost inherits both by decision rather than by
+   measurement — nothing in this repo declares a disabled ghost. */
 .btn--primary:disabled,
 .btn--ghost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* THERE IS NO FOCUS RULE IN THIS FILE, AND THAT IS THE CORRECTION, NOT AN
+   OMISSION. One was added and removed on 2026-08-06. It set a 2px
+   --color-action ring on :focus-visible, and the comment justifying it said
+   no legacy button declares a focus style so there was nothing to read.
+   That premise was wrong: 03-elements/forms.css:106 already carries a bare
+   `:focus-visible { outline: 2px solid var(--color-accent); outline-offset:
+   2px }` in layer(elements) — live on all three live pages since UI-021, and
+   ported from static/theme.css:212, which still carries it on the four pages
+   that link it. Buttons already have a ring everywhere except landing and
+   print.
+
+   So the rule was not adding accessibility, it was changing a colour: a
+   0,2,0 selector in layer(components) beats forms.css's 0,1,0 in
+   layer(elements), so any re-classed page would have shown BUTTONS RINGED
+   INDIGO while every other focusable element on the same screen stayed TEAL.
+   Measured on slo.html before removal: the same button reads
+   rgb(14,165,164) as `btn` and rgb(79,70,229) as `btn btn--primary`. Two
+   appearances of one interaction on one screen is D27's defect wearing a
+   different hat, which is why the rule is gone rather than documented.
+
+   If a button-specific ring is ever wanted, it needs a Tier 2 focus token
+   and a decision about the whole tree's ring colour — not a component
+   override. */

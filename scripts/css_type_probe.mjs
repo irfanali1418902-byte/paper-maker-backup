@@ -87,15 +87,26 @@ async function evaluate(sid, expr) {
 // two counts of the same migration disagreed. Type and box, since a leading change moves
 // both: the line box itself and everything laid out below it.
 //
-// UI-041 ADDED THE SECOND GROUP, and the reason is worth keeping. The original 18 are a
-// TYPE probe: font, colour, background-colour and the box. A button component moves none
-// of those first — it moves BORDER, RADIUS, SHADOW and CURSOR. Measured on the live pages
-// at HEAD: library.css:86 .btn-ghost is `border: 1px solid #D6DEEA; border-radius: 9px`,
-// library.css:76 .btn-primary is `border: none; border-radius: 12px; min-height: 44px` plus
-// a box-shadow, slo.css:57 .btn-ghost is `1px solid var(--border)`. With the original set,
-// a rule that flattened all 63 of library's buttons to borderless would have reported ZERO
-// deltas, because background-color and color do not move when only the border does. The
-// gate would have passed a regression. Do not shrink this list back.
+// UI-041 ADDED THE SECOND GROUP. The original 18 are a TYPE probe: font, colour,
+// background-colour and the box. A button component also moves RADIUS, SHADOW and CURSOR,
+// and the original set cannot see any of those.
+//
+// THE JUSTIFICATION HERE WAS WRONG IN ITS FIRST DRAFT AND THE CORRECTION IS THE USEFUL
+// PART. It claimed a rule flattening library's buttons to borderless would have reported
+// ZERO deltas under the old 18. It would not: box-sizing is border-box globally
+// (02-generic/reset.css:73), so removing a 1px border changes the used width and height —
+// both of which ARE in the original set — on the button and on its flex siblings.
+// Mutation-tested in-browser on library.html at review: `button { border: none }` moves 172
+// of the original 18 properties, and the narrower `.btn-primary,.btn-ghost { border: none }`
+// moves 18. Border removal was the one example that WOULD have been caught.
+//
+// What genuinely produces zero deltas under the old set, same mutation test, same page:
+// `border-radius: 0` -> 0, `box-shadow: none` -> 0, `cursor: default` -> 0. Those three are
+// why this list grew, and they are enough on their own: library.css:86 gives .btn-ghost a
+// 9px radius, library.css:76 gives .btn-primary a box-shadow and a radius of
+// var(--radius-btn) (10px, library.css:16 — an earlier draft of this comment said 12px,
+// which is index.css:126's .ghost-btn, not library's). A component that changed any of the
+// three would have passed the gate silently. Do not shrink this list back.
 const SNAP = String.raw`(() => {
   const PROPS = [
     'font-size','line-height','font-family','font-weight','letter-spacing',

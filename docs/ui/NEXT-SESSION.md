@@ -9,7 +9,26 @@
 
 ---
 
-## ▶ START HERE — **UI-045** (display / hero type step). It releases `landing`.
+## ▶ START HERE — **RE-REVIEW UI-041.** Then UI-045.
+
+**UI-041 (the button component) was committed on 2026-08-06 with its last recorded review
+verdict at FAIL.** That is not an oversight, it is a handover: two review rounds ran, round 1
+found three blocking issues and round 2 found one more, **all of them were fixed**, and the
+session ended before round 3 could confirm. **DoD #6 is not met until it does.**
+
+| | |
+|---|---|
+| what to review | `a420ee0` + the follow-up commit — **seven files** |
+| what changed in the last round | **comments and docs only**, no CSS rule — so this is cheap |
+| the checklist | round 2's findings: the STATUS ledger self-contradiction, the `:disabled` "only other live family" wording, the unstated counting rule behind "21", and D37's "three of the twelve" |
+| risk while it waits | **none on any live page.** `.btn--` matches zero elements on `slo`, `slo-health` and `library`; re-measured after every edit at 0 element × property deltas over 44 properties |
+
+**Do not start UI-040 or the `taqseem` migration until this passes** — both build directly on
+`btn.css`, and a component that has never passed review is not a foundation.
+
+---
+
+## THEN — **UI-045** (display / hero type step). It releases `landing`.
 
 **This was asked directly on 2026-08-06 and the answer is UI-045**, on the ordering rule this
 sprint was re-scoped around: *which task completes a page by itself.*
@@ -17,8 +36,8 @@ sprint was re-scoped around: *which task completes a page by itself.*
 | candidate | completes, on its own |
 |---|---|
 | **UI-045** — hero / display type | **`landing`** — one small task, one page released |
-| UI-041 — button + chip/tag/badge | **nothing.** `taqseem` also needs UI-040; `index` also needs UI-046 |
-| UI-041 **+** UI-040 | `taqseem` only — two tasks, one page |
+| ~~UI-041~~ — button. **DONE 2026-08-06, re-review pending** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, so **UI-046 alone releases it** |
+| UI-041 **+** UI-040 | `taqseem` only — and UI-041's half is now done |
 
 **`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +
 status-bar + domain components, it is order 7, and it releases **no held page**. The "button/card
