@@ -33,6 +33,73 @@ component, shrink the prose rather than defend it.
 
 ---
 
+## UI-045 — **scoped 2026-08-07, not started.** Two findings from reading it
+
+**Nothing was written. These are decisions and a measurement, recorded so the next session does
+not re-derive them.**
+
+### (a) UI-045 = one Tier 1 step, one Tier 2 role, and ONE RULE in `parked-landing.css`
+
+**Decided by Irfan 2026-08-07.** Do **not** create `05-components/hero.css`.
+
+```
+01-settings/tokens.css    --font-size-8: 30px          measured from 99-legacy/landing.css:48
+01-settings/theme.css     --text-display: var(--font-size-8)
+docs/ui/parked-landing.css
+  @layer components { .hero h1 { font-size: …; line-height: 1.2; margin-bottom: 12px } }
+```
+
+**PREPARED, NOT LIVE — the UI-044b shape**, and for the same reason: the rule lives in a page
+entry file that is not under `static/`, so it cannot reach a live page. It activates in the
+commit that migrates `landing`.
+
+**Why the rule cannot go in `03-elements/typography.css`:** that file takes element selectors
+only, by its own contract, and the hero is `.hero h1` — a class.
+
+**Why it needs three declarations, not one.** The token alone does not restore the page. Read,
+not assumed:
+
+| | HEAD (`99-legacy/landing.css`:48) | migrated, no rule | why it moves |
+|---|---|---|---|
+| `font-size` | 30px | 24px (`--text-heading-1`) | `layer(elements)` beats `layer(legacy)`; layer order is decided before specificity, so `.hero h1` loses to bare `h1` |
+| `line-height` | 1.2 | **1.1** (`--leading-heading` → `--line-height-tight`) | same mechanism. **This one is easy to miss** — the board only ever recorded the size |
+| `margin-bottom` | 12px | 0 | `02-generic/reset.css`:79-91 zeroes `h1` margins in `layer(generic)`, also above legacy |
+
+**`line-height: 1.2` and `margin-bottom: 12px` stay literal, deliberately** —
+`03-elements/typography.css`:68-72 already states the rule: a scale is tokenised because it
+repeats across files; a single heading's optical nudge on a single page is not a scale. Only the
+size is a scale step, which is what "display type step" names.
+
+**Reach, measured:** `.hero` appears in **zero** markup on `slo`, `slo-health` and `library` —
+only `landing.html`:13-14. **But `01-settings/` DOES reach all three live pages**, so the two new
+token names must still be measured inert rather than assumed inert. Nothing reads them yet, which
+is the reason to expect zero and not the proof of it.
+
+### (b) **`landing` needs TWO tasks, not one. `PLAN.md`:246 and `STATUS.md`:391 are wrong.**
+
+Both say **UI-045 releases `landing`**. It does not. UI-045 fixes the hero. **The second blocker
+is untouched by it:**
+
+`docs/ui/parked-landing.css`:41-60 — `99-legacy/landing.css`:26 declares `.icon { width: 22px;
+height: 22px }`, the only page in the project that overrides the sprite size. **Today it wins
+purely by document order**: it and `static/app.css`:57 (17px) are both unlayered `<link>`s and
+landing's is second. The moment landing's file moves into `layer(legacy)`, `app.css` — still
+unlayered, still linked, because it owns `.icon` until the nav component — outranks it. **Measured
+before and after at the time: 11 icons at 22px → 11 at 17px.** Not predicted, measured.
+
+**That belongs to `UI-046` (nav + shell / icon), or to an explicit "keep 17px" decision from
+Irfan.** The parked file says the same thing and calls it his call. So:
+
+> **`landing` is released by UI-045 + UI-046, or by UI-045 plus a decision to accept 17px icons.**
+
+**This is D34's pattern repeating** — a held page whose second blocker no task ID owns, hidden
+behind a board line that names only the first. D34 was raised, resolved, and the same shape
+survived inside one of its own rows. **When UI-045 is taken, correct `PLAN.md`:246 and
+`STATUS.md`:391 in the same commit** — do not leave a "releases `landing`" claim standing that the
+task cannot deliver.
+
+---
+
 ## THEN — **UI-045** (display / hero type step). It releases `landing`.
 
 **This was asked directly on 2026-08-06 and the answer is UI-045**, on the ordering rule this
