@@ -104,6 +104,10 @@
   --text-heading-1: var(--font-size-7);
   --text-heading-2: var(--font-size-6);
   --text-heading-3: var(--font-size-4);  /* h3 and below */
+  /* Above h1. No ELEMENT wears this — 03-elements/typography.css takes element
+     selectors only and the one hero is `.hero h1`, a class. Read by landing's
+     entry file (UI-045), which is parked; nothing consumes it in static/ yet. */
+  --text-display:   var(--font-size-8);
 
   /* ── weight roles ─────────────────────────────────────────────────────── */
   --font-weight-strong:  var(--weight-semibold);  /* labels, table headers */

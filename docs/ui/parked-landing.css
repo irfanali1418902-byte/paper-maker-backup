@@ -9,11 +9,18 @@
 
    WHY IT WAS HELD: the migration is correct and green, but it visibly
    degrades the app's front door. landing's legacy h1 is the largest in the
-   project and the new tree's h1 is smaller, so the hero headline SHRINKS
-   (two lines -> one) and reset.css zeroes the 12px gap beneath it, leaving
-   the title jammed against the paragraph. Unlike D26/D27/D28 this is not a
-   Sprint 4 tidy-up on an interior page. The real fix is a hero/display type
-   step, which is Sprint 4's typography work — so landing waits for it.
+   project and the new tree's h1 is smaller, so the hero headline SHRINKS and
+   reset.css zeroes the 12px gap beneath it, leaving the title jammed against
+   the paragraph. Unlike D26/D27/D28 this is not a Sprint 4 tidy-up on an
+   interior page. The real fix is a hero/display type step — UI-045, below.
+
+   "(two lines -> one)" USED TO STAND HERE AND IT IS FALSE. Measured
+   2026-08-07 at 1280x900, this page's real h1: at HEAD it is 30px with a 36px
+   line box and an element height of 72px — exactly two lines. Migrated
+   without UI-045's rule it is 24px / 26.4px / 52.78px — 52.78 / 26.4 is
+   exactly two lines as well. `max-width: 640px` holds the wrap in both
+   states. The shrink is real and the dead gap is real; the reflow to one line
+   is not, and was never measured before it was written down.
 
    TO RESUME: move this file back to static/css/pages/landing.css, change
    landing.html's second <link> from /static/css/99-legacy/landing.css to
@@ -76,3 +83,41 @@
 
 @import url("../main.css");
 @import url("../99-legacy/landing.css") layer(legacy);
+
+/* =========================================================================
+   UI-045 — the hero, restored. Added 2026-08-07.
+
+   THIS IS THE SECOND ENTRY FILE TO CARRY A RULE, and the trade is the same
+   one UI-044b recorded in parked-print.css: entry files are documented as two
+   @imports and nothing else, and a page-scoped fix buys that deviation by
+   being unable to reach any other page. If this ever moves into the shared
+   tree, re-measure the live pages first.
+
+   THREE DECLARATIONS, NOT ONE — the token alone does not restore the page.
+   All three lose to the new tree for the same reason: layer order is decided
+   before specificity, so `.hero h1` in layer(legacy) cannot beat a bare rule
+   in a later layer. Read from the files, at HEAD vs migrated-without-this:
+
+     font-size    30px -> 24px   h1 { --text-heading-1 }, layer(elements)
+     line-height  1.2  -> 1.1    h1 { --leading-heading }, layer(elements)
+     margin       12px -> 0      02-generic/reset.css:79-91, layer(generic)
+
+   line-height and margin are literals on purpose. 03-elements/typography.css
+   :68-72 states the rule: a scale is tokenised because it repeats across
+   files, and one heading's optical nudge on one page is not a scale. Only the
+   size is a scale step — --font-size-8 / --text-display, added in UI-045.
+
+   WHAT THIS DOES NOT FIX: the icons. 99-legacy/landing.css:26's
+   `.icon { 22px }` still loses to unlayered static/app.css:57 (17px) the
+   moment this file's legacy import makes it layered — 11 icons, 22px -> 17px,
+   measured. That is UI-046's, or an explicit decision to accept 17px.
+   LANDING IS NOT RELEASED BY UI-045 ALONE.
+   ========================================================================= */
+
+@layer components {
+  .hero h1 {
+    font-size: var(--text-display);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+}

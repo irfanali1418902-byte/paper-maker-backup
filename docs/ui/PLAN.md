@@ -204,7 +204,7 @@ waiting on something below. **A task is not done until the pages it owns are mig
 |---:|---|---|---|
 | **1a** | **UI-044a** ✅ **DONE 2026-08-05** | **Nastaliq leading** — `--line-height-nastaliq` + `05-components/urdu.css` | **PREPARED, NOT LIVE** — proof-tested on `bank`, activates when `bank` migrates |
 | **1b** | **UI-044b** | **print-media leading** — the half `--leading-body` cannot solve | `print` · settles **D36** |
-| **2** | **UI-045** | **display / hero type step** — the scale step above `h1` | `landing` |
+| **2** | **UI-045** ✅ **DONE 2026-08-07** | **display / hero type step** — `--font-size-8` / `--text-display` + one rule in landing's parked entry file | **nothing alone** — `landing` also needs **UI-046** (icons) |
 | **3** | UI-041 ✅ **DONE 2026-08-07** — four review rounds, PASS at round 4 | `button` — `.btn--primary` / `.btn--ghost` in `05-components/btn.css`. **Not** `.button`, and **no** chip/tag/badge: `.tag` is live on `slo-health` and JS-queried as the brand tagline, `.chip` on `taqseem` is a domain block for UI-043 | **PREPARED, NOT LIVE** — releases nothing. Needed by `taqseem` (with UI-040). **NOT by `index`** — see below |
 | **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | `blueprint`, and completes `index` |
 | **5** | UI-040 | `card` (6×) + unify `.page-head` → `.card`/`pagehead` (4×) | completes `taqseem` |
@@ -219,7 +219,7 @@ the three pages that do link it carry zero Urdu. It was proof-tested through a t
 migration that will need it, exactly the shape UI-021 used. **Nothing activates until `bank`
 migrates.**
 
-**UI-044b and UI-045 are the foundation and go next, together releasing two more of the six.**
+**UI-044b and UI-045 were the foundation and are both done. Neither released a page** — this line predicted "two more of the six" and both were measured false.
 They are listed separately because they are separately reviewable, but they touch the same two
 files (`03-elements/typography.css` and `01-settings/`) and should be taken back to back; doing
 either one alone leaves the other's pages held.
@@ -232,7 +232,8 @@ task settles.
 
 **Why UI-041 is third and not first.** It is needed by two pages and **completes neither on its
 own**: `taqseem` also needs UI-040, and `index` also needs UI-046's shell layout. UI-044a/b and UI-045
-each complete their pages outright, which is why they outrank it.
+were ordered ahead of it because they were expected to complete their pages outright; **all three
+are now done and none of them did.**
 
 **Nothing here depends on `--space-*`.** An earlier plan for this sprint assumed a space-token
 layer fix was the foundation; **D35 measured that mechanism and it does not exist on this
@@ -243,7 +244,7 @@ schedule work for it.
 
 | page | the actual blocker | released by |
 |---|---|---|
-| `landing` | hero headline shrinks; `reset.css` zeroes the gap under it | **UI-045** |
+| `landing` | **two blockers, not one.** (1) hero headline shrinks and `reset.css` zeroes the gap under it — **fixed by UI-045**, prepared and not yet live. (2) `.icon` 22px → 17px on 11 icons: `99-legacy/landing.css`:26 wins today only by document order and loses to unlayered `static/app.css`:57 the moment the page is layered — **untouched by UI-045**. Both measured 2026-08-07 in a three-state swap | **UI-045 + UI-046**, or UI-045 plus a decision to accept 17px icons |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions — **fixed by UI-044a, which is prepared and not yet live** | **UI-044a** (done) + Irfan's call on **D31** → UI-042 |
 | `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** |
 | `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |

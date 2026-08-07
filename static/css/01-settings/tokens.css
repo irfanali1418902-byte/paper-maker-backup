@@ -94,6 +94,7 @@
        15px    body base, Modern direction     static/mockup-modern.html --fs
        18px    h2                              static/theme.css .brand .logo
        24px    h1                              static/theme.css .pagehead h1
+       30px    landing's hero headline          99-legacy/landing.css:48
      Named by step, not by role: --text-body and friends are Tier 2's job. */
   --font-size-1: 11.5px;
   --font-size-2: 12px;
@@ -102,6 +103,10 @@
   --font-size-5: 15px;
   --font-size-6: 18px;
   --font-size-7: 24px;
+  /* Step 8 is the display step (UI-045). It is the project's largest real type
+     size, not an extrapolation of the ramp: landing.css:48 sets the hero to 30px
+     today. Consumed by --text-display, which is what makes it allowed here. */
+  --font-size-8: 30px;
 
   /* ── weights ──────────────────────────────────────────────────────────────
      600 and 700 only. 500 is real too (static/theme.css .nav a) but nothing in

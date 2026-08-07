@@ -1,6 +1,6 @@
 # NEXT SESSION — start here
 
-> **Updated 2026-08-07, after UI-041 closed at round 4.** Read `docs/ui/STATUS.md` first — it is
+> **Updated 2026-08-07, after UI-041 closed at round 4 and UI-045 shipped.** Read `docs/ui/STATUS.md` first — it is
 > the SOURCE OF TRUTH and it is current. This file is the orientation layer: what is done,
 > what is next, and the traps. **The probes that produced every number are now repo files —
 > see `docs/ui/PROBES.md`.**
@@ -9,7 +9,7 @@
 
 ---
 
-## ▶ START HERE — **UI-045.** UI-041 is DONE.
+## ▶ START HERE — **UI-046.** UI-041 and UI-045 are both DONE, and neither released a page.
 
 **UI-041's re-review PASSED at round 4 on 2026-08-07 and the task is closed.** It took four
 rounds — FAIL, FAIL, FAIL, PASS-with-notes — and the reason is the useful part of this entry.
@@ -33,14 +33,24 @@ component, shrink the prose rather than defend it.
 
 ---
 
-## UI-045 — **scoped 2026-08-07, not started.** Two findings from reading it
+## UI-045 — **DONE 2026-08-07.** Built, swap-proven, reverted. It released nothing
 
-**Nothing was written. These are decisions and a measurement, recorded so the next session does
-not re-derive them.**
+**Both findings below were written before the build and both survived it.** (a) is what shipped;
+(b) is the reason `landing` is still HELD.
 
 ### (a) UI-045 = one Tier 1 step, one Tier 2 role, and ONE RULE in `parked-landing.css`
 
-**Decided by Irfan 2026-08-07.** Do **not** create `05-components/hero.css`.
+**Decided by Irfan 2026-08-07.** Do **not** create `05-components/hero.css`. **Shipped exactly
+as scoped**, and proven by migrating `landing`, measuring, and reverting:
+
+| | `font-size` | `line-height` | `margin-bottom` | `h1` height | `.icon` |
+|---|---|---|---|---|---|
+| HEAD | 30px | 36px | 12px | 72px | 11 at **22px** |
+| migrated, no rule | 24px | 26.4px | 0px | 52.78px | 11 at **17px** |
+| migrated + rule | **30px** | **36px** | **12px** | **72px** | 11 at **17px** |
+
+The rule's isolated effect is **8 element × property deltas**. The live-page gate ran at
+**314,996 comparisons, 0 deltas, drift 0**.
 
 ```
 01-settings/tokens.css    --font-size-8: 30px          measured from 99-legacy/landing.css:48
@@ -94,20 +104,23 @@ Irfan.** The parked file says the same thing and calls it his call. So:
 
 **This is D34's pattern repeating** — a held page whose second blocker no task ID owns, hidden
 behind a board line that names only the first. D34 was raised, resolved, and the same shape
-survived inside one of its own rows. **When UI-045 is taken, correct `PLAN.md`:246 and
-`STATUS.md`:391 in the same commit** — do not leave a "releases `landing`" claim standing that the
-task cannot deliver.
+survived inside one of its own rows. **`PLAN.md`:246 and `STATUS.md`:391 are corrected in the
+UI-045 commit**, as this block said they must be.
+
+**And it was confirmed by measurement, not left as a reading**: the icons are 17px in the
+migrated state **with** UI-045's rule applied, exactly as they are without it.
 
 ---
 
-## THEN — **UI-045** (display / hero type step). It releases `landing`.
+## THEN — **UI-046** (nav + shell / icon). It releases `blueprint`, completes `index`, and is `landing`'s second half.
 
-**This was asked directly on 2026-08-06 and the answer is UI-045**, on the ordering rule this
-sprint was re-scoped around: *which task completes a page by itself.*
+**The ordering rule this sprint was re-scoped around is *which task completes a page by
+itself*, and UI-045 has just failed that test in practice** — it was listed here as releasing
+`landing` and it does not.
 
 | candidate | completes, on its own |
 |---|---|
-| **UI-045** — hero / display type | **`landing`** — one small task, one page released |
+| ~~UI-045~~ — hero / display type. **DONE 2026-08-07** | **nothing.** This row said "`landing` — one small task, one page released". Measured false: the hero is restored exactly, and the 11 icons still go 22px → 17px, so `landing` needs UI-046 too |
 | ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, so **UI-046 alone releases it** |
 | UI-041 **+** UI-040 | `taqseem` only — and UI-041's half is now done |
 
@@ -432,7 +445,7 @@ the summary. The roadmap below now follows that order.
 | # | task | rough size | blocked by |
 |---|---|---|---|
 | ~~1~~ | ~~**UI-044a/b** type + leading~~ — **DONE 2026-08-05/06**, both prepared-not-live | — | — |
-| **2** | **UI-045** display / hero type step → releases **`landing`** | Sprint 4 | take with #1 — same two files |
+| ~~2~~ | ~~**UI-045** display / hero type step~~ — **DONE 2026-08-07**, prepared-not-live. **Released nothing**: it restores the hero exactly and leaves `landing`'s 11 icons at 17px | — | — |
 | **3** | **Fix D32** — teach `css_orphans.py` to read markup, then re-run the nine-page table | ~30 min, one script | nothing |
 | **4** | **UI-041** button + chip/tag/badge — needed by `taqseem` and `index`, completes neither alone | Sprint 4 | nothing |
 | **5** | **UI-046** nav + shell → releases **`blueprint`**, completes **`index`** | Sprint 4 | 3 first |
@@ -475,9 +488,11 @@ It was held on a reported `--space-*` margin regression; that report is **retire
 margin does not move at all. The run that retired it found **D36** instead, a real pagination
 regression from D21/F3's line-height growth. **The hold was right; the stated reason was not.**
 
-**UI-044a/b are done and released no page.** `bank`'s Urdu leading and `print`'s D36 are both
-solved in files those pages do not yet load; `landing` still needs UI-045's hero step. The next
-task that actually releases a page is **UI-045** (`landing`).
+**UI-044a/b, UI-041 and UI-045 are all done and NONE of them released a page.** `bank`'s Urdu
+leading and `print`'s D36 are solved in files those pages do not load; UI-041 completes no page
+alone; and **UI-045 was predicted to release `landing` and does not** — the hero is restored
+exactly, the 11 icons still fall 22px → 17px. **The next task that actually releases a page is
+`UI-046`** (`blueprint`, and `index`, and `landing`'s remaining half).
 
 **`bank`'s hold and `print`'s F2 are one problem in two places.** Whichever Sprint 4 task takes
 the Nastaliq leading decision should take both, or they will diverge.
