@@ -39,14 +39,17 @@
    never written down. The rule: distinct BASE button class names across the
    nine legacy files plus theme.css, deduped across files, folding every
    pseudo-class (:hover, :disabled, :not) and every compound or contextual
-   variant (.filter-bar .btn-ghost, .pg-btn.active, .actions .gen-btn, and
-   theme.css's .btn.gold/.ghost/.sm/.block) into its base, and counting
+   variant into its base, and counting
    `.segbtns button` as one. That gives: btn, btn-primary, btn-ghost,
    btn-danger, btn-danger-sm, btn-secondary, btn-edit, btn-cancel, btn-save,
    btn-bar-action, btn-bar-cancel, btn-fb-save, btn-fb-cancel, btn-file-label,
    btn-img-remove, pg-btn, gen-btn, ghost-btn, edit-btn, suggest-btn,
-   segbtns button = 21. Count the compounds separately and it is 30; drop
-   `.segbtns button` and it is 20.
+   segbtns button = 21. Drop `.segbtns button` and it is 20. Count the
+   compounds separately and it is 30, which needs ALL NINE of them — the
+   earlier draft of this comment listed seven and a reader reproducing from
+   it got 28: .filter-bar .btn-ghost, .pg-btn.active, .actions .gen-btn,
+   .actions .ghost-btn (index.css:334), .segbtns button.on (theme.css:164),
+   and theme.css's .btn.gold / .ghost / .sm / .block.
 
    Two ROLES account for the bulk of the 21 — a filled action and an outlined
    secondary — with the rest being size and context variations of those two

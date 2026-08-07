@@ -1,6 +1,6 @@
 # NEXT SESSION — start here
 
-> **Updated 2026-08-06, after UI-044a and UI-044b.** Read `docs/ui/STATUS.md` first — it is
+> **Updated 2026-08-07, after UI-041 closed at round 4.** Read `docs/ui/STATUS.md` first — it is
 > the SOURCE OF TRUTH and it is current. This file is the orientation layer: what is done,
 > what is next, and the traps. **The probes that produced every number are now repo files —
 > see `docs/ui/PROBES.md`.**
@@ -9,22 +9,27 @@
 
 ---
 
-## ▶ START HERE — **RE-REVIEW UI-041.** Then UI-045.
+## ▶ START HERE — **UI-045.** UI-041 is DONE.
 
-**UI-041 (the button component) was committed on 2026-08-06 with its last recorded review
-verdict at FAIL.** That is not an oversight, it is a handover: two review rounds ran, round 1
-found three blocking issues and round 2 found one more, **all of them were fixed**, and the
-session ended before round 3 could confirm. **DoD #6 is not met until it does.**
+**UI-041's re-review PASSED at round 4 on 2026-08-07 and the task is closed.** It took four
+rounds — FAIL, FAIL, FAIL, PASS-with-notes — and the reason is the useful part of this entry.
 
 | | |
 |---|---|
-| what to review | `a420ee0` + the follow-up commit — **seven files** |
-| what changed in the last round | **comments and docs only**, no CSS rule — so this is cheap |
-| the checklist | round 2's findings: the STATUS ledger self-contradiction, the `:disabled` "only other live family" wording, the unstated counting rule behind "21", and D37's "three of the twelve" |
-| risk while it waits | **none on any live page.** `.btn--` matches zero elements on `slo`, `slo-health` and `library`; re-measured after every edit at 0 element × property deltas over 44 properties |
+| what was reviewed | `a420ee0` + `8b9b055` + the closing commit — **eight files**, not the "seven" this block used to say |
+| how many findings touched a CSS rule | **one, in round 1** — the `:focus-visible` ring, removed because its premise was false |
+| what rounds 2, 3 and 4 found | **prose, citations and counts.** Nothing else |
+| proof the CSS never moved | strip the comments and `btn.css`'s declarations are **byte-identical across all three states** — 882 chars at `a420ee0`, at `8b9b055`, and after the round-3 remediation |
+| effect on live pages | **zero, throughout.** `.btn--` matches nothing on `slo`, `slo-health` or `library`; re-measured after every edit at 0 element × property deltas over 44 properties |
 
-**Do not start UI-040 or the `taqseem` migration until this passes** — both build directly on
-`btn.css`, and a component that has never passed review is not a foundation.
+**The lesson, because it will repeat on UI-040.** Round 3's blocking finding was *created by
+round 2's fix*: a summary line saying UI-041 was "done" while the same board said DoD #6 was
+unmet. Blocking findings fell 3 → 1 → 1 while notes rose 0 → 3 → 7. Each remediation added
+prose, and prose that makes precise numeric claims is surface for the next reviewer to land on.
+**The button was fine after round 1. The 165 lines written about it were not.** On the next
+component, shrink the prose rather than defend it.
+
+**UI-040 and the `taqseem` migration are now unblocked** — `btn.css` is a reviewed foundation.
 
 ---
 
@@ -36,7 +41,7 @@ sprint was re-scoped around: *which task completes a page by itself.*
 | candidate | completes, on its own |
 |---|---|
 | **UI-045** — hero / display type | **`landing`** — one small task, one page released |
-| ~~UI-041~~ — button. **DONE 2026-08-06, re-review pending** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, so **UI-046 alone releases it** |
+| ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, so **UI-046 alone releases it** |
 | UI-041 **+** UI-040 | `taqseem` only — and UI-041's half is now done |
 
 **`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +

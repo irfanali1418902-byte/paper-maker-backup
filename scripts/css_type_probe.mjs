@@ -96,9 +96,12 @@ async function evaluate(sid, expr) {
 // ZERO deltas under the old 18. It would not: box-sizing is border-box globally
 // (02-generic/reset.css:73), so removing a 1px border changes the used width and height —
 // both of which ARE in the original set — on the button and on its flex siblings.
-// Mutation-tested in-browser on library.html at review: `button { border: none }` moves 172
-// of the original 18 properties, and the narrower `.btn-primary,.btn-ghost { border: none }`
-// moves 18. Border removal was the one example that WOULD have been caught.
+// Mutation-tested in-browser on library.html at review: `button { border: none }` produces 172
+// element x property deltas within the original 18, and the narrower
+// `.btn-primary,.btn-ghost { border: none }` produces 18. BOTH NUMBERS ARE DELTAS, NOT
+// PROPERTIES — an earlier draft said "moves 172 of the original 18", which cannot be read
+// literally and collides with the 18 twice over. Border removal was the one example that
+// WOULD have been caught.
 //
 // What genuinely produces zero deltas under the old set, same mutation test, same page:
 // `border-radius: 0` -> 0, `box-shadow: none` -> 0, `cursor: default` -> 0. Those three are
