@@ -175,7 +175,13 @@
 @import url("05-components/btn.css")       layer(components);
 
 /* UI-040..043 */
-/* @import url("05-components/card.css")      layer(components); */
+/* UI-040 — card chrome + pagehead. PREPARED, NOT LIVE, and for a reason worth
+   knowing before editing it: there is deliberately no bare `.card { }` rule in
+   that file, because `.card` is carried by 13 elements across the three live
+   pages. Four of its seven rules stay inert only because `.ch`, `.cb` and
+   `.has-ch` are absent from live markup, and the three `.pagehead` rules only
+   because the live pages spell it `.page-head`. Read its header first. */
+@import url("05-components/card.css")      layer(components);
 /* @import url("05-components/modal.css")     layer(components); */
 /* @import url("05-components/field.css")     layer(components); */
 /* @import url("05-components/badge.css")     layer(components); */

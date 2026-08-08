@@ -1,0 +1,136 @@
+/* =========================================================================
+   05-components/card.css — card chrome + pagehead (UI-040)
+   PREPARED, NOT LIVE. Every rule here matches ZERO elements on every page.
+   -------------------------------------------------------------------------
+   SEVEN RULES, AND THE EIGHTH IS DELIBERATELY ABSENT. THERE IS NO BARE
+   `.card { }` RULE, AND ADDING ONE REPAINTS THREE LIVE PAGES. `.card` is
+   carried by 13 elements today — slo 3, slo-health 6, library 4, measured
+   2026-08-08. This file is in layer(components), which outranks
+   layer(legacy), so a bare `.card` block would take all thirteen the moment
+   it landed. btn.css made the same call for the same reason (slo.html has
+   two live `class="btn"` buttons). A bare block rule becomes safe only once
+   Sprint 6 drains the legacy files — not before.
+
+   FOUR OF THE SEVEN ARE SAFE FOR A REASON THAT COULD STOP BEING TRUE, so it
+   is written here rather than assumed. `.card.has-ch`, `.card > .ch`,
+   `.card > .ch h3` and `.card > .cb` are NOT safe because `.card` is absent
+   from the live pages — it is present, on all three. They are safe because
+   `.has-ch`, `.ch` and `.cb` are absent: measured 0 / 0 / 0 on slo,
+   slo-health and library. **The day a live page's markup gains a `.ch`
+   child, these four rules activate.** Re-measure before assuming otherwise.
+
+   THE `.pagehead` RULES REST ON ONE HYPHEN. The live pages carry
+   `.page-head`; theme.css writes `.pagehead`. PLAN.md:48 records the fork
+   ("`.page-head` (4 pages) vs `.pagehead` (theme.css)") and it is what keeps
+   these three rules off every live page — 0 matches, measured. That is
+   load-bearing, not a typo, the same way `.btn-primary` and `.btn--primary`
+   differ by one hyphen in btn.css.
+
+   WHAT THIS UNBLOCKS, AND WHAT IT DOES NOT. It prepares a component and
+   releases no page. `taqseem` needs 8 card/pagehead rules and gets 7 of
+   them here — its bare `.card` arrives with its migration's re-classing. It
+   also needs 6 button rules, and UI-041 does not carry the gold fill its two
+   `btn gold` buttons use. `blueprint` gets 3 of its 20 orphan rules here.
+   Both pages stay HELD.
+
+   PROVENANCE — static/theme.css:90-92 and :103-108, read, not invented. And
+   unlike btn.css there is NO value divergence to record: every token this
+   file reads resolves to exactly what theme.css resolved to.
+
+   This table is provenance for that whole theme.css range, NOT a list of what
+   ships here — the three rows marked (absent) belong to the bare `.card`
+   rule this file deliberately omits, and nothing below reads them. The ten
+   tokens actually read are --color-border, --color-text, --color-text-muted,
+   --font-display, --font-weight-heading, --space-gap, --space-inset,
+   --text-control, --text-heading-1 and --text-heading-3.
+
+     --fg     -> --color-text          exact (--slate-900)
+     --muted  -> --color-text-muted    exact (--slate-500)
+     --line   -> --color-border        exact (--slate-200)
+     --pad        24px -> --space-inset       exact
+     --gap        22px -> --space-gap         exact
+     24px / 700        -> --text-heading-1 / --font-weight-heading  exact
+     14px / 13.5px     -> --text-heading-3 / --text-control         exact
+     --panel  -> --color-surface       exact (Tier 1 --white)   (absent)
+     --radius     16px -> --radius-container  exact             (absent)
+     --shadow          -> --shadow-card       exact             (absent)
+
+   --shadow is computed-identical rather than textually identical: theme.css
+   spells it rgba(15,23,42,.04) and Tier 1 spells the same colour with spaces
+   and a leading zero. "Exact" here means what the probe measures.
+
+   The four colour rows name Tier 1 primitives rather than quoting their
+   values, and that is not squeamishness: the first draft of this table wrote
+   the four hex out and the ratchet caught it at 429 -> 433. tokens.css is
+   the only file allowed to hold a hex, comment or not, and this check has
+   now failed five times on this epic — every single time through a comment.
+
+   The remaining literals — 14px, 10px, 6px, 3px, 620px, the 1px border-width
+   and the -0.2px tracking — have no member in the SPACE scale (8/12/22/24)
+   and are optical one-offs, which is the rule
+   03-elements/typography.css:68-72 already states: a scale is tokenised
+   because it repeats across files; a per-rule nudge is not a scale.
+   Inventing steps to absorb them would be inventing the scale. Note "space
+   scale" and not "any scale": 14px IS a type step (--font-size-4), and an
+   earlier draft of this line said no scale carried it. Here it is a gap and
+   a padding, and reaching for a type role to supply a space value is the
+   category error the tiers exist to prevent — so it stays literal, but for
+   that reason rather than for absence.
+
+   No raw hex appears anywhere in this file, including these comments.
+   ========================================================================= */
+
+.pagehead {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin: 6px 0 var(--space-gap);
+}
+
+/* 03-elements/typography.css already gives h1 this family, size, weight and
+   tracking, and layer(components) beats layer(elements) — so this rule is
+   currently a restatement rather than an override. It is kept because it is
+   what theme.css declares, and because the page that will wear it must not
+   depend on the element layer happening to agree. */
+.pagehead h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-heading-1);
+  font-weight: var(--font-weight-heading);
+  letter-spacing: -0.2px;
+  color: var(--color-text);
+}
+
+.pagehead p {
+  color: var(--color-text-muted);
+  font-size: var(--text-control);
+  margin-top: 3px;
+  max-width: 620px;
+}
+
+/* An explicit marker, NOT :has() — theme.css:104 says so and the reason is
+   still good: :has() would make the card's padding depend on its children,
+   which is a different contract from the one the markup states. */
+.card.has-ch {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card > .ch {
+  padding: 14px var(--space-inset);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card > .ch h3 {
+  margin: 0;
+  font-size: var(--text-heading-3);
+  font-weight: var(--font-weight-heading);
+  font-family: var(--font-display);
+}
+
+.card > .cb {
+  padding: var(--space-inset);
+}
