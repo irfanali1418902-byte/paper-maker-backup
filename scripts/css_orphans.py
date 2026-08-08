@@ -121,6 +121,17 @@ READ_RE = re.compile(r"var\(\s*(--[A-Za-z0-9_-]+)\s*([,)])")
 # one page whose Ctrl+P output is the epic's highest-consequence artefact.
 THEME_LINK_RE = re.compile(r"""<link[^>]+href=["'](?:/static/theme\.css)["']""", re.I)
 
+# D32 — THE MARKUP PASS. Everything above reads stylesheets only, so a var() inside an
+# inline style="" is invisible to it and a page can measure 0 orphan tokens while still
+# losing a value when /static/theme.css is unlinked. Found on bank (--line, twice) and
+# blueprint (nine names, none with a fallback).
+#
+# This pass is READ-ONLY on the markup: it parses .html to count reads and never writes
+# one. HTML comments are blanked first — a style="" inside <!-- --> is not live, and
+# counting it would report exposure a browser never sees.
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+INLINE_STYLE_RE = re.compile(r"""\bstyle\s*=\s*(["'])(.*?)\1""", re.I | re.DOTALL)
+
 
 def _source(path: Path) -> str:
     """File text with comments removed, or "" if the file does not exist."""
@@ -138,6 +149,32 @@ def read_names(path: Path) -> dict[str, bool]:
     out: dict[str, bool] = {}
     for name, nxt in READ_RE.findall(_source(path)):
         out[name] = out.get(name, False) or nxt == ","
+    return out
+
+
+def markup_read_names(path: Path) -> dict[str, bool]:
+    """``{name: has_fallback}`` for every ``var()`` read inside an inline ``style=""``.
+
+    D32. The same READ_RE as the stylesheet pass, applied to the attribute bodies only —
+    so a name is counted once per page however many attributes carry it, and a name with a
+    fallback anywhere is treated as having one. The file is only read.
+
+    THE RULE IS TEXTUAL, NOT SEMANTIC, and mkBare is therefore not the whole runtime
+    picture. It counts any style="…" string in the file, including ones inside <script>
+    that build HTML — three of blueprint's nine come from JS at blueprint.html:330-395 —
+    and it does NOT see a style set through the DOM, e.g. blueprint.html:341's
+    `box.style.cssText = '…var(--yellow)…'`. Those two names are bare theme.css-only reads
+    at runtime; they understate nothing on the board today only because they are already
+    inside blueprint's 21 stylesheet orphan tokens. Widening this to the DOM is a
+    different task from the one D32 scoped.
+    """
+    if not path.is_file():
+        return {}
+    text = HTML_COMMENT_RE.sub(" ", path.read_text(encoding="utf-8"))
+    out: dict[str, bool] = {}
+    for _quote, body in INLINE_STYLE_RE.findall(text):
+        for name, nxt in READ_RE.findall(body):
+            out[name] = out.get(name, False) or nxt == ","
     return out
 
 
@@ -166,6 +203,14 @@ def measure(page: str) -> dict:
     covered = {n for n in supplied if n in new_names}
     compat = {n for n in supplied if n not in new_names}
 
+    # D32 — the markup pass, kept in its OWN keys. Nothing above is recomputed and no
+    # markup read is folded into `reads`/`orphans`/`supplied`: the two sources answer
+    # different questions and merging them would hide which one a number came from.
+    markup_reads = markup_read_names(html)
+    markup_orphans = {n: fb for n, fb in markup_reads.items()
+                      if n not in declares and n not in new_names}
+    markup_bare = {n for n, fb in markup_orphans.items() if not fb}
+
     return {
         "page": page,
         "links_theme": links_theme,
@@ -178,11 +223,19 @@ def measure(page: str) -> dict:
         "compat": compat,
         "fallback": {n for n, fb in supplied.items() if fb},
         "collide": declares & new_names,
+        "markup_reads": markup_reads,
+        "markup_orphans": markup_orphans,
+        "markup_bare": markup_bare,
     }
 
 
+# The last three are D32's markup pass and are deliberately the RIGHTMOST columns, after
+# every stylesheet figure: mkRead = var() names read from inline style="", mkOrph = those
+# neither the page's legacy file nor the new tree declares, mkBare = of those, the ones
+# with no fallback. mkBare is the number that matters — it is the whole difference between
+# bank (one read, fallback present) and blueprint (nine, none).
 HEADERS = ("page", "theme?", "decl", "reads", "orphan", "supplied", "covered", "compat",
-           "dead", "fallbk", "collide")
+           "dead", "fallbk", "collide", "mkRead", "mkOrph", "mkBare")
 
 
 def _cells(r: dict) -> list[str]:
@@ -198,6 +251,9 @@ def _cells(r: dict) -> list[str]:
         str(len(r["dead"])),
         str(len(r["fallback"])),
         str(len(r["collide"])),
+        str(len(r["markup_reads"])),
+        str(len(r["markup_orphans"])),
+        str(len(r["markup_bare"])),
     ]
 
 
@@ -217,7 +273,7 @@ def print_table(rows: list[dict]) -> None:
 
 def print_names(rows: list[dict]) -> None:
     for r in rows:
-        if not (r["orphans"] or r["collide"]):
+        if not (r["orphans"] or r["collide"] or r["markup_orphans"]):
             continue
         print()
         print(f"--- {r['page']}")
@@ -242,6 +298,22 @@ def print_names(rows: list[dict]) -> None:
             print(f"  declared here AND by the new tree — owner changes ({len(r['collide'])}):")
             for n in sorted(r["collide"]):
                 print(f"    {n}")
+        if r["markup_orphans"]:
+            # D32. Reported separately from every set above, and split by fallback,
+            # because that split is the finding: a bare read loses its value outright when
+            # static/theme.css goes, a read with a fallback quietly drops to the fallback.
+            bare = sorted(r["markup_bare"])
+            withfb = sorted(n for n in r["markup_orphans"] if n not in r["markup_bare"])
+            print(f"  read from inline style=\"\", declared by neither this page's legacy "
+                  f"file nor the new tree ({len(r['markup_orphans'])}):")
+            if bare:
+                print(f"    NO FALLBACK — lost outright when static/theme.css goes ({len(bare)}):")
+                for n in bare:
+                    print(f"      {n}")
+            if withfb:
+                print(f"    has a fallback — drops to it, silently ({len(withfb)}):")
+                for n in withfb:
+                    print(f"      {n}")
 
 
 # =============================================================================

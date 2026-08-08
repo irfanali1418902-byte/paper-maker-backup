@@ -249,10 +249,12 @@ schedule work for it.
 | `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** |
 | `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |
 | `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-046 only.** This row said "UI-041 + UI-046" and UI-041 measured it false on 2026-08-06: `index`'s `.gen-btn`/`.ghost-btn` controls come from `99-legacy/index.css`:115/:123 and survive migration untouched — it never used `.btn` at all. **28 elements, 14 each**, of `index.html`'s 39 `<button>`s; this row said "29 buttons", which is the class-**string** count — the 29th is `.ghost-btn` on an `<a>`. Its button-shaped blocker is the `forms.css` reset, which is **D22**, and D22 is parked precisely because no component can unpark it |
-| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | **UI-046** |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads — now measured by the script, not by hand** (D32 resolved 2026-08-08): `--accent`, `--accent-soft`, `--brand`, `--chip-bg`, `--fg`, `--green`, `--green-bg`, `--muted`, `--red`, **not one with a fallback** | **UI-046** |
 
-**Run D32 before UI-046.** `blueprint` is the page whose exposure number D32 moves, so measuring
-it with a fixed `css_orphans.py` is cheaper than unholding it twice.
+**D32 was run before UI-046, as this line required — resolved 2026-08-08.** `css_orphans.py`
+now reads inline `style=""`, and `blueprint`'s exposure is measured rather than hand-counted:
+**9 bare markup reads**, reproducing D32's recorded sweep cell for cell across all nine pages.
+UI-046 is no longer waiting on anything.
 
 ### Sprint 5 — Inline `style=""` burn-down (3 tasks)
 | ID | Task |

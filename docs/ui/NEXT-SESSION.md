@@ -446,9 +446,9 @@ the summary. The roadmap below now follows that order.
 |---|---|---|---|
 | ~~1~~ | ~~**UI-044a/b** type + leading~~ — **DONE 2026-08-05/06**, both prepared-not-live | — | — |
 | ~~2~~ | ~~**UI-045** display / hero type step~~ — **DONE 2026-08-07**, prepared-not-live. **Released nothing**: it restores the hero exactly and leaves `landing`'s 11 icons at 17px | — | — |
-| **3** | **Fix D32** — teach `css_orphans.py` to read markup, then re-run the nine-page table | ~30 min, one script | nothing |
+| ~~3~~ | ~~**Fix D32** — teach `css_orphans.py` to read markup~~ — **DONE 2026-08-08.** Three new columns (`mkRead`/`mkOrph`/`mkBare`), nothing merged into the old counts, and the re-run reproduced D32's recorded sweep cell for cell | — | — |
 | **4** | **UI-041** button + chip/tag/badge — needed by `taqseem` and `index`, completes neither alone | Sprint 4 | nothing |
-| **5** | **UI-046** nav + shell → releases **`blueprint`**, completes **`index`** | Sprint 4 | 3 first |
+| **5** | **UI-046** nav + shell → releases **`blueprint`**, completes **`index`** | Sprint 4 | **nothing — #3 (D32) is done** |
 | **6** | **UI-040** card + pagehead → completes **`taqseem`** | Sprint 4 | 4 |
 | **7** | Re-migrate the released pages — entry files are parked and already measured | ~15 min each | the task that releases each |
 | 8 | UI-042 modal/field · UI-043 tables/domain | Sprint 4 | no held page waits on either |
@@ -458,14 +458,19 @@ the summary. The roadmap below now follows that order.
 - **#1 is the highest-value task in the epic right now.** `bank`'s hold and `print`'s D33 are one
   problem in two places, and the `print` pagination regression comes from the same leading
   change — one task settles all three.
-- **#1, #2 and #3 need no review agent**, so they are the cheapest if budget is the constraint.
+- **#1 and #2 need no review agent**, so they are the cheapest if budget is the constraint.
+  **This line said "#1, #2 and #3" and #3 was wrong**: D32 edits a script two committed tasks
+  depend on and adds columns to a published board table, which is the UI-017a/UI-018a shape its
+  own DEFERRED row calls out. It got a review agent on 2026-08-08 and needed one.
   Nothing in #3 ships CSS.
 - **The old ordering is gone deliberately.** It ran UI-040/041 first by duplication count, which
   would have ended Sprint 4 with `landing`, `bank`, `blueprint` and `print` all still held.
 
-**Do #3 before #7.** `blueprint` is the page whose exposure number D32 moves — it reads nine
-theme.css-only tokens from inline `style=""` with no fallback, which the current script cannot
-see — so measuring it with a fixed script is cheaper than unholding it twice.
+**#3 is done (2026-08-08) and it was done before #7, as this line required.** `blueprint` reads
+nine `theme.css`-only tokens from inline `style=""` with no fallback; the script can now see
+them, and the number is measured rather than hand-counted. **It did not change** — the fixed
+script reproduced the hand sweep exactly, on all nine pages, which is the useful outcome: the
+recorded numbers were right, and they are now re-derivable by anyone who runs the script.
 
 ---
 
@@ -478,7 +483,7 @@ see — so measuring it with a fixed script is cheaper than unholding it twice.
 |---|---|---|
 | `landing` | hero headline shrinks, `reset.css` zeroes the gap under it | a display/hero type step — **owned by no UI-04x task yet** |
 | `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 button + card |
-| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus 9 bare inline reads (D32) | shell/nav components |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads, now script-measured** (D32 resolved 2026-08-08) | shell/nav components |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions | **the Nastaliq leading decision — same problem as F2 above** |
 | `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 button reset + shell layout |
 | `print` | **D36** — `0d04c750` gains a printed page, 2 → 3 (+6.0% sheet height) | **fix written (UI-044b), not live** — activates on migration |

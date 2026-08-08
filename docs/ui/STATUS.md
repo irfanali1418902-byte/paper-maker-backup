@@ -436,7 +436,9 @@ while its 11 icons still fall 22px → 17px. **UI-044 (a+b) is the single highes
 the epic right now**: `bank`'s hold and `print`'s D33 are one problem in two places, and D36
 comes from the same leading change, so one task settles all three.
 
-**Run D32 before UI-046** — `blueprint` is the page whose exposure number it moves.
+**D32 is done (2026-08-08) and UI-046 is clear.** `css_orphans.py` now reads inline `style=""`;
+`blueprint`'s **9 bare markup reads** are measured, and the re-run reproduced D32's recorded
+nine-page sweep exactly.
 
 **Nothing in Sprint 4 is scheduled for `--space-*`.** An earlier plan treated a space-token
 layer fix as the foundation that would open several pages at once; **D35 measured it and the
@@ -622,6 +624,15 @@ drives the browser through `scripts/css_rules_probe.mjs`.
 | `bank` | yes | 0 / 0 | 6 / 3 / 2 / **1** | **0** — the one orphan is `:focus-visible`, which `03-elements/forms.css` declares | repetition — **yet HELD**, on something neither check measures |
 | `index` | yes | 0 / 0 | 11 / 2 / 4 / **5** | **3** — `input[type=number]` and `:focus-visible` are both in `forms.css` | repetition — **yet HELD**, on two things neither check measures |
 | `print` | **no** | 0 / 0 | 5 / 0 / 2 / **3** | **0** by D9 — the file is not linked, so all three already fail to apply today | clean on both checks — **yet HELD** (2026-08-05), like `bank` and `index` before it |
+
+**This table's token column is STYLESHEET-ONLY, and D32 is the third column it does not have.**
+Since 2026-08-08 `css_orphans.py` also reads inline `style=""` and reports it separately as
+`mkRead` / `mkOrph` / `mkBare`. For these four pages: `blueprint` **9 markup reads with no
+fallback** — `--accent`, `--accent-soft`, `--brand`, `--chip-bg`, `--fg`, `--green`,
+`--green-bg`, `--muted`, `--red`, all `theme.css`-only — `bank` **1** (`--line`, fallback
+present, so it drops silently rather than failing), `index` and `print` **0**. So
+`blueprint`'s real exposure is 20 orphan rules **plus** 21 orphan tokens **plus** 9 bare markup
+reads, and the "21 / 19" cell below understates it.
 
 Measured at 1280×900 in **Edge 151** (this board said 150; the dev PC has moved). Every page
 was probed **twice with no action in between and drift was 0 on all four**, and a second full
