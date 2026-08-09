@@ -419,15 +419,21 @@ pages were waiting on work no task ID owned.** It is now **seven tasks ordered b
 pages each releases.** Three IDs are new. The full table and the per-page blocker map live in
 `PLAN.md` §Sprint 4 — this is the summary:
 
-| order | ID | releases |
+**A COMPONENT TASK CANNOT RELEASE A PAGE — A MIGRATION DOES.** This column said otherwise in
+every component row until 2026-08-08. A component ships new names into `layer(components)`; a
+page opens when its markup is re-classed and its `<link>` block changes. Measured false three
+times before the pattern was named: UI-045/`landing`, UI-046/`blueprint`, UI-040/`taqseem`. The
+counts below are from §"THE SIX HELD PAGES, MEASURED".
+
+| order | ID | prepares / releases |
 |---:|---|---|
 | **1a** | **UI-044a** ✅ done — Nastaliq leading | **prepared, not live**; activates when `bank` migrates |
-| **1b** | **UI-044b** — print-media leading | `print` · settles **D36** |
-| **2** | **UI-045** ✅ done — display / hero type step | **nothing on its own.** `landing` also needs **UI-046** — measured 2026-08-07 |
-| **3** | UI-041 — button + chip/tag/badge | needed by `taqseem`, `index`; completes neither alone |
-| **4** | **UI-046** — nav + shell components | `blueprint`, completes `index` |
-| **5** | UI-040 — card + pagehead | completes `taqseem` |
-| 6–7 | UI-042 modal/field · UI-043 tables/domain | no held page waits on either |
+| **1b** | **UI-044b** ✅ done — print-media leading | **prepared, not live**, in `print`'s parked entry file · settles **D36** |
+| **2** | **UI-045** ✅ done — display / hero type step | **prepared component, released nothing.** `landing` also needs its icons settled — and **no component can do that**, see the two unowned blockers below |
+| **3** | UI-041 ✅ done — button | **prepared component, released nothing.** 6 of `taqseem`'s 17 — **not the gold fill** |
+| **4** | **UI-046** — nav + shell components | **prepares component, releases nothing.** 12 of `blueprint`'s 20 |
+| **5** | UI-040 ✅ done — card + pagehead | **prepared component, released nothing.** 7 of `taqseem`'s 8 card rules, 3 of `blueprint`'s 20 |
+| 6–7 | UI-042 modal/field · UI-043 tables/domain | **prepare components, release nothing.** UI-043 carries `blueprint`'s `.chip` and `index`'s `.tag` |
 
 **UI-044b and UI-045 are both done and NEITHER released a page.** This line said they would
 "release two more of the six, and each completes its pages outright"; both halves were measured
@@ -443,6 +449,70 @@ nine-page sweep exactly.
 **Nothing in Sprint 4 is scheduled for `--space-*`.** An earlier plan treated a space-token
 layer fix as the foundation that would open several pages at once; **D35 measured it and the
 mechanism does not exist on this branch.** See D35.
+
+### THE SIX HELD PAGES, MEASURED — 2026-08-08, Edge 151, drift 0 on every page
+
+**Every number below was produced by `scripts/css_orphans.py --rules`, not estimated.** It is
+recorded here because it was measured while scoping UI-046 and UI-040 and had nowhere on the
+board to live — the shape this epic already lost once, when the first `print` session left its
+measurement scripts in a scratchpad (`docs/ui/PROBES.md` header).
+
+**"Real" subtracts the orphans the new tree already declares.** `03-elements/forms.css` carries
+`:focus-visible` (:106) and the `input`/`select`/`textarea` family (:53-57, :79-81), which are
+the same selectors `static/theme.css` declares at :196, :199 and :212 — so a page whose only
+orphans are those is not exposed at all.
+
+| page | links `theme.css`? | orphan rules | **real** | what they are |
+|---|---|---:|---:|---|
+| `blueprint` | yes | 20 | **19** | 12 nav/shell · 3 brand · 3 card · 1 chip |
+| `taqseem` | yes | **17** | **14** | 8 card/pagehead · 6 button · 3 already covered |
+| `index` | yes | 5 | **3** | `.tag` ×2 · `.row` · `.summary-row:last-child` · **plus 4 partial rules** |
+| `bank` | yes | 1 | **0** | its one orphan is `:focus-visible` |
+| `landing` | **no** | 2 | **0** | D9 — never linked it, so both already fall through |
+| `print` | **no** | 3 | **0** | D9 |
+
+**`taqseem` is 17, not the 16 this board carried.** Re-counted, not copied.
+
+**`blueprint`'s 20, by which task owns them** — this is what makes "UI-046 releases `blueprint`"
+impossible, and it was found by enumerating the rules rather than by reading the old summary:
+
+| owner | n | rules |
+|---|---:|---|
+| **UI-046** nav + shell | **12** | `.app` · `.top` · `.top .crumbs` · `.top .crumbs b` · `.top .spacer` · `.top .avatar` · `.nav` · `.nav .grp` · `.nav a` · `.nav a .icon` · `.nav a:hover` · `.nav a.active` |
+| brand | 3 | `.brand .logo` · `.brand b` · `.brand small` |
+| **UI-040** card | 3 | `.card > .ch` · `.card > .ch h3` · `.card > .cb` — **shipped 2026-08-08** |
+| **UI-043** chip | 1 | `.chip` |
+| already covered | 1 | `:focus-visible` |
+
+**Plus three partial rules** — the selector is redeclared but properties still go: `.brand` (7),
+`.main` (`grid-area`, `overflow`, `padding`), `.pagehead p` (`margin-top`, `max-width`) — **and
+two media-query rules nothing redeclares**, `@media (max-width: 760px)`'s `.app` and `.nav`, so
+the narrow-viewport shell breaks too. Neither group is inside the 20.
+
+**`taqseem`'s 17, the same way:** **8** card/pagehead (UI-040 shipped 7 of them; the 8th is the
+bare `.card`, which arrives with the migration's re-classing), **6** button, **3** already
+covered. Plus two partials: `.brand` (`background`, `color`, `grid-area`) and `.brand small`
+(`font-weight`).
+
+#### Two blockers that no task currently owns
+
+**1. There is no gold button, and `taqseem` cannot migrate without one.** Measured:
+`taqseem.html` carries `btn gold` ×2 and `btn ghost` ×1. `btn.css` ships `.btn--primary` and
+`.btn--ghost` only, and **UI-041's own header lists the gold fill among the four shapes with no
+home**. So `taqseem`'s migration needs either a new modifier in a reviewed component or its own
+page-scoped rule — a decision, not a task that exists.
+
+**2. `landing`'s icons cannot be fixed from any layer.** `.icon { 17px }` is in **unlayered**
+`static/app.css`:57, which all nine pages link, and **unlayered styles beat every `@layer`**
+(`main.css`:73-74 states this rule). `99-legacy/landing.css`:26's 22px wins today only by
+document order and loses the moment the page is layered — 11 icons, measured. **No component in
+the new tree can reach it.** The choice is editing `app.css` (live on all nine pages) or an
+unlayered rule in `landing`'s own entry file. UI-046 was recorded as fixing this and cannot.
+
+**Both now have homes on the board: the gold fill is `UI-041b` (`.btn--accent`, which also
+settles D7), and the six migrations are `UI-047a-f`. See `PLAN.md` §Sprint 4b** — added the same
+day, because the migrations had been a single line at the bottom of the roadmap and that is what
+let five component tasks ship while the board read as though pages were opening.
 
 ### `print` — **HELD (2026-08-05), on Irfan's call.** Nothing was swapped, nothing reverted
 

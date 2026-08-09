@@ -9,7 +9,34 @@
 
 ---
 
-## ▶ START HERE — **UI-046.** UI-041 and UI-045 are both DONE, and neither released a page.
+> ## ⚠ FIRST, WHEN THE API BUDGET RESETS: this sweep was NOT reviewed.
+> The independent review agent was launched and **died part-way through on the monthly spend
+> limit** — the same way the first `print` session's review died, which is recorded further down
+> this file. It returned no verdict. The commit that landed this says so in full.
+>
+> **Two jobs, before trusting anything below:**
+> 1. **Re-derive the figures.** Everything in `STATUS.md` §"THE SIX HELD PAGES, MEASURED" came
+>    from one session's own measurement. It is all re-derivable in minutes:
+>    `.venv\Scripts\python.exe scripts\css_orphans.py --rules` (and `--rules --names` for the
+>    ownership splits). `print` needs `--paper-id 9ade2655-21e6-449d-943a-ae875542012e`.
+> 2. **Run the deferred review** on commit range `81706b9..HEAD` — docs only, no CSS.
+>
+> Nothing here is at risk in the meantime: the sweep touched no CSS, no code and no `.html`, and
+> every ratchet metric is +0. The risk is only that a wrong number is now written down.
+
+## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
+
+**Five component tasks have shipped and not one released a page** — UI-044a, UI-044b, UI-041,
+UI-045, UI-040. That is not five failures; it is what component tasks do. The board used to say
+otherwise and was corrected on 2026-08-08 (`PLAN.md` §Sprint 4b).
+
+- **Shortest path to a page actually opening:** **`UI-041b`** (`.btn--accent`, two declarations,
+  settles D7) → **`UI-047a`** (`taqseem`'s migration). `taqseem` is the closest of the six.
+- **Next component task:** **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules, scoped and
+  planned. It releases nothing, and `blueprint` needs UI-043 and its migration as well.
+
+Read `STATUS.md` §"THE SIX HELD PAGES, MEASURED" before choosing — every per-page number is
+there, measured, including **two blockers that are decisions rather than tasks**.
 
 **UI-041's re-review PASSED at round 4 on 2026-08-07 and the task is closed.** It took four
 rounds — FAIL, FAIL, FAIL, PASS-with-notes — and the reason is the useful part of this entry.
@@ -112,7 +139,7 @@ migrated state **with** UI-045's rule applied, exactly as they are without it.
 
 ---
 
-## THEN — **UI-046** (nav + shell / icon). It releases `blueprint`, completes `index`, and is `landing`'s second half.
+## THEN — **UI-046** (nav + shell). It prepares 12 of `blueprint`'s 20 rules and releases nothing.
 
 **The ordering rule this sprint was re-scoped around is *which task completes a page by
 itself*, and UI-045 has just failed that test in practice** — it was listed here as releasing
@@ -121,7 +148,7 @@ itself*, and UI-045 has just failed that test in practice** — it was listed he
 | candidate | completes, on its own |
 |---|---|
 | ~~UI-045~~ — hero / display type. **DONE 2026-08-07** | **nothing.** This row said "`landing` — one small task, one page released". Measured false: the hero is restored exactly, and the 11 icons still go 22px → 17px, so `landing` needs UI-046 too |
-| ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file, so **UI-046 alone releases it** |
+| ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file. **This row then said "UI-046 alone releases it", which is false twice over** (2026-08-08): `index`'s rule exposure is `.tag` — that is **UI-043**, not UI-046 — and it is blocked on **D22** besides, which no component can unpark. Its release is **`UI-047c`** |
 | UI-041 **+** UI-040 | `taqseem` only — and UI-041's half is now done |
 
 **`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +
@@ -448,9 +475,9 @@ the summary. The roadmap below now follows that order.
 | ~~2~~ | ~~**UI-045** display / hero type step~~ — **DONE 2026-08-07**, prepared-not-live. **Released nothing**: it restores the hero exactly and leaves `landing`'s 11 icons at 17px | — | — |
 | ~~3~~ | ~~**Fix D32** — teach `css_orphans.py` to read markup~~ — **DONE 2026-08-08.** Three new columns (`mkRead`/`mkOrph`/`mkBare`), nothing merged into the old counts, and the re-run reproduced D32's recorded sweep cell for cell | — | — |
 | **4** | **UI-041** button + chip/tag/badge — needed by `taqseem` and `index`, completes neither alone | Sprint 4 | nothing |
-| **5** | **UI-046** nav + shell → releases **`blueprint`**, completes **`index`** | Sprint 4 | **nothing — #3 (D32) is done** |
+| **5** | **UI-046** nav + shell — **prepares 12 of `blueprint`'s 20, releases nothing** | Sprint 4 | **nothing — #3 (D32) is done** |
 | **6** | **UI-040** card + pagehead → completes **`taqseem`** | Sprint 4 | 4 |
-| **7** | Re-migrate the released pages — entry files are parked and already measured | ~15 min each | the task that releases each |
+| **7** | ~~Re-migrate the released pages — ~15 min each~~ — **this line was the problem.** The migrations are where pages actually open, and hiding all six behind one bottom-of-the-list row is what let five component tasks ship while the board read as though pages were being released. They are now **`UI-047a-f`, one per page with its own blockers**, in `PLAN.md` §Sprint 4b. **None of them is 15 minutes** | — | see §Sprint 4b |
 | 8 | UI-042 modal/field · UI-043 tables/domain | Sprint 4 | no held page waits on either |
 
 **Three things worth knowing before picking one:**

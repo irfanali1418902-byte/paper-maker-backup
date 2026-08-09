@@ -200,16 +200,24 @@ held pages does this task release", not "how many duplicates does it remove".
 Sprint 3 closed at **3 of 9 pages migrated**. The other six are HELD and every one of them is
 waiting on something below. **A task is not done until the pages it owns are migrated.**
 
-| order | ID | Task | Releases |
+> **A COMPONENT TASK CANNOT RELEASE A PAGE. A MIGRATION DOES.** This column said otherwise in
+> every component row and is rewritten — 2026-08-08. A component ships new names into
+> `layer(components)`; a page opens only when its markup is re-classed and its `<link>` block
+> changes. The claim was measured false three times before the pattern was named: **UI-045** was
+> listed as releasing `landing` and does not, **UI-046** as releasing `blueprint` and cannot, and
+> **UI-040** as completing `taqseem` and cannot. Per-page counts are in `STATUS.md`
+> §"THE SIX HELD PAGES, MEASURED"; the releases themselves live in the migration tasks.
+
+| order | ID | Task | Prepares / releases |
 |---:|---|---|---|
 | **1a** | **UI-044a** ✅ **DONE 2026-08-05** | **Nastaliq leading** — `--line-height-nastaliq` + `05-components/urdu.css` | **PREPARED, NOT LIVE** — proof-tested on `bank`, activates when `bank` migrates |
 | **1b** | **UI-044b** | **print-media leading** — the half `--leading-body` cannot solve | `print` · settles **D36** |
 | **2** | **UI-045** ✅ **DONE 2026-08-07** | **display / hero type step** — `--font-size-8` / `--text-display` + one rule in landing's parked entry file | **nothing alone** — `landing` also needs **UI-046** (icons) |
-| **3** | UI-041 ✅ **DONE 2026-08-07** — four review rounds, PASS at round 4 | `button` — `.btn--primary` / `.btn--ghost` in `05-components/btn.css`. **Not** `.button`, and **no** chip/tag/badge: `.tag` is live on `slo-health` and JS-queried as the brand tagline, `.chip` on `taqseem` is a domain block for UI-043 | **PREPARED, NOT LIVE** — releases nothing. Needed by `taqseem` (with UI-040). **NOT by `index`** — see below |
-| **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | `blueprint`, and completes `index` |
-| **5** | UI-040 | `card` (6×) + unify `.page-head` → `.card`/`pagehead` (4×) | completes `taqseem` |
-| 6 | UI-042 | `modal` (4×) + `field` / form-row (4×) | no held page — settles D26/D27/**D31** |
-| 7 | UI-043 | tables + status-bar + domain components (sec/qrow/pin, board/col, imgcard, stat, bloom, sheet) | no held page |
+| **3** | UI-041 ✅ **DONE 2026-08-07** — four review rounds, PASS at round 4 | `button` — `.btn--primary` / `.btn--ghost` in `05-components/btn.css`. **Not** `.button`, and **no** chip/tag/badge: `.tag` is live on `slo-health` and JS-queried as the brand tagline, `.chip` on `taqseem` is a domain block for UI-043 | **prepared component, released nothing.** Covers **6 of `taqseem`'s 17** — but **not the gold fill its two `btn gold` buttons need**. **Does not touch `index`** (measured 2026-08-06) |
+| **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | **prepares component, releases nothing.** Covers **12 of `blueprint`'s 20**; those 12 match 0 elements on all three live pages |
+| **5** | UI-040 ✅ **DONE 2026-08-08** | `card` chrome + `pagehead` — 7 rules in `05-components/card.css`, **no bare `.card`** | **prepared component, released nothing.** Gave `taqseem` 7 of its 8 and `blueprint` 3 of its 20; both stay HELD |
+| 6 | UI-042 | `modal` (4×) + `field` / form-row (4×) | **prepares component, releases nothing** — settles D26/D27/**D31** |
+| 7 | UI-043 | tables + status-bar + domain components (sec/qrow/pin, board/col, imgcard, stat, bloom, sheet) | **prepares component, releases nothing.** Carries `blueprint`'s `.chip` and `index`'s `.tag` |
 
 **UI-044a landed as FOUNDATION-FIRST, not as a page release.** The rule and its token are in
 the tree and imported by `main.css`, but they reach **nothing**: the only page carrying
@@ -242,6 +250,13 @@ schedule work for it.
 
 **Per-page map — the six HELD pages and what releases each:**
 
+> **READ THE "RELEASED BY" COLUMN AS "NEEDS", NOT "OPENS".** Every ID it names is a component
+> task, and a component releases nothing — the migration does. Two of its cells were measured
+> false in 2026-08-08's scoping and are corrected in the rows themselves; the per-page rule
+> counts, the ownership split of `blueprint`'s 20 and `taqseem`'s 17, and **two blockers no task
+> owns at all** (the gold button, and `landing`'s icons) are in `STATUS.md`
+> §"THE SIX HELD PAGES, MEASURED". **No page below is one task away from opening.**
+
 | page | the actual blocker | released by |
 |---|---|---|
 | `landing` | **two blockers, not one.** (1) hero headline shrinks and `reset.css` zeroes the gap under it — **fixed by UI-045**, prepared and not yet live. (2) `.icon` 22px → 17px on 11 icons: `99-legacy/landing.css`:26 wins today only by document order and loses to unlayered `static/app.css`:57 the moment the page is layered — **untouched by UI-045**. Both measured 2026-08-07 in a three-state swap | **UI-045 + UI-046**, or UI-045 plus a decision to accept 17px icons |
@@ -255,6 +270,37 @@ schedule work for it.
 now reads inline `style=""`, and `blueprint`'s exposure is measured rather than hand-counted:
 **9 bare markup reads**, reproducing D32's recorded sweep cell for cell across all nine pages.
 UI-046 is no longer waiting on anything.
+
+### Sprint 4b — THE MIGRATIONS. **This is where pages actually open.**
+
+**Added 2026-08-08, because these were invisible.** The roadmap carried them as a single line —
+*"re-migrate the released pages, ~15 min each"* — sitting at step 7, after everything. That
+framing is what let five component tasks ship in a row while the board read as though pages were
+being released. **A component prepares; a migration releases. One task per page, each with its
+own blockers, and none of them is 15 minutes.**
+
+IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
+
+| ID | page | components it needs | what the migration itself must do | can it start? |
+|---|---|---|---|---|
+| **UI-047a** | `taqseem` | UI-040 ✅ · UI-041 ✅ · **UI-041b** | re-class 3 buttons (`btn gold` ×2, `btn ghost`), the bare `.card`, a 23-name compat block, 2 `.brand` partials | **after UI-041b** — closest to ready |
+| **UI-047b** | `blueprint` | UI-040 ✅ · UI-043 · UI-046 | 19-name compat block (covers D32's 9 markup reads too), 3 `.brand` rules, 3 partials, **2 media-query rules** | after UI-043 + UI-046 |
+| **UI-047c** | `index` | UI-043 (`.tag`) | `.row`, `.summary-row:last-child`, 4 partials incl. `.main`'s three properties | **blocked on D22** — no component can unpark it |
+| **UI-047d** | `landing` | none — UI-045 ✅ | **the icon decision** | **blocked on a decision nobody owns** |
+| **UI-047e** | `bank` | none — UI-044a ✅ | activate the parked entry file | **blocked on D31** — Irfan's call |
+| **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
+
+**`UI-041b` — `.btn--accent`, and it settles D7.** `taqseem`'s two `btn gold` buttons need a fill
+`btn.css` does not carry; `btn.css`'s own header lists it among the four shapes with no home.
+Measured: `theme.css`:120 is two declarations, `background: var(--accent); color: #fff`, and
+`--accent` is the same value Tier 2's `--color-accent` already resolves to — so nothing is
+invented. **Name it `--accent`, not `--gold`**: D7 records that the `gold` class renders teal and
+that the name lies, and carrying the lie into the new tree would be the one avoidable part.
+It is a separate task because `btn.css` is a reviewed component and earns its own review.
+
+**Two blockers still belong to nobody**, and both are decisions rather than tasks: `landing`'s
+icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEASURED") and D31 on
+`bank`.
 
 ### Sprint 5 — Inline `style=""` burn-down (3 tasks)
 | ID | Task |
