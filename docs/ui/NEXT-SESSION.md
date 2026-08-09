@@ -9,20 +9,31 @@
 
 ---
 
-> ## ⚠ FIRST, WHEN THE API BUDGET RESETS: this sweep was NOT reviewed.
-> The independent review agent was launched and **died part-way through on the monthly spend
-> limit** — the same way the first `print` session's review died, which is recorded further down
-> this file. It returned no verdict. The commit that landed this says so in full.
+> ## ✅ 156d4a0's two open jobs are CLOSED — 2026-08-09. Both were done.
+> **1. The figures were re-derived, independently, and every one reproduced exactly.**
+> `scripts\css_orphans.py --rules --paper-id 9ade2655-21e6-449d-943a-ae875542012e`, Edge 151,
+> drift 0 on all nine pages: orphan rules `blueprint` 20, `taqseem` 17, `index` 5, `bank` 1,
+> `landing` 2, `print` 3 — and `landing`/`print` at EXPOSURE 0 by D9. The per-page `--names`
+> runs reproduced the ownership splits cell for cell, and `03-elements/forms.css`:53-57, :79-81
+> and :106 were read to confirm the "real" subtraction. **Nothing in §"THE SIX HELD PAGES,
+> MEASURED" needs re-measuring.**
 >
-> **Two jobs, before trusting anything below:**
-> 1. **Re-derive the figures.** Everything in `STATUS.md` §"THE SIX HELD PAGES, MEASURED" came
->    from one session's own measurement. It is all re-derivable in minutes:
->    `.venv\Scripts\python.exe scripts\css_orphans.py --rules` (and `--rules --names` for the
->    ownership splits). `print` needs `--paper-id 9ade2655-21e6-449d-943a-ae875542012e`.
-> 2. **Run the deferred review** on commit range `81706b9..HEAD` — docs only, no CSS.
+> **2. The deferred review ran on `81706b9..HEAD` and returned FAIL — nine blocking findings,
+> every one of them prose or a citation, none of them a number.** They were nearly all one
+> defect: **the board still claimed, in all three files, that a component task fixes `landing`'s
+> icons or releases a page** — usually naming `UI-046`, which STATUS.md's own
+> §"THE SIX HELD PAGES, MEASURED" retires in the same commit that made the claim. Every instance
+> `grep UI-046` finds is corrected in the commit that carries this block, along with `taqseem`'s
+> stale "16" and two citations to a list in `btn.css`'s header that is not there.
+> Run at a deliberate **one-round ceiling** — no round 2 — because this epic
+> has already proved that prose remediation manufactures the next round's findings (UI-041, four
+> rounds, one CSS finding).
 >
-> Nothing here is at risk in the meantime: the sweep touched no CSS, no code and no `.html`, and
-> every ratchet metric is +0. The risk is only that a wrong number is now written down.
+> **`156d4a0`'s commit message overclaimed and the record should say so.** It states that "grep
+> across all of docs/ui/ finds no surviving claim that a component task releases or completes a
+> page; the four remaining hits" quote it to retire it. False: at least eight live hits survived,
+> in all three files it touched. The message cannot be corrected — the commit is pushed and
+> history is not rewritten — so it is corrected here instead.
 
 ## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
 
@@ -121,13 +132,17 @@ is untouched by it:**
 height: 22px }`, the only page in the project that overrides the sprite size. **Today it wins
 purely by document order**: it and `static/app.css`:57 (17px) are both unlayered `<link>`s and
 landing's is second. The moment landing's file moves into `layer(legacy)`, `app.css` — still
-unlayered, still linked, because it owns `.icon` until the nav component — outranks it. **Measured
+unlayered, still linked, and reachable by no `@layer` — outranks it. **Measured
 before and after at the time: 11 icons at 22px → 11 at 17px.** Not predicted, measured.
 
-**That belongs to `UI-046` (nav + shell / icon), or to an explicit "keep 17px" decision from
-Irfan.** The parked file says the same thing and calls it his call. So:
+**That belongs to `UI-047d` (`landing`'s migration), or to an explicit "keep 17px" decision from
+Irfan.** No component task can reach it — see `STATUS.md` §"THE SIX HELD PAGES, MEASURED". The
+parked file agrees it is his call but **still names `UI-046`** (`docs/ui/parked-landing.css`:113);
+it is left uncorrected deliberately, to keep this commit docs-only, and is fixed when `landing`
+migrates under `UI-047d`. So:
 
-> **`landing` is released by UI-045 + UI-046, or by UI-045 plus a decision to accept 17px icons.**
+> **`landing` is released by `UI-047d` — UI-045 plus the icon decision, or UI-045 plus a decision
+> to accept 17px icons.**
 
 **This is D34's pattern repeating** — a held page whose second blocker no task ID owns, hidden
 behind a board line that names only the first. D34 was raised, resolved, and the same shape
@@ -147,9 +162,9 @@ itself*, and UI-045 has just failed that test in practice** — it was listed he
 
 | candidate | completes, on its own |
 |---|---|
-| ~~UI-045~~ — hero / display type. **DONE 2026-08-07** | **nothing.** This row said "`landing` — one small task, one page released". Measured false: the hero is restored exactly, and the 11 icons still go 22px → 17px, so `landing` needs UI-046 too |
+| ~~UI-045~~ — hero / display type. **DONE 2026-08-07** | **nothing.** This row said "`landing` — one small task, one page released". Measured false: the hero is restored exactly, and the 11 icons still go 22px → 17px, so `landing` needs the icon decision too — **`UI-047d`**, which no component can make |
 | ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file. **This row then said "UI-046 alone releases it", which is false twice over** (2026-08-08): `index`'s rule exposure is `.tag` — that is **UI-043**, not UI-046 — and it is blocked on **D22** besides, which no component can unpark. Its release is **`UI-047c`** |
-| UI-041 **+** UI-040 | `taqseem` only — and UI-041's half is now done |
+| UI-041 **+** UI-040 — both **DONE** | **nothing.** They cover 13 of `taqseem`'s 17; the gold fill is **`UI-041b`** and the release is **`UI-047a`** |
 
 **`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +
 status-bar + domain components, it is order 7, and it releases **no held page**. The "button/card
@@ -508,11 +523,11 @@ recorded numbers were right, and they are now re-derivable by anyone who runs th
 
 | page | held on | needs |
 |---|---|---|
-| `landing` | hero headline shrinks, `reset.css` zeroes the gap under it | a display/hero type step — **owned by no UI-04x task yet** |
-| `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 button + card |
-| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads, now script-measured** (D32 resolved 2026-08-08) | shell/nav components |
+| `landing` | hero headline shrinks, `reset.css` zeroes the gap under it | the type step — **UI-045, DONE** — plus the icon decision, then `UI-047d` |
+| `taqseem` | 17 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 + UI-040 (both DONE) + **UI-041b**, then `UI-047a` |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads, now script-measured** (D32 resolved 2026-08-08) | UI-046 + UI-043, then `UI-047b` |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions | **the Nastaliq leading decision — same problem as F2 above** |
-| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | UI-041 button reset + shell layout |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-043** (`.tag`) — and **D22**, which no component can unpark; then `UI-047c` |
 | `print` | **D36** — `0d04c750` gains a printed page, 2 → 3 (+6.0% sheet height) | **fix written (UI-044b), not live** — activates on migration |
 
 **`print` was held for one reason and stays held for another, and the swap is worth remembering.**
@@ -520,11 +535,11 @@ It was held on a reported `--space-*` margin regression; that report is **retire
 margin does not move at all. The run that retired it found **D36** instead, a real pagination
 regression from D21/F3's line-height growth. **The hold was right; the stated reason was not.**
 
-**UI-044a/b, UI-041 and UI-045 are all done and NONE of them released a page.** `bank`'s Urdu
-leading and `print`'s D36 are solved in files those pages do not load; UI-041 completes no page
-alone; and **UI-045 was predicted to release `landing` and does not** — the hero is restored
-exactly, the 11 icons still fall 22px → 17px. **The next task that actually releases a page is
-`UI-046`** (`blueprint`, and `index`, and `landing`'s remaining half).
+**UI-044a/b, UI-041, UI-045 and UI-040 are all done and NONE of them released a page.** `bank`'s
+Urdu leading and `print`'s D36 are solved in files those pages do not load; UI-041 completes no
+page alone; and **UI-045 was predicted to release `landing` and does not** — the hero is restored
+exactly, the 11 icons still fall 22px → 17px. **No component task releases any page. The next
+task that actually releases one is `UI-047a`** (`taqseem`'s migration, after `UI-041b`).
 
 **`bank`'s hold and `print`'s F2 are one problem in two places.** Whichever Sprint 4 task takes
 the Nastaliq leading decision should take both, or they will diverge.

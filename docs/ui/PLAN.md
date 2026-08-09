@@ -211,8 +211,8 @@ waiting on something below. **A task is not done until the pages it owns are mig
 | order | ID | Task | Prepares / releases |
 |---:|---|---|---|
 | **1a** | **UI-044a** ✅ **DONE 2026-08-05** | **Nastaliq leading** — `--line-height-nastaliq` + `05-components/urdu.css` | **PREPARED, NOT LIVE** — proof-tested on `bank`, activates when `bank` migrates |
-| **1b** | **UI-044b** | **print-media leading** — the half `--leading-body` cannot solve | `print` · settles **D36** |
-| **2** | **UI-045** ✅ **DONE 2026-08-07** | **display / hero type step** — `--font-size-8` / `--text-display` + one rule in landing's parked entry file | **nothing alone** — `landing` also needs **UI-046** (icons) |
+| **1b** | **UI-044b** ✅ **done** | **print-media leading** — the half `--leading-body` cannot solve | **PREPARED, NOT LIVE** — in `print`'s parked entry file · settles **D36** |
+| **2** | **UI-045** ✅ **DONE 2026-08-07** | **display / hero type step** — `--font-size-8` / `--text-display` + one rule in landing's parked entry file | **nothing alone** — `landing` also needs the icon decision (**`UI-047d`**), which no component can make |
 | **3** | UI-041 ✅ **DONE 2026-08-07** — four review rounds, PASS at round 4 | `button` — `.btn--primary` / `.btn--ghost` in `05-components/btn.css`. **Not** `.button`, and **no** chip/tag/badge: `.tag` is live on `slo-health` and JS-queried as the brand tagline, `.chip` on `taqseem` is a domain block for UI-043 | **prepared component, released nothing.** Covers **6 of `taqseem`'s 17** — but **not the gold fill its two `btn gold` buttons need**. **Does not touch `index`** (measured 2026-08-06) |
 | **4** | **UI-046** | **nav + shell components** — consumes `04-objects/shell.css` and `config/nav.json` | **prepares component, releases nothing.** Covers **12 of `blueprint`'s 20**; those 12 match 0 elements on all three live pages |
 | **5** | UI-040 ✅ **DONE 2026-08-08** | `card` chrome + `pagehead` — 7 rules in `05-components/card.css`, **no bare `.card`** | **prepared component, released nothing.** Gave `taqseem` 7 of its 8 and `blueprint` 3 of its 20; both stay HELD |
@@ -239,7 +239,8 @@ from `layer(elements)` — and whoever takes one must take the other or they wil
 task settles.
 
 **Why UI-041 is third and not first.** It is needed by two pages and **completes neither on its
-own**: `taqseem` also needs UI-040, and `index` also needs UI-046's shell layout. UI-044a/b and UI-045
+own**: `taqseem` also needs UI-040 and UI-041b, and `index` never used `.btn` at all — its
+button-shaped blocker is **D22**, which no component can unpark. UI-044a/b and UI-045
 were ordered ahead of it because they were expected to complete their pages outright; **all three
 are now done and none of them did.**
 
@@ -259,12 +260,12 @@ schedule work for it.
 
 | page | the actual blocker | released by |
 |---|---|---|
-| `landing` | **two blockers, not one.** (1) hero headline shrinks and `reset.css` zeroes the gap under it — **fixed by UI-045**, prepared and not yet live. (2) `.icon` 22px → 17px on 11 icons: `99-legacy/landing.css`:26 wins today only by document order and loses to unlayered `static/app.css`:57 the moment the page is layered — **untouched by UI-045**. Both measured 2026-08-07 in a three-state swap | **UI-045 + UI-046**, or UI-045 plus a decision to accept 17px icons |
+| `landing` | **two blockers, not one.** (1) hero headline shrinks and `reset.css` zeroes the gap under it — **fixed by UI-045**, prepared and not yet live. (2) `.icon` 22px → 17px on 11 icons: `99-legacy/landing.css`:26 wins today only by document order and loses to unlayered `static/app.css`:57 the moment the page is layered — **untouched by UI-045**. Both measured 2026-08-07 in a three-state swap | **UI-045 + the icon decision**, or UI-045 plus a decision to accept 17px icons — no component can reach `.icon`; the release is **`UI-047d`** |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions — **fixed by UI-044a, which is prepared and not yet live** | **UI-044a** (done) + Irfan's call on **D31** → UI-042 |
-| `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** |
-| `taqseem` | 16 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 |
-| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-046 only.** This row said "UI-041 + UI-046" and UI-041 measured it false on 2026-08-06: `index`'s `.gen-btn`/`.ghost-btn` controls come from `99-legacy/index.css`:115/:123 and survive migration untouched — it never used `.btn` at all. **28 elements, 14 each**, of `index.html`'s 39 `<button>`s; this row said "29 buttons", which is the class-**string** count — the 29th is `.ghost-btn` on an `<a>`. Its button-shaped blocker is the `forms.css` reset, which is **D22**, and D22 is parked precisely because no component can unpark it |
-| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads — now measured by the script, not by hand** (D32 resolved 2026-08-08): `--accent`, `--accent-soft`, `--brand`, `--chip-bg`, `--fg`, `--green`, `--green-bg`, `--muted`, `--red`, **not one with a fallback** | **UI-046** |
+| `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** (done, parked) — the release is **`UI-047f`**, and it needs a real printer check |
+| `taqseem` | 17 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 (both done) **+ UI-041b** — the release is **`UI-047a`** |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-043** (`.tag`), and **D22**, which no component can unpark — the release is **`UI-047c`**. This row said "UI-046 only", and before that "UI-041 + UI-046" and UI-041 measured it false on 2026-08-06: `index`'s `.gen-btn`/`.ghost-btn` controls come from `99-legacy/index.css`:115/:123 and survive migration untouched — it never used `.btn` at all. **28 elements, 14 each**, of `index.html`'s 39 `<button>`s; this row said "29 buttons", which is the class-**string** count — the 29th is `.ghost-btn` on an `<a>`. Its button-shaped blocker is the `forms.css` reset, which is **D22**, and D22 is parked precisely because no component can unpark it |
+| `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads — now measured by the script, not by hand** (D32 resolved 2026-08-08): `--accent`, `--accent-soft`, `--brand`, `--chip-bg`, `--fg`, `--green`, `--green-bg`, `--muted`, `--red`, **not one with a fallback** | UI-040 (done) **+ UI-046 + UI-043** — the release is **`UI-047b`** |
 
 **D32 was run before UI-046, as this line required — resolved 2026-08-08.** `css_orphans.py`
 now reads inline `style=""`, and `blueprint`'s exposure is measured rather than hand-counted:
@@ -291,7 +292,9 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 | **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
 
 **`UI-041b` — `.btn--accent`, and it settles D7.** `taqseem`'s two `btn gold` buttons need a fill
-`btn.css` does not carry; `btn.css`'s own header lists it among the four shapes with no home.
+`btn.css` does not carry; `STATUS.md`'s UI-041 ledger row lists it among the four shapes with no
+home (accent/gold, with secondary, danger and on-dark). `btn.css`'s header carries no such list —
+it points at STATUS.md.
 Measured: `theme.css`:120 is two declarations, `background: var(--accent); color: #fff`, and
 `--accent` is the same value Tier 2's `--color-accent` already resolves to — so nothing is
 invented. **Name it `--accent`, not `--gold`**: D7 records that the `gold` class renders teal and
