@@ -282,6 +282,36 @@ own blockers, and none of them is 15 minutes.**
 
 IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 
+> **ORDER, REVISED 2026-08-09 — decisions first, then the three pages that need no new CSS.**
+> Read from the table below, not asserted: **`landing`, `bank` and `print` need ZERO component
+> work** — their components column is "none". They are held on decisions and one printer check.
+> Doing them first opens **three of the six pages without writing a line of CSS**, which is the
+> cheapest visible progress available. The old order ran components first and ended with five
+> component tasks shipped and no page open.
+>
+> | phase | work | opens |
+> |---|---|---|
+> | **1** | the four items in `docs/ui/DECISIONS-FOR-IRFAN.md` | — |
+> | **2** | `UI-047d` `landing` · `UI-047e` `bank` · `UI-047f` `print` | **3 pages** |
+> | **3** | `UI-041b` → `UI-047a` | **`taqseem`** |
+> | **4** | `UI-043` + `UI-046` → `UI-047b`, `UI-047c` | last 2 pages |
+> | **5** | Sprint 5, then Sprint 6 | legacy deleted |
+
+> **REVIEW GATE, REVISED 2026-08-09 — three tiers, because one rule was wrong in both directions.**
+> 1. **CSS that reaches a live page → the SCRIPT gate, not a review agent.**
+>    `css_type_probe.mjs`, 0 element × property deltas on `slo`/`slo-health`/`library`. Evidence:
+>    UI-041 ran four review rounds; exactly one finding touched a CSS rule, and the probe returned
+>    0 deltas every time. **A script catches breakage; a review catches prose.**
+> 2. **Docs that make a NEW claim or a NEW number → ONE round of review. Not four.**
+>    Not zero either: `156d4a0` was docs-only, shipped unreviewed, and carried **nine** false
+>    claims — corrected in `e602d78`. Skipping review because "it is only docs" is how that
+>    happened.
+> 3. **Purely mechanical docs (an ID renamed, a number corrected, a stale line deleted) → no
+>    review.**
+>
+> **And numbers go in tables, not paragraphs.** `docs/ui/` is 2,655 lines against 1,753 lines of
+> new CSS. Do not grow it.
+
 | ID | page | components it needs | what the migration itself must do | can it start? |
 |---|---|---|---|---|
 | **UI-047a** | `taqseem` | UI-040 ✅ · UI-041 ✅ · **UI-041b** | re-class 3 buttons (`btn gold` ×2, `btn ghost`), the bare `.card`, a 23-name compat block, 2 `.brand` partials | **after UI-041b** — closest to ready |
