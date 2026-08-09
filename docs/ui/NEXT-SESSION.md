@@ -46,6 +46,16 @@ otherwise and was corrected on 2026-08-08 (`PLAN.md` §Sprint 4b).
 - **Next component task:** **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules, scoped and
   planned. It releases nothing, and `blueprint` needs UI-043 and its migration as well.
 
+**`UI-041b`'s first step is a READ, not a write.** `PLAN.md`:295 records `theme.css`:120 as
+`background: var(--accent); color: #fff` — **that second declaration is a raw hex and cannot be
+copied into `btn.css`**, which carries zero raw hex including its comments and says so in its
+header; `unsanctioned_hex` has failed five times on this epic. So before writing anything, read
+`01-settings/theme.css` and `01-settings/tokens.css` and answer one question: **does a Tier 2
+on-accent text role already exist?** `btn.css`:113 already pairs `--color-action` with
+`--color-on-action`, so the accent pair may be there already. If it is not, UI-041b adds a Tier 2
+role as well as the modifier, and that is a bigger task than "two declarations" — decide it on
+the read, not on this line.
+
 Read `STATUS.md` §"THE SIX HELD PAGES, MEASURED" before choosing — every per-page number is
 there, measured, including **two blockers that are decisions rather than tasks**.
 
