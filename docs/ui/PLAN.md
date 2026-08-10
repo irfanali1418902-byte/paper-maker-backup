@@ -317,7 +317,7 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 | **UI-047a** | `taqseem` | UI-040 ✅ · UI-041 ✅ · **UI-041b** | re-class 3 buttons (`btn gold` ×2, `btn ghost`), the bare `.card`, a 23-name compat block, 2 `.brand` partials | **after UI-041b** — closest to ready |
 | **UI-047b** | `blueprint` | UI-040 ✅ · UI-043 · UI-046 | 19-name compat block (covers D32's 9 markup reads too), 3 `.brand` rules, 3 partials, **2 media-query rules** | after UI-043 + UI-046 |
 | **UI-047c** | `index` | UI-043 (`.tag`) | `.row`, `.summary-row:last-child`, 4 partials incl. `.main`'s three properties | **blocked on D22** — no component can unpark it |
-| **UI-047d** | `landing` | none — UI-045 ✅ | **the icon decision** | **blocked on a decision nobody owns** |
+| **UI-047d** ✅ | `landing` | none — UI-045 ✅ | **DONE 2026-08-10.** Icon decision answered **A (accept 17px)**; entry file moved out of `docs/ui/`, one `<link>` swapped. 279 deltas on the page, **0 on every live page**, hero restored to HEAD exactly | **DONE — first page opened since Sprint 3** |
 | **UI-047e** | `bank` | none — UI-044a ✅ | activate the parked entry file | **blocked on D31** — Irfan's call |
 | **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
 

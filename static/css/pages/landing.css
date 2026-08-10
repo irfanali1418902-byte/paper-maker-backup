@@ -1,37 +1,14 @@
 /* =========================================================================
-   ⚠ PARKED — THIS FILE IS NOT LIVE AND MUST NOT BE MOVED BACK CASUALLY.
-
-   It is a finished, measured UI-031b entry file for landing.html that Irfan
-   HELD on 2026-08-01 rather than shipped. It sits in docs/ because anything
-   under static/css/ counts toward the shared_css_lines metric even when no
-   page links it, and re-pinning BASELINE.json with 55 unlinked lines in it
-   would bury them inside the next task's number.
-
-   WHY IT WAS HELD: the migration is correct and green, but it visibly
-   degrades the app's front door. landing's legacy h1 is the largest in the
-   project and the new tree's h1 is smaller, so the hero headline SHRINKS and
-   reset.css zeroes the 12px gap beneath it, leaving the title jammed against
-   the paragraph. Unlike D26/D27/D28 this is not a Sprint 4 tidy-up on an
-   interior page. The real fix is a hero/display type step — UI-045, below.
-
-   "(two lines -> one)" USED TO STAND HERE AND IT IS FALSE. Measured
-   2026-08-07 at 1280x900, this page's real h1: at HEAD it is 30px with a 36px
-   line box and an element height of 72px — exactly two lines. Migrated
-   without UI-045's rule it is 24px / 26.4px / 52.78px — 52.78 / 26.4 is
-   exactly two lines as well. `max-width: 640px` holds the wrap in both
-   states. The shrink is real and the dead gap is real; the reflow to one line
-   is not, and was never measured before it was written down.
-
-   TO RESUME: move this file back to static/css/pages/landing.css, change
-   landing.html's second <link> from /static/css/99-legacy/landing.css to
-   /static/css/pages/landing.css, and re-measure. The measurement below is
-   still valid as of 2026-08-01; the icon finding in particular is real and
-   will recur.
-   =========================================================================
-
-   pages/landing.css — the single stylesheet landing.html links (UI-031b)
-   Two @imports. No rules of its own, ever.
+   pages/landing.css — the single stylesheet landing.html links (UI-031b/UI-047d)
+   Two @imports, plus one page-scoped rule. See the UI-045 block below.
    -------------------------------------------------------------------------
+   LIVE since UI-047d, 2026-08-10. It was written at UI-031b and HELD by Irfan
+   on 2026-08-01 because the migration, while green, shrank the hero headline
+   and let reset.css zero the 12px gap beneath it — the app's front door. That
+   is fixed by the UI-045 rule at the bottom of this file, measured back to
+   HEAD exactly. It was parked in docs/ui/ in the meantime so its lines could
+   not count toward shared_css_lines while nothing linked them.
+
    THE MECHANISM IS NOT RE-ARGUED HERE — read pages/slo.css's header for why
    the legacy import lives in a per-page entry file (D19/D20) and why line 2
    must be an @import with layer() rather than a second <link>.
@@ -47,24 +24,17 @@
 
    2. THE ICONS SHRINK, AND THAT IS THIS PAGE'S REAL DELTA. 99-legacy/
       landing.css:26 declares `.icon { width: 22px; height: 22px }` — the only
-      page in the project that overrides the sprite size. Today it WINS, purely
-      by document order: both it and static/app.css:57 (17px) are unlayered
-      <link>s and this one is second. The moment it moves into layer(legacy),
-      app.css — still unlayered, still linked, because it owns .icon until
-      Sprint 4's nav component — outranks it, and all 11 icons on this page go
-      22px -> 17px. Measured, before and after, not predicted: 11 elements at
-      22px before, 11 at 17px after.
+      page in the project that overrides the sprite size. Before this file went
+      live it WON, purely by document order: both it and static/app.css:57
+      (17px) were unlayered <link>s and this one was second. Now that it is
+      inside layer(legacy), app.css — still unlayered, still linked, and
+      reachable by no @layer — outranks it, and all 11 icons on this page are
+      17px. Measured, before and after, not predicted: 11 elements at 22px
+      before, 11 at 17px after.
 
       This was FORESEEN, in pages/slo.css's closing paragraph, which noted that
       app.css being unlayered is load-bearing "right now" precisely because of
       landing.css:26. It is the first time the epic has cashed that cheque.
-
-      It is NOT fixed here, and the reason is scope: this task moves a <link>
-      block. Restoring 22px would mean either authoring a rule in the new tree
-      (Sprint 4's nav/icon component owns that) or leaving landing on the old
-      mechanism (which defeats the task). Irfan's call at handover; if the
-      answer is "keep 22px", it belongs to UI-04x with the icon component and
-      it should be recorded there rather than patched here.
 
    3. NO D20 EXPOSURE. Measured before writing: landing.css declares 12 custom
       properties and reads 10, and the set it reads but does not declare is
@@ -85,7 +55,7 @@
 @import url("../99-legacy/landing.css") layer(legacy);
 
 /* =========================================================================
-   UI-045 — the hero, restored. Added 2026-08-07.
+   UI-045 — the hero, restored. Added 2026-08-07, went live with UI-047d.
 
    THIS IS THE SECOND ENTRY FILE TO CARRY A RULE, and the trade is the same
    one UI-044b recorded in parked-print.css: entry files are documented as two
@@ -107,11 +77,13 @@
    files, and one heading's optical nudge on one page is not a scale. Only the
    size is a scale step — --font-size-8 / --text-display, added in UI-045.
 
-   WHAT THIS DOES NOT FIX: the icons. 99-legacy/landing.css:26's
-   `.icon { 22px }` still loses to unlayered static/app.css:57 (17px) the
-   moment this file's legacy import makes it layered — 11 icons, 22px -> 17px,
-   measured. That is UI-046's, or an explicit decision to accept 17px.
-   LANDING IS NOT RELEASED BY UI-045 ALONE.
+   WHAT THIS DOES NOT FIX: the icons. See point 2 in the header above — 11
+   icons are 17px now, and no rule in the new tree can restore 22px, because
+   static/app.css:57 is unlayered and unlayered beats every @layer. Restoring
+   22px would need an UNLAYERED rule in this file. That is Irfan's decision,
+   recorded in docs/ui/DECISIONS-FOR-IRFAN.md item 1, and it is deliberately
+   NOT taken here. An earlier version of this comment said the icons belonged
+   to UI-046; that was measured false and corrected on 2026-08-09.
    ========================================================================= */
 
 @layer components {

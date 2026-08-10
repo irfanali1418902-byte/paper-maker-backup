@@ -7,7 +7,10 @@ re-measured while writing this page. No review agent read it — Irfan reads it 
 
 ---
 
-### 1. `landing` — the icons shrink when the page is layered
+### 1. `landing` — the icons shrink when the page is layered · **ANSWERED: A, 2026-08-10**
+
+**Irfan chose A — accept 17px.** No rule was written. `landing` migrated the same day (UI-047d)
+and the 11 icons are 17px, matching the other eight pages.
 
 **11 icons go 22px → 17px.** `99-legacy/landing.css`:26 (22px) wins today only by document order;
 `static/app.css`:57 (17px) is unlayered, and unlayered beats every `@layer`. The other eight pages
@@ -60,7 +63,7 @@ outranks `99-legacy/index.css`:34 by layer order. *(measured UI-032, 2026-08-04)
 
 | # | answer |
 |---|---|
-| 1 `landing` icons | A / B |
+| 1 `landing` icons | **A — 17px. Answered 2026-08-10, page migrated** ✅ |
 | 2 `bank` labels | A / B |
 | 3 `print` | edges OK? A / B · ink change OK? yes / no |
 | 4 `index` toggle | A / B |

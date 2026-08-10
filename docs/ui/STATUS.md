@@ -12,7 +12,7 @@ foundation `taqseem` needs, and `taqseem` also needs UI-040.
 
 ---
 
-## NEXT TASK → **UI-041b** (`.btn--accent`), then **UI-047a** (`taqseem`'s migration) — the shortest path to a page actually opening. **UI-046** (nav + shell) is the next *component* task and releases nothing. **UI-045 is DONE 2026-08-07 — and it did NOT release `landing`.** UI-041, UI-044a, UI-044b and UI-040 are done too; all five shipped nothing visible.
+## NEXT TASK → **`UI-047e`** (`bank`) and **`UI-047f`** (`print`) — both need only a decision from Irfan, no new CSS. Then **UI-041b** → **`UI-047a`** (`taqseem`). **`UI-047d` migrated `landing` on 2026-08-10 — the first page to open since Sprint 3, and 4 of 9 are now live.** Five component tasks (UI-040/041/044a/044b/045) shipped nothing visible; the migration did.
 
 ### UI-045 — **the display / hero type step. DONE 2026-08-07. PREPARED, NOT LIVE.**
 
@@ -39,10 +39,15 @@ by layer order, which is decided before specificity.
 deltas** — `font-size` 1, `line-height` 1, `margin-bottom` 1, `height` 5 (the `h1` and its
 containers). Nothing else on the page moved.
 
-**IT DOES NOT RELEASE `landing`, and that is measured, not feared.** The icons are 17px in
-**both** migrated states — the rule never touches them. `landing` needs the icon decision as
-well (**`UI-047d`**); no component can make it.
-Migrating the page costs **285** element × property deltas; this rule fixes **8** of them.
+**IT DID NOT RELEASE `landing`** — `UI-047d` did, on 2026-08-10, once Irfan accepted 17px icons.
+The icons are 17px in **both** migrated states; the rule never touches them.
+
+Migrating the page costs **285** element × property deltas. **This rule changes 8 of them and
+restores 6 to HEAD** — an earlier version of this line said "fixes 8" and the arithmetic that
+follows from it is wrong. The 6 that cancel are the `h1`'s four properties plus `.hero` and
+`.hero-inner` heights; the 2 that do **not** are `html` and `body` height, because the page below
+the hero is genuinely shorter (**1010.27px → 993.953px**). So the live migration measures
+**285 − 6 = 279**, reproduced three ways on 2026-08-10.
 
 **Live-page gate: 314,996 element × property comparisons, 0 deltas, 0 paths in only one
 snapshot, drift 0** on `slo`, `slo-health`, `library` and `bank`. The two token names reach all
@@ -1268,6 +1273,7 @@ fall by genuine deletion, and no page may gain a `<style>` block.
 | 2 Foundation | UI-020..021 | **2/2** | **done** |
 | 3 Shell | UI-030..032 | **2/3** | in progress — **UI-032's MEASUREMENT is done (both checks, all four pages, 2026-08-04) but no page is migrated**; those four are still on their old `<link>`s. Verdicts: `bank` and `index` are repetitions, `print` is 0 by D9, and **`blueprint` measures like a fourth held page** — 21 orphan tokens *and* 20 orphan rules, the whole `.app`/`.top`/`.nav` shell, so it needs Irfan and Sprint 4's components, not an entry file. UI-031: `slo`, `slo-health`, `library` live; **`landing` HELD** (hero regression, resumes after Sprint 4 typography) and **`taqseem` HELD** as UI-031c (16 orphan RULES — its buttons and cards live only in `static/theme.css`; resumes after Sprint 4 components). Both measured, neither to be re-attempted before Sprint 4 |
 | 4 Components | UI-040..046 | **4/7** | in progress — **UI-044a, UI-044b, UI-041, UI-045 and UI-040 done, all five PREPARED-NOT-LIVE**; **none released a held page, including UI-045, which the board predicted would release `landing` and does not** (D34's pattern again — `landing`'s second blocker is the icons, and **no component task can fix it**: `UI-047d`). Next: **UI-041b**, then UI-046, UI-042, UI-043 |
+| 4b Migrations | UI-047a..f | **1/6** | in progress — **`UI-047d` `landing` LIVE 2026-08-10**, the first page opened since Sprint 3. Gate: 0 element × property deltas on `slo`/`slo-health`/`library`/`bank`, drift 0; `landing` itself 279 deltas, hero restored to HEAD exactly, 11 icons 22px → 17px on Irfan's decision (A). `shared_css_lines` 2022 → **2117**, `unsanctioned_hex` flat at 429, pytest 906, ruff clean. Next: `UI-047e` `bank` and `UI-047f` `print`, both needing only a decision |
 | 5 Inline burn-down | UI-050..052 | 0/3 | not started |
 | 6 Legacy kill | UI-060..064 | 0/5 | not started |
 | 7 Optional | UI-070 | 0/1 | not started |

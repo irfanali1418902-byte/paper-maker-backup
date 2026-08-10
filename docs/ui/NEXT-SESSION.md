@@ -35,6 +35,15 @@
 > in all three files it touched. The message cannot be corrected — the commit is pushed and
 > history is not rewritten — so it is corrected here instead.
 
+> ## ✅ `landing` IS LIVE — `UI-047d`, 2026-08-10. **4 of 9 pages migrated; 5 held.**
+> The first page opened since Sprint 3, and it needed **no new CSS** — the entry file had been
+> parked and proof-tested since UI-031b/UI-045. Irfan answered decision 1 with **A (accept 17px
+> icons)**, so no rule was written. Gate: **0 element × property deltas** on `slo`, `slo-health`,
+> `library` and `bank`, drift 0. `landing` itself moved 279 pairs, hero restored to HEAD exactly.
+>
+> **Next two are the same shape and need no new CSS either:** `UI-047e` (`bank`, decision 2) and
+> `UI-047f` (`print`, the printer check). Both are in `docs/ui/DECISIONS-FOR-IRFAN.md`.
+
 ## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
 
 **Five component tasks have shipped and not one released a page** — UI-044a, UI-044b, UI-041,

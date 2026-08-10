@@ -30,13 +30,16 @@ const label = process.argv[2];
 const outdir = process.argv[3];
 mkdirSync(outdir, { recursive: true });
 
-// The three live pages are the gate. bank is the subject. Nothing else is measured:
-// taqseem has no Urdu rule at all (checked), index and print are held and unmigrated.
+// The three live pages are the gate. bank and landing are subjects. Nothing else is
+// measured: taqseem has no Urdu rule at all (checked), index and print are held.
+// landing added 2026-08-10 for UI-047d, per PROBES.md's rule that a migrating page
+// joins this list or the gate silently stops covering it.
 const PAGES = [
   { page: 'slo', url: `${BASE}/slo.html`, role: 'LIVE — regression gate' },
   { page: 'slo-health', url: `${BASE}/slo-health.html`, role: 'LIVE — regression gate' },
   { page: 'library', url: `${BASE}/library.html`, role: 'LIVE — regression gate' },
   { page: 'bank', url: `${BASE}/bank.html`, role: 'subject — the Urdu fix' },
+  { page: 'landing', url: `${BASE}/landing.html`, role: 'subject — UI-047d migration' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
