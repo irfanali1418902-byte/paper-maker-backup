@@ -47,6 +47,16 @@
   /* ── text ─────────────────────────────────────────────────────────────── */
   --color-text:        var(--slate-900);
   --color-text-muted:  var(--slate-500);
+  /* D31, UI-047e. --color-text-muted is slate-500, which was chosen against the
+     white canvas and clears AA there with little to spare. Measured on every
+     Tier 2 surface at 12px/600: white 4.76 and sunken 4.60 pass, but
+     --color-canvas 4.48, --color-surface-inset 4.34 and bank's own tinted
+     .urdu-toggle-row 4.44 all fail. slate-600 clears all five at 6.92-7.58, so
+     this is a darker sibling rather than a new colour — --color-text-nav
+     already reads the same primitive. Consumed by 03-elements/forms.css's
+     label. D31 is NOT closed by it: `small` (typography.css) and `.pagehead p`
+     (card.css) still read the weak role and can sit on a failing surface. */
+  --color-text-muted-strong: var(--slate-600);
   --color-text-nav:    var(--slate-600);
   --color-on-action:   var(--white);  /* text/icon on a filled action surface */
 

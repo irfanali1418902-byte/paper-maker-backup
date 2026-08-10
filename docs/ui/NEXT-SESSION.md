@@ -35,14 +35,25 @@
 > in all three files it touched. The message cannot be corrected — the commit is pushed and
 > history is not rewritten — so it is corrected here instead.
 
-> ## ✅ `landing` IS LIVE — `UI-047d`, 2026-08-10. **4 of 9 pages migrated; 5 held.**
-> The first page opened since Sprint 3, and it needed **no new CSS** — the entry file had been
-> parked and proof-tested since UI-031b/UI-045. Irfan answered decision 1 with **A (accept 17px
-> icons)**, so no rule was written. Gate: **0 element × property deltas** on `slo`, `slo-health`,
-> `library` and `bank`, drift 0. `landing` itself moved 279 pairs, hero restored to HEAD exactly.
+> ## ✅ `landing` AND `bank` ARE LIVE — `UI-047d` + `UI-047e`, 2026-08-10. **5 of 9 migrated; 4 held.**
+> Two pages opened in one day, both from entry files that had been parked and proof-tested for
+> days. Neither needed new CSS to migrate.
 >
-> **Next two are the same shape and need no new CSS either:** `UI-047e` (`bank`, decision 2) and
-> `UI-047f` (`print`, the printer check). Both are in `docs/ui/DECISIONS-FOR-IRFAN.md`.
+> - **`landing`** — decision 1 answered **A (accept 17px icons)**, so no rule was written. 279
+>   deltas on the page, hero restored to HEAD exactly, **0 on every other page**.
+> - **`bank`** — **the Urdu it was held on did not move**: 24 questions, `normal`/38px before and
+>   after. UI-044a's `05-components/urdu.css` had been imported and inert since 2026-08-05 and
+>   this migration is what finally gave it markup. First prepared component to reach real
+>   elements and do its job.
+>
+> **One live page was changed on purpose, and that is new.** D31 was answered **B** — a
+> `--color-text-muted-strong` role at `--slate-600`, read by `forms.css`'s `label`. `library`'s
+> 44 labels darkened with `bank`'s 59: **220 deltas on `library`, nothing else**, `slo` /
+> `slo-health` / `landing` at 0. The sheet said this was two labels 0.06 under AA; measurement
+> said slate-500 fails on three Tier 2 surfaces including `--color-canvas`. **D31 is still OPEN**
+> — `small` and `.pagehead p` keep the weak role.
+>
+> **Next:** `UI-047f` (`print`) — needs only Irfan's printer check. Then `UI-041b` → `UI-047a`.
 
 ## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
 

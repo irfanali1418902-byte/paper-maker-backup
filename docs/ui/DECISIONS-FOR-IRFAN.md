@@ -21,7 +21,19 @@ already show 17px. *(measured 2026-08-07 · `main.css`:73-74)*
 | **A** | accept **17px** | zero work — matches every other page |
 | **B** | keep **22px** | one unlayered rule in `landing`'s own entry file |
 
-### 2. `bank` — two labels miss WCAG AA by 0.06
+### 2. `bank` — two labels miss WCAG AA by 0.06 · **ANSWERED: B, 2026-08-10**
+
+**Irfan delegated the call; B was taken on the measurement.** `--color-text-muted-strong`
+(`--slate-600`) added and read by `forms.css`'s `label`. The two labels go **4.44 → 7.07**, and
+103 labels across `bank` and `library` take the darker role. **`library` is a live page and this
+changes it** — 44 labels, measured, nothing else. `slo`, `slo-health` and `landing`: 0 deltas.
+
+**The option sheet understated the problem, and that is why B won.** slate-500 fails AA on three
+Tier 2 surfaces at 12px/600, not one: tinted 4.44, **`--color-canvas` 4.48** and
+`--color-surface-inset` 4.34. Canvas is the page background, so this was never only bank's two
+labels. slate-600 clears all five surfaces at 6.92–7.58.
+
+**D31 stays OPEN.** `small` and `.pagehead p` still read the weak role. See DEFERRED.md.
 
 **2 of 59 labels land at 4.44:1 against AA's 4.5:1.** The other 57 sit on white at 4.76:1 and
 pass. The two that fail are on `.urdu-toggle-row`'s tinted background. *(D31 · `bank.html`, Edge 151)*
@@ -64,6 +76,6 @@ outranks `99-legacy/index.css`:34 by layer order. *(measured UI-032, 2026-08-04)
 | # | answer |
 |---|---|
 | 1 `landing` icons | **A — 17px. Answered 2026-08-10, page migrated** ✅ |
-| 2 `bank` labels | A / B |
+| 2 `bank` labels | **B — darker role. Answered 2026-08-10, page migrated** ✅ |
 | 3 `print` | edges OK? A / B · ink change OK? yes / no |
 | 4 `index` toggle | A / B |

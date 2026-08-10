@@ -318,7 +318,7 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 | **UI-047b** | `blueprint` | UI-040 ✅ · UI-043 · UI-046 | 19-name compat block (covers D32's 9 markup reads too), 3 `.brand` rules, 3 partials, **2 media-query rules** | after UI-043 + UI-046 |
 | **UI-047c** | `index` | UI-043 (`.tag`) | `.row`, `.summary-row:last-child`, 4 partials incl. `.main`'s three properties | **blocked on D22** — no component can unpark it |
 | **UI-047d** ✅ | `landing` | none — UI-045 ✅ | **DONE 2026-08-10.** Icon decision answered **A (accept 17px)**; entry file moved out of `docs/ui/`, one `<link>` swapped. 279 deltas on the page, **0 on every live page**, hero restored to HEAD exactly | **DONE — first page opened since Sprint 3** |
-| **UI-047e** | `bank` | none — UI-044a ✅ | activate the parked entry file | **blocked on D31** — Irfan's call |
+| **UI-047e** ✅ | `bank` | none — UI-044a ✅ | **DONE 2026-08-10.** Three `<link>`s → two. **UI-044a's Urdu fix activated on real markup for the first time — 24 questions, `normal`/38px, unchanged from HEAD**, which is what the page was held for. D31 answered **B**; `library`'s 44 labels changed with it | **DONE** |
 | **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
 
 **`UI-041b` — `.btn--accent`, and it settles D7.** `taqseem`'s two `btn gold` buttons need a fill

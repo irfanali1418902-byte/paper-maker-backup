@@ -1,36 +1,36 @@
 /* =========================================================================
-   ⚠ PARKED — THIS FILE IS NOT LIVE AND MUST NOT BE MOVED BACK CASUALLY.
+   pages/bank.css — the single stylesheet bank.html links (UI-032/UI-047e)
+   Two @imports. No rules of its own, ever.
+   -------------------------------------------------------------------------
+   LIVE since UI-047e. It was written at UI-032 and HELD by Irfan on
+   2026-08-04, parked in docs/ui/ so its lines could not count toward
+   shared_css_lines while nothing linked them. The migration itself is the
+   link block and nothing else: bank.html's three <link>s become two,
+   /static/app.css + this file, dropping /static/theme.css.
 
-   It is the UI-032 entry file for bank.html, held on 2026-08-04. Like
-   parked-landing.css and parked-taqseem.css it sits in docs/ because anything
-   under static/css/ counts toward shared_css_lines even when no page links
-   it, and re-pinning BASELINE.json with these unlinked lines in it would bury
-   them inside the next task's number.
+   WHY IT WAS HELD, AND WHY IT NO LONGER IS. Neither orphan check held it —
+   both pass, and the page's exposure is zero on both halves: bank borrows
+   nothing from static/theme.css that it does not redeclare or that the new
+   tree does not supply. It was held because of what the new tree does to
+   Urdu question text. 99-legacy/bank.css:229 `.q-text .qt.rtl` sets
+   'Noto Nastaliq Urdu' and a font-size but NO line-height, so the line box
+   came from the font's own metrics — and 03-elements/typography.css:41's
+   `body { line-height: var(--leading-body) }` sits in layer(elements), beats
+   layer(legacy), and took it over. Measured on the 24 Urdu-only questions in
+   this DB: the line box fell from the font's natural 38px to 21.75px, a 43%
+   cut, on the one script in the app whose glyphs paint well outside their em
+   box. Nothing clips — no .q-row / .q-text / .qt sets overflow — so the
+   failure mode was overlap, which is why it needed eyes and not a number.
+   Irfan looked and called it: Nastaliq gets looked at properly in Sprint 4,
+   not patched in a hurry.
 
-   TO RESTORE: move this file to static/css/pages/bank.css — the two @import
-   paths at the bottom are relative to THAT directory and resolve nowhere from
-   docs/ui/ — then swap bank.html's three <link>s for two:
-   /static/app.css + /static/css/pages/bank.css. That swap is -53 bytes and
-   touches nothing else in the file; it was performed, measured and reverted,
-   so it is known to be exactly the link block.
-
-   WHY IT WAS HELD, and it is NOT either orphan check — both pass, and the
-   page's exposure is zero on both halves: bank borrows nothing from
-   static/theme.css that it does not redeclare or that the new tree does not
-   supply. It was held because of what the NEW TREE does to Urdu question
-   text. 99-legacy/bank.css:229 `.q-text .qt.rtl` sets 'Noto Nastaliq Urdu'
-   and a font-size but NO line-height, so the line box came from the font's
-   own metrics — and 03-elements/typography.css:41's `body { line-height:
-   var(--leading-body) }` sits in layer(elements), beats layer(legacy), and
-   takes it over. Measured on the 24 Urdu-only questions in this DB: the line
-   box falls from the font's natural 38px to 21.75px, a 43% cut, on the one
-   script in the app whose glyphs paint well outside their em box. Nothing
-   clips — no .q-row / .q-text / .qt sets overflow — so the failure mode is
-   overlap, and the row's 14px padding absorbs some of it, which is why this
-   needed eyes and not a number. Irfan looked and called it: Nastaliq gets
-   looked at properly in Sprint 4, not patched in a hurry. This is D21 firing
-   on the first migrated page that actually renders Urdu — print could not
-   exercise it, because no paper in this DB has Urdu question text.
+   THAT IS UI-044a, AND IT SHIPPED ON 2026-08-05. 05-components/urdu.css
+   declares `.q-text .qt.rtl { line-height: var(--leading-nastaliq) }` in
+   layer(components), which outranks the element rule that caused this. It has
+   been imported by main.css and inert ever since, because bank is the only
+   page carrying those elements and bank did not load main.css. THIS FILE IS
+   WHAT ACTIVATES IT — the first time in the epic that a prepared component
+   reaches real markup.
 
    THE WORK BELOW IS FINISHED AND VERIFIED — it is why the file was kept
    rather than deleted. Do not re-derive it. The measurements are in

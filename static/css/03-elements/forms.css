@@ -47,7 +47,7 @@
 label {
   font-size: var(--text-label);
   font-weight: var(--font-weight-strong);
-  color: var(--color-text-muted);
+  color: var(--color-text-muted-strong);
 }
 
 input[type="text"],
