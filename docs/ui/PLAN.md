@@ -319,7 +319,7 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 | **UI-047c** | `index` | UI-043 (`.tag`) | `.row`, `.summary-row:last-child`, 4 partials incl. `.main`'s three properties | **blocked on D22** — no component can unpark it |
 | **UI-047d** ✅ | `landing` | none — UI-045 ✅ | **DONE 2026-08-10.** Icon decision answered **A (accept 17px)**; entry file moved out of `docs/ui/`, one `<link>` swapped. 279 deltas on the page, **0 on every live page**, hero restored to HEAD exactly | **DONE — first page opened since Sprint 3** |
 | **UI-047e** ✅ | `bank` | none — UI-044a ✅ | **DONE 2026-08-10.** Three `<link>`s → two. **UI-044a's Urdu fix activated on real markup for the first time — 24 questions, `normal`/38px, unchanged from HEAD**, which is what the page was held for. D31 answered **B**; `library`'s 44 labels changed with it | **DONE** |
-| **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
+| **UI-047f** ✅ | `print` | none — UI-044b ✅ | **DONE 2026-08-11.** Parked entry file activated, 2/6/7 confirmed twice, **plus D33's `.letterhead .school-ur` selector added to `urdu.css`** as that file's header required | **DONE — unheld by a real printer, not a probe.** D33 and D36 both Resolved |
 
 **`UI-041b` ✅ DONE 2026-08-11 — `.btn--accent`, and D7 is now Resolved.** Prepared, not live:
 `.btn--` is in zero markup, 0 element × property deltas on all five live pages. **It is not the

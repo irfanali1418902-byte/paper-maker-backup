@@ -43,7 +43,11 @@ pass. The two that fail are on `.urdu-toggle-row`'s tinted background. *(D31 · 
 | **A** | accept **4.44:1** | zero work — `bank` migrates now |
 | **B** | add `--color-text-muted-strong` | lifts all 59 at once — D31 calls this the one-line fix |
 
-### 3. `print` — one real print, on a real printer
+### 3. `print` — one real print, on a real printer · **DONE: PASSED, 2026-08-11**
+
+**Irfan printed all three papers on real paper and passed them**: edges inside, slate ink reads
+clean, pagination correct — **`0d04c750` came out at 2 pages, not 3**, so D36's fix works on a
+physical printer and not only in `Page.printToPDF`. `print` migrated the same day (UI-047f).
 
 **Not a decision, a check.** Margin is **52.9134px = exactly 14mm** on all four sides, before *and*
 after migration (D35), and page counts are back to **2 / 6 / 7** (UI-044b). What is unproven is a
@@ -77,5 +81,5 @@ outranks `99-legacy/index.css`:34 by layer order. *(measured UI-032, 2026-08-04)
 |---|---|
 | 1 `landing` icons | **A — 17px. Answered 2026-08-10, page migrated** ✅ |
 | 2 `bank` labels | **B — darker role. Answered 2026-08-10, page migrated** ✅ |
-| 3 `print` | edges OK? A / B · ink change OK? yes / no |
+| 3 `print` | **PASSED — edges OK, ink OK, 2/6/7 on paper. 2026-08-11** ✅ |
 | 4 `index` toggle | A / B |

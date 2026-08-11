@@ -26,10 +26,11 @@
    1.7 (print.css:182 .qtext-ur, index.css:257 body.lang-ur .h1), 1.8
    (print.css:280 .field-group .urdu-input), 1.9 (bank.css:94 .urdu-mode,
    index.css:258 body.lang-ur .app-nav a) and 2.0 (index.css:36 .urdu, .ur). Only
-   TWO declare none — bank.css:229, fixed below, and print.css:126
-   .letterhead .school-ur, which is DEFERRED D33 and is NOT fixed here because
-   print.html is HELD and unmigrated: it does not link main.css, so a rule here
-   would not reach it. When print migrates, add its selector to this file.
+   TWO declare none — bank.css:229 and print.css:126 .letterhead .school-ur,
+   which was DEFERRED D33. **Both are fixed below now.** The second was held back
+   deliberately while print.html was unmigrated: the page did not link main.css,
+   so a rule here could not reach it and would have been dead CSS. This file said
+   "when print migrates, add its selector", and UI-047f is that commit.
 
    WHY `normal` AND NOT 1.9. The value restores exactly what a teacher sees on
    bank.html today (38px at 15px — measured at HEAD, not assumed), so unholding the
@@ -46,6 +47,21 @@
    computed style; that is a gate this task re-runs after every rule, not a claim.
    ========================================================================= */
 
-.q-text .qt.rtl {
+/* `.letterhead .school-ur` added by UI-047f, 2026-08-11 — this is D33, and the
+   header above predicted the exact commit it would land in. 99-legacy/print.css
+   :126 sets 'Noto Nastaliq Urdu' at 19px with NO line-height, and no ancestor
+   supplies one (body:24, .sheet:112, .letterhead:118 each read), so it inherited
+   03-elements/typography.css:41's body rule from layer(elements): normal ->
+   27.55px while the glyph line rect stays 47px, a 47px ink extent in a 28px box.
+   It could not be fixed before now — print.html did not link main.css, so a rule
+   here was unreachable, which is why the header says to add the selector in the
+   migrating commit rather than earlier.
+   IT SHIPS UNVERIFIED ON PAPER, AND THAT IS STATED RATHER THAN GLOSSED:
+   school_name_ur is EMPTY in this database, so the element renders nothing and
+   the print check that unheld this page could not have exercised it either way.
+   The cascade fix is the same one bank's Urdu took and measured; the visual
+   proof needs a school with an Urdu name filled in. D33 records how. */
+.q-text .qt.rtl,
+.letterhead .school-ur {
   line-height: var(--leading-nastaliq);
 }

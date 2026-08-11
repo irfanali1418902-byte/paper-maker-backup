@@ -1,22 +1,28 @@
 /* =========================================================================
-   ⚠ PARKED — THIS FILE IS NOT LIVE. It is NOT held for a defect.
+   pages/print.css — the single stylesheet print.html links (UI-032/UI-047f)
+   Two @imports plus one page-scoped print-media rule. See the bottom.
+   -------------------------------------------------------------------------
+   LIVE since UI-047f, 2026-08-11, and this page was unheld by a REAL PRINTER
+   rather than by a probe. Irfan printed all three test papers and confirmed
+   the edges are inside, the slate ink reads clean, and `0d04c750` comes out at
+   2 pages and not 3 — D36's fix working on paper, not only in Page.printToPDF.
+   D33 and D36 are both Resolved in that commit.
 
-   It is the UI-032 entry file for print.html. The migration was performed,
-   measured in print media, and CHECKED BY IRFAN IN A REAL PRINT PREVIEW on
-   two real papers — he found the output correct and said ship. It was then
-   reverted anyway, unshipped, because the session ended before the decision
-   was committed: the independent review agent (§12 step 5) died part-way on
-   an API spend limit, so the gate was never satisfied, and Irfan chose to
-   stop rather than commit an unreviewed shipping change. THE PAGE IS NOT
-   HELD AND NOTHING IS WRONG WITH THIS FILE. See docs/ui/NEXT-SESSION.md.
+   ITS HISTORY HAS THREE CHAPTERS AND THEY MUST NOT BE MERGED. First it was
+   migrated, measured, and checked by Irfan in a real print preview on two
+   papers — correct, ship — and then reverted unshipped, because the review
+   agent died part-way on an API spend limit and §12 forbids committing an
+   unreviewed shipping change. Then it was HELD on a reported --space-* margin
+   regression, which a third pass measured and RETIRED (D35): the printed
+   margin does not move at all. That same run found the real regression, D36 —
+   `0d04c750` gaining a printed page from D21's line-height growth — which is
+   what the rule at the bottom of this file fixes.
 
-   It sits in docs/ because anything under static/css/ counts toward
-   shared_css_lines even when no page links it.
+   It was parked in docs/ in the meantime, because anything under static/css/
+   counts toward shared_css_lines even when no page links it.
 
-   TO RESTORE: move this file to static/css/pages/print.css — the two @import
-   paths at the bottom are relative to THAT directory and resolve nowhere
-   from docs/ui/ — then change print.html's SECOND <link> (it has only two,
-   and app.css stays) from /static/css/99-legacy/print.css to
+   THE MIGRATION ITSELF: print.html's SECOND <link> (it has only two, and
+   app.css stays) goes from /static/css/99-legacy/print.css to
    /static/css/pages/print.css. That swap is -4 bytes, one line, and it was
    performed and reverted, so it is known to be exactly that.
 

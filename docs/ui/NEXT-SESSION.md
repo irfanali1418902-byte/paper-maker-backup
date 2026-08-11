@@ -58,8 +58,15 @@
 > `--teal-500` is **3.03:1** and the button is 15px/700, so the legacy `.btn.gold` fails AA on
 > `taqseem` today. Irfan chose to darken the fill (`--teal-600`, **6.07:1**) rather than the text.
 >
-> **Next:** `UI-047f` (`print`), which needs only Irfan's printer check. `UI-047a` (`taqseem`)
-> has no blocker left either, but read the block below before starting it.
+> **`UI-047f` migrated `print` on 2026-08-11 — 6 of 9 pages are live, and D33 and D36 are both
+> Resolved.** It is the first page in this epic unheld by a **physical printer** rather than a
+> probe: Irfan printed all three papers and confirmed edges inside, slate ink clean, and
+> `0d04c750` at **2 pages, not 3** — D36's fix working on paper, not only in `Page.printToPDF`.
+> D33's `.letterhead .school-ur` selector went into `05-components/urdu.css` in the same commit,
+> as that file's header had instructed; **it ships unverified on paper**, because
+> `school_name_ur` is empty in this database and nothing renders.
+>
+> **Next:** `UI-047a` (`taqseem`) — no blocker left, but read the block below before starting it.
 
 > ## ⚠ `UI-047a` (`taqseem`) — START WITH THE ENUMERATION, NOT THE `<link>`
 > **Irfan's call, 2026-08-11: this one gets a fresh session.** It is the first migration that
