@@ -53,8 +53,18 @@ async function evaluate(sid, expr) {
   return r.result.value;
 }
 
+/* Optional second argument, added UI-041b 2026-08-11: a selector substring. The walk
+ * already reaches every @imported sheet, so reporting which CSSStyleRules carry that
+ * substring — with the layer they arrived in and how many elements they match — answers
+ * "is this new rule in the CSSOM, and is it inert or unreachable?" for the cost of one
+ * condition. That is the check UI-041's review ran by hand. Omit the argument and the
+ * script behaves exactly as before. */
+const NEEDLE = process.argv[3] ?? null;
+
 const EXPR = String.raw`(() => {
+  const NEEDLE = ${JSON.stringify(NEEDLE)};
   const found = [];
+  const matched = [];
   const layers = [];
   const seen = new Set();
   const walk = (sheet, origin, layerCtx, depth) => {
@@ -73,11 +83,14 @@ const EXPR = String.raw`(() => {
       if (kind === 'CSSLayerStatementRule') layers.push({ origin, names: [...r.nameList] });
       if (kind === 'CSSLayerBlockRule') { walk({ cssRules: r.cssRules }, origin, r.name || '(anonymous)', depth + 1); continue; }
       if (kind === 'CSSPageRule') found.push({ origin, layer: layerCtx ?? '(unlayered)', text: r.cssText, depth });
+      if (kind === 'CSSStyleRule' && NEEDLE && r.selectorText && r.selectorText.includes(NEEDLE))
+        matched.push({ origin, layer: layerCtx ?? '(unlayered)', selector: r.selectorText,
+                       text: r.cssText, matches: document.querySelectorAll(r.selectorText).length, depth });
       if (r.cssRules && kind !== 'CSSPageRule') walk({ cssRules: r.cssRules }, origin, layerCtx, depth + 1);
     }
   };
   for (const ss of document.styleSheets) walk(ss, ss.href || '(inline)', null, 0);
-  return { pageRules: found, layerStatements: layers,
+  return { pageRules: found, selectorHits: NEEDLE ? matched : undefined, layerStatements: layers,
            links: [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.getAttribute('href')) };
 })()`;
 

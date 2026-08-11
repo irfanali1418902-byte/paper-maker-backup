@@ -53,7 +53,13 @@
 > said slate-500 fails on three Tier 2 surfaces including `--color-canvas`. **D31 is still OPEN**
 > — `small` and `.pagehead p` keep the weak role.
 >
-> **Next:** `UI-047f` (`print`) — needs only Irfan's printer check. Then `UI-041b` → `UI-047a`.
+> **`UI-041b` is DONE 2026-08-11** — `.btn--accent`, prepared not live, 0 deltas on all five live
+> pages, and **D7 is Resolved**. It was scoped as two declarations and was not: white on
+> `--teal-500` is **3.03:1** and the button is 15px/700, so the legacy `.btn.gold` fails AA on
+> `taqseem` today. Irfan chose to darken the fill (`--teal-600`, **6.07:1**) rather than the text.
+>
+> **Next:** `UI-047a` (`taqseem`) — nothing blocks it now. Or `UI-047f` (`print`), which needs
+> only Irfan's printer check.
 
 ## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
 

@@ -54,9 +54,16 @@
    Two ROLES account for the bulk of the 21 — a filled action and an outlined
    secondary — with the rest being size and context variations of those two
    (modal footers, a feedback bar on a dark surface, small row actions) plus
-   danger, which is a colour swap. Two variants is the scoped decision, not
+   danger, which is a colour swap. Two variants was the scoped decision, not
    the measured ceiling — see docs/ui/STATUS.md for the full inventory and
    the shapes that need a home before bank and blueprint migrate.
+
+   THERE ARE THREE NOW. UI-041b added `.btn--accent` on 2026-08-11, because
+   taqseem carries `btn gold` twice and cannot migrate without it. It is the
+   second FILLED variant, so it shares the filled geometry block below and
+   differs from `.btn--primary` in exactly two declarations. Of the four shapes
+   STATUS.md's UI-041 row lists as having no home — secondary, danger,
+   accent/gold, on-dark — accent/gold is now covered and three remain.
 
    PROVENANCE OF EVERY NUMBER — 99-legacy/bank.css:139 and :149, read, not
    invented. Colour comes from Tier 2 rather than from bank's own values.
@@ -94,7 +101,8 @@
    <a class="btn--ghost"> and a <button class="btn--ghost"> paint the same,
    which the legacy classes do not manage today. */
 .btn--primary,
-.btn--ghost {
+.btn--ghost,
+.btn--accent {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -105,14 +113,50 @@
   cursor: pointer;
 }
 
-.btn--primary {
+/* The filled shape. Split from the colour below in UI-041b so `.btn--accent`
+   shares the geometry rather than repeating it — the two filled variants
+   differ in exactly two declarations, which is what the board scoped. */
+.btn--primary,
+.btn--accent {
   min-height: 44px;
   padding: 0 20px;
   border: none;
-  background: var(--color-action);
-  color: var(--color-on-action);
   font-size: var(--text-body);
   font-weight: var(--font-weight-heading);
+}
+
+.btn--primary {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+/* UI-041b — the gold fill, and it settles D7. `theme.css`:120 sets a
+   `var(--accent)` background and a literal white text colour, read not
+   assumed, and that `--accent` resolves to exactly the value Tier 2's
+   `--color-accent` already carries — no colour is invented here, and neither
+   literal is repeated in this comment, because a copy-pasteable hex counts
+   toward `unsanctioned_hex` even inside a comment and this check has now
+   fired six times on this epic, every one of them through a comment, this one
+   included. THE NAME IS `--accent`, NOT `--gold`: D7 records that the
+   `gold` class renders teal and that the name lies, and carrying the lie into
+   this tree would be the one avoidable part of the port.
+
+   IT DOES NOT READ `--color-accent`, AND THAT IS THE FINDING. White on
+   teal-500 is 3.03:1. This button is 15px/700, under WCAG's large-text
+   threshold of 18.66px bold, so it needs 4.5:1 and the legacy button fails it
+   on `taqseem` today. Irfan's call, 2026-08-11: darken the fill rather than
+   darken the text, so both filled variants keep white text. `--teal-600` gives
+   6.07:1, sitting beside `.btn--primary`'s 6.29:1.
+
+   NO HOVER RULE, DELIBERATELY, and it matches today. `theme.css`'s generic
+   `.btn:hover` is at :119 and `.btn.gold` at :120 with equal specificity
+   (0,2,0 both), so the later rule wins and a gold button does not change on
+   hover. `.btn--primary` does have one; that asymmetry is real and is left
+   rather than invented, because a hover here needs a `--color-accent-hover`
+   role and that is a decision, not a port. Recorded like bank's drop shadow. */
+.btn--accent {
+  background: var(--color-accent-strong);
+  color: var(--color-on-accent);
 }
 
 .btn--primary:hover {
@@ -148,7 +192,8 @@
    live rules use, and the ghost inherits both by decision rather than by
    measurement — nothing in this repo declares a disabled ghost. */
 .btn--primary:disabled,
-.btn--ghost:disabled {
+.btn--ghost:disabled,
+.btn--accent:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

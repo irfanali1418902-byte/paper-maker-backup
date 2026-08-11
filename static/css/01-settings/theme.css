@@ -70,6 +70,10 @@
   /* ── accent (teal): highlight, focus ring, selected state ─────────────── */
   --color-accent:      var(--teal-500);
   --color-accent-soft: var(--teal-050);
+  /* The accent as a FILL that carries text, which --color-accent cannot do:
+     white on teal-500 is 3.03:1. See tokens.css's --teal-600. UI-041b. */
+  --color-accent-strong: var(--teal-600);
+  --color-on-accent:     var(--white);  /* text/icon on a filled accent surface */
 
   /* ── status ───────────────────────────────────────────────────────────── */
   --color-success:      var(--green-600);

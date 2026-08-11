@@ -17,7 +17,7 @@ in a scratchpad.
 | `css_print_probe.mjs` | **print** | Print-media computed styles **and PDF page counts** for the three live pages and `print.html` on three real papers. The gate that caught D36's shared-tree blast radius. |
 | `css_margin_probe.mjs` | **print** | `print.html` only: the margin chain (`html`/`body`/`.print-main`/`.sheet`), the three print knobs, `@page` as the engine sees it, and the PDF. Written for D35. |
 | `css_margin_diff.mjs` | — | Diffs two `css_margin_probe` runs and **names every element whose box moved**. Written because "12 elements changed padding" is not an answer when the question is whether the printed margin moved. |
-| `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. |
+| `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. **With an optional second argument (a selector substring) it also reports every `CSSStyleRule` carrying it — the layer it arrived in, and how many elements it matches.** That is the "is this new rule inert, or is it simply not there?" check UI-041's review ran by hand; UI-041b made it a flag. |
 
 `css_rules_probe.mjs` (older, UI-032) is the DOM half of `css_orphans.py --rules` and is
 unrelated to these five.
@@ -39,7 +39,7 @@ node scripts/css_type_probe.mjs       <label> <outdir>
 node scripts/css_print_probe.mjs      <label> <outdir>
 node scripts/css_margin_probe.mjs     <label> <outdir> <paperId...>
 node scripts/css_margin_diff.mjs      <before.json> <after.json>
-node scripts/css_page_rule_probe.mjs  <url>
+node scripts/css_page_rule_probe.mjs  <url> [selector-substring]
 ```
 
 Each writes `<outdir>/<label>.json` and prints a summary. **Use a scratchpad for `<outdir>`** —

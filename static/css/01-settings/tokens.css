@@ -55,6 +55,16 @@
   /* ── accent: teal (highlight, focus, selected state) ──────────────────── */
   --teal-050: #dcf5f4;
   --teal-500: #0ea5a4;
+  /* 600 exists because 500 cannot carry white text. Measured, not assumed:
+     white on --teal-500 is 3.03:1, and the accent button is 15px/700 — under
+     WCAG's large-text threshold of 18.66px bold, so it needs 4.5:1 and fails.
+     That is true of static/theme.css's `.btn.gold` today; it is not a defect
+     this tree introduced. White on this value is 6.07:1, chosen to sit beside
+     the primary button's 6.29:1 rather than to scrape past 4.5 — D31's lesson
+     from the day before, where a token picked with 0.26 to spare turned out to
+     fail on three surfaces. --teal-500 keeps the focus ring and the soft states,
+     where nothing sits on top of it. UI-041b. */
+  --teal-600: #0a6e6c;
 
   /* ── status: traffic-light, each with its tint ────────────────────────────
      Coverage semantics live in the app, not here: green >=100, amber 60-99,

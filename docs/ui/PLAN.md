@@ -321,7 +321,16 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 | **UI-047e** ✅ | `bank` | none — UI-044a ✅ | **DONE 2026-08-10.** Three `<link>`s → two. **UI-044a's Urdu fix activated on real markup for the first time — 24 questions, `normal`/38px, unchanged from HEAD**, which is what the page was held for. D31 answered **B**; `library`'s 44 labels changed with it | **DONE** |
 | **UI-047f** | `print` | none — UI-044b ✅ | activate the parked entry file, confirm 2/6/7 | **nearest to ready** — needs a real printer check |
 
-**`UI-041b` — `.btn--accent`, and it settles D7.** `taqseem`'s two `btn gold` buttons need a fill
+**`UI-041b` ✅ DONE 2026-08-11 — `.btn--accent`, and D7 is now Resolved.** Prepared, not live:
+`.btn--` is in zero markup, 0 element × property deltas on all five live pages. **It is not the
+two-declaration port this section predicted.** White on `--teal-500` is **3.03:1** and the button
+is 15px/700 — under WCAG's large-text threshold, so it needs 4.5:1, and the legacy `.btn.gold`
+fails it on `taqseem` today. Irfan chose to darken the fill rather than the text, keeping white
+text on both filled variants: a new `--teal-600` at **6.07:1**, beside `.btn--primary`'s 6.29:1.
+The filled geometry was split out of `.btn--primary` so the two variants differ in exactly two
+declarations. **`UI-047a` is now unblocked.** The original scoping follows.
+
+`taqseem`'s two `btn gold` buttons need a fill
 `btn.css` does not carry; `STATUS.md`'s UI-041 ledger row lists it among the four shapes with no
 home (accent/gold, with secondary, danger and on-dark). `btn.css`'s header carries no such list —
 it points at STATUS.md.
