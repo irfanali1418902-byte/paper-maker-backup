@@ -58,8 +58,52 @@
 > `--teal-500` is **3.03:1** and the button is 15px/700, so the legacy `.btn.gold` fails AA on
 > `taqseem` today. Irfan chose to darken the fill (`--teal-600`, **6.07:1**) rather than the text.
 >
-> **Next:** `UI-047a` (`taqseem`) — nothing blocks it now. Or `UI-047f` (`print`), which needs
-> only Irfan's printer check.
+> **Next:** `UI-047f` (`print`), which needs only Irfan's printer check. `UI-047a` (`taqseem`)
+> has no blocker left either, but read the block below before starting it.
+
+> ## ⚠ `UI-047a` (`taqseem`) — START WITH THE ENUMERATION, NOT THE `<link>`
+> **Irfan's call, 2026-08-11: this one gets a fresh session.** It is the first migration that
+> must re-class markup rather than only swap a `<link>`, and a computed-style gate cannot see
+> whether the page still *works*. Every number below was measured on 2026-08-11, on `taqseem.html`
+> at HEAD.
+>
+> **1. ENUMERATE FIRST, so the page is not left half-migrated.** List every rule the page loses
+> when `/static/theme.css` goes, and name the component or task that covers each. It was 17
+> orphan rules at the last count and the coverage is believed complete — `card.css` (UI-040),
+> `btn.css` (UI-041), `.btn--accent` (UI-041b), `forms.css` (UI-021) — **with one known
+> exception: the bare `.card`.** `card.css` ships deliberately without it, because `.card` is on
+> 13 live elements across `slo`/`slo-health`/`library` and `layer(components)` would repaint
+> them. It needs a page-scoped rule in `taqseem`'s own entry file. Confirm there is no second
+> exception before touching anything.
+>
+> **2. BROWSER-VERIFY THE BEHAVIOUR. This is the real work, and 0 deltas will not give it to you.**
+> Measured facts to start from, so the risk is assessed rather than guessed:
+>
+> | | measured |
+> |---|---|
+> | inline `onclick` attributes | **0** — the page says so itself at `taqseem.html`:310, "event delegation — koi inline onclick nahi" |
+> | the 3 buttons | **bound by `id`**, not by class — `$("genBtn")`, `$("confirmOk")`, `$("confirmCancel")`. **Re-classing `gold`/`ghost` cannot break them**, and nothing in the file matches on those two names |
+> | interactive nodes in source markup | **13** — 3 `<button>`, 3 `<select>`, 7 `<a href>` |
+> | the delegated handler | `#board` → `e.target.closest(".move-sel")`, and `.move-sel` is **JS-rendered** |
+> | chips | **JS-rendered** (`chipHtml()`), styled by `99-legacy/taqseem.css`:72, not orphaned |
+>
+> **The chips and the `.move-sel` selects are the whole reason this needs eyes.** They appear in
+> **no snapshot** — the probe measures 70 elements and they are not among them — so the entry
+> file's claim that they survive is a reading of the cascade, not a measurement of the page. The
+> same gap `index`'s `.paper-sheet` has. Load the page with real data, watch the chips render,
+> and change a select to fire `moveSlo`.
+>
+> **3. LOOK AT IT.** Both buttons clicked, the confirm modal opened and cancelled, the board
+> rendered. A green gate on a page nobody opened is not a migrated page.
+>
+> **This was attempted once and reverted, deliberately.** On 2026-08-11 the full migration was
+> performed and measured: 239 deltas on the page, **0 on all five other live pages**, drift 0, the
+> three buttons did **not** fall to UA default, `.card` byte-identical, frozen inventory intact
+> (`id` 12/12, `class` 44/44, `<script>` sha256 identical), and `.btn--accent` went `matches=0` →
+> `matches=2` in the CSSOM. All gates passed. **It was reverted anyway**, because none of that
+> touches step 2, and Irfan chose a fresh session over shipping a page nobody had clicked. The
+> entry file is parked at `docs/ui/parked-taqseem.css` and the work is reproducible from this
+> block.
 
 ## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
 
