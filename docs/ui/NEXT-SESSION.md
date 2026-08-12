@@ -243,6 +243,39 @@ migrated state **with** UI-045's rule applied, exactly as they are without it.
 
 ## THEN — **UI-046** (nav + shell). It prepares 12 of `blueprint`'s 20 rules and releases nothing.
 
+> ### ⚠ `UI-046` — START BY MEASURING `.icon`'s REACH, NOT BY WRITING THE 12 RULES
+> **Scope, measured and fixed — do not re-derive it.** These twelve, and no others:
+> `.app` · `.top` · `.top .crumbs` · `.top .crumbs b` · `.top .spacer` · `.top .avatar` ·
+> `.nav` · `.nav .grp` · `.nav a` · `.nav a .icon` · `.nav a:hover` · `.nav a.active`
+>
+> **Two things are OUT, and each for a measured reason:**
+>
+> | out | why |
+> |---|---|
+> | `.brand` (+ `.logo`, `b`, `small`) | it is **live on the migrated pages**; a component rule in `layer(components)` would repaint them. Same call `card.css` made for the bare `.card` and `btn.css` for the bare `.btn` |
+> | `.icon` | `static/app.css`:57 sets it **unlayered**, and unlayered beats every `@layer` (`main.css`:73-74). **No component in this tree can reach it** — that is measured, it is what `landing`'s icon decision turned on, and UI-046 was recorded as fixing it and cannot |
+>
+> **THE FIRST STEP IS THEREFORE A MEASUREMENT, AND IT IS THE ONE THIS SCOPE TURNS ON.** The
+> twelfth rule is **`.nav a .icon`** — it names `.icon`, and `.icon` is exactly the thing the row
+> above says no layer can reach. Those two statements cannot both be acted on without checking
+> which wins here. Before writing anything, measure on `blueprint`: does a `layer(components)`
+> rule at `.nav a .icon` (0,2,0, two classes and an element) actually take `width`/`height` from
+> unlayered `app.css`:57's bare `.icon`? **Specificity does not decide this — layer origin does,
+> and an unlayered rule sits outside the layer order entirely.** The expected answer is that it
+> does NOT win, in which case `.nav a .icon` is 11 rules plus a known-dead one and the scope must
+> say so. **Do not assume either way. `css_page_rule_probe.mjs <url> ".nav a"` reports the layer
+> each rule arrived in and how many elements it matches.**
+>
+> **It releases nothing, and that is not a failure — it is what component tasks do.** `blueprint`
+> additionally needs `UI-043` (its `.chip`) and its own migration `UI-047b`, which also carries a
+> 19-name compat block, 3 `.brand` rules, 3 partials and **two media-query rules nothing
+> redeclares** (`@media (max-width: 760px)`'s `.app` and `.nav`, so the narrow-viewport shell
+> breaks too). None of those four are inside the 12.
+>
+> **Gate:** `css_type_probe.mjs` must stay at 0 element × property deltas on all six live pages.
+> `.app`/`.top`/`.nav` are `blueprint`'s markup; confirm they match 0 elements on the six before
+> believing the 0.
+
 **The ordering rule this sprint was re-scoped around is *which task completes a page by
 itself*, and UI-045 has just failed that test in practice** — it was listed here as releasing
 `landing` and it does not.
