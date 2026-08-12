@@ -111,6 +111,14 @@
   font-family: inherit;
   text-decoration: none;
   cursor: pointer;
+  /* From theme.css:117's bare `.btn`, and it was the ONE declaration of that
+     rule's thirteen that no variant here carried. This file's own review did
+     not find it; UI-047a's enumeration did, by listing what `taqseem` loses
+     when theme.css goes and checking each against the tree. It is a port, not
+     a decision — the legacy buttons do not wrap today and nothing about this
+     migration should be what changes that. Inert on arrival: `.btn--` is in
+     zero markup, so no live page moves until taqseem re-classes. */
+  white-space: nowrap;
 }
 
 /* The filled shape. Split from the colour below in UI-041b so `.btn--accent`
