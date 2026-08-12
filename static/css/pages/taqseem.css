@@ -1,0 +1,136 @@
+/* =========================================================================
+   taqseem.html's entry file — UI-047a, live 2026-08-12.
+
+   It was written for UI-032 and parked in docs/ui/ on 2026-08-03 because
+   anything under static/css/ counts toward shared_css_lines even when no
+   page links it. It came back here when the components it waited for
+   shipped. Its two @import paths are relative to THIS directory.
+
+   WHY IT WAS HELD, and it was NOT the token block below: taqseem borrows 17
+   whole RULES from static/theme.css that its own 99-legacy/taqseem.css never
+   redeclares — the entire .btn / .card / .pagehead set, two input/:focus
+   rules, and :focus-visible. (The header said 16 while it was parked; that
+   count excluded :focus-visible, which the rules probe reports separately as
+   state-only. Both numbers are the same measurement.) Unlinking
+   static/theme.css dropped the page's three buttons to UA default and took
+   .card's shadow to none. D22 parked the button reset until UI-041.
+
+   UI-047a's enumeration re-ran that count on 2026-08-12 and checked all 17
+   against the tree rather than trusting the coverage claim. 15 are covered
+   outright — card.css (UI-040) for .pagehead ×3 and the four .card
+   descendants, btn.css (UI-041 + UI-041b) for the .btn set, forms.css
+   (UI-021) for select / select:focus / :focus-visible. Two were not, and
+   both are answered rather than carried:
+
+     · bare .card — card.css ships deliberately without it, because .card is
+       on 13 live elements across slo / slo-health / library and a
+       layer(components) rule would repaint all thirteen. It is page-scoped
+       below instead. That is the exception the board already knew about.
+     · white-space: nowrap — theme.css:117's bare .btn carried it and no
+       .btn--* variant did. It was the SECOND exception the board asked to be
+       confirmed or ruled out before anything was touched, and it was real.
+       Fixed at its own address in btn.css, not here, because it is a
+       property of the button and not of this page.
+
+   THE TOKEN HALF BELOW IS FINISHED AND VERIFIED — it is why the file was
+   kept rather than deleted. Do not re-derive it.
+
+   Mechanism: see pages/slo.css's header (D19) — the legacy import lives in a
+   per-page entry file and must carry layer(), never a second <link>.
+   D20 DOES hit this page, and the block below is the answer to it:
+   99-legacy/taqseem.css reads custom properties it never declares, every one
+   of them supplied by /static/theme.css and not one carrying a fallback, so
+   unlinking that file would leave them empty. Each is re-supplied here from a
+   Tier 2 role in 01-settings/theme.css — value for value, no literal of its
+   own. --font-display / --font-body / --font-data are deliberately ABSENT:
+   Tier 2 declares those three names itself and that collision is load-bearing
+   (see its header). The block sits in layer(legacy) because it is legacy debt
+   and dies with it in UI-064, and it follows the imports so it wins if a name
+   is ever declared on both sides.
+   ⚠ D29 — two files are named theme.css. This page DROPS /static/theme.css and
+   KEEPS /static/css/01-settings/theme.css; quote full paths in any handover.
+   Measurements live in STATUS.md's task-log row, never in this comment.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/taqseem.css") layer(legacy);
+
+@layer legacy {
+  :root {
+    /* brand + accent */
+    --brand:           var(--color-action);
+    --brand-2:         var(--color-action-hover);
+    --accent:          var(--color-accent);
+    --accent-soft:     var(--color-accent-soft);
+
+    /* surfaces */
+    --app-bg:          var(--color-canvas);
+    --panel:           var(--color-surface);
+    --panel-2:         var(--color-surface-sunken);
+    --chip-bg:         var(--color-surface-inset);
+
+    /* text + lines */
+    --fg:              var(--color-text);
+    --muted:           var(--color-text-muted);
+    --line:            var(--color-border);
+
+    /* the dark sidebar, still legacy */
+    --sidebar-bg:      var(--color-sidebar-bg);
+    --sidebar-fg:      var(--color-text-nav);
+    --sidebar-active:  var(--color-action);
+
+    /* status */
+    --green:           var(--color-success);
+    --green-bg:        var(--color-success-soft);
+    --yellow:          var(--color-warning);
+    --yellow-bg:       var(--color-warning-soft);
+    --red:             var(--color-danger);
+    --red-bg:          var(--color-danger-soft);
+
+    /* shape + elevation */
+    --radius:          var(--radius-container);
+    --radius-sm:       var(--radius-control);
+    --shadow:          var(--shadow-card);
+  }
+}
+
+/* THE BARE `.card`, PAGE-SCOPED — see the header. card.css cannot ship this
+   rule without repainting 13 live elements, and the four descendants it DOES
+   ship (.card.has-ch, .card > .ch, .card > .ch h3, .card > .cb) do not draw
+   the box: background, border, radius and shadow all live on the bare
+   selector. Values are theme.css:103's, read through Tier 2 roles rather than
+   through the compat block above, because card.css spells them that way and
+   this rule is card chrome that happens to be scoped, not legacy debt.
+   It follows landing.css:89's precedent — an entry file is two @imports and
+   nothing else, and a page-scoped rule buys that deviation by naming why. */
+@layer components {
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-container);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* THE TWO `.brand` PARTIALS. These are not orphans — 99-legacy/taqseem.css
+   :25 and :31 redeclare both selectors — but it does not redeclare every
+   property, and the rules probe reports exactly which survive the unlink:
+   `.brand` loses background, color and grid-area, `.brand small` loses
+   font-weight. Today theme.css supplies them because both files are unlayered
+   and theme.css wins whatever the legacy file leaves unset; after this
+   migration the legacy file is inside layer(legacy) and theme.css is gone,
+   so they must be re-supplied or the sidebar header loses its surface.
+   layer(legacy) rather than components: this is the legacy shell, it dies
+   with 99-legacy/taqseem.css in UI-064, and it sits after the imports so it
+   wins if that file ever declares the same names. */
+@layer legacy {
+  .brand {
+    grid-area: brand;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .brand small {
+    font-weight: 400;
+  }
+}
