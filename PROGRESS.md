@@ -1,5 +1,69 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-12 — UI-043 came off the critical path, and no CSS was written to do it
+
+**Sprint 4b, UI-ARCH epic.** Docs only. Full board: `docs/ui/STATUS.md`, evidence block in
+`docs/ui/NEXT-SESSION.md` §📐.
+
+**What the board said.** Both remaining pages — `blueprint` and `index` — were held on
+`UI-043`, a component task, for its `.chip` and its `.tag`. The order was `UI-043` → `UI-046`
+→ `UI-047b`.
+
+**What the enumeration measured.** Four rules are actually at stake: `.chip` (blueprint ×1),
+`.tag` (index ×2), `.row` (index ×1), `.summary-row:last-child` (index ×1). Three of them are
+already live on migrated pages. `main.css`:42 orders the layers with `legacy` lowest, so a
+`layer(components)` rule should beat the legacy file painting those elements — the same call
+`card.css` made for the bare `.card` and `btn.css` for the bare `.btn`. **But those two had safe
+descendants to ship and these three do not**: they are flat single rules with nothing underneath
+them, so a component file has nothing it can carry.
+
+**That reading was then tested rather than trusted**, because a cascade argument is exactly the
+kind of thing this epic keeps getting wrong. The three rules were written into
+`layer(components)` at `theme.css`'s own values, `css_type_probe` was run against a same-browser
+control, and the rules were reverted. **`landing` moved 21 element × property deltas and
+`taqseem` moved 2** (`gap` 12px → 10px). The mechanism is measured, not inferred.
+
+**The first run gave a false all-clear, and that is the part worth keeping.** It reported 0
+deltas everywhere but `landing`, which read as "`.row` is safe" — and that was written down and
+told to Irfan before it was checked. It was wrong. The probe's page list did not include
+`taqseem`, the one live page whose legacy `.row` sets a different `gap`; `slo` and `slo-health`
+returned 0 because their value already agrees, which is agreement and not absence of collision.
+**A 0 from a probe that is not looking at the page is not a 0.** `taqseem` was added to
+`css_type_probe.mjs` — late, since `UI-047a` migrated it that same day and should have added it
+then, exactly as that file's own comment requires.
+
+**`.chip` cannot be probe-measured at all.** `taqseem` has no static `.chip`; the class exists
+only inside `chipHtml()`'s template string, so the chips are absent from every snapshot until
+real data renders them. An earlier count of "`.chip` ×1" was counting that template string as
+markup. What can be compared is the two declarations, and they are not variants of one
+component — `99-legacy/taqseem.css`:72 is a standing bordered block holding a code, a strand, a
+sequence and a `<select>`; `theme.css`:127 is a flat pill. A component `.chip` would collapse
+the first into the second.
+
+**`.tag` is the same failure three times over**: the brand tagline on `index` (×2, both
+`data-i18n="brand.tag"`), the hero tagline on `landing` (which `brand.js`:27 queries as
+`.brand .tag:not([data-i18n])`), and a JS-rendered SLO code badge on `slo-health`.
+
+**Consequence.** All four rules are page-scoped and belong to the two migrations, `UI-047b` and
+`UI-047c` — exactly where `taqseem`'s bare `.card` went the same day. **`UI-043` is off the
+critical path**: `blueprint` now needs only `UI-046` plus its migration, and `index` needs only
+a decision on **D22**, with no code in front of it at all. UI-043's remaining scope is real but
+nothing waits on it — tables were already shipped by `03-elements/tables.css`, and the domain
+families are duplication work for Sprint 5/6.
+
+**The method is the transferable part.** This is the second finding in one day from the same
+step: list what a page loses when `theme.css` goes, then check each line against the tree
+instead of trusting the coverage claim. The first was a missing `white-space` in `btn.css`.
+Neither was found by review; both were found by one probe run and a grep.
+
+**And the correction is the second transferable part.** The claim in this entry was written
+once from a cascade reading, presented as settled, and then asked for by Irfan as a measurement
+before it could be committed. Measuring it confirmed the conclusion and broke one of the three
+arguments under it. The conclusion survived; the reasoning did not, and a board carrying the
+original wording would have taught the next session a false rule about `.row`.
+
+---
+
 ## 2026-08-12 — UI-047a: taqseem migrated, and its enumeration found a hole in a finished component
 
 **Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. **7 of 9 pages are now live**
@@ -32,8 +96,11 @@ rules probe reports 3 / 2 / 2 / 1 in `layer(components)` against UI-041b's `matc
 **And the page was opened before it was committed.** The same migration was performed on
 2026-08-11, passed every gate above, and was reverted deliberately — chips and the `.move-sel`
 selects are JS-rendered, appear in no snapshot, and no computed-style probe can see whether the
-page still works. This time the browser check came first: chips render, a select fires
-`moveSlo`, all three buttons work, the confirm modal opens and cancels, the board renders.
+page still works. This time the browser check came first. The checklist put to Irfan was: chips
+render, a select fires `moveSlo`, all three buttons work, the confirm modal opens and cancels,
+the board renders — and **he answered as a whole rather than item by item**, which is what this
+entry records. An earlier draft wrote the five as separately confirmed observations; they were
+the questions asked, not the answers given.
 Two changes are deliberate and were flagged in advance so they would not read as regressions —
 the buttons are taller (44px touch target) and the accent fill is darker, because white on the
 old fill measured 3.03:1 and failed WCAG on this page.

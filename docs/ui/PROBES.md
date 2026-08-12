@@ -13,7 +13,7 @@ in a scratchpad.
 
 | script | media | answers |
 |---|---|---|
-| `css_type_probe.mjs` | screen | The **live-page regression gate**. Computed styles for every element on `slo`, `slo-health`, `library` and `bank`, plus the Urdu line boxes. This is what proves a type change moved nothing. |
+| `css_type_probe.mjs` | screen | The **live-page regression gate**. Computed styles for every element on `slo`, `slo-health`, `library`, `taqseem` and `bank`, plus `landing` and the Urdu line boxes. This is what proves a type change moved nothing. `taqseem` joined 2026-08-12 — see the page-list rule below for what its absence cost. |
 | `css_print_probe.mjs` | **print** | Print-media computed styles **and PDF page counts** for the three live pages and `print.html` on three real papers. The gate that caught D36's shared-tree blast radius. |
 | `css_margin_probe.mjs` | **print** | `print.html` only: the margin chain (`html`/`body`/`.print-main`/`.sheet`), the three print knobs, `@page` as the engine sees it, and the PDF. Written for D35. |
 | `css_margin_diff.mjs` | — | Diffs two `css_margin_probe` runs and **names every element whose box moved**. Written because "12 elements changed padding" is not an answer when the question is whether the printed margin moved. |
@@ -66,9 +66,17 @@ The usual shape of a task is: measure at HEAD → make the change → measure �
   parameter is `paper_id` and the IDs are UUIDs — `?id=` silently renders nothing, which cost
   this epic time twice.
 
-- **The page list** in `css_type_probe.mjs` and `css_print_probe.mjs` is the three live pages
-  plus the subject. **Add a page to that list when it migrates** — otherwise the gate silently
-  stops covering it.
+- **The page list** in `css_type_probe.mjs` and `css_print_probe.mjs` is the live pages plus the
+  subject. **Add a page to that list when it migrates** — otherwise the gate silently stops
+  covering it.
+
+  **This rule was broken once, on 2026-08-12.** `UI-047a` migrated `taqseem` and did not add it,
+  and the omission was invisible for exactly as long as nothing asked a question about that page.
+  When one did — was `.row` safe to ship as a component? — the probe returned **0 deltas and the
+  0 was believed**, because a page returning nothing and a page not being measured look identical
+  in the output. Adding `taqseem` turned that 0 into 2 deltas and reversed the answer.
+  **A page missing from this list does not fail loudly; it agrees with you.** That is why the rule
+  is here rather than in a task's checklist.
 
 ---
 

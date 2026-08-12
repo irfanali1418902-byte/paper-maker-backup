@@ -96,32 +96,98 @@
 > **AND IT WAS OPENED.** The 2026-08-11 attempt passed every gate above and was reverted anyway,
 > because chips and `.move-sel` are JS-rendered, appear in no snapshot, and a computed-style probe
 > cannot see whether the page still works. This time Irfan checked in the browser **before** the
-> commit: chips render, a select fires `moveSlo`, all three buttons work, the confirm modal opens
-> and cancels, the board renders. Two deliberate changes were flagged in advance so they would not
-> read as regressions — buttons are taller (44px touch target) and the accent fill is darker,
-> because white on the old fill was 3.03:1 and failed WCAG on this page.
+> commit. **The checklist put to him** was: chips render, a select fires `moveSlo`, all three
+> buttons work, the confirm modal opens and cancels, the board renders. **He answered as a whole,
+> not item by item**, and this block says so rather than writing five separate confirmations he
+> did not give. Two deliberate changes were flagged in advance so they would not read as
+> regressions — buttons are taller (44px touch target) and the accent fill is darker, because
+> white on the old fill was 3.03:1 and failed WCAG on this page.
 
-## ▶ START HERE — **two pages left, and both of them go through `UI-043`.**
+## ▶ START HERE — **two pages left, and `UI-043` is NOT what either of them waits on.**
 
 **Five component tasks shipped and not one released a page** — UI-044a, UI-044b, UI-041, UI-045,
 UI-040. That is not five failures; it is what component tasks do, and the board was corrected on
 2026-08-08 (`PLAN.md` §Sprint 4b). **Four migrations have now released four pages** — UI-047d
 `landing`, UI-047e `bank`, UI-047f `print`, UI-047a `taqseem`. **7 of 9 live.**
 
-- **`UI-043`** — tables + domain, and it is the shared blocker: `blueprint` needs its `.chip`,
-  `index` needs its `.tag`. **Neither remaining page can open without it.**
-- **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules. Releases nothing, and **its 12 rules
-  cannot be verified until `UI-047b`** — see its block below, that is measured, not a guess.
-- **`UI-047c`** (`index`) is blocked on **D22** besides, which no component can unpark.
+- **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules. **This is the next task.** It releases
+  nothing, and **its 12 rules cannot be verified until `UI-047b`** — measured 2026-08-12, see its
+  block below.
+- **`UI-047b`** (`blueprint`) — needs UI-046, and now carries `.chip` itself.
+- **`UI-047c`** (`index`) — blocked on **D22**, which no component can unpark, and now carries
+  `.tag`, `.row` and `.summary-row` itself.
+- **`UI-043`** — off the critical path as of 2026-08-12, **by measurement**. See the block below.
 
-**The order that follows from those three lines is `UI-043` → `UI-046` → `UI-047b`**, which opens
-`blueprint` and leaves `index` waiting on a decision rather than on code.
+**The order is `UI-046` → `UI-047b`**, which opens `blueprint`. `index` then waits on a decision,
+not on code.
 
-**Take `UI-047a`'s lesson into `UI-043`: enumerate before writing.** That task's step 1 found a
-declaration missing from `btn.css` — `white-space`, twelve of thirteen ported and the thirteenth
-simply absent — that four rounds of review on UI-041 had not. The method that found it was
-listing what a page loses when `theme.css` goes and checking each line against the tree, and it
-costs one probe run.
+> ### 📐 `UI-043` CAME OFF THE CRITICAL PATH — measured 2026-08-12, and this is the evidence
+> The board said `blueprint` and `index` both wait on `UI-043` for its `.chip` and its `.tag`.
+> **They do not, and no component task can give them those rules.** Four rules are at stake:
+>
+> | rule | needed by | can a component own it? | how that was established |
+> |---|---|---|---|
+> | `.tag` | `index` ×2 | **no** | **measured — 21 element × property deltas on `landing`** |
+> | `.row` | `index` ×1 | **no** | **measured — 2 deltas on `taqseem`**, `gap` 12px → 10px |
+> | `.chip` | `blueprint` ×1 | **no** | mechanism measured twice above; the two rules compared line by line. **Not probe-measurable — see below** |
+> | `.summary-row` + `:last-child` | `index` | yes | it exists only on `index`, so componentising it buys nothing |
+>
+> **THE MECHANISM IS MEASURED, NOT REASONED.** `main.css`:42 orders the layers
+> `legacy, settings, generic, elements, objects, components, utilities` — legacy is lowest — so a
+> `layer(components)` rule should beat the legacy file painting those elements. **That reading was
+> then tested rather than trusted**: the three rules were written into a `layer(components)` file
+> at `theme.css`'s own values, `css_type_probe` was run against a same-browser control, and the
+> rules were reverted. `landing` moved 21 deltas and `taqseem` moved 2. The cascade reading was
+> right, and it is no longer only a reading.
+>
+> **THE FIRST RUN GAVE A FALSE ALL-CLEAR ON `.row`, AND THE REASON IS THE USEFUL PART.** It
+> returned 0 deltas everywhere except `landing`, which read as "`.row` is safe". It was not — the
+> probe's page list did not include `taqseem`, the only live page whose legacy `.row` sets a
+> different `gap`. `slo` and `slo-health` returned 0 because their legacy `gap` already equals the
+> component value, which is agreement, not absence of a collision. **A 0 from a probe that is not
+> looking at the page is not a 0.** `taqseem` is now in the list — see `css_type_probe.mjs`:33.
+>
+> **`.chip` CANNOT BE PROBE-MEASURED AT ALL, and that is a property of the page, not a gap in
+> effort.** `taqseem` has **no static `.chip`** — the class exists only inside `chipHtml()`'s
+> template string at `taqseem.html`:126, so the chips are absent from every snapshot until real
+> data renders them. An earlier count of "`.chip` ×1 on `taqseem`" was counting that template
+> string as markup. What can be compared is the two declarations, and they are not variants of one
+> component — they are two different components wearing one name:
+>
+> ```
+> 99-legacy/taqseem.css:72   display:flex; flex-direction:column; gap:6px;
+>                            border:1px solid; border-radius:var(--radius-sm); padding:8px 9px
+> static/theme.css:127       display:inline-flex; align-items:center; gap:5px;
+>                            border-radius:999px; padding:3px 9px; font-size:11.5px
+> ```
+>
+> A standing block that holds a code, a strand, a sequence and a `<select>`, against a flat pill.
+> A component `.chip` would collapse the first into the second.
+>
+> **`.tag` is the same failure three times over.** The brand tagline on `index` (×2, both
+> `data-i18n="brand.tag"`), the hero tagline on `landing` (which `brand.js`:27 queries as
+> `.brand .tag:not([data-i18n])`), and a JS-rendered **SLO code badge** on `slo-health`:165.
+>
+> **What each page actually loses**, read against its own legacy file rather than assumed —
+> `index`'s `.brand .tag` and `.topbar .tag` (both 0,2,0) already win `font-size` and `color`, so
+> the exposure is the five properties they do not set: `font-family`, `font-weight`, `padding`,
+> `border-radius`, `background` — the pill shape. `.row` loses all three of `display`,
+> `align-items`, `gap`, because `.topbar .row` is inside `index.css`:304's `@media (max-width:
+> 760px)` and does not apply at desktop width. `.summary-row` loses `border-bottom`, the separator
+> between rows.
+>
+> **So the four rules are page-scoped rules, and they belong to `UI-047b` and `UI-047c`** — the
+> same place `taqseem`'s bare `.card` went. **`UI-043`'s remaining scope is real but nothing waits
+> on it**: tables are already shipped by `03-elements/tables.css` (`main.css`:110-114), and the
+> domain families `PLAN.md`:220 lists — sec/qrow/pin, board/col, imgcard, stat, bloom, sheet — are
+> duplication work for Sprint 5/6. This file's own §"parked" row said "no held page waits on
+> either" all along; it read as stale and it was right.
+
+**Take `UI-047a`'s lesson into whatever is next: enumerate before writing.** That task's step 1
+found a declaration missing from `btn.css` — `white-space`, twelve of thirteen ported and the
+thirteenth simply absent — that four rounds of review on UI-041 had not. **The same method is
+what took `UI-043` off the critical path an hour later.** Listing what a page loses when
+`theme.css` goes and checking each line against the tree costs one probe run.
 
 Read `STATUS.md` §"THE SIX HELD PAGES, MEASURED" before choosing — every per-page number is
 there, measured, including **two blockers that are decisions rather than tasks**.
@@ -633,7 +699,7 @@ the summary. The roadmap below now follows that order.
 | **5** | **UI-046** nav + shell — **prepares 12 of `blueprint`'s 20, releases nothing** | Sprint 4 | **nothing — #3 (D32) is done** |
 | **6** | **UI-040** card + pagehead → completes **`taqseem`** | Sprint 4 | 4 |
 | **7** | ~~Re-migrate the released pages — ~15 min each~~ — **this line was the problem.** The migrations are where pages actually open, and hiding all six behind one bottom-of-the-list row is what let five component tasks ship while the board read as though pages were being released. They are now **`UI-047a-f`, one per page with its own blockers**, in `PLAN.md` §Sprint 4b. **None of them is 15 minutes** | — | see §Sprint 4b |
-| 8 | UI-042 modal/field · UI-043 tables/domain | Sprint 4 | no held page waits on either |
+| 8 | UI-042 modal/field · UI-043 status-bar/domain | Sprint 4 | no held page waits on either — **and for UI-043 this row was later contradicted by the per-page map and then confirmed correct by measurement on 2026-08-12.** See §📐 |
 
 **Three things worth knowing before picking one:**
 

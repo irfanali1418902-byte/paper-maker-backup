@@ -30,14 +30,26 @@ const label = process.argv[2];
 const outdir = process.argv[3];
 mkdirSync(outdir, { recursive: true });
 
-// The three live pages are the gate. bank and landing are subjects. Nothing else is
-// measured: taqseem has no Urdu rule at all (checked), index and print are held.
-// landing added 2026-08-10 for UI-047d, per PROBES.md's rule that a migrating page
-// joins this list or the gate silently stops covering it.
+// The live pages are the gate. Only index is held now. landing added 2026-08-10 for
+// UI-047d, per PROBES.md's rule that a migrating page joins this list or the gate
+// silently stops covering it.
+//
+// taqseem added 2026-08-12, AND IT IS LATE. UI-047a migrated it and did not add it
+// here, so for the length of that task the gate did not cover a live page — which is
+// exactly what the rule above exists to prevent. It surfaced when UI-043's scope
+// question needed a measurement of `.chip`, a class that exists on taqseem and on no
+// other live page: the probe could not answer, because it was not looking. The older
+// reason this line gave for excluding taqseem — "no Urdu rule at all" — was about the
+// Urdu half of this probe and was never a reason to skip the computed-style half.
+//
+// print is live too (UI-047f, 2026-08-11) and is deliberately NOT here: css_print_probe
+// owns it and measures it in print media, which is the media its regressions live in.
+// If a screen regression on print.html ever matters, this is the list it joins.
 const PAGES = [
   { page: 'slo', url: `${BASE}/slo.html`, role: 'LIVE — regression gate' },
   { page: 'slo-health', url: `${BASE}/slo-health.html`, role: 'LIVE — regression gate' },
   { page: 'library', url: `${BASE}/library.html`, role: 'LIVE — regression gate' },
+  { page: 'taqseem', url: `${BASE}/taqseem.html`, role: 'LIVE — regression gate' },
   { page: 'bank', url: `${BASE}/bank.html`, role: 'subject — the Urdu fix' },
   { page: 'landing', url: `${BASE}/landing.html`, role: 'subject — UI-047d migration' },
 ];

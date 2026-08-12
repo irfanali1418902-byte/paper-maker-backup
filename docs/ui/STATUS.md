@@ -10,7 +10,7 @@ Sprint 3 closed incomplete at 3 of 9; five migrations have since opened four mor
 
 ---
 
-## NEXT TASK → **`UI-043`** (tables + domain) — it is the shared blocker for **both** remaining pages: `blueprint` needs its `.chip`, `index` needs its `.tag`. **`UI-047a` migrated `taqseem` on 2026-08-12 — 7 of 9 pages are live.** Its enumeration found a declaration missing from `btn.css` that four rounds of review on UI-041 had not (`white-space`, fixed in `2f2368e`); **run the same enumeration at the start of UI-043.** The order that follows: `UI-043` → `UI-046` → `UI-047b` opens `blueprint`; `index` then waits on **D22**, which no component can unpark. Note **UI-046's 12 rules cannot be verified until `UI-047b`** — `blueprint` loads no layered sheet at all, measured 2026-08-12.
+## NEXT TASK → **`UI-046`** (nav + shell) — and it is now the **only** code left before `blueprint` opens. **`UI-047a` migrated `taqseem` on 2026-08-12 — 7 of 9 pages are live.** Its enumeration found a declaration missing from `btn.css` that four rounds of review on UI-041 had not (`white-space`, fixed in `2f2368e`), and the same method run against the last two pages **took `UI-043` off the critical path the same day**: `.chip`, `.tag` and `.row` are all live on migrated pages, `layer(components)` outranks `layer(legacy)`, and unlike `.card`/`.btn` they are flat rules with no safe descendant — so all four page-opening rules are page-scoped and belong to `UI-047b`/`UI-047c`. Evidence in `NEXT-SESSION.md` §📐. The order is now **`UI-046` → `UI-047b`** for `blueprint`; **`index` waits on D22 alone**, with no code in front of it. Note **UI-046's 12 rules cannot be verified until `UI-047b`** — `blueprint` loads no layered sheet at all, measured 2026-08-12.
 
 ### UI-047a — **`taqseem`'s migration. DONE 2026-08-12. LIVE.**
 
@@ -23,7 +23,7 @@ Sprint 3 closed incomplete at 3 of 9; five migrations have since opened four mor
 | `theme?` / EXPOSURE on `taqseem` | **no** / **17 → 0** |
 | element count | 70 → **69**, and that is the removed `<link>` — markup diff is one deleted line and three class attributes |
 | `.btn--*` in the CSSOM | shared **3**, filled **2**, `.btn--accent` **2**, `.btn--ghost` **1**, `.btn--primary` **0** — all `layer(components)`, depth 2, against UI-041b's `matches=0` |
-| browser-verified | **yes, before the commit** — chips render, a select fires `moveSlo`, three buttons work, confirm modal opens and cancels, board renders |
+| browser-verified | **yes, before the commit — by Irfan, and reported as a whole rather than item by item.** The checklist put to him was: chips render, a select fires `moveSlo`, three buttons work, confirm modal opens and cancels, board renders. His answer was that the page was fine. **Recorded this way deliberately** — an earlier draft of this row wrote each item as separately confirmed, which is more than was said |
 
 **The 2026-08-11 attempt passed every gate in this table and was reverted anyway**, because chips
 and `.move-sel` are JS-rendered and appear in no snapshot. That is the whole reason this row can
@@ -487,7 +487,7 @@ orphans are those is not exposed at all.
 |---|---|---:|---:|---|
 | `blueprint` | yes | 20 | **19** | 12 nav/shell · 3 brand · 3 card · 1 chip |
 | ~~`taqseem`~~ ✅ | **no** — migrated 2026-08-12 | **17** | **0** | UI-047a: 15 covered by components, bare `.card` page-scoped, `white-space` fixed in `btn.css` |
-| `index` | yes | 5 | **3** | `.tag` ×2 · `.row` · `.summary-row:last-child` · **plus 4 partial rules** |
+| `index` | yes | 5 | **3** | `.tag` ×2 · `.row` · `.summary-row:last-child` · **plus 4 partial rules**. Re-checked 2026-08-12: all three are **page-scoped work for `UI-047c`**, not UI-043 — each is live on a migrated page under a different meaning. The other 2 orphans are covered: `input[type=number]` → `forms.css`:54, `:focus-visible` → `forms.css`:106 |
 | `bank` | yes | 1 | **0** | its one orphan is `:focus-visible` |
 | `landing` | **no** | 2 | **0** | D9 — never linked it, so both already fall through |
 | `print` | **no** | 3 | **0** | D9 |
