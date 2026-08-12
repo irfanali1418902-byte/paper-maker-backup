@@ -243,7 +243,7 @@ migrated state **with** UI-045's rule applied, exactly as they are without it.
 
 ## THEN — **UI-046** (nav + shell). It prepares 12 of `blueprint`'s 20 rules and releases nothing.
 
-> ### ⚠ `UI-046` — START BY MEASURING `.icon`'s REACH, NOT BY WRITING THE 12 RULES
+> ### ⚠ `UI-046` — THE OPENING MEASUREMENT HAS BEEN RUN. IT MOVED THE SCOPE. READ THIS FIRST.
 > **Scope, measured and fixed — do not re-derive it.** These twelve, and no others:
 > `.app` · `.top` · `.top .crumbs` · `.top .crumbs b` · `.top .spacer` · `.top .avatar` ·
 > `.nav` · `.nav .grp` · `.nav a` · `.nav a .icon` · `.nav a:hover` · `.nav a.active`
@@ -253,18 +253,36 @@ migrated state **with** UI-045's rule applied, exactly as they are without it.
 > | out | why |
 > |---|---|
 > | `.brand` (+ `.logo`, `b`, `small`) | it is **live on the migrated pages**; a component rule in `layer(components)` would repaint them. Same call `card.css` made for the bare `.card` and `btn.css` for the bare `.btn` |
-> | `.icon` | `static/app.css`:57 sets it **unlayered**, and unlayered beats every `@layer` (`main.css`:73-74). **No component in this tree can reach it** — that is measured, it is what `landing`'s icon decision turned on, and UI-046 was recorded as fixing it and cannot |
+> | `.icon` | unlayered rules beat every `@layer` (`main.css`:73-74), so **no component in this tree can reach it** — that is measured, it is what `landing`'s icon decision turned on, and UI-046 was recorded as fixing it and cannot. **The competing rule named here was wrong and is corrected below:** on `blueprint` it is not `app.css`:57's bare `.icon`, it is `theme.css`'s own `.nav a .icon` |
 >
-> **THE FIRST STEP IS THEREFORE A MEASUREMENT, AND IT IS THE ONE THIS SCOPE TURNS ON.** The
-> twelfth rule is **`.nav a .icon`** — it names `.icon`, and `.icon` is exactly the thing the row
-> above says no layer can reach. Those two statements cannot both be acted on without checking
-> which wins here. Before writing anything, measure on `blueprint`: does a `layer(components)`
-> rule at `.nav a .icon` (0,2,0, two classes and an element) actually take `width`/`height` from
-> unlayered `app.css`:57's bare `.icon`? **Specificity does not decide this — layer origin does,
-> and an unlayered rule sits outside the layer order entirely.** The expected answer is that it
-> does NOT win, in which case `.nav a .icon` is 11 rules plus a known-dead one and the scope must
-> say so. **Do not assume either way. `css_page_rule_probe.mjs <url> ".nav a"` reports the layer
-> each rule arrived in and how many elements it matches.**
+> **THE MEASUREMENT IS DONE — `css_page_rule_probe.mjs http://127.0.0.1:8000/blueprint.html
+> ".nav a"`, 2026-08-12.** The predicted answer held (a `layer(components)` rule at
+> `.nav a .icon` does **not** take `width`/`height`), but it held for a different reason than
+> the one written above, and the probe returned a second result that matters more.
+>
+> **1 — the competing rule is not `app.css`:57.** All four `.nav a*` rules on `blueprint` arrive
+> from `static/theme.css`, **unlayered**, and one of them is:
+>
+> ```
+> .nav a .ic, .nav a .icon { width: 18px; height: 18px; flex: 0 0 auto; opacity: .85 }   matches: 5
+> ```
+>
+> So the competitor is not a bare `.icon` at 0,1,0/`17px` — it is `theme.css`'s own
+> `.nav a .icon`, at **the same 0,2,0** and **also unlayered**, at `18px`. A component rule
+> loses on layer origin *and* fails to win on specificity. **The conclusion stands; the argument
+> for it in the row above did not, and reasoning from `app.css`:57 again will mislead.**
+>
+> **2 — `blueprint` has no layers at all, so all 12 would be inert today, not just one.** The
+> probe reported `"layerStatements": []`, and the page's only sheets are `/static/app.css`,
+> `/static/theme.css`, `/static/css/99-legacy/blueprint.css`. **`main.css` is never loaded.**
+> The layer stack arrives with `UI-047b`. **Therefore the live-vs-dead split cannot be settled
+> now: "11 live + 1 known-dead" is unmeasurable until `blueprint` is migrated.** Writing the 12
+> is still safe — they paint nothing — but the count must not be recorded as verified, and the
+> probe must be re-run on `blueprint` after `UI-047b` before it is.
+>
+> **3 — one false signal, do not record it as a finding.** The probe reports `.nav a:hover`
+> at `matches: 0`. That is a `:hover` artifact — nothing was hovered when the probe ran — **not
+> a dead rule**. `.nav a` matched 5 and `.nav a.active` matched 1; the markup is present.
 >
 > **It releases nothing, and that is not a failure — it is what component tasks do.** `blueprint`
 > additionally needs `UI-043` (its `.chip`) and its own migration `UI-047b`, which also carries a
@@ -272,9 +290,21 @@ migrated state **with** UI-045's rule applied, exactly as they are without it.
 > redeclares** (`@media (max-width: 760px)`'s `.app` and `.nav`, so the narrow-viewport shell
 > breaks too). None of those four are inside the 12.
 >
-> **Gate:** `css_type_probe.mjs` must stay at 0 element × property deltas on all six live pages.
-> `.app`/`.top`/`.nav` are `blueprint`'s markup; confirm they match 0 elements on the six before
-> believing the 0.
+> **Gate — AND THE GATE AS WRITTEN CANNOT FAIL, SO IT IS NOT EVIDENCE.** The instruction was:
+> `css_type_probe.mjs` at 0 element × property deltas on all six live pages, after confirming
+> `.app`/`.top`/`.nav` match 0 elements there. **That confirmation has now been run and the
+> answer is 0 on all six** — `bank`, `landing`, `library`, `print`, `slo-health`, `slo` — by
+> exact class-token match, with `blueprint` at 3 as the control that proves the check can find
+> them, and with no runtime source: no `classList.add`/`toggle`, no `className =`, and no
+> templated `class="…"` in `static/apiClient.js` or `static/brand.js`. *(An earlier `\b`-based
+> grep reported 2 hits per page. Those were `app-sidebar` and `app-nav` — `\b` breaks on the
+> hyphen. They are not the bare classes.)*
+>
+> **The consequence is the point:** because those selectors match nothing on the six, the probe
+> returns 0 deltas whether the 12 rules are correct or wildly wrong. **A passing gate here says
+> only that UI-046 did not touch the migrated pages — it says nothing about whether UI-046 is
+> right.** Keep running it as a no-regression check; do not read a pass as verification. The
+> only page that can verify these rules is `blueprint`, and it cannot until `UI-047b`.
 
 **The ordering rule this sprint was re-scoped around is *which task completes a page by
 itself*, and UI-045 has just failed that test in practice** — it was listed here as releasing
