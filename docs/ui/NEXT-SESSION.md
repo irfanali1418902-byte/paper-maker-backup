@@ -66,72 +66,62 @@
 > as that file's header had instructed; **it ships unverified on paper**, because
 > `school_name_ur` is empty in this database and nothing renders.
 >
-> **Next:** `UI-047a` (`taqseem`) — no blocker left, but read the block below before starting it.
+> **Next:** `UI-047a` is **DONE**. See the block below for what it found; the open work is `UI-043`.
 
-> ## ⚠ `UI-047a` (`taqseem`) — START WITH THE ENUMERATION, NOT THE `<link>`
-> **Irfan's call, 2026-08-11: this one gets a fresh session.** It is the first migration that
-> must re-class markup rather than only swap a `<link>`, and a computed-style gate cannot see
-> whether the page still *works*. Every number below was measured on 2026-08-11, on `taqseem.html`
-> at HEAD.
+> ## ✅ `UI-047a` (`taqseem`) — DONE 2026-08-12, AND THE ENUMERATION IS WHY
+> **7 of 9 pages live.** The block that stood here said: enumerate first, confirm there is no
+> second exception before touching anything, and do not ship a page nobody has clicked. All three
+> instructions paid, and the second one paid the most.
 >
-> **1. ENUMERATE FIRST, so the page is not left half-migrated.** List every rule the page loses
-> when `/static/theme.css` goes, and name the component or task that covers each. It was 17
-> orphan rules at the last count and the coverage is believed complete — `card.css` (UI-040),
-> `btn.css` (UI-041), `.btn--accent` (UI-041b), `forms.css` (UI-021) — **with one known
-> exception: the bare `.card`.** `card.css` ships deliberately without it, because `.card` is on
-> 13 live elements across `slo`/`slo-health`/`library` and `layer(components)` would repaint
-> them. It needs a page-scoped rule in `taqseem`'s own entry file. Confirm there is no second
-> exception before touching anything.
+> **THE ENUMERATION FOUND A SECOND EXCEPTION, AND IT WAS NOT IN `card.css`.** 17 orphan rules,
+> reproducing the 2026-08-11 count exactly. 15 covered — `card.css` for `.pagehead` ×3 and the
+> four `.card` descendants, `btn.css` for the six `.btn` rules, `forms.css` for
+> `select`/`select:focus`/`:focus-visible`. The known exception, the bare `.card`, is now
+> page-scoped in the entry file. **The unknown one was `white-space: nowrap`** — `theme.css`:117's
+> bare `.btn` carried it, no `.btn--*` variant did, and it appeared **nowhere** in `01-settings`
+> through `05-components` or `main.css`. Twelve of that rule's thirteen declarations had been
+> ported; the thirteenth was simply absent, with no decision recorded against it. Fixed in
+> `btn.css` (`2f2368e`), not page-scoped, because it is a property of the button. **UI-041's own
+> four review rounds did not find it. Listing what a page loses and checking each line against
+> the tree did.**
 >
-> **2. BROWSER-VERIFY THE BEHAVIOUR. This is the real work, and 0 deltas will not give it to you.**
-> Measured facts to start from, so the risk is assessed rather than guessed:
+> **THE COMPONENTS WENT LIVE.** UI-041b recorded `.btn--*` as prepared, `matches=0` everywhere.
+> The page rule probe now reports the shared block at 3, the filled block at 2, `.btn--accent` at
+> 2, `.btn--ghost` at 1, `.btn--primary` at 0 — all in `layer(components)`, depth 2.
 >
-> | | measured |
-> |---|---|
-> | inline `onclick` attributes | **0** — the page says so itself at `taqseem.html`:310, "event delegation — koi inline onclick nahi" |
-> | the 3 buttons | **bound by `id`**, not by class — `$("genBtn")`, `$("confirmOk")`, `$("confirmCancel")`. **Re-classing `gold`/`ghost` cannot break them**, and nothing in the file matches on those two names |
-> | interactive nodes in source markup | **13** — 3 `<button>`, 3 `<select>`, 7 `<a href>` |
-> | the delegated handler | `#board` → `e.target.closest(".move-sel")`, and `.move-sel` is **JS-rendered** |
-> | chips | **JS-rendered** (`chipHtml()`), styled by `99-legacy/taqseem.css`:72, not orphaned |
+> **Gates:** 0 element × property deltas on all five pages `css_type_probe` covers, drift 0,
+> `theme?` **no**, EXPOSURE **17 → 0**. Element count went 70 → 69 and that is the removed
+> `<link>`, not a lost node — the markup diff is one deleted line and three class attributes.
 >
-> **The chips and the `.move-sel` selects are the whole reason this needs eyes.** They appear in
-> **no snapshot** — the probe measures 70 elements and they are not among them — so the entry
-> file's claim that they survive is a reading of the cascade, not a measurement of the page. The
-> same gap `index`'s `.paper-sheet` has. Load the page with real data, watch the chips render,
-> and change a select to fire `moveSlo`.
->
-> **3. LOOK AT IT.** Both buttons clicked, the confirm modal opened and cancelled, the board
-> rendered. A green gate on a page nobody opened is not a migrated page.
->
-> **This was attempted once and reverted, deliberately.** On 2026-08-11 the full migration was
-> performed and measured: 239 deltas on the page, **0 on all five other live pages**, drift 0, the
-> three buttons did **not** fall to UA default, `.card` byte-identical, frozen inventory intact
-> (`id` 12/12, `class` 44/44, `<script>` sha256 identical), and `.btn--accent` went `matches=0` →
-> `matches=2` in the CSSOM. All gates passed. **It was reverted anyway**, because none of that
-> touches step 2, and Irfan chose a fresh session over shipping a page nobody had clicked. The
-> entry file is parked at `docs/ui/parked-taqseem.css` and the work is reproducible from this
-> block.
+> **AND IT WAS OPENED.** The 2026-08-11 attempt passed every gate above and was reverted anyway,
+> because chips and `.move-sel` are JS-rendered, appear in no snapshot, and a computed-style probe
+> cannot see whether the page still works. This time Irfan checked in the browser **before** the
+> commit: chips render, a select fires `moveSlo`, all three buttons work, the confirm modal opens
+> and cancels, the board renders. Two deliberate changes were flagged in advance so they would not
+> read as regressions — buttons are taller (44px touch target) and the accent fill is darker,
+> because white on the old fill was 3.03:1 and failed WCAG on this page.
 
-## ▶ START HERE — **two honest options, and the board no longer pretends they are the same.**
+## ▶ START HERE — **two pages left, and both of them go through `UI-043`.**
 
-**Five component tasks have shipped and not one released a page** — UI-044a, UI-044b, UI-041,
-UI-045, UI-040. That is not five failures; it is what component tasks do. The board used to say
-otherwise and was corrected on 2026-08-08 (`PLAN.md` §Sprint 4b).
+**Five component tasks shipped and not one released a page** — UI-044a, UI-044b, UI-041, UI-045,
+UI-040. That is not five failures; it is what component tasks do, and the board was corrected on
+2026-08-08 (`PLAN.md` §Sprint 4b). **Four migrations have now released four pages** — UI-047d
+`landing`, UI-047e `bank`, UI-047f `print`, UI-047a `taqseem`. **7 of 9 live.**
 
-- **Shortest path to a page actually opening:** **`UI-041b`** (`.btn--accent`, two declarations,
-  settles D7) → **`UI-047a`** (`taqseem`'s migration). `taqseem` is the closest of the six.
-- **Next component task:** **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules, scoped and
-  planned. It releases nothing, and `blueprint` needs UI-043 and its migration as well.
+- **`UI-043`** — tables + domain, and it is the shared blocker: `blueprint` needs its `.chip`,
+  `index` needs its `.tag`. **Neither remaining page can open without it.**
+- **`UI-046`** — nav + shell, 12 of `blueprint`'s 20 rules. Releases nothing, and **its 12 rules
+  cannot be verified until `UI-047b`** — see its block below, that is measured, not a guess.
+- **`UI-047c`** (`index`) is blocked on **D22** besides, which no component can unpark.
 
-**`UI-041b`'s first step is a READ, not a write.** `PLAN.md`:295 records `theme.css`:120 as
-`background: var(--accent); color: #fff` — **that second declaration is a raw hex and cannot be
-copied into `btn.css`**, which carries zero raw hex including its comments and says so in its
-header; `unsanctioned_hex` has failed five times on this epic. So before writing anything, read
-`01-settings/theme.css` and `01-settings/tokens.css` and answer one question: **does a Tier 2
-on-accent text role already exist?** `btn.css`:113 already pairs `--color-action` with
-`--color-on-action`, so the accent pair may be there already. If it is not, UI-041b adds a Tier 2
-role as well as the modifier, and that is a bigger task than "two declarations" — decide it on
-the read, not on this line.
+**The order that follows from those three lines is `UI-043` → `UI-046` → `UI-047b`**, which opens
+`blueprint` and leaves `index` waiting on a decision rather than on code.
+
+**Take `UI-047a`'s lesson into `UI-043`: enumerate before writing.** That task's step 1 found a
+declaration missing from `btn.css` — `white-space`, twelve of thirteen ported and the thirteenth
+simply absent — that four rounds of review on UI-041 had not. The method that found it was
+listing what a page loses when `theme.css` goes and checking each line against the tree, and it
+costs one probe run.
 
 Read `STATUS.md` §"THE SIX HELD PAGES, MEASURED" before choosing — every per-page number is
 there, measured, including **two blockers that are decisions rather than tasks**.

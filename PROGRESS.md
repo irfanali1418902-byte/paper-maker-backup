@@ -1,5 +1,45 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-12 — UI-047a: taqseem migrated, and its enumeration found a hole in a finished component
+
+**Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. **7 of 9 pages are now live**
+on the new tree; `blueprint` and `index` remain.
+
+**What shipped.** `taqseem.html`'s three `<link>`s became two — `app.css` plus the entry file
+`static/css/pages/taqseem.css`, unparked from `docs/ui/` where it had waited since 2026-08-03
+for the components it borrows. Three buttons re-classed (`btn gold` ×2 → `.btn--accent`,
+`btn ghost` → `.btn--ghost`). The entry file gained a page-scoped bare `.card` and the two
+`.brand` partials the legacy file does not fully redeclare. This is the first migration that
+had to change markup rather than only swap a link.
+
+**The finding, and it is why the first step was an enumeration and not the `<link>`.** The
+board said `taqseem` loses 17 rules when `theme.css` goes, that existing components cover
+them, and that exactly one exception was known — the bare `.card`, which `card.css` omits
+deliberately because `.card` is on 13 live elements elsewhere. The instruction was to confirm
+there was no *second* exception before touching anything. There was. `theme.css`'s bare `.btn`
+carries thirteen declarations; twelve had been ported into `.btn--*`, and the thirteenth,
+`white-space: nowrap`, existed **nowhere** in the layered tree — not ported, not decided
+against, simply absent. UI-041 shipped after four review rounds and none of them saw it.
+Listing what one page loses and checking each line against the tree did, in one probe run.
+Fixed at its own address in `btn.css` (`2f2368e`), not page-scoped, because it is a property
+of the button rather than of this page.
+
+**Gates.** 0 element × property deltas on all five pages `css_type_probe` covers, drift 0.
+On `taqseem`: `theme?` no, EXPOSURE 17 → 0. Element count 70 → 69, which is the removed
+`<link>` and not a lost node. `.btn--*` went live on real markup for the first time — the
+rules probe reports 3 / 2 / 2 / 1 in `layer(components)` against UI-041b's `matches=0`.
+
+**And the page was opened before it was committed.** The same migration was performed on
+2026-08-11, passed every gate above, and was reverted deliberately — chips and the `.move-sel`
+selects are JS-rendered, appear in no snapshot, and no computed-style probe can see whether the
+page still works. This time the browser check came first: chips render, a select fires
+`moveSlo`, all three buttons work, the confirm modal opens and cancels, the board renders.
+Two changes are deliberate and were flagged in advance so they would not read as regressions —
+the buttons are taller (44px touch target) and the accent fill is darker, because white on the
+old fill measured 3.03:1 and failed WCAG on this page.
+
+---
+
 ## 2026-08-01 — UI-031a: slo.html is the first page on the new CSS tree (@layer live)
 
 **Sprint 3, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. This is the first page in the

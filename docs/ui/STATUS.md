@@ -4,15 +4,30 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-08-07 (**UI-041 — the button component. DONE, re-review PASSED at round 4. PREPARED, NOT LIVE.**) — **three
-pages are live on the new tree and all six others are HELD**: `landing`, `taqseem`,
-`blueprint`, `bank`, `index` and `print`. **No page remains migratable, and Sprint 3 closes
-incomplete at 3 of 9.** UI-041 released none of the six and was never going to; it is the
-foundation `taqseem` needs, and `taqseem` also needs UI-040.
+**Last updated:** 2026-08-12 (**UI-047a — `taqseem`'s migration. DONE, browser-verified before
+commit.**) — **seven pages are live on the new tree and two are HELD**: `blueprint` and `index`.
+Sprint 3 closed incomplete at 3 of 9; five migrations have since opened four more.
 
 ---
 
-## NEXT TASK → **`UI-047a`** (`taqseem`), **in a fresh session** — read the ⚠ block in `NEXT-SESSION.md` first; it needs browser-verification, not just a green gate. **`UI-047f` migrated `print` on 2026-08-11 after Irfan printed all three papers on real paper — 6 of 9 pages are live**, up from 3 where Sprint 3 closed, and **D33 and D36 are both Resolved**. Three pages remain: `taqseem`, `blueprint` (UI-046 + UI-043), `index` (UI-043 + D22). Five component tasks shipped nothing visible; four migrations opened four pages in two days.
+## NEXT TASK → **`UI-043`** (tables + domain) — it is the shared blocker for **both** remaining pages: `blueprint` needs its `.chip`, `index` needs its `.tag`. **`UI-047a` migrated `taqseem` on 2026-08-12 — 7 of 9 pages are live.** Its enumeration found a declaration missing from `btn.css` that four rounds of review on UI-041 had not (`white-space`, fixed in `2f2368e`); **run the same enumeration at the start of UI-043.** The order that follows: `UI-043` → `UI-046` → `UI-047b` opens `blueprint`; `index` then waits on **D22**, which no component can unpark. Note **UI-046's 12 rules cannot be verified until `UI-047b`** — `blueprint` loads no layered sheet at all, measured 2026-08-12.
+
+### UI-047a — **`taqseem`'s migration. DONE 2026-08-12. LIVE.**
+
+| | measured |
+|---|---|
+| orphan rules enumerated | **17**, reproducing the 2026-08-11 count exactly |
+| covered by existing components | **15** — `card.css` ×7, `btn.css` ×6, `forms.css` ×3 (counting `:focus-visible`) |
+| exceptions | **2.** Bare `.card`, known — now page-scoped in the entry file. `white-space: nowrap`, **unknown until this task** — absent from the whole tree, fixed in `btn.css` |
+| live-page deltas | **0** element × property on all five `css_type_probe` covers, drift **0** |
+| `theme?` / EXPOSURE on `taqseem` | **no** / **17 → 0** |
+| element count | 70 → **69**, and that is the removed `<link>` — markup diff is one deleted line and three class attributes |
+| `.btn--*` in the CSSOM | shared **3**, filled **2**, `.btn--accent` **2**, `.btn--ghost` **1**, `.btn--primary` **0** — all `layer(components)`, depth 2, against UI-041b's `matches=0` |
+| browser-verified | **yes, before the commit** — chips render, a select fires `moveSlo`, three buttons work, confirm modal opens and cancels, board renders |
+
+**The 2026-08-11 attempt passed every gate in this table and was reverted anyway**, because chips
+and `.move-sel` are JS-rendered and appear in no snapshot. That is the whole reason this row can
+say "live" rather than "prepared".
 
 ### UI-045 — **the display / hero type step. DONE 2026-08-07. PREPARED, NOT LIVE.**
 
@@ -471,7 +486,7 @@ orphans are those is not exposed at all.
 | page | links `theme.css`? | orphan rules | **real** | what they are |
 |---|---|---:|---:|---|
 | `blueprint` | yes | 20 | **19** | 12 nav/shell · 3 brand · 3 card · 1 chip |
-| `taqseem` | yes | **17** | **14** | 8 card/pagehead · 6 button · 3 already covered |
+| ~~`taqseem`~~ ✅ | **no** — migrated 2026-08-12 | **17** | **0** | UI-047a: 15 covered by components, bare `.card` page-scoped, `white-space` fixed in `btn.css` |
 | `index` | yes | 5 | **3** | `.tag` ×2 · `.row` · `.summary-row:last-child` · **plus 4 partial rules** |
 | `bank` | yes | 1 | **0** | its one orphan is `:focus-visible` |
 | `landing` | **no** | 2 | **0** | D9 — never linked it, so both already fall through |

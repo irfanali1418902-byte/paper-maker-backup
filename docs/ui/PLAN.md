@@ -263,7 +263,7 @@ schedule work for it.
 | `landing` | **two blockers, not one.** (1) hero headline shrinks and `reset.css` zeroes the gap under it — **fixed by UI-045**, prepared and not yet live. (2) `.icon` 22px → 17px on 11 icons: `99-legacy/landing.css`:26 wins today only by document order and loses to unlayered `static/app.css`:57 the moment the page is layered — **untouched by UI-045**. Both measured 2026-08-07 in a three-state swap | **UI-045 + the icon decision**, or UI-045 plus a decision to accept 17px icons — no component can reach `.icon`; the release is **`UI-047d`** |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions — **fixed by UI-044a, which is prepared and not yet live** | **UI-044a** (done) + Irfan's call on **D31** → UI-042 |
 | `print` | D36 — `0d04c750` goes 2 → 3 printed pages (+6.0% sheet height) | **UI-044b** (done, parked) — the release is **`UI-047f`**, and it needs a real printer check |
-| `taqseem` | 17 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 **+** UI-040 (both done) **+ UI-041b** — the release is **`UI-047a`** |
+| ~~`taqseem`~~ ✅ | 17 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | **RELEASED 2026-08-12 by `UI-047a`.** UI-041 + UI-040 + UI-041b covered 15 of the 17. The other two were exceptions and both are answered: the bare `.card` is page-scoped in `taqseem`'s entry file, and `white-space` was **missing from `btn.css` entirely** — found by this task's enumeration, fixed at its own address |
 | `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-043** (`.tag`), and **D22**, which no component can unpark — the release is **`UI-047c`**. This row said "UI-046 only", and before that "UI-041 + UI-046" and UI-041 measured it false on 2026-08-06: `index`'s `.gen-btn`/`.ghost-btn` controls come from `99-legacy/index.css`:115/:123 and survive migration untouched — it never used `.btn` at all. **28 elements, 14 each**, of `index.html`'s 39 `<button>`s; this row said "29 buttons", which is the class-**string** count — the 29th is `.ghost-btn` on an `<a>`. Its button-shaped blocker is the `forms.css` reset, which is **D22**, and D22 is parked precisely because no component can unpark it |
 | `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads — now measured by the script, not by hand** (D32 resolved 2026-08-08): `--accent`, `--accent-soft`, `--brand`, `--chip-bg`, `--fg`, `--green`, `--green-bg`, `--muted`, `--red`, **not one with a fallback** | UI-040 (done) **+ UI-046 + UI-043** — the release is **`UI-047b`** |
 
@@ -293,7 +293,7 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 > |---|---|---|
 > | **1** | the four items in `docs/ui/DECISIONS-FOR-IRFAN.md` | — |
 > | **2** | `UI-047d` `landing` · `UI-047e` `bank` · `UI-047f` `print` | **3 pages** |
-> | **3** | `UI-041b` → `UI-047a` | **`taqseem`** |
+> | ~~**3**~~ ✅ | `UI-041b` ✅ → `UI-047a` ✅ | **`taqseem`** — done 2026-08-12, 7 of 9 pages live |
 > | **4** | `UI-043` + `UI-046` → `UI-047b`, `UI-047c` | last 2 pages |
 > | **5** | Sprint 5, then Sprint 6 | legacy deleted |
 
@@ -314,7 +314,7 @@ IDs are a proposal — Sprint 5 already owns UI-050..052, so these take 047.
 
 | ID | page | components it needs | what the migration itself must do | can it start? |
 |---|---|---|---|---|
-| **UI-047a** | `taqseem` | UI-040 ✅ · UI-041 ✅ · **UI-041b** | re-class 3 buttons (`btn gold` ×2, `btn ghost`), the bare `.card`, a 23-name compat block, 2 `.brand` partials | **after UI-041b** — closest to ready |
+| **UI-047a** ✅ | `taqseem` | none — UI-040 ✅ · UI-041 ✅ · UI-041b ✅ | **DONE 2026-08-12.** 3 buttons re-classed (`btn gold` ×2 → `.btn--accent`, `btn ghost` → `.btn--ghost`), the bare `.card` page-scoped, the 23-name compat block as parked, 2 `.brand` partials. **`.btn--*` live on real markup for the first time** — the probe reports 3/2/2/1 in `layer(components)` against UI-041b's `matches=0`. 0 deltas on all five probed live pages, drift 0, EXPOSURE 17 → 0 | **DONE — and it was opened before it shipped**, which is what the 2026-08-11 attempt was reverted for |
 | **UI-047b** | `blueprint` | UI-040 ✅ · UI-043 · UI-046 | 19-name compat block (covers D32's 9 markup reads too), 3 `.brand` rules, 3 partials, **2 media-query rules** | after UI-043 + UI-046 |
 | **UI-047c** | `index` | UI-043 (`.tag`) | `.row`, `.summary-row:last-child`, 4 partials incl. `.main`'s three properties | **blocked on D22** — no component can unpark it |
 | **UI-047d** ✅ | `landing` | none — UI-045 ✅ | **DONE 2026-08-10.** Icon decision answered **A (accept 17px)**; entry file moved out of `docs/ui/`, one `<link>` swapped. 279 deltas on the page, **0 on every live page**, hero restored to HEAD exactly | **DONE — first page opened since Sprint 3** |
