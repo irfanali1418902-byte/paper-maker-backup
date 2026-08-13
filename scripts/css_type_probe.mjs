@@ -45,13 +45,23 @@ mkdirSync(outdir, { recursive: true });
 // print is live too (UI-047f, 2026-08-11) and is deliberately NOT here: css_print_probe
 // owns it and measures it in print media, which is the media its regressions live in.
 // If a screen regression on print.html ever matters, this is the list it joins.
+//
+// blueprint added 2026-08-13 with UI-047b — on time, unlike taqseem — and index the same day
+// as the SUBJECT of UI-047c, before that migration rather than after it. index is the largest
+// page in the app (783 elements, a 7-screen SPA, 224 inline style attributes) and the one
+// whose before/after cannot be read off a browser glance. Adding a page here BEFORE migrating
+// it is the pattern UI-047d used on landing, where 279 deltas were measured and each one
+// accounted for; taqseem was migrated without it and the gap produced a false all-clear the
+// next day.
 const PAGES = [
   { page: 'slo', url: `${BASE}/slo.html`, role: 'LIVE — regression gate' },
   { page: 'slo-health', url: `${BASE}/slo-health.html`, role: 'LIVE — regression gate' },
   { page: 'library', url: `${BASE}/library.html`, role: 'LIVE — regression gate' },
   { page: 'taqseem', url: `${BASE}/taqseem.html`, role: 'LIVE — regression gate' },
+  { page: 'blueprint', url: `${BASE}/blueprint.html`, role: 'LIVE — regression gate' },
   { page: 'bank', url: `${BASE}/bank.html`, role: 'subject — the Urdu fix' },
   { page: 'landing', url: `${BASE}/landing.html`, role: 'subject — UI-047d migration' },
+  { page: 'index', url: `${BASE}/index.html`, role: 'subject — UI-047c migration' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

@@ -112,25 +112,33 @@
   }
 }
 
-/* THE TWO `.brand` PARTIALS. These are not orphans — 99-legacy/taqseem.css
-   :25 and :31 redeclare both selectors — but it does not redeclare every
-   property, and the rules probe reports exactly which survive the unlink:
-   `.brand` loses background, color and grid-area, `.brand small` loses
-   font-weight. Today theme.css supplies them because both files are unlayered
-   and theme.css wins whatever the legacy file leaves unset; after this
-   migration the legacy file is inside layer(legacy) and theme.css is gone,
-   so they must be re-supplied or the sidebar header loses its surface.
-   layer(legacy) rather than components: this is the legacy shell, it dies
-   with 99-legacy/taqseem.css in UI-064, and it sits after the imports so it
-   wins if that file ever declares the same names. */
-@layer legacy {
-  .brand {
-    grid-area: brand;
-    background: var(--color-surface);
-    color: var(--color-text);
-  }
+/* THE `.brand` PARTIALS ARE DELIBERATELY NOT PORTED, AND AN EARLIER VERSION
+   OF THIS FILE PORTED THEM — that was a regression and it was live for a day.
 
-  .brand small {
-    font-weight: 400;
-  }
-}
+   UI-047a re-supplied `background`, `color` and `grid-area` here on
+   2026-08-12, reasoning that a partial the rules probe reports as lost must
+   be given back "or the sidebar header loses its surface". Four migrations
+   had already decided the opposite. `pages/bank.css`:110 states it as
+   settled: *"The /static/theme.css white slab on `.brand` goes, for the
+   fourth page running — treat it as a theme.css fact, not a per-page
+   quirk."* landing, bank, print and library all let it go.
+
+   MEASURED 2026-08-13, which is how this was caught rather than argued.
+   `.app-sidebar` is navy on all four of these pages; theme.css's `.brand`
+   paints a light panel with dark text on top of it, because it was written
+   for the LIGHT shell that `.app`/`.nav` use and leaks onto the legacy navy
+   one. With the port in place taqseem read `background: rgb(255,255,255)`
+   against a navy sidebar while `library` and `bank` read `rgba(0,0,0,0)` and
+   inherited it correctly. taqseem was the only live page carrying the slab,
+   and it was carrying it because this file put it back.
+
+   `grid-area: brand` went with them and was meaningless besides — taqseem's
+   shell is `.shell`/`.app-sidebar` flex, not the `.app` grid. `.brand small`
+   loses theme.css's weight along with its uppercase, letter-spacing and
+   opacity; **D26 already owns that** for every migrated page and does not
+   need a per-page rule here either.
+
+   The lesson is not "check the probe output". It is that a partial the probe
+   reports as lost is not automatically a partial worth restoring — four
+   pages had already ruled on this one, and the ruling was in a sibling entry
+   file that was never read. */
