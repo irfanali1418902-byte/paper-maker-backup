@@ -1,4 +1,4 @@
-# Handoff — 2026-08-13 (session end: blueprint LIVE, index unblocked)
+# Handoff — 2026-08-13 (session end: 9 OF 9 PAGES LIVE — Sprint 4b complete)
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 overwrite hoti hai — hamesha aakhri haalat rakhti hai.
@@ -20,11 +20,30 @@ KAAM KARNE KA TAREEQA (yeh sab se ahem hai):
   feat/ui-architecture` se confirm kar dena jab main kahoon.
 - Koi cloud deploy nahi. `backup` remote sirf backup hai.
 
-HAALAT: 9 mein se 8 pages live.
-  live:   bank, blueprint, landing, library, print, slo, slo-health, taqseem
-  baqi:   sirf index
+HAALAT: 9 ke 9 pages LIVE. Sprint 4b mukammal.
+  live:   bank, blueprint, index, landing, library, print, slo, slo-health, taqseem
+  held:   koi nahi
 
-AGLA KAAM — UI-047c (index ki migration). AAKHRI PAGE, aur iske saamne kuch nahi hai.
+AGLA KAAM — SPRINT 6 (UI-060..064), "the drain". Yahan se CSS GHATNA shuru hoti hai.
+  99-legacy/*  = 2,115 lines, nau files
+  theme.css = 212 lines — AB ISAY KOI PAGE LINK NAHI KARTA, delete pehli baar unblocked
+  app.css   = 57 lines  — NAU KE NAU pages abhi bhi link karte hain (@font-face + .icon
+              sprite). Yeh UI-064 ke saath jaata hai, abhi nahi.
+  Sprint 5 (466 inline styles) aur UI-042/UI-043 JAAN-BOOJH KAR chhore hain:
+    koi page inka muntazir nahi, aur Sprint 5 ka bara hissa drain ke doran khud nikal aayega.
+  Andaza: 6-12 sessions. Yeh andaza SAB SE KAMZOR hai — is qism ka ek bhi task abhi
+  tak nahi hua.
+
+⚠ EK KHULA DEFECT, PAANCH LIVE PAGES PAR:
+.app-sidebar par `height: 100vh` hai aur `overflow` KOI NAHI. Content viewport se lamba ho
+to wo scroll nahi hota, painted box se BAHAR chhalak jata hai. Irfan ne 2026-08-13 ko
+browser mein pakra — index ka aakhri nav item "SLO Health" navy background se bahar tha.
+index par page-scoped `overflow-y: auto` se theek kiya. library, bank, slo, slo-health,
+taqseem par WOHI HOLE KHULA HAI (unki nav 209-294px hai, index ki 450px thi, is liye abhi
+nahi phata). Jaan-boojh kar nahi chhua: paanch live pages apna gate maangte hain.
+KOI PROBE ISAY NAHI DEKH SAKTA: probe ka viewport 900px hai (wahan overflow hota hi nahi)
+aur `overflow` capture hi nahi hoti. Fix 0 deltas deta hai — matlab kuch bigra nahi, yeh
+nahi ke kaam karta hai.
   blueprint : ✅ LIVE 2026-08-13 (UI-046 → UI-047b)
   index     : UI-047c — aur iske saamne KUCH NAHI hai
 

@@ -9,8 +9,8 @@ about sequencing, this file is the newer decision.
 
 ## Where the epic actually stands
 
-**8 of 9 pages are live** as of 2026-08-13. Only `index` is held, and **nothing stands in front
-of it** — the D22 blocker was a misattribution, struck the same day.
+**9 of 9 pages are live** as of 2026-08-13. **Marhala A is complete** — it was estimated at 4–7
+sessions and took about two.
 
 **And the duplication this epic exists to remove is still entirely present.** That is not a
 failure, it is the middle of a strangler fig — but it should not be misread:
@@ -20,10 +20,13 @@ failure, it is the middle of a strangler fig — but it should not be misread:
 | baseline, 2026-07-28 — nine `<style>` blocks | 2,133 |
 | today — `99-legacy/*.css`, still imported by every migrated page | **2,115** |
 | today — the new tree (`01-settings` … `pages/`) | 2,401 |
-| today — `theme.css` + `app.css`, still live on `index` | 269 |
+| today — `theme.css`, **now linked by NO page** | 212 |
+| today — `app.css`, **still linked by all nine** (`@font-face` + the `.icon` sprite) | 57 |
 
 **CSS has roughly doubled and nothing has been deleted yet.** The old tree comes out in
-Sprint 6, which has not started. "8 of 9 live" is the halfway marker, not the finish.
+Sprint 6, which has not started. **"9 of 9 live" is the halfway marker, not the finish** — and
+now that no page links `theme.css`, deleting its 212 lines is unblocked for the first time.
+`app.css` is a different matter — all nine pages still link it, and it goes with `UI-064`.
 
 ---
 
@@ -36,7 +39,7 @@ Sprint 6, which has not started. "8 of 9 live" is the halfway marker, not the fi
 | ~~1~~ ✅ | **UI-046** nav + shell | 1 | **DONE 2026-08-13.** The board's twelve rules were nine: `.app` and `.top .spacer` were already complete in `shell.css`, and `.nav a .icon` is dead |
 | ~~2~~ ✅ | **UI-047b** `blueprint` | 1 | **DONE 2026-08-13, and it verified UI-046** — nine rules from `matches:0` to live. Two re-classes turned out to be additions: `.brand` (brand.js) and `.main` (legacy:28) |
 | ~~3~~ | ~~**D22** — Irfan's decision~~ | — | **THIS ROW WAS WRONG AND SO WAS EVERY OTHER PLACE THAT SAID IT.** `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04: D22 is a technical constraint for Sprint 6, not a decision. The correction had not propagated, and this file repeated it on 2026-08-13 without checking |
-| 4 | **UI-047c** `index` | 1–2 | **the last page, and nothing blocks it.** The real blocker was narrow — 2 اردو toggle buttons losing Nastaliq — **answered A on 2026-08-13**, page-scoped. Still the riskiest single item: 7-screen SPA, 783 elements, **224 inline styles** |
+| ~~4~~ ✅ | **UI-047c** `index` | 1 | **DONE 2026-08-13. 9 of 9.** Feared as the riskiest item and was the SMALLEST migration in the epic: no compat block (index declares all 27 tokens it reads), no re-classing (its shell is its own `.app-sidebar`), no UI-046. 2,476 deltas on the page, every one accounted for. **Irfan found the one real bug in the browser** — the sidebar could not scroll |
 
 **At the end of A: 9 of 9 pages live.** This is the visible half. **8 of 9 as of 2026-08-13** —
 only `index` remains, and nothing stands in front of it.
@@ -106,6 +109,7 @@ These are real and are tracked nowhere else. They are not in the estimate above.
 
 | item | state |
 |---|---|
+| **`.app-sidebar` cannot scroll — OPEN on five pages** | `height: 100vh` with no `overflow`, on all six pages using the legacy shell. Content taller than the viewport spills out of the painted box instead of scrolling. **Found by Irfan in the browser on 2026-08-13** — `index`'s last nav item hung outside the navy background — and fixed page-scoped there only. `library`, `bank`, `slo`, `slo-health`, `taqseem` still have it; their navs are 209–294px against `index`'s 450px, so nothing has spilled yet. **No probe can see this**: at the probe's 900px viewport nothing overflows, and `overflow` is not a captured property |
 | **`taqseem` browser check** | **done 2026-08-13, and the half that mattered is confirmed.** Chips render as standing blocks and a chip's select moves the SLO — the two things no probe can see. **Modal open/cancel and card/brand header were not checked** and are recorded as such. Use `Pre Year 1` + `Mathematics`; it is the only class/subject with a plan |
 | **`STATUS.md` task-log gap** | the log table stops at `UI-041b`. **Six shipped tasks have no row**: UI-044a, UI-044b, UI-047d, UI-047e, UI-047f, UI-047a |
 | **Dead-code audit — API layer** | done 2026-08-13. 80 routes, 74 live. `/api/syllabus-topics`, `export.docx`, `export.pdf` have **no caller anywhere**; `export.py` + `export_service.py` are 411 lines plus a `python-docx` dependency. `blueprint-presets/{id}` and `library/question-types` are called by tests only. Awaiting Irfan's decision |

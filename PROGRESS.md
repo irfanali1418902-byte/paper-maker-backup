@@ -1,5 +1,60 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-13 — index is live. **9 of 9 pages.** Sprint 4b is complete
+
+**Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. Sprint 3 closed incomplete at
+3 of 9; seven migrations opened the other six, four of them in two days.
+
+**The page everyone feared was the smallest migration in the epic.** `index` is the largest
+page in the app — 508 elements at rest, a 7-screen SPA, 224 inline `style` attributes — and
+it needed **no compat block, no re-classing and no UI-046**. It declares all 27 tokens it
+reads, so nothing had to be re-supplied; its shell is its own `.shell`/`.app-sidebar`/
+`.app-nav` rather than `theme.css`'s grid, so no class attribute changed at all; and the 224
+inline styles were never at risk, because inline beats every layer. Part 2 was a `<link>` swap
+and nothing else. The very thing `PLAN.md` §1 opens with as a defect — *"index.html redefines
+`--line` and `--muted`"* — is what made it cheap.
+
+**2,476 deltas on the page, and each was read rather than waved through.** The palette takes
+over (index's `--ink` → `--color-text`, 256 elements plus their border colours), the type scale
+lands (16→15px on 171, 15→13.5px on 58), the body leading lands where legacy left it `normal`
+(185 at 21.75px), D31's label role arrives on 44 — the same change `bank` and `library` already
+took — em gaps shrink with their font-size, and form controls take `forms.css`'s optical
+padding. Nothing unaccounted for, nothing pointing at something lost. The five page-scoped
+rules were verified element by element: `.main` keeps its padding, `.summary-row` keeps its
+dashed rule at index's own `--line`, `.tag` keeps its pill, and **all four `.urdu` elements keep
+Nastaliq — including the two toggle buttons that were the whole of decision A.**
+
+**And the one real defect was found by eye, not by any gate.** Irfan opened the page and the
+last nav item, SLO Health, hung outside the navy sidebar. `.app-sidebar` is `height: 100vh`
+with **no `overflow` property**, so content taller than the viewport spills out of the painted
+box instead of scrolling. Both other shells in this repo handle it — `theme.css`'s `.nav` and
+`shell.css`'s `.o-shell__nav` both set `overflow: auto` — and the legacy `.app-sidebar` never
+did, on any of the six pages that use it.
+
+**index's line-height was not the defect and the fix does not touch it.** All six migrated
+pages compute the nav at 21.75px; index's is simply the tallest at 450px against 294 and 209,
+because it lists every screen. Special-casing its leading would have fixed the symptom by
+making one page disagree with five. The fragility also pre-dates the migration — the sidebar's
+children totalled 680.4px before and 700.7px after, so the new leading added 20.3px and crossed
+the threshold on Irfan's screen.
+
+**No probe could have caught it, and the record says so.** At the probe's 900px viewport
+nothing overflows, `overflow` is not a captured property, and the fix therefore measures as 0
+deltas — which means it disturbs nothing, not that it works. **The same hole is still open on
+`library`, `bank`, `slo`, `slo-health` and `taqseem`** and is deliberately left open: they are
+live, their navs are short enough that nothing has spilled, and five live pages want their own
+gate run rather than a drive-by.
+
+**Where the epic now stands.** Every page is on the new tree and **`static/theme.css` — the
+212-line file this epic exists to replace — is now linked by no page at all**, so deleting it
+is unblocked for the first time. `static/app.css` is not in the same position: all nine pages
+still link its 57 lines for the `@font-face` block and the `.icon` sprite rule, and it goes
+with `UI-064`. But `99-legacy/*` is still **2,115 lines** against a 2,133-line baseline,
+and the new tree sits on top of it rather than in place of it. **CSS has roughly doubled and
+nothing has been deleted yet.** That reverses in Sprint 6, which has not started.
+
+---
+
 ## 2026-08-13 — blueprint is live, UI-046 is finally verified, and index turns out to be blocked on nothing
 
 **Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. **8 of 9 pages are now live**;
