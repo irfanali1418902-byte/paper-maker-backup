@@ -1,5 +1,41 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-13 — the DOCX/PDF export is deleted: 630 lines nothing called, and a LibreOffice dependency
+
+**Not part of the UI-ARCH epic.** That epic sanctioned exactly one backend change (UI-003);
+this comes out of the dead-code audit and is committed on its own for that reason.
+
+**Removed:** `app/api/export.py` (49 lines), `app/services/export_service.py` (362),
+`tests/test_export_service.py` (210), `python-docx` from `requirements.txt`, the
+`PdfConversionFailed` exception, and the router's import and registration in `app/main.py`.
+
+**Why, and "unused" is the weaker half of it.** `/api/paper/{id}/export.docx` and `.pdf` had
+no caller anywhere — not in any page, not in `apiClient.js`, not in a test. The stronger half
+is that the PDF path **shells out to LibreOffice** (`soffice`) as a subprocess: a feature
+needing third-party software installed on the school PC, that nothing invoked, and that would
+have failed the moment anyone did invoke it on a machine without it. The code was also
+untouched since the initial commit of 2026-07-06 — one commit in the whole life of the repo.
+
+**And the cost is real, not zero.** This was the app's only DOCX export, so a teacher wanting
+an editable paper file no longer has a path to one. It was working, tested code — 16 tests
+passed — not rot. What makes it a removal rather than a loss is the standing position that
+printing is the browser's Ctrl+P via `print.html`; DOCX was never in the workflow.
+
+**Verified:** app imports, suite **890 passed** (906 minus the 16 that tested the deleted
+service), 69 API paths remain, and the only `export` among them is `/api/questions/slo-export`
+— the SLO spreadsheet, unrelated.
+
+**A note for whoever checks this next.** The first verification reported "0 API routes" and
+looked like the deletion had unregistered everything. It had not. In this FastAPI version
+`app.routes` holds included routers as `_IncludedRouter` objects with no `.path`, so filtering
+on `.path` finds only the four docs endpoints and the two mounts. Count the `_IncludedRouter`
+entries (14 now, 15 before) or read `app.openapi()["paths"]`.
+
+**Still open from the same audit:** `/api/syllabus-topics` has no caller anywhere and has not
+been decided. `blueprint-presets/{id}` and `library/question-types` are called by tests only.
+
+---
+
 ## 2026-08-13 — static/theme.css is deleted. The file this epic was written about is gone
 
 **Sprint 6, UI-ARCH epic — `UI-064` part 1.** Full board: `docs/ui/STATUS.md`.

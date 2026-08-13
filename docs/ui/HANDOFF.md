@@ -1,4 +1,4 @@
-# Handoff — 2026-08-13 (session end: 9 OF 9 LIVE, theme.css DELETED)
+# Handoff — 2026-08-13 (session end: 9 OF 9 LIVE · theme.css DELETED · export DELETED)
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 **dobara likhi jaati hai** — purani cheezein jorhi nahi jaatin, hamesha sirf aakhri haalat.
@@ -24,7 +24,8 @@ Tree clean, sab kuch push ho chuka, dev server band, port 8000 free.
 ## HAALAT
 
 9 ke 9 pages LIVE — bank, blueprint, index, landing, library, print, slo, slo-health, taqseem.
-Sprint 0-4b mukammal. `static/theme.css` DELETE ho chuki (UI-064 part 1).
+Sprint 0-4b mukammal. `static/theme.css` DELETE ho chuki (UI-064 part 1, 212 lines).
+DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code audit se.
 
 ## AGLA KAAM — Sprint 6 ka asal hissa: UI-060..063, "the drain"
 
@@ -59,12 +60,20 @@ nahi", yeh nahi ke "kaam karta hai".
 
 ## DOOSRA KHULA KAAM — dead-code audit, adhoora
 
-API layer ho chuka (2026-08-13): 80 routes, 74 zinda. `/api/syllabus-topics`,
-`/api/paper/{id}/export.docx`, `/api/paper/{id}/export.pdf` ka **koi caller nahi** —
-`export.py` + `export_service.py` = 411 lines plus `python-docx` dependency, aur yeh Irfan
-ki apni tarjeeh se mel khata hai (printing browser ke Ctrl+P se hoti hai, DOCX se nahi).
-`blueprint-presets/{id}` aur `library/question-types` sirf tests se bulaye jaate hain.
-**Irfan ke faisle ka muntazir.** JS / CSS / services wala hissa shuru bhi nahi hua.
+API layer ho chuka (2026-08-13) aur us par amal bhi hua: 80 routes, 74 zinda.
+✅ `export.docx` + `export.pdf` DELETE ho chuke (e2bdcc4) — 630 lines unke tests samet,
+   plus `python-docx` aur LibreOffice subprocess ka taqaza. Irfan ka faisla, aur UI-ARCH
+   epic se BAHAR (wo epic sirf ek backend change ki ijazat deti thi, UI-003).
+⬜ ABHI KHULA: `/api/syllabus-topics` ka koi caller nahi — na frontend, na test. Faisla
+   nahi hua.
+⬜ `blueprint-presets/{id}` aur `library/question-types` sirf tests se bulaye jaate hain —
+   asal routes, magar koi frontend raasta nahi. Faisla nahi hua.
+⬜ JS / CSS / services wala audit shuru bhi nahi hua.
+
+⚠ FastAPI routes ginte waqt: is version mein `app.routes` included routers ko
+`_IncludedRouter` objects mein rakhta hai jinpar `.path` hai hi nahi. `.path` par filter
+karoge to sirf 4 docs endpoints aur 2 mounts milenge aur lagega ke sab kuch toot gaya.
+`_IncludedRouter` ginlo (abhi 14) ya `app.openapi()["paths"]` parho.
 
 ## PEHLA QADAM HAMESHA ENUMERATION HOTA HAI, LIKHAI NAHI
 
