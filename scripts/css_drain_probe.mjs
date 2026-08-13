@@ -164,6 +164,23 @@ const DRAIN = (pageName) => String.raw`(() => {
   const legacy = findLegacy([...document.styleSheets], '99-legacy/' + ${JSON.stringify(pageName)} + '.css', 0);
   if (!legacy) return { error: '99-legacy/' + ${JSON.stringify(pageName)} + '.css not found in the CSSOM' };
 
+  // KILL TRANSITIONS BEFORE MEASURING ANYTHING, and this is not cosmetic —
+  // without it the probe cannot measure two of the nine files at all.
+  // Deleting a rule changes the properties it set; if those properties are
+  // transitioned, they ANIMATE to the new value. Re-inserting the rule starts
+  // the animation back the other way, and the restore check snapshots while it
+  // is still running — so the sheet reads as drifted when nothing is wrong.
+  // It fired on landing's .qa-card (transform/box-shadow/border-color, .12s,
+  // 35 deltas) and bank's .bulk-drop-zone (background/border-color, .15s, 5).
+  // NOTE: no backticks anywhere in this in-page block -- it is itself a
+  // backtick template, and one inside a comment ends it mid-string. That is
+  // exactly how this edit failed the first time, with 'card is not defined'.
+  // Safe to do: transition-* and animation-* are not among the 44 properties
+  // measured, so suppressing them cannot move a number this probe reports.
+  const freeze = document.createElement('style');
+  freeze.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+  document.head.appendChild(freeze);
+
   const els = [...document.querySelectorAll('*')];
   function snap() {
     const out = new Array(els.length);
