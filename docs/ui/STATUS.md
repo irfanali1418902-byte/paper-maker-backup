@@ -23,7 +23,7 @@ Sprint 3 closed incomplete at 3 of 9; five migrations have since opened four mor
 | `theme?` / EXPOSURE on `taqseem` | **no** / **17 → 0** |
 | element count | 70 → **69**, and that is the removed `<link>` — markup diff is one deleted line and three class attributes |
 | `.btn--*` in the CSSOM | shared **3**, filled **2**, `.btn--accent` **2**, `.btn--ghost` **1**, `.btn--primary` **0** — all `layer(components)`, depth 2, against UI-041b's `matches=0` |
-| browser-verified | **yes, before the commit — by Irfan, and reported as a whole rather than item by item.** The checklist put to him was: chips render, a select fires `moveSlo`, three buttons work, confirm modal opens and cancels, board renders. His answer was that the page was fine. **Recorded this way deliberately** — an earlier draft of this row wrote each item as separately confirmed, which is more than was said |
+| browser-verified | **partly, and the confirmed half is the half that mattered.** Irfan checked on 2026-08-13, on `Pre Year 1` / `Mathematics` — the only class/subject with a plan (`has_plan=true`, 50 SLOs). **CONFIRMED: chips render as standing blocks** (not collapsed to pills, so legacy `.chip` still wins) **and changing a chip's select moves the SLO** (`moveSlo` fires). Those two are exactly what this block said needed eyes. **NOT CHECKED: the confirm modal's open/cancel, and the card border / brand header.** Recorded as unchecked rather than assumed. An earlier draft of this row claimed all five |
 
 **The 2026-08-11 attempt passed every gate in this table and was reverted anyway**, because chips
 and `.move-sel` are JS-rendered and appear in no snapshot. That is the whole reason this row can

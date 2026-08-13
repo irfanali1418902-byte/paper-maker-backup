@@ -102,7 +102,7 @@ These are real and are tracked nowhere else. They are not in the estimate above.
 
 | item | state |
 |---|---|
-| **`taqseem` browser check** | **still not done.** The page is live and was reported fine by Irfan as a whole; no per-item confirmation exists, and chips/`.move-sel` are invisible to every probe. **Only `Pre Year 1` + `Mathematics` has a plan** (`has_plan=true`, 50 SLOs) — every other class/subject renders an empty board and would read as breakage |
+| **`taqseem` browser check** | **done 2026-08-13, and the half that mattered is confirmed.** Chips render as standing blocks and a chip's select moves the SLO — the two things no probe can see. **Modal open/cancel and card/brand header were not checked** and are recorded as such. Use `Pre Year 1` + `Mathematics`; it is the only class/subject with a plan |
 | **`STATUS.md` task-log gap** | the log table stops at `UI-041b`. **Six shipped tasks have no row**: UI-044a, UI-044b, UI-047d, UI-047e, UI-047f, UI-047a |
 | **Dead-code audit — API layer** | done 2026-08-13. 80 routes, 74 live. `/api/syllabus-topics`, `export.docx`, `export.pdf` have **no caller anywhere**; `export.py` + `export_service.py` are 411 lines plus a `python-docx` dependency. `blueprint-presets/{id}` and `library/question-types` are called by tests only. Awaiting Irfan's decision |
 | **Dead-code audit — JS / CSS / services** | not started |

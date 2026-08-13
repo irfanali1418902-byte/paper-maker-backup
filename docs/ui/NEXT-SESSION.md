@@ -95,13 +95,23 @@
 >
 > **AND IT WAS OPENED.** The 2026-08-11 attempt passed every gate above and was reverted anyway,
 > because chips and `.move-sel` are JS-rendered, appear in no snapshot, and a computed-style probe
-> cannot see whether the page still works. This time Irfan checked in the browser **before** the
-> commit. **The checklist put to him** was: chips render, a select fires `moveSlo`, all three
-> buttons work, the confirm modal opens and cancels, the board renders. **He answered as a whole,
-> not item by item**, and this block says so rather than writing five separate confirmations he
-> did not give. Two deliberate changes were flagged in advance so they would not read as
-> regressions — buttons are taller (44px touch target) and the accent fill is darker, because
-> white on the old fill was 3.03:1 and failed WCAG on this page.
+> cannot see whether the page still works. **Checked by Irfan on 2026-08-13, item by item, and
+> the two that were confirmed are the two this block called for.**
+>
+> | check | result |
+> |---|---|
+> | chips render as standing blocks, not pills | ✅ **confirmed** — legacy `.chip` still wins |
+> | changing a chip's select moves the SLO | ✅ **confirmed** — `moveSlo` fires |
+> | confirm modal opens and cancels | ⬜ not checked |
+> | card border · brand header | ⬜ not checked |
+>
+> **Only `Pre Year 1` / `Mathematics` can be used for this** — it is the one class/subject with a
+> plan (`has_plan=true`, 50 SLOs). Every other combination renders an empty board, which reads as
+> breakage and is not. **A first attempt to record this verification claimed all five items from
+> a single "it's fine"; the two ⬜ rows above are what that claim was hiding.** Two deliberate
+> changes were flagged in advance so they would not read as regressions — buttons are taller
+> (44px touch target) and the accent fill is darker, because white on the old fill was 3.03:1 and
+> failed WCAG on this page.
 
 ## ▶ START HERE — **two pages left, and `UI-043` is NOT what either of them waits on.**
 

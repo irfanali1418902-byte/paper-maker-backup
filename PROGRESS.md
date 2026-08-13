@@ -96,11 +96,13 @@ rules probe reports 3 / 2 / 2 / 1 in `layer(components)` against UI-041b's `matc
 **And the page was opened before it was committed.** The same migration was performed on
 2026-08-11, passed every gate above, and was reverted deliberately — chips and the `.move-sel`
 selects are JS-rendered, appear in no snapshot, and no computed-style probe can see whether the
-page still works. This time the browser check came first. The checklist put to Irfan was: chips
-render, a select fires `moveSlo`, all three buttons work, the confirm modal opens and cancels,
-the board renders — and **he answered as a whole rather than item by item**, which is what this
-entry records. An earlier draft wrote the five as separately confirmed observations; they were
-the questions asked, not the answers given.
+page still works. **Checked by Irfan on 2026-08-13, item by item.** Confirmed: **chips render as
+standing blocks** rather than collapsing to pills, so the legacy `.chip` still wins; and
+**changing a chip's select moves the SLO**, so `moveSlo` fires. Those two are precisely what the
+board said needed eyes. **Not checked: the confirm modal's open/cancel, and the card border and
+brand header** — recorded as unchecked rather than assumed. Only `Pre Year 1` / `Mathematics`
+can be used for this check; it is the one class/subject carrying a plan, and every other
+combination renders an empty board that reads as breakage and is not.
 Two changes are deliberate and were flagged in advance so they would not read as regressions —
 the buttons are taller (44px touch target) and the accent fill is darker, because white on the
 old fill measured 3.03:1 and failed WCAG on this page.
