@@ -1,0 +1,179 @@
+/* =========================================================================
+   blueprint.html's entry file — UI-047b, part 1 of 2.
+
+   NOT LINKED YET, AND THAT IS THE POINT. blueprint.html still carries its
+   three original <link>s, so nothing in this file reaches any page and its
+   effect is measurably zero. Part 2 swaps the links and re-classes the
+   markup; only then does the page move. Split this way at Irfan's request
+   because UI-047b is the heaviest migration in the epic and a CSS-only half
+   can be measured on its own.
+
+   ⚠ D29 — TWO FILES ARE NAMED theme.css. This page DROPS /static/theme.css
+   and KEEPS /static/css/01-settings/theme.css. Quote full paths in handover.
+
+   THE MARKUP CONTRACT PART 2 MUST FULFIL. The rules below assume these
+   re-classes; written down here because this file is meaningless without
+   them and a later session must not have to infer them:
+
+     .app          → .o-shell                 (shell.css, complete)
+     .top          → .o-shell__top .appbar    (layout + surface)
+     .top .crumbs  → .appbar__crumbs
+     .top .spacer  → .o-shell__spacer
+     .top .avatar  → .appbar__avatar
+     .nav          → .o-shell__nav .sidenav   (layout + surface)
+     .nav .grp     → .sidenav__group
+     .nav a        → .sidenav__link  (+ .sidenav__link--active on the current)
+     .main         → .o-shell__main
+     .brand        → .o-shell__brand          (placement only; see below)
+
+   WHAT STAYS ON ITS LEGACY NAME, AND WHY IT IS NOT LAZINESS. `.chip` and the
+   `.brand` internals are page-scoped below rather than re-classed onto a
+   component, because no component can carry them: `.brand` is live on ALL
+   SEVEN migrated pages and `.logo` on three, so a layer(components) rule
+   would repaint them — the same call card.css made for the bare `.card` and
+   btn.css for the bare `.btn`. `.chip` is live on taqseem and is a different
+   component wearing the same name (a standing block there, a flat pill here).
+   Measured 2026-08-12/13; the evidence is in NEXT-SESSION.md §📐.
+
+   `.nav a .icon` IS ABSENT AND IS DEAD. static/app.css:57 sets a bare `.icon`
+   unlayered, and unlayered beats every @layer regardless of specificity
+   (main.css:73-74). theme.css:85 also spells it `.nav a .ic`; both are dead.
+
+   WHAT THIS MIGRATION DOES NOT FIX — say it out loud. theme.css carries two
+   `@media (max-width: 760px)` rules for `.app` and `.nav` that NOTHING
+   redeclares, so blueprint's narrow-viewport shell is broken today and stays
+   broken after this. shell.css declined that breakpoint deliberately: hiding
+   the nav without the control that brings it back is half a mechanism, and
+   that control is a component nobody has built. DEFERRED D21 flags the same
+   viewport. This is not a regression introduced here; it is a hole this task
+   does not close.
+
+   Mechanism: see pages/slo.css's header (D19) — the legacy import lives in a
+   per-page entry file and must carry layer(), never a second <link>.
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/blueprint.css") layer(legacy);
+
+/* ── D20 compat block, 19 names ───────────────────────────────────────────
+   99-legacy/blueprint.css reads these and declares none of them; every one is
+   supplied today by /static/theme.css, which this page is about to drop. Nine
+   of the nineteen are ALSO read from inline style="" in the markup — measured
+   by the script rather than by hand (D32, resolved 2026-08-08) — and not one
+   of those nine carries a fallback, so they are lost outright rather than
+   degrading. The block covers both halves at once.
+
+   Each is re-supplied from a Tier 2 role, value for value, with no literal of
+   its own. --font-display and --font-body are deliberately ABSENT: Tier 2
+   declares those names itself and that collision is load-bearing (see its
+   header). Sits in layer(legacy) because it is legacy debt and dies with
+   99-legacy/blueprint.css in UI-064, and follows the imports so it wins if a
+   name is ever declared on both sides. */
+@layer legacy {
+  :root {
+    /* brand + accent */
+    --brand:        var(--color-action);
+    --brand-2:      var(--color-action-hover);
+    --accent:       var(--color-accent);
+    --accent-soft:  var(--color-accent-soft);
+
+    /* surfaces */
+    --app-bg:       var(--color-canvas);
+    --panel:        var(--color-surface);
+    --panel-2:      var(--color-surface-sunken);
+    --chip-bg:      var(--color-surface-inset);
+
+    /* text + lines */
+    --fg:           var(--color-text);
+    --muted:        var(--color-text-muted);
+    --line:         var(--color-border);
+
+    /* status */
+    --green:        var(--color-success);
+    --green-bg:     var(--color-success-soft);
+    --yellow:       var(--color-warning);
+    --yellow-bg:    var(--color-warning-soft);
+    --red:          var(--color-danger);
+    --red-bg:       var(--color-danger-soft);
+
+    /* shape */
+    --radius:       var(--radius-container);
+    --radius-sm:    var(--radius-control);
+  }
+}
+
+/* ── page-scoped: the brand block ─────────────────────────────────────────
+   shell.css's .o-shell__brand gives placement — grid-area, display, flex
+   alignment, gap and padding — and its header states the split explicitly:
+   the background, colour and bottom border are the brand COMPONENT's. There
+   is no brand component, and this enumeration is what established there
+   cannot be one while `.brand` is live on seven pages. So the cosmetics land
+   here, scoped to the only page that loads this file.
+
+   The three declarations below are exactly what the rules probe reported as
+   surviving the unlink — `.brand` is redeclared by 99-legacy/blueprint.css
+   for everything except background, colour, border-bottom and the placement
+   `.o-shell__brand` now covers. Nothing is ported that the legacy file
+   already sets. */
+@layer components {
+  .o-shell__brand {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* The square mark. `--color-on-accent` rather than a literal white:
+     theme.css:64 writes the white as a raw hex and this tree carries zero of
+     them, including in comments — the ratchet fired on exactly that mistake
+     in nav.css yesterday. 34px and the 9px radius are one-off dimensions with
+     no vocabulary behind them, same policy as shell.css's 248px sidebar. The
+     800 weight has no Tier 2 role: --font-weight-heading is bold, and this is
+     heavier. Left literal rather than inventing a role for one consumer. */
+  .o-shell__brand .logo {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 9px;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .o-shell__brand b {
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: 0.2px;
+    line-height: 1.05;
+  }
+
+  .o-shell__brand small {
+    display: block;
+    font-size: var(--text-micro);
+    font-weight: 400;
+    opacity: 0.7;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+
+  /* ── page-scoped: the chip ──────────────────────────────────────────────
+     A flat pill. taqseem's `.chip` is a standing bordered block holding a
+     code, a strand, a sequence and a <select> — two different components
+     wearing one name, which is why this cannot go in 05-components. Verified
+     on taqseem in the browser on 2026-08-13: the chips there render as blocks
+     and must keep doing so. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-inset);
+    color: var(--color-text-muted);
+    font-size: 11.5px;
+    font-weight: var(--font-weight-strong);
+  }
+}
