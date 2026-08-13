@@ -48,6 +48,28 @@
      filled indigo/teal button. */
   --white: #ffffff;
 
+  /* ── the dark sidebar's own palette ────────────────────────────────────
+     Added 2026-08-13 for UI-060. The slate ramp above cannot serve a dark
+     sidebar: its light end is a surface tint and its dark end is text, and
+     nothing in it is a legible foreground ON near-black. These four are the
+     legacy sidebar's real values, read out of 99-legacy/slo.css:24-33 rather
+     than chosen — every page with a navy sidebar has been using them since
+     before this epic.
+
+     THEY EXIST BECAUSE OF IRFAN'S CALL ON 2026-08-13: keep the sidebar navy.
+     The Modern direction in PLAN.md §2 and 04-objects/shell.css's header is a
+     LIGHT sidebar, and UI-046 built nav.css for it — blueprint went white
+     while eight pages stayed navy. The decision reverses that, so the light
+     component needs an on-dark palette to be recoloured with.
+
+     The two overlays are rgba on purpose: hover and active on this sidebar
+     are white at low alpha, so they sit correctly on any navy the page
+     happens to use — and there are currently two (see theme.css). */
+  --navy-200: #C6D2E8;               /* nav item text on a dark sidebar */
+  --blue-400: #5B8DEF;               /* the active item's leading rail */
+  --overlay-white-07: rgba(255, 255, 255, 0.07);   /* nav item hover */
+  --overlay-white-09: rgba(255, 255, 255, 0.09);   /* nav item active */
+
   /* ── brand: indigo (primary action) ───────────────────────────────────── */
   --indigo-500: #6366f1;
   --indigo-600: #4f46e5;

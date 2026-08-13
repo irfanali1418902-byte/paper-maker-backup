@@ -83,12 +83,31 @@
   --color-danger:       var(--red-600);
   --color-danger-soft:  var(--red-050);
 
-  /* ── the dark sidebar, still needed ────────────────────────────────────────
-     The Modern direction is a LIGHT sidebar, and the shell built in UI-030 uses
-     it. But static/theme.css's --sidebar-bg is dark and pages that have not been
-     converted still read it, so the primitive stays until Sprint 6 drains them.
-     Named as a role so the eventual deletion is one line here, not a hunt. */
-  --color-sidebar-bg: var(--slate-950);
+  /* ── the dark sidebar — NOW THE DIRECTION, not a leftover ─────────────────
+     This block used to read "The Modern direction is a LIGHT sidebar, and the
+     shell built in UI-030 uses it… the primitive stays until Sprint 6 drains
+     them." IRFAN REVERSED THAT ON 2026-08-13: the sidebar stays navy.
+
+     What forced the decision: UI-046 built nav.css for the light shell and
+     UI-047b put blueprint on it, so blueprint rendered a WHITE sidebar while
+     the other eight pages rendered navy — measured, rgb(255,255,255) against
+     rgb(22,41,74). One app, two looks. Asked to choose, Irfan chose navy, and
+     that makes these roles the target rather than the legacy.
+
+     ⚠ THERE ARE STILL TWO NAVIES AND THIS DOES NOT SETTLE THEM.
+     --color-sidebar-bg is --slate-950 (#0e1729) and taqseem reads it. The
+     other six navy pages use their legacy files' own --navy (#16294A). Six
+     pages one shade, two the other. Left open deliberately — closing it moves
+     a live page's colour and wants its own decision. Recorded in ROADMAP.md.
+
+     The four foregrounds are the legacy sidebar's own values (99-legacy/slo.css
+     :24-33), promoted rather than invented. */
+  --color-sidebar-bg:     var(--slate-950);
+  --color-sidebar-fg:     var(--navy-200);          /* nav item label */
+  --color-sidebar-fg-on:  var(--white);             /* hovered / current item */
+  --color-sidebar-hover:  var(--overlay-white-07);
+  --color-sidebar-active: var(--overlay-white-09);
+  --color-sidebar-rail:   var(--blue-400);          /* current item's edge */
 
   /* ── typography roles ─────────────────────────────────────────────────────
      The first three names COLLIDE with static/theme.css on purpose — see the

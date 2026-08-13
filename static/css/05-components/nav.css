@@ -1,12 +1,20 @@
 /* =========================================================================
    05-components/nav.css — the sidebar nav and the topbar (UI-046)
 
-   PREPARED, NOT LIVE, AND IT CANNOT BE VERIFIED YET. `blueprint` is the only
-   page carrying this markup and it loads no layered stylesheet at all —
-   measured 2026-08-12: the rules probe reported `layerStatements: []` and the
-   page's only sheets are app.css, theme.css and 99-legacy/blueprint.css.
-   Every rule below is therefore inert until UI-047b migrates that page, and
-   the probe must be re-run there before any of it is called verified.
+   LIVE ON blueprint SINCE UI-047b (2026-08-13). It shipped prepared and
+   unverifiable — blueprint loaded no layered sheet at all — and that migration
+   is what gave these rules markup. The page rule probe reports 3/2/2/1 and the
+   rest at 1.
+
+   ⚠ RECOLOURED TO NAVY THE SAME DAY, AND THAT REVERSED THE DESIGN TARGET.
+   This file was written for the Modern LIGHT sidebar that PLAN.md §2 and
+   04-objects/shell.css specify. The result, once blueprint was on it, was
+   measured: blueprint rendered rgb(255,255,255) while the other eight pages
+   rendered navy. One app, two looks. **Irfan chose navy.** So `.sidenav` now
+   reads the `--color-sidebar-*` roles, and 01-settings/theme.css's block for
+   them says the same thing — those roles are the target now, not a leftover.
+   The topbar below is NOT dark: the legacy pages have no topbar at all, and
+   blueprint's was light before the port.
 
    THE BOARD SAID TWELVE RULES. NINE ARE WRITTEN HERE, AND THE OTHER THREE ARE
    NOT AN OVERSIGHT:
@@ -80,19 +88,23 @@
 }
 
 /* ── the sidebar nav ──────────────────────────────────────────────────────
-   Surface and edge only; shell.css owns the rest. theme.css:80 reads
-   `var(--panel)`, the LIGHT panel — not `--sidebar-bg`. The dark sidebar on
-   the unmigrated pages is `.app-sidebar`, a different element, and this nav
-   was already light before the port. */
+   Surface only; shell.css owns padding, overflow and placement. The border
+   that used to be here is GONE, not forgotten: a light hairline was right
+   against a white panel and is wrong against navy, and the legacy
+   `.app-sidebar` these eight pages run has no border either.
+
+   ⚠ TWO NAVIES EXIST AND THIS PICKS ONE. `--color-sidebar-bg` is `--slate-950`;
+   the six pages whose legacy files carry their own `--navy` use a different,
+   lighter shade. blueprint and taqseem now match each other, not those six.
+   Deliberately not settled here — see theme.css's sidebar block. */
 .sidenav {
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  background: var(--color-sidebar-bg);
 }
 
 /* Group heading — "PAPERS", "CONTENT". Uppercase micro type. */
 .sidenav__group {
   padding: 14px 12px 6px;
-  color: var(--color-text-muted);
+  color: var(--color-sidebar-fg);
   opacity: 0.6;
   font-size: var(--text-micro);
   letter-spacing: 0.9px;
@@ -106,25 +118,27 @@
   padding: 10px 12px;
   margin-bottom: 2px;
   border-radius: var(--radius-control);
-  color: var(--color-text-nav);
+  color: var(--color-sidebar-fg);
   font-size: var(--text-body);
   font-weight: 500;
   cursor: pointer;
 }
 
 .sidenav__link:hover {
-  background: var(--color-surface-sunken);
+  background: var(--color-sidebar-hover);
+  color: var(--color-sidebar-fg-on);
 }
 
 /* The current page. The inset box-shadow is the active rail on the leading
-   edge — theme.css:86 draws it with `--sidebar-active`, which resolves to the
-   same value `--color-action` already carries, so no second role is invented
-   for it. `[data-active]` is carried alongside the class because theme.css:86
-   matches both and the markup uses both. */
+   edge. On navy it can no longer be `--color-action` — indigo on near-black is
+   not a rail anybody sees — so it reads `--color-sidebar-rail`, which is the
+   legacy sidebar's own blue from 99-legacy/slo.css:32, promoted rather than
+   picked. `[data-active]` is carried alongside the class because the markup
+   uses both. */
 .sidenav__link--active,
 .sidenav__link[data-active="1"] {
-  background: var(--color-accent-soft);
-  color: var(--color-action);
+  background: var(--color-sidebar-active);
+  color: var(--color-sidebar-fg-on);
   font-weight: var(--font-weight-strong);
-  box-shadow: inset 3px 0 0 var(--color-action);
+  box-shadow: inset 3px 0 0 var(--color-sidebar-rail);
 }
