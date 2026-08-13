@@ -82,6 +82,39 @@
     font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
   }
 
+  /* THE SIDEBAR HAS TO SCROLL, AND IT NEVER COULD. Reported by Irfan in the
+     browser on 2026-08-13, on the first look at the migrated page: the last
+     nav item, SLO Health, hangs outside the navy background.
+
+     `.app-sidebar` is `height: 100vh; position: sticky` (99-legacy/index.css
+     :42) with NO overflow property, so content taller than the viewport does
+     not scroll — it spills out of the painted box. Both of the other shells
+     in this repo handle it: static/theme.css's `.nav` and
+     04-objects/shell.css's `.o-shell__nav` both set `overflow: auto`. The
+     legacy `.app-sidebar` shell never did, on any of the six pages that use
+     it.
+
+     MEASURED, and index's line-height is NOT the defect. All six migrated
+     pages compute the nav at line-height 21.75px — the new tree's body
+     leading, applied consistently. index's nav is simply the tallest:
+     450.16px against taqseem/slo/slo-health at 294.08px and library/bank at
+     209.48px, because index lists every screen. Special-casing index's
+     leading would fix the symptom by making this one page disagree with the
+     other five.
+
+     THE FRAGILITY PRE-DATES THIS MIGRATION. The sidebar's children totalled
+     680.4px before and 700.7px after — the migration added 20.3px through
+     the leading, and that crossed the threshold on Irfan's screen. A short
+     enough window would have shown it before, too.
+
+     THE SAME HOLE IS OPEN ON THE OTHER FIVE PAGES and is deliberately not
+     touched here: they are live, their navs are shorter so nothing has
+     spilled yet, and five live pages want their own gate run rather than a
+     drive-by. Recorded rather than silently fixed. */
+  .app-sidebar {
+    overflow-y: auto;
+  }
+
   /* `.main`'s padding, and this one IS measured: index's .main computes
      24px 28px 44px today, entirely from theme.css. Dropping it would strip
      the side inset from all seven screens. grid-area and overflow are not
