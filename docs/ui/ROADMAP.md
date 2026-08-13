@@ -84,6 +84,38 @@ home is a decision each time — a new component, the page's own entry file, or 
 change in value. **That half has not been done once.** `slo` still has all 26 of its
 load-bearing rules.
 
+#### And the drain should go BY THING, not BY PAGE — measured 2026-08-13
+
+`UI-060..063` is written as "per page: drain `99-legacy/<page>.css` to zero". Taking `slo`
+that far first is what showed why that ordering is wrong. Of its 26 load-bearing rules, **9
+are the navy sidebar shell** — and those same rules are in seven other files:
+
+| selector | rules across all files | how many DIFFERENT versions |
+|---|---:|---:|
+| `.app-nav` (+ `a`, `a:hover`, `a.active`) | 36 | 3–4 |
+| `.brand` (+ `.name`, `small`) | 30 | 6 |
+| `.app-sidebar` | 16 | 5 |
+| `.sidebar-foot` | 15 | 5 |
+| `.page-head` (+ `h1`, `p`) | 11 | — |
+| **total** | **~108** | |
+
+**~108 of the 454 load-bearing rules are one shell, written eight or nine times.** This is
+`PLAN.md` §1's opening complaint — *".app-sidebar 8 copies, .app-nav a 7 copies, .brand 9
+copies"* — still true, and now measured at the rule level rather than the selector level.
+
+**AND THE DUPLICATION HAS DRIFTED, WHICH IS THE PART THAT DECIDES THE TASK.** These are not
+eight identical copies. Each selector has 3–6 genuinely different versions. But there is one
+clean group: **`bank`, `library`, `slo-health` and `slo` are byte-identical across all five
+selectors** — **50 rules between them**. `taqseem` joins them for `.app-nav` only;
+`blueprint`, `index`, `print` and `landing` each drifted their own way.
+
+So the shape of the work is not nine page-drains. It is: **extract the shell once, adopt it on
+the four pages that already agree (50 rules out, ~13 in), then take the other five one at a
+time as decisions** — each one being "accept the shared values, or keep this page's variant".
+
+`shell.css` already exists from UI-030, but it is the NEW `.o-shell*` shell and only
+`blueprint` uses it. The eight other pages still run the old navy one.
+
 **What this does to the 5–10 estimate:** it stays, but the upper end is likelier. The cheap
 quarter is now measured and could be cleared quickly; the 454 is not measured by anything,
 because no page has been taken through it.

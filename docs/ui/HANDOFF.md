@@ -54,12 +54,38 @@ DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code aud
      ghar dena har baar EK FAISLA hai (naya component / page ki apni file / value
      badalne ki ijazat).
 
+  ⚠⚠ AUR EK NAAP JISNE TARTEEB BADAL DI (2026-08-13):
+     slo ke 26 zinda rules mein se 9 NAVY SIDEBAR SHELL ke hain — aur wohi rules
+     saat aur files mein bhi hain. Poore repo mein:
+        .app-nav (+a, :hover, .active)   36 rules
+        .brand (+.name, small)           30
+        .app-sidebar                     16
+        .sidebar-foot                    15
+        .page-head (+h1, p)              11
+        ------------------------------------
+        ~108 rules = EK shell, aath-nau baar likha hua
+     Yani 454 zinda rules ka ~24% ek hi cheez hai.
+
+     MAGAR WO EK JAISI NAHI RAHI — har selector ki 3-6 alag iqsaam ban chuki hain.
+     Ek SAAF group hai: bank, library, slo-health, slo — in CHAAR par paanchon
+     rules HARF-BA-HARF ek jaise hain, kul 50 rules. taqseem sirf .app-nav mein
+     inke saath hai; blueprint, index, print, landing har ek apni raah.
+
+     IS SE TARTEEB BADALTI HAI: UI-060..063 "per page" likha hai, magar page-ba-page
+     karna ghalat hai. Sahi tareeqa:
+       1. shell ko EK BAAR component banao
+       2. un CHAAR pages par lagao jo pehle se ek jaise hain (50 rules nikle, ~13 aaye)
+       3. baqi paanch ko ek-ek karke dekho — har ek par FAISLA: shared values qubool
+          karo, ya us page ka apna variant rakho
+     Nota: shell.css (UI-030) mojood hai magar wo NAYA .o-shell* shell hai jo sirf
+     blueprint use karta hai. Baqi aath pages purana navy shell chala rahe hain.
+
   AGLA QADAM (do mein se ek, Irfan se poochho):
-    (a) baqi files ka AASAN hissa nikalo — har file ke zeros ko caveats se chhaan
-        kar delete karo. Tez, kam khatre wala, ~200 rules.
-    (b) slo.css ko POORA khatam karo — uske 26 zinda rules ko ghar do. Mushkil,
-        magar isse pata chalega ke ek file poori karne mein kitna waqt lagta hai,
-        jo abhi bilkul na-maloom hai.
+    (a) SHELL COMPONENT banao — sab se bara ek-mushat faida (~50 rules chaar files se).
+        Mera mashwara yehi hai, upar wali naap ki wajah se.
+    (b) baqi files ka AASAN hissa nikalo — har file ke zeros ko caveats se chhaan kar
+        delete karo. Tez, kam khatre wala, ~200 rules — magar ye 454 zinda rules ko
+        haath nahi lagata, jo asal kaam hain.
 
 ## ⚠ EK KHULA DEFECT — PAANCH LIVE PAGES PAR
 
