@@ -1,0 +1,148 @@
+/* =========================================================================
+   index.html's entry file — UI-047c, part 1 of 2. THE LAST PAGE.
+
+   NOT LINKED YET. index.html still carries its three original <link>s, so
+   nothing here reaches any page and its effect is measurably zero. Part 2
+   swaps the links; only then does the page move.
+
+   ⚠ D29 — TWO FILES ARE NAMED theme.css. This page DROPS /static/theme.css
+   and KEEPS /static/css/01-settings/theme.css. Quote full paths in handover.
+
+   THIS IS THE SMALLEST MIGRATION IN THE EPIC, AND THE MEASUREMENTS ARE WHY.
+   index is the largest page in the app — 508 elements at rest, a 7-screen
+   SPA, 224 inline style attributes — and every one of those numbers made it
+   look like the hardest. It is not:
+
+     · NO COMPAT BLOCK. index declares 27 tokens and reads 21, with ZERO
+       orphans (`css_orphans.py index --names`, 2026-08-13). taqseem needed
+       23 names and blueprint 19. index needs none, because its own :root is
+       complete — which is the same fact PLAN.md §1 opens with as a defect,
+       "index.html redefines --line and --muted", paying off here.
+     · NO RE-CLASSING. blueprint needed ten class attributes changed because
+       it used theme.css's .app/.top/.nav grid shell. index uses its own
+       .shell/.app-sidebar/.app-nav, declared in 99-legacy/index.css:41-73,
+       and that survives the unlink untouched. Part 2 is a <link> swap and
+       nothing else.
+     · NO UI-046. Same reason — index's nav is .app-nav, not .nav.
+     · The 224 inline style attributes are unaffected. Inline beats every
+       layer, which is also why the .urdu input below needs no rule.
+
+   WHAT THE PAGE ACTUALLY LOSES, and the five rules are the answer to it.
+   Two of its seven orphan rules are already covered — `input[type=number]`
+   by 03-elements/forms.css:53 and `:focus-visible` by :106 — and three of
+   its four partials are dropped deliberately rather than ported:
+
+     · `.brand` (background, color, border-bottom, grid-area) — DROPPED.
+       pages/bank.css:110 settled this across four migrations: "The
+       /static/theme.css white slab on .brand goes, for the fourth page
+       running — treat it as a theme.css fact, not a per-page quirk."
+       Measured 2026-08-13: with the slab, index's brand block renders
+       rgb(255,255,255) on a navy rgb(22,41,74) sidebar. Without it, it
+       matches library and bank. UI-047a ported this partial into taqseem by
+       mistake and shipped the slab for a day; that is fixed and this file
+       does not repeat it.
+     · `.brand .logo` (color, flex, font-family, font-size, font-weight,
+       place-items) — DROPPED, all six inert here. The logo holds an <svg>
+       with a white `stroke` attribute written into the markup, so `color` never reaches
+       it; there is no text, so the three font properties have nothing to
+       act on; and 99-legacy/index.css:48 already centres it with
+       display:flex + align-items + justify-content and pins it with
+       flex-shrink:0.
+     · `.main`'s `grid-area` — DROPPED. index's .main is a flex child of
+       `.shell { display: flex }`, so a grid-area names nothing.
+     · `.main`'s `overflow` — DROPPED PROVISIONALLY, and this is the one
+       thing here that is not settled by measurement. The type probe does
+       not capture overflow, and .main has no constrained height for
+       `auto` to act on, so it is expected to be inert. **If part 2's
+       before/after diff shows a delta, it belongs in the rule below.**
+   ========================================================================= */
+
+@import url("../main.css");
+@import url("../99-legacy/index.css") layer(legacy);
+
+@layer components {
+  /* THE اردو TOGGLE — Irfan's decision, answered A on 2026-08-13.
+     03-elements/forms.css:101's `button { font-family: inherit }` sits in
+     layer(elements) and outranks 99-legacy/index.css:34's `.urdu, .ur` in
+     layer(legacy), so both toggle buttons would render the Urdu label in the
+     Latin body sans. layer(components) outranks layer(elements) and wins it
+     back, page-scoped, without touching a file that is live on eight pages.
+
+     Scope measured before it was answered: exactly TWO elements, both
+     <button class="urdu">. The `<input class="urdu">` at index.html:444 is
+     already safe behind an inline style. bank and print are not affected —
+     their urdu-toggle-row, qtext-ur, school-ur and urdu-input are different
+     class names that `.urdu` does not match. A first grep said otherwise and
+     was wrong, because \b treats the hyphen as a word boundary; the same
+     trap this epic hit on app-nav the day before.
+
+     The stack is 99-legacy/index.css:34's own, unchanged. */
+  .urdu,
+  .ur {
+    font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', serif;
+  }
+
+  /* `.main`'s padding, and this one IS measured: index's .main computes
+     24px 28px 44px today, entirely from theme.css. Dropping it would strip
+     the side inset from all seven screens. grid-area and overflow are not
+     here — see the header. The values are theme.css's own, read through the
+     roles: --pad is the card/panel inset, and 28px/44px are literal in
+     theme.css with no vocabulary behind them, same policy as shell.css's
+     248px sidebar. */
+  .main {
+    padding: var(--space-inset) 28px 44px;
+  }
+
+  /* `.tag` — the brand tagline. 99-legacy/index.css:53's `.brand .tag` and
+     :317's `.topbar .tag` already win font-size and color at 0,2,0, so what
+     actually goes when theme.css goes is the pill: these five. NOT a
+     component — `.tag` is live on landing as the hero tagline and on
+     slo-health as a JS-rendered SLO code badge, three different things
+     wearing one class, which is why UI-043 could not own it
+     (NEXT-SESSION.md §📐). */
+  .tag {
+    font-family: var(--font-data);
+    font-size: 11px;
+    font-weight: var(--font-weight-strong);
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--color-accent-soft);
+    color: var(--color-action);
+  }
+
+  /* `.row` — a flex row. `.topbar .row` exists in the legacy file but only
+     inside `@media (max-width: 760px)` (index.css:304), so at desktop width
+     nothing redeclares it. Page-scoped for the same reason as `.tag`: `.row`
+     is live on slo-health, slo and taqseem, and a layer(components) rule
+     would repaint all seven — measured, 2 deltas on taqseem alone. */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* The summary rows' separators. theme.css draws a border on every
+     `.summary-row` and removes it on the last; 99-legacy/index.css:144
+     declares the selector but not the border, so both halves go together.
+     This is the one selector in this file that is live nowhere else.
+
+     `dashed`, and `var(--line)` rather than `var(--color-border)` — both
+     read off the page rather than off theme.css's source, and an earlier
+     draft of this rule got both wrong. theme.css:208 is `1px dashed
+     var(--line)`, and on THIS page `--line` is index's own value
+     (99-legacy/index.css:12), which computes to rgb(237,240,245). The Tier 2
+     role would have given `--slate-200`, which computes to rgb(234,237,243)
+     — a different colour, and a delta nobody asked for. Neither value is
+     quoted as a hex here: a copy-pasteable hex counts toward
+     `unsanctioned_hex` EVEN INSIDE A COMMENT, and an earlier draft of this
+     file tripped the ratchet on exactly that, 429 -> 432, three times in one
+     pass. A page-scoped compat rule exists to hold the
+     page still, so it takes the value the page actually has. */
+  .summary-row {
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .summary-row:last-child {
+    border-bottom: none;
+  }
+}
