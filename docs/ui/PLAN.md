@@ -3,6 +3,11 @@
 **Branch:** `feat/ui-architecture` (one epic branch, one commit per task)
 **Baseline tag:** `ui-baseline`
 **Design target:** `static/mockup-modern.html` (Modern: indigo `#4f46e5` + teal `#0ea5a4`)
+**⚠ ONE PART OF IT IS OVERRIDDEN — the sidebar.** Modern's default is a LIGHT sidebar
+(`mockup-modern.html`:38, `--sidebar-bg:#fff`). **Irfan chose navy on 2026-08-13** and the tree
+follows him: `05-components/nav.css` reads the `--color-sidebar-*` roles and
+`01-settings/theme.css` documents them as the target rather than a leftover. Everything else in
+the Modern palette stands. See §Sprint 6.
 **Status board:** `docs/ui/STATUS.md` ← *fresh sessions read this first, not this file*
 
 ---
@@ -352,9 +357,26 @@ icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEA
 | UI-052 | `display:none` audit — `.is-hidden` **only** where JS never sets `.style.display` |
 
 ### Sprint 6 — Legacy elimination + mockup fidelity (5 tasks)
+
+> **THE PER-PAGE ORDERING IN THIS TABLE IS WRONG, measured 2026-08-13.** Taking `slo` far
+> enough to see its load-bearing half showed why: **~108 of the 454 load-bearing rules across
+> all nine files are ONE shell** — `.app-nav` and companions 36, `.brand` and its two 30,
+> `.app-sidebar` 16, `.sidebar-foot` 15, `.page-head` and its two 11. Draining page by page
+> means meeting that same shell nine times. Go **by thing, not by page**. The survey table is
+> in `ROADMAP.md`.
+>
+> **And the shell has drifted into 3–6 versions per selector**, so "extract the duplicate" is
+> not one action. There is one clean group: `bank`, `library`, `slo-health` and `slo` are
+> byte-identical across all nine desktop shell selectors — **36 rules**. Their `@media`
+> overrides are NOT identical; those split into two groups and are D21 territory besides.
+>
+> **⚠ AND THERE ARE THREE NAVIES IN THIS REPO**, which the shell work has to settle:
+> `#16294A` on the six pages whose legacy files carry their own `--navy`; `--slate-950`
+> (`#0e1729`) behind `--color-sidebar-bg`, which `blueprint` and `taqseem` read; and `#132244`
+> in `mockup-modern.html`:28's non-Modern theme. Nobody has chosen between them.
 | ID | Task |
 |---|---|
-| UI-060..063 | Per page: drain `99-legacy/<page>.css` to zero, delete it, apply mockup screen fidelity. **Not started. 2,115 lines across nine files — this is the epic's remaining work** |
+| UI-060..063 | Per page: drain `99-legacy/<page>.css` to zero, delete it, apply mockup screen fidelity **EXCEPT the sidebar, which stays navy — Irfan 2026-08-13**. **STARTED**: `slo.css` 45 rules → 35 (`legacy_css_lines` 2,115 → 2,105, the first movement in that number), all nine files surveyed, and `nav.css` recoloured so blueprint is navy again. **~2,105 lines across nine files remain — this is the epic's work** |
 | UI-064 | ~~Delete `theme.css`~~ ✅ **part 1 DONE 2026-08-13** — 212 lines, 0 deltas on all nine pages, `unsanctioned_hex` 429 → 400. Remaining: delete `app.css` (57 lines, still linked by all nine for `@font-face` + the `.icon` sprite); move mockups to `docs/design/`; final sweep |
 
 ### Sprint 7 — Optional

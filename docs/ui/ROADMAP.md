@@ -84,6 +84,29 @@ home is a decision each time — a new component, the page's own entry file, or 
 change in value. **That half has not been done once.** `slo` still has all 26 of its
 load-bearing rules.
 
+#### The sidebar stays navy — Irfan's decision, 2026-08-13
+
+Recorded here because it **overrides the design target**, and a roadmap that did not say so
+would leave the next session reading `PLAN.md` §2 and `shell.css` for an intent that is no
+longer the plan.
+
+`mockup-modern.html`:38 makes Modern's default sidebar **white**. `04-objects/shell.css` and
+`05-components/nav.css` were built to it, and `UI-047b` put `blueprint` on them — at which
+point `blueprint` rendered `rgb(255,255,255)` while the other eight pages rendered navy. One
+app, two looks, live. Asked to choose, Irfan chose **navy**, and `nav.css` was recoloured the
+same day: 92 deltas on `blueprint`, **0 on the other seven**.
+
+**⚠ THREE NAVIES EXIST AND NONE HAS BEEN CHOSEN.**
+
+| shade | where |
+|---|---|
+| `#16294A` | the six pages whose legacy files declare their own `--navy` |
+| `#0e1729` (`--slate-950`, behind `--color-sidebar-bg`) | `blueprint` and `taqseem` |
+| `#132244` | `mockup-modern.html`:28, a non-Modern theme |
+
+`blueprint` and `taqseem` now match each other, not the six. **Closing this moves a live
+page's colour**, so it is left open on purpose and belongs to the shell work below.
+
 #### And the drain should go BY THING, not BY PAGE — measured 2026-08-13
 
 `UI-060..063` is written as "per page: drain `99-legacy/<page>.css` to zero". Taking `slo`
