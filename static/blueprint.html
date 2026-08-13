@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Blueprint Builder — Parcha Paper Maker</title>
 <link rel="stylesheet" href="/static/app.css">
-<link rel="stylesheet" href="/static/theme.css">
-<link rel="stylesheet" href="/static/css/99-legacy/blueprint.css">
+<link rel="stylesheet" href="/static/css/pages/blueprint.css">
 </head>
 <body data-page="Blueprint Builder">
 
-<div class="app">
-  <div class="brand">
+<div class="o-shell">
+  <div class="brand o-shell__brand">
     <div class="logo">P</div>
     <div>
       <b class="name">Parcha Paper Maker</b>
@@ -19,38 +18,38 @@
     </div>
   </div>
 
-  <div class="top">
-    <div class="crumbs">Parcha Paper Maker · <b>Blueprint</b></div>
-    <div class="spacer"></div>
+  <div class="o-shell__top appbar">
+    <div class="appbar__crumbs">Parcha Paper Maker · <b>Blueprint</b></div>
+    <div class="o-shell__spacer"></div>
     <span class="chip">Section-by-section paper</span>
-    <div class="avatar">P</div>
+    <div class="appbar__avatar">P</div>
   </div>
 
-  <nav class="nav">
-    <div class="grp">Menu</div>
-    <a href="/">
+  <nav class="o-shell__nav sidenav">
+    <div class="sidenav__group">Menu</div>
+    <a href="/" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
     </a>
-    <a href="/library.html">
+    <a href="/library.html" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-library"></use></svg>
       Image Library
     </a>
-    <a href="/bank.html">
+    <a href="/bank.html" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg>
       Question Bank
     </a>
-    <a href="/blueprint.html" class="active">
+    <a href="/blueprint.html" class="sidenav__link sidenav__link--active">
       <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
       Blueprint
     </a>
-    <a href="/slo-health.html">
+    <a href="/slo-health.html" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
       SLO Health
     </a>
   </nav>
 
-  <main class="main">
+  <main class="main o-shell__main">
   <div class="pagehead">
     <h1>Blueprint Builder</h1>
     <p>Paper ka structure define karo — sections, topics, types — phir save ya seedha paper banao.</p>
