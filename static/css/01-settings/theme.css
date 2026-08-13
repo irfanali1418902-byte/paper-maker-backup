@@ -94,15 +94,21 @@
      rgb(22,41,74). One app, two looks. Asked to choose, Irfan chose navy, and
      that makes these roles the target rather than the legacy.
 
-     ⚠ THERE ARE STILL TWO NAVIES AND THIS DOES NOT SETTLE THEM.
-     --color-sidebar-bg is --slate-950 (#0e1729) and taqseem reads it. The
-     other six navy pages use their legacy files' own --navy (#16294A). Six
-     pages one shade, two the other. Left open deliberately — closing it moves
-     a live page's colour and wants its own decision. Recorded in ROADMAP.md.
+     THE NAVY IS NOW SETTLED, on the majority. Until 2026-08-13 this role read
+     --slate-950 while six pages carried their own --navy: six on one shade,
+     blueprint and taqseem on another. Irfan chose the six-page value, because
+     it is the one teachers already see every day and moving it would have
+     changed four pages instead of two. --slate-950 was repointed to
+     --navy-900 and then deleted from tokens.css, having no other consumer.
+     blueprint and taqseem moved; the other six did not.
+
+     A THIRD shade exists and is NOT in play: mockup-modern.html:28's #132244,
+     in a theme that is not Modern. Named here so it is not mistaken for a
+     fourth option later.
 
      The four foregrounds are the legacy sidebar's own values (99-legacy/slo.css
      :24-33), promoted rather than invented. */
-  --color-sidebar-bg:     var(--slate-950);
+  --color-sidebar-bg:     var(--navy-900);
   --color-sidebar-fg:     var(--navy-200);          /* nav item label */
   --color-sidebar-fg-on:  var(--white);             /* hovered / current item */
   --color-sidebar-hover:  var(--overlay-white-07);

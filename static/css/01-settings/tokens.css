@@ -33,7 +33,8 @@
 :root {
   /* ── neutrals: slate ramp ──────────────────────────────────────────────
      Named by lightness, not by role. --slate-025 is the faintest tint;
-     --slate-950 is the near-black used by the legacy dark sidebar. */
+     --slate-900 is body text. The ramp stops there: the sidebar is navy, not
+     slate, and lives in its own family below. */
   --slate-025: #fafbfe;
   --slate-050: #f7f8fb;
   --slate-100: #f1f5f9;
@@ -41,7 +42,6 @@
   --slate-500: #64748b;
   --slate-600: #475569;
   --slate-900: #0f172a;
-  --slate-950: #0e1729;
 
   /* pure white. Kept as a primitive because it is a real palette value here,
      not a fallback: it is the panel surface AND the text colour on top of a
@@ -65,6 +65,7 @@
      The two overlays are rgba on purpose: hover and active on this sidebar
      are white at low alpha, so they sit correctly on any navy the page
      happens to use — and there are currently two (see theme.css). */
+  --navy-900: #16294A;               /* the sidebar surface itself */
   --navy-200: #C6D2E8;               /* nav item text on a dark sidebar */
   --blue-400: #5B8DEF;               /* the active item's leading rail */
   --overlay-white-07: rgba(255, 255, 255, 0.07);   /* nav item hover */
