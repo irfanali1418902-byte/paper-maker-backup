@@ -29,6 +29,28 @@ DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code aud
 
 ## AGLA KAAM — Sprint 6 ka asal hissa: UI-060..063, "the drain"
 
+  ✅ AALA BAN CHUKA HAI: scripts/css_drain_probe.mjs
+     Chalao:  node scripts/css_drain_probe.mjs <page>
+     Har legacy rule ko hata kar page naapta hai, phir wapas daal deta hai.
+     0 deltas = wo rule mara hua hai. Koi file kabhi edit nahi hoti.
+     ⚠ 0 CANDIDATE hai, FAISLA nahi — @media, JS-rendered content,
+       :hover/:focus, aur 44 se bahar ki properties sab 0 dete hain bagair
+       maray huay. Chaaron caveats us file ke header mein likhe hain.
+
+  ✅ slo.css NAAPI JA CHUKI HAI (45 rules) — magar KUCH DELETE NAHI HUA:
+       26  zinda (kaam kar rahe hain)
+       19  0-deltas — magar caveats lagane par sirf ~10 waqai jaane ke qabil:
+            7  naye tree se cover: *, a, table, "th, td", th, .page-head h1, .card h2
+            3  .status-error/.status-updated/.status-added — inka poore repo mein
+               koi consumer hi nahi (sirf slo.css ke andar hain)
+        9  BLIND SPOT, mara hua NAHI:
+            4 x :hover/:disabled  ·  4 x .pill* (sirf JS templates mein,
+            slo.html:170/228)  ·  1 x @media (max-width:720px)
+
+  AGLA QADAM: slo.css ki wo ~10 lines hatao, css_type_probe se aath pages par
+  0 deltas confirm karo, phir Irfan ko slo browser mein dikhao. Uske baad agli
+  file. Ek file poori hone se andaza pukhta ho jayega.
+
   99-legacy/*  = 2,115 lines, nau files. ABHI TAK EK LINE NAHI HILI. Yehi poore epic
                  ka bacha hua kaam hai.
   app.css      = 57 lines, nau ke nau pages abhi bhi link karte hain (@font-face +
