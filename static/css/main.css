@@ -185,7 +185,7 @@
 /* @import url("05-components/modal.css")     layer(components); */
 /* @import url("05-components/field.css")     layer(components); */
 /* @import url("05-components/badge.css")     layer(components); */
-/* @import url("05-components/nav.css")       layer(components); */
+@import url("05-components/nav.css")       layer(components);
 /* @import url("05-components/table-data.css") layer(components); */
 
 /* UI-050..052 */
