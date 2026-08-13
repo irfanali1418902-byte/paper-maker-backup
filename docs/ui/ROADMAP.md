@@ -53,10 +53,40 @@ Taken **before** B and C, deliberately — see "What is being skipped" below.
 
 | # | task | est. |
 |---|---|---:|
-| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page (2,115 lines). **STARTED 2026-08-13**: `css_drain_probe.mjs` written, `slo.css` measured — of its 45 rules, **26 are load-bearing, ~10 are safe to delete, 9 the probe cannot judge**. Nothing deleted yet | 5–10 |
+| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page. **STARTED 2026-08-13.** `css_drain_probe.mjs` written; **all nine files measured**; `slo.css` drained of its 10 dead rules — `legacy_css_lines` **2,115 → 2,105**, the first time that number has moved in this epic. See the survey below | 5–10 |
 | 6 | ~~UI-064 — delete `theme.css`~~ ✅ **part 1 done 2026-08-13**, out of order and deliberately: `UI-047c` made the file unreachable that morning, so it became Marhala D's cheapest step. `app.css` + final sweep remain | 1 |
 
 **CSS only goes down here.** Everything before this adds.
+
+#### The drain survey — all nine files, measured 2026-08-13
+
+| file | rules | 0-delta | load-bearing |
+|---|---:|---:|---:|
+| `landing` | 31 | 7 | 24 |
+| `slo` | 45 | 19 | 26 |
+| `taqseem` | 51 | 31 | 20 |
+| `slo-health` | 57 | 33 | 24 |
+| `library` | 93 | 28 | 65 |
+| `blueprint` | 102 | 56 | 46 |
+| `index` | 154 | 85 | 69 |
+| `bank` | 154 | 53 | 101 |
+| `print` | 158 | 79 | 79 |
+| **total** | **845** | **391** | **454** |
+
+**Read the middle column carefully — 391 is not the number of deletable rules.**
+`slo` is the only file taken all the way through: of its **19** zeros, **10** were genuinely
+dead and **9** were the probe's own blind spots — four `:hover`/`:disabled`, four `.pill*`
+that exist only inside JS template strings, one `@media` outside the viewport. If that
+roughly halves everywhere, the genuinely deletable share is **~200 of 845, about a quarter**.
+
+**And the 454 are the work.** Deleting a dead rule is minutes; giving a load-bearing one a
+home is a decision each time — a new component, the page's own entry file, or an accepted
+change in value. **That half has not been done once.** `slo` still has all 26 of its
+load-bearing rules.
+
+**What this does to the 5–10 estimate:** it stays, but the upper end is likelier. The cheap
+quarter is now measured and could be cleared quickly; the 454 is not measured by anything,
+because no page has been taken through it.
 
 ### What is being skipped, and it is a choice not an oversight
 

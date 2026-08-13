@@ -37,35 +37,29 @@ DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code aud
        :hover/:focus, aur 44 se bahar ki properties sab 0 dete hain bagair
        maray huay. Chaaron caveats us file ke header mein likhe hain.
 
-  ✅ slo.css NAAPI JA CHUKI HAI (45 rules) — magar KUCH DELETE NAHI HUA:
-       26  zinda (kaam kar rahe hain)
-       19  0-deltas — magar caveats lagane par sirf ~10 waqai jaane ke qabil:
-            7  naye tree se cover: *, a, table, "th, td", th, .page-head h1, .card h2
-            3  .status-error/.status-updated/.status-added — inka poore repo mein
-               koi consumer hi nahi (sirf slo.css ke andar hain)
-        9  BLIND SPOT, mara hua NAHI:
-            4 x :hover/:disabled  ·  4 x .pill* (sirf JS templates mein,
-            slo.html:170/228)  ·  1 x @media (max-width:720px)
+  ✅ slo.css DRAIN HO CHUKI (pehla page): 45 rules -> 35, 91 lines -> 81.
+     legacy_css_lines 2,115 -> 2,105 — YEH ADAD IS EPIC MEIN PEHLI BAAR HILA.
+     Uske 19 zeros mein se sirf 10 nikale; 9 blind spot thay (4 x :hover/:disabled,
+     4 x .pill* jo sirf JS templates mein hain, 1 x @media).
+     ⚠ Uske 26 ZINDA rules ab bhi wahin hain — unhe ghar nahi mila.
 
-  AGLA QADAM: slo.css ki wo ~10 lines hatao, css_type_probe se aath pages par
-  0 deltas confirm karo, phir Irfan ko slo browser mein dikhao. Uske baad agli
-  file. Ek file poori hone se andaza pukhta ho jayega.
+  ✅ NAU KE NAU FILES KA SURVEY HO CHUKA (2026-08-13):
+       845 rules kul  ·  391 zero-delta  ·  454 zinda
+     Poori table: docs/ui/ROADMAP.md ka "drain survey" section.
 
-  99-legacy/*  = 2,115 lines, nau files. ABHI TAK EK LINE NAHI HILI. Yehi poore epic
-                 ka bacha hua kaam hai.
-  app.css      = 57 lines, nau ke nau pages abhi bhi link karte hain (@font-face +
-                 .icon sprite). UI-064 ke baqi hisse ke saath jaata hai.
-  Andaza: 6-12 sessions — aur yeh roadmap ka SAB SE KAMZOR andaza hai, kyunke is
-  qism ka ek bhi task abhi tak nahi hua.
+  ⚠ 391 KO "DELETE HO SAKTE HAIN" MAT PARHNA. slo akela page hai jo poora dekha
+     gaya, aur uske aadhe zeros blind spot nikle. Asal delete-able hissa ~845 ka
+     CHAUTHAI hai. Aur 454 zinda rules HI ASAL KAAM hain — un mein se ek ka bhi
+     ghar nahi bana. Ek mara hua rule hatana minute ka kaam hai; ek zinda rule ko
+     ghar dena har baar EK FAISLA hai (naya component / page ki apni file / value
+     badalne ki ijazat).
 
-  Sprint 5 (466 inline styles) aur UI-042 / UI-043 JAAN-BOOJH KAR chhore hain: koi page
-  inka muntazir nahi, aur Sprint 5 ka bara hissa drain ke doran khud nikal aayega.
-
-⚠ ADAD KO GHALAT MAT PARHNA. "9 of 9 live + theme.css gone" parh kar yeh mat samajhna ke
-kaam khatam ke qareeb hai. theme.css delete hone se `legacy_css_lines` EK LINE nahi hila —
-wo abhi bhi 2,115 hai. Wo delete SASTA tha kyunke saat migrations pehle hi usay bay-asar
-kar chuki thin. Baseline (2026-07-28) par kul CSS 2,133 lines thi; aaj ~4,600 hai, kyunke
-naya tree purane ke SAATH bana hai, uski JAGAH nahi. Wo ulta Sprint 6 mein hoga.
+  AGLA QADAM (do mein se ek, Irfan se poochho):
+    (a) baqi files ka AASAN hissa nikalo — har file ke zeros ko caveats se chhaan
+        kar delete karo. Tez, kam khatre wala, ~200 rules.
+    (b) slo.css ko POORA khatam karo — uske 26 zinda rules ko ghar do. Mushkil,
+        magar isse pata chalega ke ek file poori karne mein kitna waqt lagta hai,
+        jo abhi bilkul na-maloom hai.
 
 ## ⚠ EK KHULA DEFECT — PAANCH LIVE PAGES PAR
 

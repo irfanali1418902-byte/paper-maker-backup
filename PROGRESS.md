@@ -1,5 +1,45 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-13 — Sprint 6 starts: the first legacy lines come out, and all nine files are surveyed
+
+**`legacy_css_lines` 2,115 → 2,105.** `PLAN.md` §3 says *"Progress is literally measurable as
+lines remaining in `99-legacy/`"*, and that number had not moved once in the life of this epic
+until now. Everything before today added; `theme.css`'s deletion removed a shared file but left
+legacy untouched. These are the first lines of the actual debt to go.
+
+**A tool had to exist first.** The migrations asked *"what does this page lose when
+`static/theme.css` is unlinked?"* — `css_orphans.py` answered that by diffing against
+`theme.css`, which was deleted the same morning. The drain asks the opposite: *"this legacy rule
+is still here — if I delete it, does anything move?"* Nothing measured that.
+`scripts/css_drain_probe.mjs` does: it deletes each rule from the CSSOM, re-snapshots, counts
+deltas, and puts it back. One page load, and **no file is ever edited**, so an interrupted run
+cannot leave a half-drained stylesheet on disk.
+
+**`slo.css`: 45 rules → 35, 91 lines → 81.** Ten went. Each was checked against the tree rather
+than trusted to the probe's zero — `*` and `a` by hand, because `box-sizing` and
+`text-decoration` are not among the 44 properties the probe measures. Three of the ten
+(`.status-error`, `.status-updated`, `.status-added`) turned out to be dead in a stronger
+sense: they appear nowhere in the repo outside `slo.css` itself. 0 deltas on all eight probed
+pages, ratchet 32, suite 890, and Irfan checked the page.
+
+**Nine of its nineteen zeros were NOT deleted, and that is the important half.** Four are
+`:hover`/`:disabled` and match nothing at rest; four are `.pill` variants that exist only inside
+JS template strings at `slo.html`:170 and :228; one is an `@media` block outside the probe's
+viewport. Deleting on the first number would have repeated the taqseem-chips mistake exactly.
+
+**Then all nine files were surveyed: 845 rules, 391 at zero deltas, 454 load-bearing.** The
+survey table is in `docs/ui/ROADMAP.md`. Two files could not be measured at first — `landing`
+and `bank` — because both contain rules with a `transition`, and the probe's restore check was
+snapshotting mid-animation. The guard was right to refuse; the fix freezes transitions before
+the baseline, which is safe because `transition-*` is not among the measured properties, and
+was verified by re-running `taqseem` to the same numbers.
+
+**What the survey actually says about the remaining work.** 391 is not the deletable count —
+`slo` is the only file taken through, and half its zeros were blind spots, so the genuinely
+deletable share is nearer **a quarter of 845**. The **454 load-bearing rules are the real
+job**, and none of them has been rehomed yet: even `slo` still has all 26 of its. Deleting a
+dead rule takes minutes; giving a live one a home is a decision every time.
+
 ## 2026-08-13 — the DOCX/PDF export is deleted: 630 lines nothing called, and a LibreOffice dependency
 
 **Not part of the UI-ARCH epic.** That epic sanctioned exactly one backend change (UI-003);
