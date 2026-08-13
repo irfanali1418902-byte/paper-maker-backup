@@ -43,9 +43,3 @@ class QuestionBankEmpty(Exception):
     user-facing and names the missing group, so the route surfaces it straight
     to the teacher as a 404 (CLAUDE.md §2)."""
 
-
-class PdfConversionFailed(Exception):
-    """Raised by export_service when the docx->PDF step fails — typically
-    because LibreOffice (soffice) isn't installed/found on the server, or the
-    conversion subprocess errored or timed out. The route maps this to 502
-    (upstream tool failure) with the message surfaced to the admin."""

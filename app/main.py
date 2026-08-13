@@ -18,7 +18,6 @@ from app.api import (
     brand,
     coverage,
     dashboard,
-    export,
     library,
     papers,
     questions,
@@ -98,7 +97,6 @@ app.include_router(questions.router, dependencies=_api_auth)
 app.include_router(library.router, dependencies=_api_auth)
 app.include_router(papers.router, dependencies=_api_auth)
 app.include_router(dashboard.router, dependencies=_api_auth)
-app.include_router(export.router, dependencies=_api_auth)
 app.include_router(syllabus.router, dependencies=_api_auth)
 app.include_router(school_settings.router, dependencies=_api_auth)
 app.include_router(slo.router, dependencies=_api_auth)

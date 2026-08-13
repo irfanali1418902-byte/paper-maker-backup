@@ -12,7 +12,6 @@ pandas
 numpy
 openpyxl
 python-multipart
-python-docx
 pypdf
 PyMuPDF
 Pillow
