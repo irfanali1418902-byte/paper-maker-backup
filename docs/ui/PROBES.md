@@ -1,6 +1,6 @@
 # UI-ARCH — the measurement probes
 
-Five CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
+Six CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
 re-checked instead of trusted, and they exist as repo files because **this epic has already
 lost a set of measurement scripts once** — the first `print` session wrote them into a
 session scratchpad and they were gone by the next one, with only the method surviving in
@@ -18,15 +18,21 @@ in a scratchpad.
 | `css_margin_probe.mjs` | **print** | `print.html` only: the margin chain (`html`/`body`/`.print-main`/`.sheet`), the three print knobs, `@page` as the engine sees it, and the PDF. Written for D35. |
 | `css_margin_diff.mjs` | — | Diffs two `css_margin_probe` runs and **names every element whose box moved**. Written because "12 elements changed padding" is not an answer when the question is whether the printed margin moved. |
 | `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. **With an optional second argument (a selector substring) it also reports every `CSSStyleRule` carrying it — the layer it arrived in, and how many elements it matches.** That is the "is this new rule inert, or is it simply not there?" check UI-041's review ran by hand; UI-041b made it a flag. |
+| `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`.** That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside the 44 all read 0 without being dead. Its header lists all four. |
 
 `css_rules_probe.mjs` (older, UI-032) is the DOM half of `css_orphans.py --rules` and is
-unrelated to these five.
+unrelated to these.
+
+**`css_orphans.py`'s main job is over.** It measured pages against `static/theme.css`, and that
+file was deleted on 2026-08-13. It still runs — it degrades with a warning rather than crashing
+— but every column now reads zero, correctly, because no page can be exposed to a file that
+does not exist.
 
 ---
 
 ## Running them
 
-All five need the app running first:
+All six need the app running first:
 
 ```
 .venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
@@ -40,6 +46,7 @@ node scripts/css_print_probe.mjs      <label> <outdir>
 node scripts/css_margin_probe.mjs     <label> <outdir> <paperId...>
 node scripts/css_margin_diff.mjs      <before.json> <after.json>
 node scripts/css_page_rule_probe.mjs  <url> [selector-substring]
+node scripts/css_drain_probe.mjs      <page> [--json <path>]
 ```
 
 Each writes `<outdir>/<label>.json` and prints a summary. **Use a scratchpad for `<outdir>`** —
@@ -51,8 +58,8 @@ The usual shape of a task is: measure at HEAD → make the change → measure �
 
 ## What is hardcoded, and when it will bite
 
-- **Edge's path** — `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` in four of
-  the five. Change it if the dev PC moves.
+- **Edge's path** — `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` in five of
+  the six. Change it if the dev PC moves.
 - **`http://127.0.0.1:8000/static`** as the base URL.
 - **Three paper UUIDs** in `css_print_probe.mjs`, and they are **database-specific**:
 

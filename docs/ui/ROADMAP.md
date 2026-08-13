@@ -43,8 +43,9 @@ matters.
 | ~~3~~ | ~~**D22** — Irfan's decision~~ | — | **THIS ROW WAS WRONG AND SO WAS EVERY OTHER PLACE THAT SAID IT.** `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04: D22 is a technical constraint for Sprint 6, not a decision. The correction had not propagated, and this file repeated it on 2026-08-13 without checking |
 | ~~4~~ ✅ | **UI-047c** `index` | 1 | **DONE 2026-08-13. 9 of 9.** Feared as the riskiest item and was the SMALLEST migration in the epic: no compat block (index declares all 27 tokens it reads), no re-classing (its shell is its own `.app-sidebar`), no UI-046. 2,476 deltas on the page, every one accounted for. **Irfan found the one real bug in the browser** — the sidebar could not scroll |
 
-**At the end of A: 9 of 9 pages live.** This is the visible half. **8 of 9 as of 2026-08-13** —
-only `index` remains, and nothing stands in front of it.
+**Marhala A is COMPLETE — 9 of 9 pages live, 2026-08-13.** Estimated at 4–7 sessions and took
+about two, because `index` — carried here as the riskiest item in the epic — turned out to be
+the smallest migration in it.
 
 ### Marhala D — Sprint 6, the actual cleanup · **6–12 sessions**
 
@@ -52,8 +53,8 @@ Taken **before** B and C, deliberately — see "What is being skipped" below.
 
 | # | task | est. |
 |---|---|---:|
-| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page (2,115 lines) | 5–10 |
-| 6 | ~~UI-064 — delete `theme.css`~~ ✅ **part 1 done 2026-08-13**; `app.css` + final sweep remain | 1 |
+| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page (2,115 lines). **STARTED 2026-08-13**: `css_drain_probe.mjs` written, `slo.css` measured — of its 45 rules, **26 are load-bearing, ~10 are safe to delete, 9 the probe cannot judge**. Nothing deleted yet | 5–10 |
+| 6 | ~~UI-064 — delete `theme.css`~~ ✅ **part 1 done 2026-08-13**, out of order and deliberately: `UI-047c` made the file unreachable that morning, so it became Marhala D's cheapest step. `app.css` + final sweep remain | 1 |
 
 **CSS only goes down here.** Everything before this adds.
 
