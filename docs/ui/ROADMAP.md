@@ -1,0 +1,109 @@
+# UI-ARCH — what is left, in order, with estimates
+
+**Written 2026-08-13**, from the board and from `git log`, at Irfan's request after a full
+audit. `PLAN.md` holds the sprint definitions and does not change; this file holds the **order
+they will actually be done in** and **what that is expected to cost**. When the two disagree
+about sequencing, this file is the newer decision.
+
+---
+
+## Where the epic actually stands
+
+**7 of 9 pages are live.** `blueprint` and `index` are held.
+
+**And the duplication this epic exists to remove is still entirely present.** That is not a
+failure, it is the middle of a strangler fig — but it should not be misread:
+
+| | lines |
+|---|---:|
+| baseline, 2026-07-28 — nine `<style>` blocks | 2,133 |
+| today — `99-legacy/*.css`, still imported by every migrated page | **2,115** |
+| today — the new tree (`01-settings` … `pages/`) | 2,401 |
+| today — `theme.css` + `app.css`, still live on the two held pages | 269 |
+
+**CSS has roughly doubled and nothing has been deleted yet.** The old tree comes out in
+Sprint 6, which has not started. "7 of 9 live" is the halfway marker, not the finish.
+
+---
+
+## The order
+
+### Marhala A — open the last two pages · **4–7 sessions**
+
+| # | task | est. | why it is this size |
+|---|---|---:|---|
+| 1 | **UI-046** nav + shell (12 rules) | 1 | scope already measured. **Cannot be verified until #2** — `blueprint` loads no layered sheet today |
+| 2 | **UI-047b** `blueprint` | 1–2 | heaviest migration: 19-name compat block, 3 `.brand` rules, 3 partials, 2 media-query rules, page-scoped `.chip`. 235 elements, JS-rendered content |
+| 3 | **D22** — Irfan's decision | — | **not work, a decision.** No component can unpark it. `index` waits here however long it waits |
+| 4 | **UI-047c** `index` | 1–2 | the largest page: 7-screen SPA, 783 elements, **224 inline styles**. The riskiest single item in the epic |
+
+**At the end of A: 9 of 9 pages live.** This is the visible half.
+
+### Marhala D — Sprint 6, the actual cleanup · **6–12 sessions**
+
+Taken **before** B and C, deliberately — see "What is being skipped" below.
+
+| # | task | est. |
+|---|---|---:|
+| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page (2,115 lines) | 5–10 |
+| 6 | UI-064 — delete `theme.css` + `app.css`, final sweep | 1–2 |
+
+**CSS only goes down here.** Everything before this adds.
+
+### What is being skipped, and it is a choice not an oversight
+
+- **Marhala B** — `UI-042` (modal/field), `UI-043` (status-bar + 7 domain families), 3–4
+  sessions. **No held page waits on either**, and `UI-043` was measured off the critical path
+  on 2026-08-12 (`NEXT-SESSION.md` §📐).
+- **Marhala C** — Sprint 5, the 466 inline `style=""`, 3–5 sessions. Much of it is expected to
+  fall out of Sprint 6 anyway, when the legacy files those styles compete with are drained.
+
+Both stay in `PLAN.md`. Neither is cancelled. They are simply not in front of anything.
+
+### Marhala E — optional
+`UI-070` — dedupe the sidebar markup's 8 copies. 1 session.
+
+---
+
+## Total
+
+```
+A + D  (the plan)          10–19 sessions   ≈ 2–4 weeks
++ C                         3–5
++ B                         3–4
+────────────────────────────────────────────
+everything                 16–28 sessions   ≈ 3–6 weeks
+```
+
+At 1 session/day, 5 days/week.
+
+## What the estimate rests on, and where it is weak
+
+**The basis is measured, not guessed.** 2026-08-05 → 08-12, once the work was components and
+migrations rather than mechanical extraction: UI-041, UI-045, UI-040, UI-041b, UI-047d,
+UI-047e, UI-047f, UI-047a — **8 tasks in 8 days, ~1 task per session.**
+
+1. **A's estimate is strong; D's is weak.** Four migrations are done and their cost is known.
+   **No task of Sprint 6's kind has ever been run here.** Draining legacy means every rule
+   finds a new home or is proven dead, on pages whose content is substantially JS-rendered.
+   The 5–10 could be 4. It could be 14.
+2. **D22 is not on the clock.** It is a decision sitting in front of `index`, and no amount of
+   work moves it.
+3. **One session is not one hour, and a revert is not a failure.** 2026-08-12 shipped
+   `taqseem`, found a missing declaration in `btn.css`, struck `UI-043`, and caught a false
+   all-clear from its own probe — 7 commits. `taqseem` itself was migrated and reverted once
+   before it shipped, deliberately.
+
+---
+
+## Open items that are not sprint tasks
+
+These are real and are tracked nowhere else. They are not in the estimate above.
+
+| item | state |
+|---|---|
+| **`taqseem` browser check** | **still not done.** The page is live and was reported fine by Irfan as a whole; no per-item confirmation exists, and chips/`.move-sel` are invisible to every probe. **Only `Pre Year 1` + `Mathematics` has a plan** (`has_plan=true`, 50 SLOs) — every other class/subject renders an empty board and would read as breakage |
+| **`STATUS.md` task-log gap** | the log table stops at `UI-041b`. **Six shipped tasks have no row**: UI-044a, UI-044b, UI-047d, UI-047e, UI-047f, UI-047a |
+| **Dead-code audit — API layer** | done 2026-08-13. 80 routes, 74 live. `/api/syllabus-topics`, `export.docx`, `export.pdf` have **no caller anywhere**; `export.py` + `export_service.py` are 411 lines plus a `python-docx` dependency. `blueprint-presets/{id}` and `library/question-types` are called by tests only. Awaiting Irfan's decision |
+| **Dead-code audit — JS / CSS / services** | not started |
+| **Two stale numbers, flagged not fixed** | `PLAN.md`:313 says `docs/ui/` is 2,655 lines (it is ~3,900). `main.css`:117 says `theme.css` is linked on 6 pages (it is 2) |
