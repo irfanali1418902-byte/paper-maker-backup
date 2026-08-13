@@ -25,6 +25,7 @@ Tree clean, sab kuch push ho chuka, dev server band, port 8000 free.
 
 9 ke 9 pages LIVE — bank, blueprint, index, landing, library, print, slo, slo-health, taqseem.
 Sprint 0-4b mukammal. `static/theme.css` DELETE ho chuki (UI-064 part 1, 212 lines).
+Sprint 6 shuru: slo.css se 10 rules nikle, sidebar navy par settle ho gaya.
 DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code audit se.
 
 ## AGLA KAAM — Sprint 6 ka asal hissa: UI-060..063, "the drain"
@@ -54,38 +55,48 @@ DOCX/PDF export bhi DELETE ho chuka (630 lines) — epic se bahar, dead-code aud
      ghar dena har baar EK FAISLA hai (naya component / page ki apni file / value
      badalne ki ijazat).
 
-  ⚠⚠ AUR EK NAAP JISNE TARTEEB BADAL DI (2026-08-13):
-     slo ke 26 zinda rules mein se 9 NAVY SIDEBAR SHELL ke hain — aur wohi rules
-     saat aur files mein bhi hain. Poore repo mein:
+  ⚠⚠ TARTEEB BADAL CHUKI HAI — "BY THING, NOT BY PAGE" (naapa 2026-08-13):
+     PLAN.md kehta tha har page ki file alag alag khali karo. Wo GHALAT hai.
+     454 zinda rules mein se ~108 EK HI CHEEZ hain — navy sidebar shell,
+     aath-nau baar likha hua:
         .app-nav (+a, :hover, .active)   36 rules
         .brand (+.name, small)           30
         .app-sidebar                     16
         .sidebar-foot                    15
         .page-head (+h1, p)              11
-        ------------------------------------
-        ~108 rules = EK shell, aath-nau baar likha hua
-     Yani 454 zinda rules ka ~24% ek hi cheez hai.
+     Page-ba-page chalte to wahi shell NAU BAAR dekhna parta.
 
-     MAGAR WO EK JAISI NAHI RAHI — har selector ki 3-6 alag iqsaam ban chuki hain.
-     Ek SAAF group hai: bank, library, slo-health, slo — in CHAAR par paanchon
-     rules HARF-BA-HARF ek jaise hain, kul 50 rules. taqseem sirf .app-nav mein
-     inke saath hai; blueprint, index, print, landing har ek apni raah.
+  ✅ SIDEBAR KA FAISLA HO CHUKA (Irfan, 2026-08-13) — aur usne design target
+     BADAL diya. Mockup ka Modern default SAFED sidebar hai
+     (mockup-modern.html:38). UI-046 ne nav.css usi ke liye banaya tha aur
+     UI-047b ne blueprint usay de diya — nateeja: blueprint SAFED, baqi aath
+     NAVY. Ek app, do shaklein. Irfan ne NAVY chuna.
+     -> nav.css navy kar diya gaya (blueprint par 92 deltas, baqi saat par 0)
+     -> naye tokens: --navy-900/-200, --blue-400, do white overlays
+     -> naye roles: --color-sidebar-bg/-fg/-fg-on/-hover/-active/-rail
+     Yeh PLAN.md §1, PLAN.md Sprint 6, ROADMAP.md, theme.css aur nav.css —
+     paanchon jagah likha hua hai.
 
-     IS SE TARTEEB BADALTI HAI: UI-060..063 "per page" likha hai, magar page-ba-page
-     karna ghalat hai. Sahi tareeqa:
-       1. shell ko EK BAAR component banao
-       2. un CHAAR pages par lagao jo pehle se ek jaise hain (50 rules nikle, ~13 aaye)
-       3. baqi paanch ko ek-ek karke dekho — har ek par FAISLA: shared values qubool
-          karo, ya us page ka apna variant rakho
-     Nota: shell.css (UI-030) mojood hai magar wo NAYA .o-shell* shell hai jo sirf
-     blueprint use karta hai. Baqi aath pages purana navy shell chala rahe hain.
+  ✅ EK NAVY BHI HO GAYA. Teen shades thay: #16294A (chhe pages), #0e1729
+     (blueprint + taqseem), aur #132244 (mockup ka non-Modern theme).
+     Irfan ne CHHE-PAGE WALA chuna (jo teachers rozana dekhte hain, aur usse
+     sirf 2 pages hile, 4 nahi). --slate-950 delete ho chuki (koi consumer
+     nahi tha). Ab saaton visible sidebars rgb(22,41,74) par hain.
 
-  AGLA QADAM (do mein se ek, Irfan se poochho):
-    (a) SHELL COMPONENT banao — sab se bara ek-mushat faida (~50 rules chaar files se).
-        Mera mashwara yehi hai, upar wali naap ki wajah se.
-    (b) baqi files ka AASAN hissa nikalo — har file ke zeros ko caveats se chhaan kar
-        delete karo. Tez, kam khatre wala, ~200 rules — magar ye 454 zinda rules ko
-        haath nahi lagata, jo asal kaam hain.
+  AGLA QADAM — CHAAR PAGES KA MARKUP .sidenav PAR LAANA:
+     bank, library, slo-health, slo — in chaaron par nau desktop shell rules
+     HARF-BA-HARF ek jaise hain (36 rules kul). .sidenav component pehle se
+     mojood hai aur ab USI navy par hai, to markup badalne se RANG BILKUL
+     NAHI BADLEGA — sirf 36 rules legacy se nikal jayenge.
+     ⚠ EK-EK PAGE KARO, har page ke baad naap aur Irfan ko dikhao. Yeh chaar
+       LIVE pages hain.
+     ⚠ RE-CLASS SE PEHLE HAR PAGE PAR do cheezein grep karo — blueprint par
+       dono ne kaat'a tha:
+         1. brand.js jaisi JS jo class ko query karti hai
+         2. page ki apni legacy file jo usi class par aur rules rakhti ho
+     ⚠ @media wale shell rules ADOPT MAT KARO — wo chaaron par ek jaise NAHI
+       hain (do gutt), aur shell.css ne wo breakpoint jaan-boojh kar chhora
+       hai (D21).
 
 ## ⚠ EK KHULA DEFECT — PAANCH LIVE PAGES PAR
 
