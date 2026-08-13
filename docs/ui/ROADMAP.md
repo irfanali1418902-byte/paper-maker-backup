@@ -9,7 +9,8 @@ about sequencing, this file is the newer decision.
 
 ## Where the epic actually stands
 
-**7 of 9 pages are live.** `blueprint` and `index` are held.
+**8 of 9 pages are live** as of 2026-08-13. Only `index` is held, and **nothing stands in front
+of it** — the D22 blocker was a misattribution, struck the same day.
 
 **And the duplication this epic exists to remove is still entirely present.** That is not a
 failure, it is the middle of a strangler fig — but it should not be misread:
@@ -19,10 +20,10 @@ failure, it is the middle of a strangler fig — but it should not be misread:
 | baseline, 2026-07-28 — nine `<style>` blocks | 2,133 |
 | today — `99-legacy/*.css`, still imported by every migrated page | **2,115** |
 | today — the new tree (`01-settings` … `pages/`) | 2,401 |
-| today — `theme.css` + `app.css`, still live on the two held pages | 269 |
+| today — `theme.css` + `app.css`, still live on `index` | 269 |
 
 **CSS has roughly doubled and nothing has been deleted yet.** The old tree comes out in
-Sprint 6, which has not started. "7 of 9 live" is the halfway marker, not the finish.
+Sprint 6, which has not started. "8 of 9 live" is the halfway marker, not the finish.
 
 ---
 
@@ -32,12 +33,13 @@ Sprint 6, which has not started. "7 of 9 live" is the halfway marker, not the fi
 
 | # | task | est. | why it is this size |
 |---|---|---:|---|
-| 1 | **UI-046** nav + shell (12 rules) | 1 | scope already measured. **Cannot be verified until #2** — `blueprint` loads no layered sheet today |
-| 2 | **UI-047b** `blueprint` | 1–2 | heaviest migration: 19-name compat block, 3 `.brand` rules, 3 partials, 2 media-query rules, page-scoped `.chip`. 235 elements, JS-rendered content |
-| 3 | **D22** — Irfan's decision | — | **not work, a decision.** No component can unpark it. `index` waits here however long it waits |
-| 4 | **UI-047c** `index` | 1–2 | the largest page: 7-screen SPA, 783 elements, **224 inline styles**. The riskiest single item in the epic |
+| ~~1~~ ✅ | **UI-046** nav + shell | 1 | **DONE 2026-08-13.** The board's twelve rules were nine: `.app` and `.top .spacer` were already complete in `shell.css`, and `.nav a .icon` is dead |
+| ~~2~~ ✅ | **UI-047b** `blueprint` | 1 | **DONE 2026-08-13, and it verified UI-046** — nine rules from `matches:0` to live. Two re-classes turned out to be additions: `.brand` (brand.js) and `.main` (legacy:28) |
+| ~~3~~ | ~~**D22** — Irfan's decision~~ | — | **THIS ROW WAS WRONG AND SO WAS EVERY OTHER PLACE THAT SAID IT.** `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04: D22 is a technical constraint for Sprint 6, not a decision. The correction had not propagated, and this file repeated it on 2026-08-13 without checking |
+| 4 | **UI-047c** `index` | 1–2 | **the last page, and nothing blocks it.** The real blocker was narrow — 2 اردو toggle buttons losing Nastaliq — **answered A on 2026-08-13**, page-scoped. Still the riskiest single item: 7-screen SPA, 783 elements, **224 inline styles** |
 
-**At the end of A: 9 of 9 pages live.** This is the visible half.
+**At the end of A: 9 of 9 pages live.** This is the visible half. **8 of 9 as of 2026-08-13** —
+only `index` remains, and nothing stands in front of it.
 
 ### Marhala D — Sprint 6, the actual cleanup · **6–12 sessions**
 
@@ -87,8 +89,10 @@ UI-047e, UI-047f, UI-047a — **8 tasks in 8 days, ~1 task per session.**
    **No task of Sprint 6's kind has ever been run here.** Draining legacy means every rule
    finds a new home or is proven dead, on pages whose content is substantially JS-rendered.
    The 5–10 could be 4. It could be 14.
-2. **D22 is not on the clock.** It is a decision sitting in front of `index`, and no amount of
-   work moves it.
+2. ~~**D22 is not on the clock.**~~ **Struck 2026-08-13 — the premise was false.** `index` was
+   never blocked on D22; that attribution was corrected on 2026-08-04 and the correction sat
+   unread in `DECISIONS-FOR-IRFAN.md` while six other places kept repeating it, this file
+   included. **Check the decisions file before recording something as a blocker.**
 3. **One session is not one hour, and a revert is not a failure.** 2026-08-12 shipped
    `taqseem`, found a missing declaration in `btn.css`, struck `UI-043`, and caught a false
    all-clear from its own probe — 7 commits. `taqseem` itself was migrated and reverted once

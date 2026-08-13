@@ -124,8 +124,8 @@ UI-040. That is not five failures; it is what component tasks do, and the board 
   nothing, and **its 12 rules cannot be verified until `UI-047b`** — measured 2026-08-12, see its
   block below.
 - **`UI-047b`** (`blueprint`) — needs UI-046, and now carries `.chip` itself.
-- **`UI-047c`** (`index`) — blocked on **D22**, which no component can unpark, and now carries
-  `.tag`, `.row` and `.summary-row` itself.
+- **`UI-047c`** (`index`) — **the last page, and nothing blocks it.** Carries `.tag`, `.row` and
+  `.summary-row` itself, plus the اردو toggle fix answered A on 2026-08-13.
 - **`UI-043`** — off the critical path as of 2026-08-12, **by measurement**. See the block below.
 
 **The order is `UI-046` → `UI-047b`**, which opens `blueprint`. `index` then waits on a decision,
@@ -379,7 +379,7 @@ itself*, and UI-045 has just failed that test in practice** — it was listed he
 | candidate | completes, on its own |
 |---|---|
 | ~~UI-045~~ — hero / display type. **DONE 2026-08-07** | **nothing.** This row said "`landing` — one small task, one page released". Measured false: the hero is restored exactly, and the 11 icons still go 22px → 17px, so `landing` needs the icon decision too — **`UI-047d`**, which no component can make |
-| ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file. **This row then said "UI-046 alone releases it", which is false twice over** (2026-08-08): `index`'s rule exposure is `.tag` — that is **UI-043**, not UI-046 — and it is blocked on **D22** besides, which no component can unpark. Its release is **`UI-047c`** |
+| ~~UI-041~~ — button. **DONE 2026-08-07, re-review PASSED at round 4** | **nothing**, as predicted. And the `index` half of this row was measured false: `index` never used `.btn` — its buttons are `.gen-btn`/`.ghost-btn` from its own legacy file. **This row then said "UI-046 alone releases it", which is false twice over** (2026-08-08): `index`'s rule exposure is `.tag` — that is **UI-043**, not UI-046. **Both halves of that were later measured false too** (2026-08-12/13): `.tag` is live on `landing` and `slo-health` and means three different things, so UI-043 cannot own it and was struck from the critical path; and the **D22** this row also claimed was a misattribution corrected in `DECISIONS-FOR-IRFAN.md`:67 on 2026-08-04. `index`'s real blocker was 2 اردو toggle buttons, answered **A** on 2026-08-13. **This row has now been wrong four separate times about what blocks `index`** — the lesson is the pattern, not any one correction. Its release is **`UI-047c`**, which nothing blocks |
 | UI-041 **+** UI-040 — both **DONE** | **nothing.** They cover 13 of `taqseem`'s 17; the gold fill is **`UI-041b`** and the release is **`UI-047a`** |
 
 **`UI-043` is not button/card.** Button is **UI-041**, card is **UI-040**. UI-043 is tables +
@@ -743,7 +743,7 @@ recorded numbers were right, and they are now re-derivable by anyone who runs th
 | `taqseem` | 17 borrowed `.btn`/`.card`/`.pagehead` rules; buttons fall to UA default | UI-041 + UI-040 (both DONE) + **UI-041b**, then `UI-047a` |
 | `blueprint` | 20 orphan rules that are the whole app shell, plus 21 orphan tokens, plus **9 bare inline reads, now script-measured** (D32 resolved 2026-08-08) | UI-046 + UI-043, then `UI-047b` |
 | `bank` | Urdu line-height 38px → 21.75px on 24 questions | **the Nastaliq leading decision — same problem as F2 above** |
-| `index` | Urdu toggle loses Nastaliq (`forms.css`:101); `.main` loses padding and `overflow` | **UI-043** (`.tag`) — and **D22**, which no component can unpark; then `UI-047c` |
+| `index` | Urdu toggle loses Nastaliq (`forms.css`:101) on **2 buttons**; `.main` loses padding and `overflow` | **nothing — UNBLOCKED 2026-08-13.** UI-043 was struck 2026-08-12; the D22 attribution was corrected in `DECISIONS-FOR-IRFAN.md`:67 on 2026-08-04 and never propagated. The toggle is answered **A**, page-scoped. The release is **`UI-047c`** |
 | `print` | **D36** — `0d04c750` gains a printed page, 2 → 3 (+6.0% sheet height) | **fix written (UI-044b), not live** — activates on migration |
 
 **`print` was held for one reason and stays held for another, and the swap is worth remembering.**

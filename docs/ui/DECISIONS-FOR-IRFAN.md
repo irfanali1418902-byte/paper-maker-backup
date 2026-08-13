@@ -82,4 +82,11 @@ outranks `99-legacy/index.css`:34 by layer order. *(measured UI-032, 2026-08-04)
 | 1 `landing` icons | **A — 17px. Answered 2026-08-10, page migrated** ✅ |
 | 2 `bank` labels | **B — darker role. Answered 2026-08-10, page migrated** ✅ |
 | 3 `print` | **PASSED — edges OK, ink OK, 2/6/7 on paper. 2026-08-11** ✅ |
-| 4 `index` toggle | A / B |
+| 4 `index` toggle | **A — page-scoped in `index`'s entry file. Answered 2026-08-13** ✅ |
+
+**Scope of 4, measured 2026-08-13 before it was answered:** exactly **2 elements**, both
+`<button class="urdu">`. The `<input class="urdu">` at `index.html`:444 is safe — it carries an
+inline `style` with the Nastaliq stack, and inline beats every layer. `bank` and `print` are
+not affected: their `urdu-toggle-row`, `qtext-ur`, `school-ur` and `urdu-input` are different
+class names that `.urdu` does not match. A first grep said otherwise and was wrong — ``
+treats the hyphen as a word boundary, the same trap this epic hit on `app-nav` a day earlier.

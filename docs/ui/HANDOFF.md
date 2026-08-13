@@ -1,4 +1,4 @@
-# Handoff — 2026-08-12 (session end: UI-047a shipped, UI-043 struck)
+# Handoff — 2026-08-13 (session end: blueprint LIVE, index unblocked)
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 overwrite hoti hai — hamesha aakhri haalat rakhti hai.
@@ -20,13 +20,13 @@ KAAM KARNE KA TAREEQA (yeh sab se ahem hai):
   feat/ui-architecture` se confirm kar dena jab main kahoon.
 - Koi cloud deploy nahi. `backup` remote sirf backup hai.
 
-HAALAT: 9 mein se 7 pages live.
-  live:   bank, landing, library, print, slo, slo-health, taqseem
-  baqi:   blueprint, index
+HAALAT: 9 mein se 8 pages live.
+  live:   bank, blueprint, landing, library, print, slo, slo-health, taqseem
+  baqi:   sirf index
 
-AGLA KAAM — UI-046 (nav + shell). Yeh ab blueprint se pehle ka AKELA code hai.
-  blueprint : UI-046 → UI-047b        (sirf yeh raasta)
-  index     : sirf D22 ka faisla → UI-047c   (koi code aage nahi)
+AGLA KAAM — UI-047c (index ki migration). AAKHRI PAGE, aur iske saamne kuch nahi hai.
+  blueprint : ✅ LIVE 2026-08-13 (UI-046 → UI-047b)
+  index     : UI-047c — aur iske saamne KUCH NAHI hai
 
 UI-043 AB CRITICAL PATH PAR NAHI HAI (naapa gaya 2026-08-12).
 Board kehta tha ke dono pages UI-043 ke .chip aur .tag par ruki hain. Chaar rules daav par
@@ -52,13 +52,25 @@ ittefaq hai, collision ka na-hona nahi. JIS PAGE KO PROBE DEKH HI NAHI RAHA, USK
 NAHI HOTA. taqseem ab css_type_probe.mjs:33 ki list mein hai (der se — UI-047a ko usi din
 add karna chahiye tha, jaisa us file ka apna comment kehta hai).
 
-UI-046 SHURU KARNE SE PEHLE YEH JAAN LO (naapa gaya 2026-08-12):
-blueprint par koi layer hai hi nahi — probe ne `layerStatements: []` diya, page sirf app.css +
-theme.css + 99-legacy/blueprint.css load karta hai, main.css kabhi nahi. Yani UI-046 ke 12 ke
-12 rules aaj inert honge. Unki tasdeeq UI-047b ke BAAD hi ho sakti hai. Likhna mehfooz hai,
-magar "11 live + 1 known-dead" ko verified mat likhna jab tak dobara naap na lo.
-Aur: .app/.top/.nav chhe live pages par 0 elements match karte hain, is liye css_type_probe ka
-pass hona UI-046 ke liye koi saboot nahi — sirf no-regression check hai.
+INDEX PAR JO PEHLE SE MALOOM HAI:
+- Urdu toggle: 2 x <button class="urdu"> Nastaliq kho denge, kyunke forms.css:101 ka
+  `button { font-family: inherit }` (layer elements) 99-legacy/index.css:34 ke `.urdu, .ur`
+  (layer legacy) ko harata hai. IRFAN KA FAISLA (2026-08-13): **A — page-scoped, index ki apni
+  entry file mein**. Sirf 2 elements; index:444 ka <input class="urdu"> mehfooz hai (inline
+  style), aur bank/print mutasir nahi (unke class names hyphenated hain).
+- Orphans: .tag x2, .row x1, .summary-row:last-child x1 — teenon page-scoped jaayenge, aur
+  4 partial rules jinme .main ki teen properties hain.
+- index SAB SE BARA aur SAB SE KHATRE WALA page hai: 7-screen SPA, 783 elements, 224 inline
+  styles. blueprint ki tarah DO HISSON mein baanto — pehle entry file (unlinked, inert),
+  phir <link> swap + markup.
+
+BLUEPRINT SE DO TRAPS JO INDEX PAR DOBARA DEKHNE HAIN:
+1. brand.js:22 `.brand .name` ko query karta hai — us class ko hatao to school ka naam
+   khamoshi se set hona band. index bhi brand.js load karta hai.
+2. 99-legacy/blueprint.css:28 ne `.main` par max-width rakhi thi — class hatate to content
+   poori chaurai mein phail jata. index ki legacy file bhi aise rules rakh sakti hai.
+DONO ko koi gate nahi pakarta: css_type_probe ki list mein index hai hi nahi. RE-CLASS SE
+PEHLE JS aur LEGACY dono mein grep karo.
 
 PEHLA QADAM HAMESHA ENUMERATION HOTA HAI, LIKHAI NAHI.
 Ek hi din mein isi qadam ne do cheezein pakrin jo review nahi pakar saka: btn.css mein ghayab

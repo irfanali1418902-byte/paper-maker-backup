@@ -1,5 +1,75 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-13 — blueprint is live, UI-046 is finally verified, and index turns out to be blocked on nothing
+
+**Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. **8 of 9 pages are now live**;
+only `index` remains.
+
+**UI-046 — nav + shell, and the board's twelve rules were nine.** `05-components/nav.css`,
+nine rules in `layer(components)`. Three of the twelve were not written and none was skipped:
+`.app` and `.top .spacer` are already complete in `04-objects/shell.css` as `.o-shell` and
+`.o-shell__spacer`, so repeating them would duplicate the layout this epic exists to remove;
+and `.nav a .icon` is dead, because `static/app.css`:57 sets a bare `.icon` unlayered and an
+unlayered rule beats every `@layer` regardless of specificity. The enumeration also turned up a
+name the board never recorded — `theme.css`:84 spells it `.nav a .ic, .nav a .icon`, so there
+are two dead names, not one. `.top` and `.nav` shrank to two declarations each, because
+`shell.css` owns their layout and only the surface and the edge were left.
+
+**The names are new — `.appbar` and `.sidenav` — and that was chosen against measurement.**
+`.top` and `.nav` were measured free on all seven live pages, so adopting them would have been
+safe; the reason not to is that they are exactly the kind of generic name whose nine
+independent copies caused this epic. `.app-nav` is live on seven pages and `.topbar` on
+`index`, so both were excluded; `.sidenav` and `.appbar` return zero in every page and every
+stylesheet here.
+
+**UI-047b — blueprint is LIVE, and it is what verified UI-046.** UI-046 shipped prepared and
+*unverifiable*: its rules stood at `matches:0` because blueprint loaded no layered stylesheet
+at all. This migration gave them markup, and all nine went live — `.sidenav__link` at 5,
+`.appbar` and the rest at 1. Split into two commits at Irfan's request: the entry file first,
+deliberately unlinked and measurably inert, then the `<link>` swap and the re-classing.
+
+**Two of the ten re-classes turned out to be additions, and both were caught before the edit
+rather than after.** `.brand` is kept alongside `.o-shell__brand` because `brand.js`:22 queries
+`.brand .name` and sets the school name from it. `.main` is kept alongside `.o-shell__main`
+because `99-legacy/blueprint.css`:28 sets `max-width: 1080px` on it. Dropping either class
+would have been an invisible regression — blueprint is not in `css_type_probe`'s page list, so
+no gate would have caught the school name silently not being set, or the content running the
+full width of the viewport.
+
+**And `index` was never blocked on D22.** Six places on the board said it was.
+`DECISIONS-FOR-IRFAN.md`:67 corrected that on **2026-08-04** — D22 is a technical constraint
+whose fix can only land in the commit that re-classes markup, which is Sprint 6, not a decision
+anyone was waiting on — and the correction never propagated. Two of the six stale copies were
+written by this session, into `ROADMAP.md` and `HANDOFF.md`, from the stale rows rather than
+from the decisions file. All six are corrected here.
+
+**The real blocker was smaller and is now answered.** `index`'s two اردو toggle buttons lose
+Nastaliq after migration, because `03-elements/forms.css`:101's `button { font-family: inherit }`
+sits in `layer(elements)` and outranks `99-legacy/index.css`:34's `.urdu, .ur` in
+`layer(legacy)`. Measured scope: **exactly 2 elements.** The `.urdu` input at `index.html`:444
+is safe behind an inline style, and `bank`/`print` are unaffected — their `urdu-toggle-row`,
+`qtext-ur` and `urdu-input` are different class names. Irfan answered **A**: a page-scoped rule
+in `index`'s own entry file, the same pattern `taqseem`'s bare `.card` and `blueprint`'s
+`.brand` and `.chip` already use. **`index` now waits on nothing.**
+
+**Gates across both tasks:** 0 element × property deltas on all six probed live pages, drift 0,
+ratchet 32 passed, suite 906 passed. On blueprint: `theme?` **no**, EXPOSURE **20 → 0**,
+elements 235 → 234 which is the removed `<link>`.
+
+**Not fixed, and said out loud rather than buried under "page is live":** blueprint's
+narrow-viewport shell. `theme.css` carries two `@media (max-width: 760px)` rules for `.app` and
+`.nav` that nothing redeclares. `shell.css` declined that breakpoint deliberately — hiding the
+nav without the control that brings it back is half a mechanism, and that control is a
+component nobody has built. D21 flags the same viewport. It was broken before this and is
+broken after it.
+
+**The ratchet earned its keep again.** `nav.css` failed it on the first run,
+`unsanctioned_hex` 429 → 430, because the file's own comment quoted a raw hex while explaining
+that raw hex cannot be quoted. Seventh time that check has fired on this epic; seventh time
+through a comment.
+
+---
+
 ## 2026-08-12 — UI-043 came off the critical path, and no CSS was written to do it
 
 **Sprint 4b, UI-ARCH epic.** Docs only. Full board: `docs/ui/STATUS.md`, evidence block in

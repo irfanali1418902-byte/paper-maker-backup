@@ -4,13 +4,13 @@
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
-**Last updated:** 2026-08-12 (**UI-047a — `taqseem`'s migration. DONE, browser-verified before
-commit.**) — **seven pages are live on the new tree and two are HELD**: `blueprint` and `index`.
-Sprint 3 closed incomplete at 3 of 9; five migrations have since opened four more.
+**Last updated:** 2026-08-13 (**UI-046 + UI-047b — `blueprint` is LIVE, and it verified UI-046**)
+— **eight pages are live on the new tree and one is HELD**: `index`, which now waits on nothing.
+Sprint 3 closed incomplete at 3 of 9; six migrations have since opened five more.
 
 ---
 
-## NEXT TASK → **`UI-046`** (nav + shell) — and it is now the **only** code left before `blueprint` opens. **`UI-047a` migrated `taqseem` on 2026-08-12 — 7 of 9 pages are live.** Its enumeration found a declaration missing from `btn.css` that four rounds of review on UI-041 had not (`white-space`, fixed in `2f2368e`), and the same method run against the last two pages **took `UI-043` off the critical path the same day**: `.chip`, `.tag` and `.row` are all live on migrated pages, `layer(components)` outranks `layer(legacy)`, and unlike `.card`/`.btn` they are flat rules with no safe descendant — so all four page-opening rules are page-scoped and belong to `UI-047b`/`UI-047c`. Evidence in `NEXT-SESSION.md` §📐. The order is now **`UI-046` → `UI-047b`** for `blueprint`; **`index` waits on D22 alone**, with no code in front of it. Note **UI-046's 12 rules cannot be verified until `UI-047b`** — `blueprint` loads no layered sheet at all, measured 2026-08-12.
+## NEXT TASK → **`UI-047c`** (`index`) — the last page, and **nothing stands in front of it**. `UI-046` and `UI-047b` both landed 2026-08-13 and **`blueprint` is LIVE: 8 of 9 pages.** That migration verified UI-046 for the first time — its nine rules went from `matches:0`, unverifiable because `blueprint` loaded no layered sheet at all, to live on real markup. **`index` was recorded as blocked on D22 in six places and that was wrong**; `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04 and the correction had not propagated. D22 is a technical constraint whose fix can only land in the commit that re-classes markup (Sprint 6), not a decision. The real blocker was narrower — `index`'s two اردو toggle buttons lose Nastaliq because `forms.css`:101's `button { font-family: inherit }` outranks `99-legacy/index.css`:34 by layer order — and **Irfan answered it A on 2026-08-13: page-scoped in `index`'s entry file.** `index` is unblocked.
 
 ### UI-047a — **`taqseem`'s migration. DONE 2026-08-12. LIVE.**
 
