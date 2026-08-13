@@ -354,8 +354,8 @@ icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEA
 ### Sprint 6 — Legacy elimination + mockup fidelity (5 tasks)
 | ID | Task |
 |---|---|
-| UI-060..063 | Per page: drain `99-legacy/<page>.css` to zero, delete it, apply mockup screen fidelity |
-| UI-064 | Delete `theme.css` + `app.css`; move mockups to `docs/design/`; final sweep |
+| UI-060..063 | Per page: drain `99-legacy/<page>.css` to zero, delete it, apply mockup screen fidelity. **Not started. 2,115 lines across nine files — this is the epic's remaining work** |
+| UI-064 | ~~Delete `theme.css`~~ ✅ **part 1 DONE 2026-08-13** — 212 lines, 0 deltas on all nine pages, `unsanctioned_hex` 429 → 400. Remaining: delete `app.css` (57 lines, still linked by all nine for `@font-face` + the `.icon` sprite); move mockups to `docs/design/`; final sweep |
 
 ### Sprint 7 — Optional
 | ID | Task |

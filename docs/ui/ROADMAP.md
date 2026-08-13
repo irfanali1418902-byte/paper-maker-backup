@@ -20,13 +20,15 @@ failure, it is the middle of a strangler fig — but it should not be misread:
 | baseline, 2026-07-28 — nine `<style>` blocks | 2,133 |
 | today — `99-legacy/*.css`, still imported by every migrated page | **2,115** |
 | today — the new tree (`01-settings` … `pages/`) | 2,401 |
-| today — `theme.css`, **now linked by NO page** | 212 |
+| ~~today — `theme.css`~~ | ~~212~~ **DELETED 2026-08-13** |
 | today — `app.css`, **still linked by all nine** (`@font-face` + the `.icon` sprite) | 57 |
 
 **CSS has roughly doubled and nothing has been deleted yet.** The old tree comes out in
 Sprint 6, which has not started. **"9 of 9 live" is the halfway marker, not the finish** — and
-now that no page links `theme.css`, deleting its 212 lines is unblocked for the first time.
-`app.css` is a different matter — all nine pages still link it, and it goes with `UI-064`.
+**`theme.css` is now deleted** — 212 lines, 0 deltas, the first commit in this epic that only
+removes. `app.css` is a different matter: all nine pages still link it, and it goes with the
+rest of `UI-064`. **`legacy_css_lines` has still not moved**, and that is the number that
+matters.
 
 ---
 
@@ -51,7 +53,7 @@ Taken **before** B and C, deliberately — see "What is being skipped" below.
 | # | task | est. |
 |---|---|---:|
 | 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page (2,115 lines) | 5–10 |
-| 6 | UI-064 — delete `theme.css` + `app.css`, final sweep | 1–2 |
+| 6 | ~~UI-064 — delete `theme.css`~~ ✅ **part 1 done 2026-08-13**; `app.css` + final sweep remain | 1 |
 
 **CSS only goes down here.** Everything before this adds.
 

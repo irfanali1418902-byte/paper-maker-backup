@@ -1,4 +1,4 @@
-# Handoff — 2026-08-13 (session end: 9 OF 9 PAGES LIVE — Sprint 4b complete)
+# Handoff — 2026-08-13 (session end: 9 OF 9 LIVE, theme.css DELETED)
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 overwrite hoti hai — hamesha aakhri haalat rakhti hai.
@@ -24,11 +24,19 @@ HAALAT: 9 ke 9 pages LIVE. Sprint 4b mukammal.
   live:   bank, blueprint, index, landing, library, print, slo, slo-health, taqseem
   held:   koi nahi
 
-AGLA KAAM — SPRINT 6 (UI-060..064), "the drain". Yahan se CSS GHATNA shuru hoti hai.
-  99-legacy/*  = 2,115 lines, nau files
-  theme.css = 212 lines — AB ISAY KOI PAGE LINK NAHI KARTA, delete pehli baar unblocked
-  app.css   = 57 lines  — NAU KE NAU pages abhi bhi link karte hain (@font-face + .icon
-              sprite). Yeh UI-064 ke saath jaata hai, abhi nahi.
+AGLA KAAM — SPRINT 6 ka ASAL hissa: UI-060..063, "the drain".
+  99-legacy/*  = 2,115 lines, nau files. YEH ABHI TAK NAHI CHHUA GAYA aur yehi
+                 poore epic ka bacha hua kaam hai.
+  theme.css    = ✅ DELETE HO CHUKI (UI-064 part 1, 2026-08-13). 212 lines, nau pages
+                 par 0 deltas, unsanctioned_hex 429 -> 400.
+  app.css      = 57 lines — NAU KE NAU pages abhi bhi link karte hain (@font-face +
+                 .icon sprite). UI-064 ke baqi hisse ke saath jaata hai.
+
+  ⚠ ADAD KO GHALAT MAT PARHNA: theme.css delete hone se legacy_css_lines ek line
+  nahi hila — wo abhi bhi 2,115 hai. Wo delete SASTA tha kyunke saat migrations
+  pehle hi usay bay-asar kar chuki thin. Asal kaam abhi baqi hai, aur uska andaza
+  (6-12 sessions) is roadmap ka SAB SE KAMZOR andaza hai — is qism ka ek bhi task
+  abhi tak nahi hua.
   Sprint 5 (466 inline styles) aur UI-042/UI-043 JAAN-BOOJH KAR chhore hain:
     koi page inka muntazir nahi, aur Sprint 5 ka bara hissa drain ke doran khud nikal aayega.
   Andaza: 6-12 sessions. Yeh andaza SAB SE KAMZOR hai — is qism ka ek bhi task abhi

@@ -1,5 +1,35 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-13 — static/theme.css is deleted. The file this epic was written about is gone
+
+**Sprint 6, UI-ARCH epic — `UI-064` part 1.** Full board: `docs/ui/STATUS.md`.
+
+`PLAN.md` §1 opens with: *"The app has a design system (`theme.css`, 213 lines) that ~90% of
+the styling bypasses."* That file is now removed. **212 lines deleted, 0 element × property
+deltas on all nine pages, ratchet 32 passed, suite 906 passed** — deleting it changed nothing,
+because the seven migrations had already made it unreachable. `UI-047c` unlinked the last page
+holding it earlier the same day.
+
+**`unsanctioned_hex` went 429 → 400.** That is the first ratcheted metric in this epic to fall
+through deletion rather than through care; the 29 were theme.css's own.
+
+**Checked before deleting, not after.** No page links it, verified across all nine plus the
+mockup. No test opens it — the two hits in `test_css_architecture.py` are prose.
+`css_baseline.py` names it only in comments. `css_orphans.py` **does** read it, at :89 as
+`OLD_THEME`, and already handles absence at :807 with a warning rather than a crash; confirmed
+by running it afterwards, where `index` reports `theme? no` and every column zero, which is
+correct rather than broken.
+
+**And this is the easy half, which the numbers should not be allowed to hide.**
+`legacy_css_lines` is **2,115 and did not move**. `shared_css_lines` is 2,963 — down 212 from
+3,175, but still **437 above** the 2,526 pinned at baseline, because the new tree was built
+alongside the old one rather than in place of it. `static/app.css` is untouched and still
+linked by all nine pages. **The real work of Sprint 6 is the nine `99-legacy` files and none of
+it has started.** This deletion was cheap precisely because the migrations had already done the
+expensive part.
+
+---
+
 ## 2026-08-13 — index is live. **9 of 9 pages.** Sprint 4b is complete
 
 **Sprint 4b, UI-ARCH epic.** Full board: `docs/ui/STATUS.md`. Sprint 3 closed incomplete at
