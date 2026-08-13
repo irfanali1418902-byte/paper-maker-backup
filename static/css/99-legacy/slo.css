@@ -7,14 +7,12 @@
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
     --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
-  * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     color: var(--ink); background: var(--bg);
     display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
-  a { text-decoration: none; color: inherit; }
 
   .app-sidebar {
     width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
@@ -36,14 +34,12 @@
 
   .slo-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
   .page-head { margin-bottom: 24px; }
-  .page-head h1 { margin: 0; font-size: 22px; font-weight: 700; }
   .page-head p { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
 
   .card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
   }
-  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
   .card .hint { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
 
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -72,15 +68,9 @@
   .pill.upd { background: var(--tint); color: var(--primary); }
   .pill.err { background: var(--err-bg); color: var(--err-tx); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
   td.code { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
   .bloom { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--tint); color: var(--primary); }
   .bloom.empty { background: #F1F2F5; color: var(--muted); font-style: italic; }
-  .status-error { color: var(--err-tx); }
-  .status-updated { color: var(--primary); }
-  .status-added { color: var(--ok-tx); }
   .empty-state { color: var(--muted); font-size: 13.5px; padding: 18px 0; }
 
   @media (max-width: 720px) {
