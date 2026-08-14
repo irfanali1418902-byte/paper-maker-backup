@@ -1,5 +1,43 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-14 — `bank` adopts `.sidenav`, and it turns out six live pages have had white nav links since they migrated
+
+**The re-class was predicted at 0 deltas and measured 57. The prediction was wrong in the
+useful direction: 56 of the 57 are an existing defect being undone.**
+
+**`bank.html` only.** `<nav class="app-nav">` → `<nav class="app-nav sidenav">`, and the five
+`<a>` get `sidenav__link` (the current one also `sidenav__link--active`, keeping its legacy
+`active`). `.app-sidebar`, `.brand` and `.sidebar-foot` are untouched — no component can carry
+them. **Nothing is deleted from `99-legacy/bank.css` yet**; proving the re-class is quiet comes
+first, and it did not come back quiet.
+
+**What moved: four nav links from `rgb(255,255,255)` to `rgb(198,210,232)`** — plus their `svg`
+and `use` children inheriting it, and the border colours that resolve to `currentColor`. One more
+delta is the `<nav>` gaining `--color-sidebar-bg`, navy painted on navy, invisible. The current
+page's link measured **0 deltas**: it was white before and stays white.
+
+**The cause, measured rather than reasoned.** `03-elements/typography.css`:50 declares
+`a { color: inherit }` in `layer(elements)`. Layer order is decided before specificity, so it
+beats `99-legacy/*.css`'s `.app-nav a { color: #C6D2E8 }` in `layer(legacy)` no matter what the
+selectors weigh, and the link inherits `.app-sidebar`'s white. `.sidenav__link` sits in
+`layer(components)`, above `elements`, which is why re-classing restores the legacy intent.
+
+**This is live on six pages right now, not one.** Read out of the before-snapshot: `slo`,
+`slo-health`, `library`, `taqseem`, `bank` and `index` render **every** nav link white, current
+and not. `blueprint` is the only page showing the intended split, because it is the only one
+already on `.sidenav`. So on those six the current page is distinguished by its background tint
+and rail alone, and the colour that was supposed to carry it has been absent since each page
+migrated.
+
+**It was recorded and never decided.** `pages/bank.css`:124 says it in one line — *"Nav links go
+white and the canvas changes tint, both from the new tree"* — filed as an expected consequence of
+`UI-047e` on 2026-08-10. **Irfan decided it today: accept the legacy colour.** The remaining three
+re-classes carry the same change, and `taqseem` and `index` keep white until something reaches
+them.
+
+**Gates:** 0 deltas on the other seven pages, drift 0 on all eight, ratchet OK, ruff clean, suite
+890. Irfan compared `bank` against `blueprint` in the browser.
+
 ## 2026-08-14 — `nav.css` moves to the four pages' values, so the re-class can be free
 
 **Nothing shipped to a teacher today. One component file changed, and `blueprint` moved 104
