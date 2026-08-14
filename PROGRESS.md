@@ -1,5 +1,33 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-14 — `library`, `slo-health` and `slo` adopt `.sidenav`; all four pages of the clean group are on the component
+
+**Same edit three times, measured one page at a time: `library` 57, `slo-health` 85, `slo` 85.**
+Every delta is one of the two changes already decided on `bank` — the nav links returning from
+white to `rgb(198,210,232)`, and the `<nav>` gaining `--color-sidebar-bg`, navy painted on navy.
+**No new kind of delta appeared on any of the three, and no geometry moved at all** — not a
+font-size, radius, gap, border-width or height. That is the proof that `778f65a` seated the
+component exactly on the legacy values; if it had not, these three runs are where it would have
+shown.
+
+**The counts scale with link count and nothing else.** `library` has 5 nav links, `slo` and
+`slo-health` have 7. Four inactive links × 14 (`color` plus three `currentColor` borders on the
+`<a>`, and `color` plus four on each of its `svg` and `use`) + 1 for the `<nav>` = 57; six
+inactive × 14 + 1 = 85. The current page's link measured 0 deltas on all three.
+
+**`taqseem`, `blueprint`, `bank`, `landing` and `index` all measured 0**, drift 0 on all eight.
+Ratchet OK, ruff clean, suite 890.
+
+**Where this leaves the four.** `bank`, `library`, `slo-health` and `slo` now carry both
+`.app-nav` and `.sidenav` on the `<nav>`, and both `active` and `sidenav__link--active` on the
+current link. **Nothing has been deleted from `99-legacy/*.css` yet and `legacy_css_lines` has
+not moved** — the three dead rules per page (`.app-nav a`, `:hover`, `.active`, 12 in total) come
+out as their own step, so a re-class and a deletion are never in the same commit.
+
+**`taqseem` and `index` still render white nav links**, because nothing has reached them. Two
+looks in one app again, deliberately and temporarily — the same shape as the navy split before it
+was settled.
+
 ## 2026-08-14 — `bank` adopts `.sidenav`, and it turns out six live pages have had white nav links since they migrated
 
 **The re-class was predicted at 0 deltas and measured 57. The prediction was wrong in the
