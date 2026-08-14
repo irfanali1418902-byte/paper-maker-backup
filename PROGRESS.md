@@ -1,5 +1,56 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-14 — `nav.css` moves to the four pages' values, so the re-class can be free
+
+**Nothing shipped to a teacher today. One component file changed, and `blueprint` moved 104
+element × property deltas to make four other pages able to adopt it at zero.**
+
+**The board's plan for this step was wrong, and the enumeration is what said so.** `HANDOFF.md`
+described re-classing `bank`, `library`, `slo` and `slo-health` onto `.sidenav` as "36 rules out,
+colour unchanged". The 36 is right — the nine desktop shell rules really are byte-identical
+across those four files, re-verified line by line — but **`.sidenav` is a home for only three of
+those nine**. `.app-nav a`, `:hover` and `.active` have component equivalents. `.app-sidebar`'s
+own box, `.app-nav`'s column, `.brand` ×3 and `.sidebar-foot` have none: the first lives inside
+`.o-shell`, which is a whole-page grid these four have no topbar for, and `.brand` was
+deliberately denied a component in `UI-047b` because it is live on all nine pages. **So the step
+yields 12 rules, not 36.**
+
+**And the three that do have a home were not free either.** `.sidenav__link` read `--text-body`
+(15px), `--radius-control` (11px) and an 11px gap, against the legacy 14px / 8px / 10px, and it
+carried no `border-left` at all. Re-classing at those values would have moved type and corners on
+four pages a teacher uses daily. **Irfan's call: bring the component to their values instead**,
+so `blueprint` — one page, already in the probe's list — absorbs the whole change.
+
+**What changed in `05-components/nav.css`:** `.sidenav__link` gap 11 → 10px, `font-size`
+`--text-body` → 14px, `border-radius` `--radius-control` → 8px, a `3px solid transparent`
+`border-left` added, `margin-bottom` removed. `.sidenav` gains `display:flex` + `flex-direction`
++ `gap: 2px` — the 2px moves from the item to the container because the four pages already stack
+their links with `.app-nav { gap: 2px }` in `layer(legacy)`, and an item margin would have made
+the spacing 4px on every one of them. `.sidenav__link--active` drops `font-weight` (only
+`taqseem` bolds the current item, and it is in the other group) and its rail moves from an inset
+`box-shadow` to `border-left-color` — **a shadow cannot reserve space, and the transparent border
+is what stops the current page's label from shifting.**
+
+**14px and 8px are literals, deliberately.** Neither has a Tier 2 role and neither gets one:
+`--text-body` is 15px, `--radius-control` is 11px, and `--font-size-4` is already spoken for by
+`--text-heading-3`. Giving these roles means three new names with one consumer each — the way
+`tokens.css`:145 says that file rots. Same policy as the 34px avatar in the same file and
+`shell.css`'s 248px sidebar.
+
+**Measured: 0 deltas on seven pages, 104 on `blueprint`, drift 0 everywhere.** All 104 are
+accounted for — 30 font-size/line-height across 5 links and their `svg`/`use`, 20 radius corners,
+15 `border-left`, 12 gap, 12 `min-height`/`min-width` `0px` → `auto` (the flex-item default, no
+visual effect), 5 `margin-bottom`, 5 `height`, 3 `font-weight`, 1 `display`, 1 `box-shadow`. The
+active item was checked on its own: the rail is the same `rgb(91,141,239)` at the same 3px on the
+same edge, and background and text colour did not move at all.
+
+**Irfan opened `blueprint` and `bank` side by side and the two sidebars now look the same** —
+which is the whole point of the step and the one thing no probe could report. Ratchet OK, ruff
+clean, suite 890.
+
+**Nothing is re-classed yet.** That is the next step, one page at a time, and it should now
+measure zero.
+
 ## 2026-08-13 — Sprint 6 starts: the first legacy lines come out, and all nine files are surveyed
 
 **`legacy_css_lines` 2,115 → 2,105.** `PLAN.md` §3 says *"Progress is literally measurable as

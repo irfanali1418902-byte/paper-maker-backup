@@ -93,11 +93,23 @@
    against a white panel and is wrong against navy, and the legacy
    `.app-sidebar` these eight pages run has no border either.
 
-   ⚠ TWO NAVIES EXIST AND THIS PICKS ONE. `--color-sidebar-bg` is `--slate-950`;
-   the six pages whose legacy files carry their own `--navy` use a different,
-   lighter shade. blueprint and taqseem now match each other, not those six.
-   Deliberately not settled here — see theme.css's sidebar block. */
+   THE NAVY IS SETTLED — `--color-sidebar-bg` is `--navy-900`, the shade six
+   legacy files already carried as their own `--navy`. `--slate-950`, which
+   this role used to read, has been deleted. The paragraph that stood here
+   said two navies existed and this file picked the wrong one; that was true
+   for one day.
+
+   THE COLUMN AND ITS 2px GAP ARE LAYOUT AND THEY ARE HERE ANYWAY. shell.css
+   owns the shell's grid, but the spacing BETWEEN nav items is the nav's own
+   and there is no object for it — `.o-shell__nav` is one grid cell. It sits
+   on the container rather than as `margin-bottom` on the item because the
+   four pages this file is about to serve already stack their links with
+   `.app-nav { gap: 2px }` in layer(legacy); an item margin would ADD to that
+   gap and make the spacing 4px on every one of them. */
 .sidenav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   background: var(--color-sidebar-bg);
 }
 
@@ -111,15 +123,37 @@
   text-transform: uppercase;
 }
 
+/* THE ITEM'S SIZE AND SHAPE ARE THE LEGACY SIDEBAR'S, NOT THE DESIGN TARGET'S
+   — Irfan's call, 2026-08-13, and the same call as the navy above. This file
+   was built to the mockup and read `--text-body` (15px), `--radius-control`
+   (11px) and an 11px gap. bank, library, slo and slo-health declare 14px, 8px
+   and 10px, byte-identically across all four, and they are LIVE. Adopting the
+   component on them at the mockup's values would move type and corners on
+   four pages a teacher uses daily, to buy nothing; adopting it at THEIR
+   values costs blueprint alone, which is the page this file was written for
+   and the page that can be re-measured cheapest.
+
+   14px AND 8px ARE LITERALS AND THAT IS DELIBERATE. Neither has a Tier 2 role
+   and neither gets one: `--text-body` is 15px, `--radius-control` is 11px, and
+   `--font-size-4` is already spoken for by `--text-heading-3`. Giving these a
+   role means three new names with one consumer each — the way tokens.css:145
+   says that file rots. Same policy as the 34px avatar above and shell.css's
+   248px sidebar. Read out of 99-legacy/slo.css:26-28, not chosen.
+
+   THE TRANSPARENT LEFT BORDER IS LOAD-BEARING. It reserves the 3px the active
+   item's rail paints into, so the current page's label does not shift when it
+   becomes current. The rail was an inset box-shadow here until now; the four
+   legacy files do it with `border-left-color`, and a shadow cannot reserve
+   space. */
 .sidenav__link {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   padding: 10px 12px;
-  margin-bottom: 2px;
-  border-radius: var(--radius-control);
+  border-left: 3px solid transparent;
+  border-radius: 8px;
   color: var(--color-sidebar-fg);
-  font-size: var(--text-body);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -129,16 +163,21 @@
   color: var(--color-sidebar-fg-on);
 }
 
-/* The current page. The inset box-shadow is the active rail on the leading
-   edge. On navy it can no longer be `--color-action` — indigo on near-black is
-   not a rail anybody sees — so it reads `--color-sidebar-rail`, which is the
+/* The current page. The rail on the leading edge colours in the transparent
+   border the base rule reserved. It reads `--color-sidebar-rail`, which is the
    legacy sidebar's own blue from 99-legacy/slo.css:32, promoted rather than
-   picked. `[data-active]` is carried alongside the class because the markup
-   uses both. */
+   picked — on navy it can no longer be `--color-action`, because indigo on
+   near-black is not a rail anybody sees. `[data-active]` is carried alongside
+   the class because the markup uses both.
+
+   NO `font-weight` HERE, AND ITS ABSENCE IS MEASURED. It read
+   `--font-weight-strong` until now. The four pages this file is adopted on
+   leave the current item at 500 — only taqseem bolds it, and taqseem is in the
+   other group. Bolding the current item on four live pages is a visual change
+   nobody asked for, so the declaration goes rather than being carried. */
 .sidenav__link--active,
 .sidenav__link[data-active="1"] {
   background: var(--color-sidebar-active);
   color: var(--color-sidebar-fg-on);
-  font-weight: var(--font-weight-strong);
-  box-shadow: inset 3px 0 0 var(--color-sidebar-rail);
+  border-left-color: var(--color-sidebar-rail);
 }
