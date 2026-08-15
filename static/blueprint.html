@@ -50,9 +50,14 @@
   </nav>
 
   <main class="main o-shell__main">
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side, which is what this page did until 2026-08-15. See mockup-modern.html:279. -->
   <div class="pagehead">
-    <h1>Blueprint Builder</h1>
-    <p>Paper ka structure define karo — sections, topics, types — phir save ya seedha paper banao.</p>
+    <div>
+      <h1>Blueprint Builder</h1>
+      <p>Paper ka structure define karo — sections, topics, types — phir save ya seedha paper banao.</p>
+    </div>
   </div>
 
   <!-- ===== PAPER METADATA ===== -->

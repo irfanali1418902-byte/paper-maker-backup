@@ -51,9 +51,14 @@
 </aside>
 
 <main class="tq-main">
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side, which is what this page did until 2026-08-15. See mockup-modern.html:345. -->
   <div class="pagehead">
-    <h1>Exam Taqseem</h1>
-    <p>Ek class + subject ke SLO ko exams mein baanto. NULL-sequence wale SLO auto-generate mein Unassigned rehte hain — unhe hath se move karo.</p>
+    <div>
+      <h1>Exam Taqseem</h1>
+      <p>Ek class + subject ke SLO ko exams mein baanto. NULL-sequence wale SLO auto-generate mein Unassigned rehte hain — unhe hath se move karo.</p>
+    </div>
   </div>
 
   <div class="card has-ch">

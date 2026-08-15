@@ -1,5 +1,28 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-15 — `blueprint` and `taqseem` had their subtitle beside the title, not under it
+
+A wrapper `<div>` around `h1` + `p` in both pages' `.pagehead`. **2 element × property
+deltas in the whole app**, both intended: the `.pagehead` box grows 26.4 → 49.0px on
+`blueprint` and 42.1 → 68.5px on `taqseem`. The other six pages measured **0, drift 0**.
+
+**It was found by enumerating a different task.** The plan was to re-class the four
+`.page-head` pages onto `card.css`'s `.pagehead` component and delete 11 legacy rules.
+Reading the component against the markup first — before writing anything — showed why that
+would have broken them: `.pagehead` is `display: flex`, and the mockup
+(`mockup-modern.html`:279) puts an inner `<div>` inside it. `blueprint` and `taqseem` were
+migrated to the class **without that div**, so their `h1` and `p` became flex items and sat
+side by side. The four `.page-head` pages were unaffected only because their class is still
+`display: block`. A re-class would have given all four the same defect.
+
+**And one number the board carried was wrong.** The re-class was costed as "h1 22px → 24px on
+four pages". Measured: **all four are already 24px.** `03-elements/typography.css` sets bare
+`h1` at 24px in `layer(elements)`, which beats `layer(legacy)`'s `.page-head h1 { 22px }` —
+that legacy declaration is already dead. The real cost of a re-class is layout, plus the `p`
+colour (`rgb(91,102,120)` → `rgb(100,116,139)`) and a new `max-width: 620px`.
+
+`.page-head` → `.pagehead` is **not done** and is no longer the cheap win it was scheduled as.
+
 ## 2026-08-15 — the sidebar can scroll on all nine pages; the two-day-old hole is closed
 
 `.app-sidebar { overflow-y: auto }` added to `pages/bank.css`, `library.css`, `slo.css`,
