@@ -83,6 +83,17 @@
   --color-danger:       var(--red-600);
   --color-danger-soft:  var(--red-050);
 
+  /* The status-MESSAGE pairs, for a tinted panel with text in it. Separate roles
+     from the six above on purpose: those are the signal itself (a badge, a dot),
+     these are a surface plus the ink that has to be readable on it. See the
+     tokens.css block for the measured ratios. Read by 05-components/status.css. */
+  --color-status-ok-bg:    var(--status-ok-tint);
+  --color-status-ok-fg:    var(--status-ok-fg);
+  --color-status-err-bg:   var(--status-err-tint);
+  --color-status-err-fg:   var(--status-err-fg);
+  --color-status-warn-bg:  var(--status-warn-tint);
+  --color-status-warn-fg:  var(--status-warn-fg);
+
   /* ── the dark sidebar — NOW THE DIRECTION, not a leftover ─────────────────
      This block used to read "The Modern direction is a LIGHT sidebar, and the
      shell built in UI-030 uses it… the primitive stays until Sprint 6 drains

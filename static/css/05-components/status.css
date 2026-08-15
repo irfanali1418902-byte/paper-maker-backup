@@ -1,0 +1,62 @@
+/* =========================================================================
+   05-components/status.css — the status message bar
+
+   Replaces 12 rules written three times over, in 99-legacy/bank.css:189-195,
+   blueprint.css:86-92 and library.css:94-100. The rule TEXT was identical in
+   all three; the resolved colour was not, and that is why this file exists.
+   Measured 2026-08-15 by injecting the state class and reading the pair:
+
+     bank, library   ok  rgb(46,125,91) on rgb(230,244,236)    the legacy muted pair
+     blueprint       ok  rgb(22,163,74) on rgb(220,252,231)    the traffic-light pair
+
+   (Those are written as rgb() on purpose: a raw hex inside a COMMENT still
+   counts in the unsanctioned_hex ratchet, and this epic has failed that check
+   ten times, every time through a comment.)
+
+   Two palettes, live, on three pages of one app — the same shape as the navy
+   vs white sidebar settled on 2026-08-13. This file makes them one, at the
+   values Irfan chose: legacy tint kept, ink darkened until each pair clears
+   AA. The measured ratios are in 01-settings/tokens.css.
+
+   THE STATE CLASSES ARE SET BY JS AND MATCH NOTHING AT REST.
+   Every page does `el.className = 'status-bar ' + type` in an inline script
+   (bank.html:1139, blueprint.html:1161, library.html:634 and five more), so
+   `.ok` / `.err` / `.warn` appear in no snapshot and css_type_probe returns 0
+   for them whether this file is right or wrong. A drain probe would report
+   them as dead rules. They are not. Verify colour by injecting the class —
+   the snapshot gate only tells you the rest of the app did not move.
+
+   FOUR LITERALS, DELIBERATELY. 9px has no radius token (--radius-control is
+   11px), 10px 14px and 14px are not on the space scale, and 500 has no weight
+   primitive. Moving them to the nearest token would move three live pages to
+   buy nothing; naming them would add four roles with one consumer each. Same
+   call nav.css made for its 14px and 8px, for the same reason
+   (01-settings/tokens.css:145).
+   ========================================================================= */
+
+.status-bar {
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: var(--text-control);
+  font-weight: 500;
+  margin-top: 14px;
+  display: none;
+}
+
+.status-bar.ok {
+  background: var(--color-status-ok-bg);
+  color: var(--color-status-ok-fg);
+  display: block;
+}
+
+.status-bar.err {
+  background: var(--color-status-err-bg);
+  color: var(--color-status-err-fg);
+  display: block;
+}
+
+.status-bar.warn {
+  background: var(--color-status-warn-bg);
+  color: var(--color-status-warn-fg);
+  display: block;
+}

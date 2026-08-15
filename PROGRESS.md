@@ -1,5 +1,46 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-15 — `.status-bar` becomes a component, and it turns out the app had two status palettes
+
+**`legacy_css_lines` 2,075 → 2,054.** Twelve rules, 21 lines, out of `99-legacy/bank.css`,
+`blueprint.css` and `library.css`; `05-components/status.css` replaces them.
+`unsanctioned_hex` flat at 385, ruff clean, and **0 element × property deltas on all eight
+pages, drift 0**.
+
+**The rule text agreed across all three files. The resolved colour did not.** That is the
+finding, and it is why the "byte-identical, therefore free" reading of the duplication survey
+is not safe. Measured by injecting the state class and reading the computed pair:
+
+| | before | after |
+|---|---|---|
+| `bank`, `library` — ok | `rgb(46,125,91)` on `rgb(230,244,236)` | `rgb(22,101,52)` on `rgb(230,244,236)` |
+| `blueprint` — ok | `rgb(22,163,74)` on `rgb(220,252,231)` | `rgb(22,101,52)` on `rgb(230,244,236)` |
+
+`blueprint` was on the traffic-light palette because `pages/blueprint.css`:99-104 maps its
+legacy `--green`/`--green-bg` onto `--color-success`/`-soft`; `bank` and `library` carry the
+raw legacy hex. **Two palettes, live, on three pages** — the same shape as the navy vs white
+sidebar settled on 2026-08-13, and nothing on the board recorded it.
+
+**Both palettes failed AA, and the new one failed harder.** At 13.5px/500 the pairs measured
+3.00 / 3.95 / 2.86 (traffic-light) and 4.41 / 4.64 / 3.37 (legacy) against a 4.5:1 requirement.
+Irfan chose to keep the legacy tint and darken the ink: **6.29 / 4.64 / 6.12, all passing.**
+`err` was left exactly as it was, because it already passed.
+
+**Geometry did not move at all** — `10px 14px`, `9px`, 13.5px/500, `margin-top: 14px`,
+identical on all three pages before and after. Four of those stay literal in the component:
+9px has no radius token, 10px/14px are not on the space scale, and 500 has no weight
+primitive. Same call `nav.css` made for its 14px and 8px.
+
+**Two gates are blind here and the numbers should be read accordingly.** `.status-bar` is
+`display: none` at rest and `.ok`/`.err`/`.warn` are set by inline JS
+(`el.className = 'status-bar ' + type`, eight sites), so `css_type_probe` returns 0 whether
+this file is right or wrong, and a drain probe would report all nine state rules as dead.
+The colour claim above comes from a probe that injects the class; the 0 only says the rest of
+the app did not move.
+
+**And `unsanctioned_hex` went 385 → 389 on the first run, from six raw hex inside a comment.**
+Trap #3, for the eleventh time in this epic. Fixed by writing the comparison as `rgb()`.
+
 ## 2026-08-15 — `blueprint` and `taqseem` had their subtitle beside the title, not under it
 
 A wrapper `<div>` around `h1` + `p` in both pages' `.pagehead`. **2 element × property

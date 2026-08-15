@@ -99,6 +99,27 @@
   --red-050:   #fee2e2;
   --red-600:   #dc2626;
 
+  /* ── status MESSAGES — a second pair per state, and the reason is contrast.
+     The six above are the coverage traffic-light: a dot or a badge, where the
+     colour IS the signal and nothing sits on top of it. A status bar is a tinted
+     panel with 13.5px/500 text inside it, so it needs a text/background PAIR that
+     passes AA, and the ramp above does not give one — measured on the real pairs:
+
+       --green-600 on --green-050   3.00     --amber-600 on --amber-050   2.86
+       --red-600   on --red-050     3.95     (all three fail 4.5:1)
+
+     The tints below are the ones bank and library have painted all along; the
+     text steps are darkened until each pair clears 4.5:1 — 6.29, 4.64 and 6.12.
+     Irfan's call, 2026-08-15, on the same reasoning as --teal-600 above: darken
+     the ink, keep the surface. --status-err-fg is the legacy red UNCHANGED,
+     because it already passed at 4.64 and there was no reason to move it. */
+  --status-ok-tint:   #e6f4ec;
+  --status-ok-fg:     #166534;
+  --status-err-tint:  #fbe9e7;
+  --status-err-fg:    #c0392b;
+  --status-warn-tint: #fbf1df;
+  --status-warn-fg:   #854d0e;
+
   /* ── type ─────────────────────────────────────────────────────────────────
      Self-hosted in static/fonts/. No CDN, ever — offline school PCs
      (CLAUDE.md §11). The @font-face rules are in 02-generic/fonts.css since

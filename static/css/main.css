@@ -186,6 +186,10 @@
 /* @import url("05-components/field.css")     layer(components); */
 /* @import url("05-components/badge.css")     layer(components); */
 @import url("05-components/nav.css")       layer(components);
+/* UI-043 — status bar. LIVE on bank, blueprint and library the moment it
+   loads, unlike the two above: `.status-bar` is in all three pages' markup.
+   It unifies two palettes that were both live. Read its header. */
+@import url("05-components/status.css")    layer(components);
 /* @import url("05-components/table-data.css") layer(components); */
 
 /* UI-050..052 */
