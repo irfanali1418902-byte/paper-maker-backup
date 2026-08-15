@@ -18,8 +18,9 @@ failure, it is the middle of a strangler fig — but it should not be misread:
 | | lines |
 |---|---:|
 | baseline, 2026-07-28 — nine `<style>` blocks | 2,133 |
-| today — `99-legacy/*.css`, still imported by every migrated page | **2,115** |
-| today — the new tree (`01-settings` … `pages/`) | 2,401 |
+| ~~2026-08-13 — `99-legacy/*.css`~~ | ~~2,115~~ |
+| **2026-08-14 — `99-legacy/*.css`, still imported by every migrated page** | **2,075** |
+| today — the new tree (`01-settings` … `pages/`) | 3,064 |
 | ~~today — `theme.css`~~ | ~~212~~ **DELETED 2026-08-13** |
 | today — `app.css`, **still linked by all nine** (`@font-face` + the `.icon` sprite) | 57 |
 
@@ -53,7 +54,7 @@ Taken **before** B and C, deliberately — see "What is being skipped" below.
 
 | # | task | est. |
 |---|---|---:|
-| 5 | UI-060..063 — drain `99-legacy/*` to zero, page by page. **STARTED 2026-08-13.** `css_drain_probe.mjs` written; **all nine files measured**; `slo.css` drained of its 10 dead rules — `legacy_css_lines` **2,115 → 2,105**, the first time that number has moved in this epic. See the survey below | 5–10 |
+| 5 | UI-060..063 — drain `99-legacy/*`. **STARTED 2026-08-13.** `css_drain_probe.mjs` written; all nine files measured; `slo.css` drained of its 10 dead rules — **2,115 → 2,105**, the first time that number moved. **2026-08-14: four pages onto `.sidenav`, 12 load-bearing rules rehomed and deleted — 2,105 → 2,075.** That is the first time rules that were *alive that morning* came out. See the survey and the correction below | 5–10 |
 | 6 | ~~UI-064 — delete `theme.css`~~ ✅ **part 1 done 2026-08-13**, out of order and deliberately: `UI-047c` made the file unreachable that morning, so it became Marhala D's cheapest step. `app.css` + final sweep remain | 1 |
 
 **CSS only goes down here.** Everything before this adds.
@@ -96,16 +97,12 @@ point `blueprint` rendered `rgb(255,255,255)` while the other eight pages render
 app, two looks, live. Asked to choose, Irfan chose **navy**, and `nav.css` was recoloured the
 same day: 92 deltas on `blueprint`, **0 on the other seven**.
 
-**⚠ THREE NAVIES EXIST AND NONE HAS BEEN CHOSEN.**
-
-| shade | where |
-|---|---|
-| `#16294A` | the six pages whose legacy files declare their own `--navy` |
-| `#0e1729` (`--slate-950`, behind `--color-sidebar-bg`) | `blueprint` and `taqseem` |
-| `#132244` | `mockup-modern.html`:28, a non-Modern theme |
-
-`blueprint` and `taqseem` now match each other, not the six. **Closing this moves a live
-page's colour**, so it is left open on purpose and belongs to the shell work below.
+**✅ AND THE NAVY IS SETTLED — 2026-08-13, on the majority.** This block used to say three
+navies existed and none had been chosen. They did, and one was: `--color-sidebar-bg` now reads
+`--navy-900` (`#16294A`), the shade the six legacy files already carried, and `--slate-950` was
+deleted from `tokens.css` having no other consumer. `blueprint` and `taqseem` moved 2 deltas;
+the other seven were already there. `#132244` was `mockup-modern.html`:28's non-Modern theme and
+was never in the running.
 
 #### And the drain should go BY THING, not BY PAGE — measured 2026-08-13
 
@@ -133,8 +130,24 @@ selectors** — **50 rules between them**. `taqseem` joins them for `.app-nav` o
 `blueprint`, `index`, `print` and `landing` each drifted their own way.
 
 So the shape of the work is not nine page-drains. It is: **extract the shell once, adopt it on
-the four pages that already agree (50 rules out, ~13 in), then take the other five one at a
-time as decisions** — each one being "accept the shared values, or keep this page's variant".
+the four pages that already agree, then take the other five one at a time as decisions** — each
+one being "accept the shared values, or keep this page's variant".
+
+> **⚠ "50 rules out, ~13 in" WAS WRONG, AND IT WAS RUN ON 2026-08-14. It came out at 12.**
+> The 50 counted the rules that AGREE across the four files. It did not check whether anything
+> in the new tree could receive them, and `.sidenav` is a home for only **three of the nine**
+> shell selectors — `.app-nav a`, `:hover`, `.active`. The other six have none:
+> `.app-sidebar`'s box lives inside `.o-shell`, a whole-page grid these four have no topbar
+> for; `.brand` ×3 was **deliberately denied a component** in `UI-047b` because it is live on
+> all nine pages; `.sidebar-foot` has no component and `blueprint` has no such element; and
+> `.app-nav`'s own `padding: 0 10px` survives even after `.sidenav` took its column and gap.
+> **12 rules out, 30 lines, `legacy_css_lines` 2,105 → 2,075.** The remaining **24** — six
+> rules × four pages — are still there and are the real shape of the 454.
+>
+> **The lesson is the method, not the number.** Counting which rules agree with each other is
+> not the same question as counting which rules have somewhere to go. The second question is
+> the one the drain is made of, and it is answered by reading the component against the legacy
+> declaration by declaration, tokens resolved — not by a probe.
 
 `shell.css` already exists from UI-030, but it is the NEW `.o-shell*` shell and only
 `blueprint` uses it. The eight other pages still run the old navy one.

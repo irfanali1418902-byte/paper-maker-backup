@@ -1,5 +1,25 @@
 # NEXT SESSION — start here
 
+> # 🛑 THIS FILE'S NAME IS A LIE. IT IS NOT THE STARTING POINT AND HAS NOT BEEN SINCE 2026-08-12.
+>
+> **Start at `docs/ui/HANDOFF.md`.** That file is rewritten at the end of every session and
+> holds the only current state.
+>
+> **Everything below about STATE is out of date, and it misled a session on 2026-08-14** — the
+> banner is here because of that. It still says "7 of 9 live", still calls `UI-046` "the next
+> task", still lists six HELD pages and `index` as blocked. **All nine pages have been live
+> since 2026-08-13**, `UI-046`/`UI-047a-f` are all done, `static/theme.css` is deleted, and
+> Sprint 6 has removed 40 lines of legacy CSS.
+>
+> **What IS still worth reading here, and it is a lot:** the MECHANISM and TRAP sections —
+> §📐 on why `UI-043` came off the critical path (layer order vs specificity, and the false
+> all-clear from a probe that was not looking at `taqseem`), the `print` findings F1/F2/F3 and
+> the margin harness, the test-data paper UUIDs, the webfont-line-box rule, and the
+> `pre-commit run --all-files` warning. Those are measurements and they did not expire.
+>
+> **Rule of thumb: if a sentence here says what is DONE or what is NEXT, do not believe it.
+> If it says how something WORKS or how it was MEASURED, it is still good.**
+
 > **Updated 2026-08-07, after UI-041 closed at round 4 and UI-045 shipped.** Read `docs/ui/STATUS.md` first — it is
 > the SOURCE OF TRUTH and it is current. This file is the orientation layer: what is done,
 > what is next, and the traps. **The probes that produced every number are now repo files —
