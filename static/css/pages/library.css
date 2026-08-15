@@ -38,3 +38,14 @@
 
 @import url("../main.css");
 @import url("../99-legacy/library.css") layer(legacy);
+
+/* `.app-sidebar` is height:100vh with no overflow (99-legacy/library.css:29),
+   so content taller than the viewport spills out of the painted box instead of
+   scrolling. Same fix as pages/index.css:114, where Irfan found it in the
+   browser. Goes away when this page moves onto `.o-shell`, which already sets
+   it. No probe can see this: overflow is not a captured property. */
+@layer components {
+  .app-sidebar {
+    overflow-y: auto;
+  }
+}

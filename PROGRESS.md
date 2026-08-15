@@ -1,5 +1,32 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-15 — the sidebar can scroll on all nine pages; the two-day-old hole is closed
+
+`.app-sidebar { overflow-y: auto }` added to `pages/bank.css`, `library.css`, `slo.css`,
+`slo-health.css` and `taqseem.css` — one declaration each, in `layer(components)`. The legacy
+shell sets `height: 100vh` with no `overflow`, so a nav taller than the viewport spilled out of
+the painted navy box instead of scrolling. **Found by Irfan in the browser on 2026-08-13** on
+`index`, fixed page-scoped there the same day, and recorded as still open on five pages rather
+than fixed by a drive-by. This closes it.
+
+**The enumeration moved the scope from six pages to five, both ways.** `blueprint` was on the
+board's list and does not have the defect — its only `.app-sidebar` rule is inside
+`@media (max-width: 760px)`, and at desktop it runs the new `.o-shell` grid, which already sets
+`overflow: auto`. `print` was not on the list and was already fixed: `99-legacy/print.css`:45
+carries `overflow-y: auto` with its own comment.
+
+**There is no shared home for this and that is by design, not an oversight.**
+`04-objects/shell.css`'s header forbids a `.app-sidebar` rule outright — a rule under that name
+in `layer(objects)` would take over the brand/shell block on all nine pages the moment they
+link `main.css` (the D21 failure mode). So it is five page-scoped copies, and they go away when
+these pages move onto `.o-shell`.
+
+**No probe can verify this and the gate was not run for it.** `css_type_probe`'s viewport is
+900px and `overflow` is not a captured property, so it returns 0 either way. Ratchet OK
+(`shared_css_lines` 3,064 → 3,117, `unsanctioned_hex` flat at 385), ruff clean.
+**Verified by Irfan in the browser instead** — incognito, zoomed to ~200% so the 209–294px navs
+exceed the viewport, on the pages themselves.
+
 ## 2026-08-14 — the drain: 12 dead rules leave four legacy files, and `legacy_css_lines` moves for the second time in this epic
 
 **`legacy_css_lines` 2,105 → 2,075. Thirty lines, 0 deltas on all eight pages.** This is the
