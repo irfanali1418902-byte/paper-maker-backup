@@ -44,8 +44,7 @@
   }
   input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
 
-  .field-row { display: flex; gap: 14px; }
-  .field-row > div { flex: 1; }
+  /* .field-row: 05-components/field.css (UI-042) */
 
   /* ---- Buttons ---- */
   .btn-primary {
@@ -266,5 +265,4 @@
     .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
     .sidebar-foot { display: none; }
     .bp-main { padding: 16px 14px; }
-    .field-row { flex-direction: column; gap: 10px; }
   }

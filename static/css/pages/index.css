@@ -115,6 +115,15 @@
     overflow-y: auto;
   }
 
+  /* index is the one page of four that stacks .field-row at 14px rather than
+     10px below 760px. 05-components/field.css took the majority; this keeps
+     index exactly where it was instead of quietly moving it. */
+  @media (max-width: 760px) {
+    .field-row {
+      gap: 14px;
+    }
+  }
+
   /* `.main`'s padding, and this one IS measured: index's .main computes
      24px 28px 44px today, entirely from theme.css. Dropping it would strip
      the side inset from all seven screens. grid-area and overflow are not

@@ -183,7 +183,9 @@
    because the live pages spell it `.page-head`. Read its header first. */
 @import url("05-components/card.css")      layer(components);
 /* @import url("05-components/modal.css")     layer(components); */
-/* @import url("05-components/field.css")     layer(components); */
+/* UI-042 — .field-row + .filter-bar. LIVE on bank, blueprint, index and
+   library; all four carry the markup. Layout and size only, no colour. */
+@import url("05-components/field.css")     layer(components);
 /* @import url("05-components/badge.css")     layer(components); */
 @import url("05-components/nav.css")       layer(components);
 /* UI-043 — status bar. LIVE on bank, blueprint and library the moment it

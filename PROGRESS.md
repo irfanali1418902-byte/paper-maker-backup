@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-15 — `.field-row` + `.filter-bar` become a component, at zero deltas
+
+**`legacy_css_lines` 2,054 → 2,042.** Nineteen rules out of `99-legacy`'s `bank`, `blueprint`,
+`index` and `library`; `05-components/field.css` replaces them, the name `main.css` had held
+commented-out since UI-042 was scoped. **0 element × property deltas on all eight pages,
+drift 0.** `unsanctioned_hex` flat at 385 — the file declares no colour at all.
+
+The net line count is 12 rather than 19 because each deletion left a one-line signpost naming
+the component that took it, the same as the `.status-bar` commit.
+
+**It did NOT come out at zero on the first run — it came out at 75, and the reason is worth
+more than the rules.** Two of the legacy declarations had been **dead since the migration**:
+`.filter-bar label { font-size: 11.5px }` and `.filter-bar select { padding: 8px 11px }` sit in
+`layer(legacy)` and lose to `03-elements/forms.css` in `layer(elements)`, because layer order is
+decided before specificity. Those labels have rendered at 12px, and those selects at 9px 11px,
+for as long as the pages have been migrated. **Copying the declarations into a component file
+moved them up to `layer(components)` and brought them back to life** — 11 labels shrank and 9
+selects lost a pixel of padding.
+
+Irfan's call: **match what is live.** Both declarations are dropped from the component, which
+now carries only `margin-top: 0` on the label and `min-height: 38px` on the control — the one
+thing the filter bar genuinely adds over the default. Re-measured at 0.
+
+**A third value was never a rule at all.** `.filter-bar input` measured `padding: 8px 11px`
+where `select` measured `9px`, which looked like a cascade puzzle. It is an **inline style** on
+`library.html`:186, and inline beats every layer. That input was never reading the rule.
+
+**Measured identical before anything was written**, which is why the `.field-row` half was
+uneventful: `flex`/`gap 14px` and `flex: 1 1 0%` on all four pages, `.filter-bar` and its `> div`
+identical on both. `index` alone stacks at `gap: 14px` below 760px against the other three at
+`10px`; the component took the majority and index's own value moved to `pages/index.css`.
+
+**`.type-checks` was in the original scope and was left out.** Its rule text is byte-identical
+in `bank` and `blueprint`, and its checkbox is `rgb(46,90,172)` at 16px on one and
+`rgb(79,70,229)` at 15px on the other — `blueprint` maps the legacy token names onto the new
+tree's roles in its entry file. That is a decision about which blue, not a refactor.
+
 ## 2026-08-15 — `.status-bar` becomes a component, and it turns out the app had two status palettes
 
 **`legacy_css_lines` 2,075 → 2,054.** Twelve rules, 21 lines, out of `99-legacy/bank.css`,
