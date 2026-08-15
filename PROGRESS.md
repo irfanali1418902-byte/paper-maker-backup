@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-14 — the drain: 12 dead rules leave four legacy files, and `legacy_css_lines` moves for the second time in this epic
+
+**`legacy_css_lines` 2,105 → 2,075. Thirty lines, 0 deltas on all eight pages.** This is the
+payoff for everything above it today — three commits that only added, followed by the one that
+takes away.
+
+**What was deleted:** `.app-nav a`, `.app-nav a:hover` and `.app-nav a.active` from
+`99-legacy/bank.css`, `library.css`, `slo-health.css` and `slo.css`. **Twelve rules, thirty
+lines** — the blocks are 8 lines in `bank`/`library` and 7 in `slo`/`slo-health`, which is why
+the estimate of "~24" written an hour earlier was wrong: it counted rules and the file counts
+lines.
+
+**`.app-nav` itself STAYS on all four**, and that is not an oversight. It carries
+`display: flex`, `flex-direction: column`, `gap: 2px` and `padding: 0 10px`, and **no component
+covers the last of those** — `.sidenav` took the column and the gap in `778f65a`, deliberately,
+but the 10px side padding has no home. The `@media (max-width: 760px)` `.app-nav` rules stay too,
+for the reason `shell.css` gives: that breakpoint hides the nav and the control that brings it
+back does not exist yet.
+
+**0 element × property deltas on all eight pages, drift 0** — `slo`, `slo-health`, `library`,
+`taqseem`, `blueprint`, `bank`, `landing`, `index`. `unsanctioned_hex` 401 → 385: sixteen raw hex
+went with the rules, four per file.
+
+**The `:hover` half is NOT probe-verified, and that is stated rather than glossed.** The probe
+hovers nothing, so `.app-nav a:hover`'s deletion returns 0 whether or not the component replaces
+it. What was done instead is a value-for-value read: `--color-sidebar-hover` resolves through
+`--overlay-white-07` to `rgba(255,255,255,0.07)` and `--color-sidebar-fg-on` through `--white` to
+`#ffffff`, which is exactly what the deleted rule declared. The `.active` half **is** measured,
+because the current item is in that state at rest. **A hover check belongs to a person with a
+mouse.**
+
+**What this does to the epic's own number.** The first move was `slo`'s ten dead rules on
+2026-08-13 (2,115 → 2,105). This is the second, and it is a different kind: those ten were dead
+already, while these twelve were **load-bearing until this morning** and were made dead on
+purpose. That is the 454, not the 391 — the first of the load-bearing rules in this epic to be
+given a home and then removed.
+
 ## 2026-08-14 — `library`, `slo-health` and `slo` adopt `.sidenav`; all four pages of the clean group are on the component
 
 **Same edit three times, measured one page at a time: `library` 57, `slo-health` 85, `slo` 85.**
