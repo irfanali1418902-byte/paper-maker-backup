@@ -1,6 +1,6 @@
 # UI-ARCH — the measurement probes
 
-Six CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
+Seven CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
 re-checked instead of trusted, and they exist as repo files because **this epic has already
 lost a set of measurement scripts once** — the first `print` session wrote them into a
 session scratchpad and they were gone by the next one, with only the method surviving in
@@ -20,8 +20,19 @@ in a scratchpad.
 | `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. **With an optional second argument (a selector substring) it also reports every `CSSStyleRule` carrying it — the layer it arrived in, and how many elements it matches.** That is the "is this new rule inert, or is it simply not there?" check UI-041's review ran by hand; UI-041b made it a flag. |
 | `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`.** That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside the 44 all read 0 without being dead. Its header lists all four. |
 
+| `css_selector_probe.mjs` | screen | **What does this selector actually compute to, page by page?** Takes a selector, a property list and a page list. **`--add=<selector>:<class>` adds a class before reading and removes it after**, which is the only way to reach state that is `display: none` at rest — `.status-bar`'s `.ok`/`.err`/`.warn` are written by inline JS and `.modal-backdrop` needs `.open`, so `css_type_probe` returns 0 for both whether the CSS is right or wrong. Written 2026-08-15/16, when it found **six** families whose rule text was byte-identical across files and whose resolved values were not. Its header lists them. |
+
 `css_rules_probe.mjs` (older, UI-032) is the DOM half of `css_orphans.py --rules` and is
 unrelated to these.
+
+**Rule 9, added 2026-08-16 and it earned its place twice in one sitting: identical rule text is
+not identical output, and a dead declaration is not a safe one.** The migrated entry files
+remap some legacy token names onto the new tree's roles and leave others on the legacy
+literals, so the same rule paints differently depending on the page — and a declaration that
+loses to `layer(elements)` from inside `layer(legacy)` comes back to life the moment it is
+copied into `layer(components)`, because layer order is decided before specificity. Measure the
+computed value on each page before extracting a rule, and measure again after. `.filter-bar`'s
+resurrection cost 75 deltas before it was caught.
 
 **`css_orphans.py`'s main job is over.** It measured pages against `static/theme.css`, and that
 file was deleted on 2026-08-13. It still runs — it degrades with a warning rather than crashing

@@ -1,4 +1,4 @@
-# Handoff — 2026-08-14 (four pages on `.sidenav` · `legacy_css_lines` 2,105 → 2,075)
+# Handoff — 2026-08-16 (`legacy_css_lines` 2,075 → 2,008 · six components live)
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 **dobara likhi jaati hai** — purani cheezein jorhi nahi jaatin, hamesha sirf aakhri haalat.
@@ -9,7 +9,7 @@ PaperMaker — UI architecture sprint, session handoff
 
 REPO: C:\PaperMaker\paper-maker-mvp   (sirf yeh path. E: drive ki purani copies mat chhuo)
 BRANCH: feat/ui-architecture
-Tree clean, dev server band, port 8000 free. **Push abhi baqi hai — 4 commits `backup` se aage.**
+Tree clean. **`backup` se 6 commits aage — push baqi hai.**
 
 ## KAAM KARNE KA TAREEQA — yeh sab se ahem hai
 
@@ -17,188 +17,152 @@ Tree clean, dev server band, port 8000 free. **Push abhi baqi hai — 4 commits 
   nahi hai — qadam batao, phir ruko.
 - Files kabhi PowerShell Set-Content/Out-File se mat likho, UTF-8 kharab hota hai. Edit ya
   Write tool use karo.
-- Push main khud GitHub Desktop se karta hoon. Tum push mat karo — sirf
-  `git ls-remote backup feat/ui-architecture` se confirm karo jab main kahoon.
+- Push main khud GitHub Desktop se karta hoon. Tum push mat karo.
 - Koi cloud deploy nahi. `backup` remote sirf backup hai.
+- **Measurement stylesheet ke comment mein mat likho.** `pages/bank.css` ka apna qaida:
+  numbers board par rehte hain (PROGRESS.md), file mein sirf wo jis se agla banda ghalti
+  karne se ruke. Teen review rounds isi par fail ho chuke hain — aur 16 Agast ko main ne
+  yehi ghalti teen naye files mein ki aur `8ca7ed8` mein wapas li.
 
 ## HAALAT
 
-9 ke 9 pages LIVE. Sprint 0-4b mukammal. `static/theme.css` aur DOCX/PDF export DELETE ho chuke.
-
-**Sprint 6 chal raha hai, aur ab is ka nateeja number par nazar aata hai:**
+9 ke 9 pages LIVE. Sprint 6 (drain) chal raha hai.
 
 ```
-legacy_css_lines   2,115 (baseline)  →  2,105 (13 Aug)  →  2,075 (14 Aug)
-unsanctioned_hex     429             →                     385
-shared_css_lines   2,526             →                   3,064
+legacy_css_lines   2,115 (baseline) → 2,075 (14 Ag) → 2,008 (16 Ag)
+unsanctioned_hex     429            →   385         →   382
 ```
 
-**Chaar pages ab `.sidenav` component par hain** — `bank`, `library`, `slo-health`, `slo` —
-aur unki 12 legacy rules nikal chuki hain. `blueprint` pehle se us par tha. Baqi chaar
-(`taqseem`, `index`, `print`, `landing`) nahi.
+**Chhe components ab live hain:** `nav.css` (`.sidenav`, 4 pages), aur 16 Agast ke paanch —
+`status.css`, `field.css` (`.field-row` + `.filter-bar` + `.type-checks`), `modal.css` (chrome),
+aur `btn.css` mein `.btn-primary`.
 
-## 14 AGAST KA KAAM — chaar commits, tarteeb ahem hai
+## 15–16 AGAST KA KAAM — aath commits
 
-  ✅ `778f65a` — `nav.css` ko chaar pages ki values par laya gaya.
-     Component `--text-body` (15px), `--radius-control` (11px), 11px gap par tha;
-     chaar legacy files 14px / 8px / 10px kehti hain. Component ko UN par laya gaya,
-     ulta nahi — taake chaar live pages na hilein. Qeemat: `blueprint` par 104 deltas
-     (type, corners, active ka weight 600→500, rail box-shadow se border par).
-     Irfan ne browser mein dekh kar manzoor kiya.
-     ⚠ 14px aur 8px LITERAL hain, token nahi — `--text-body` 15px hai, `--radius-control`
-       11px, aur `--font-size-4` par `--text-heading-3` ka qabza hai. Teen naye naam
-       banane ka matlab teen aise roles jinka ek-ek consumer ho: `tokens.css`:145 khud
-       kehti hai ke file isi tarah sarhti hai. `nav.css` ke 34px avatar ka wohi usool.
+```
+f957a0e  sidebar scroll — 5 pages ka khula defect band
+9c99160  blueprint + taqseem: subtitle title ke neeche wapas
+60fa37e  .status-bar component — 12 rules, do palettes ek, AA pass
+5e3120a  .field-row + .filter-bar — 19 rules, 0 deltas
+70e55da  .type-checks — 4 rules, 0 deltas
+fa68cd7  modal chrome — 6 rules, 0 deltas
+8ca7ed8  teen component files se measurements nikal kar board par
+2a18b1a  .btn-primary — 9 rules, indigo par unify (dekhne wali tabdeeli)
+```
 
-  ✅ `8cbc38f` — `bank` re-classed. **0 deltas ki tawaqqo thi, 57 aaye.**
-  ✅ `b75346a` — `library` 57, `slo-health` 85, `slo` 85.
-  ✅ `b70cf99` — 12 rules delete: `.app-nav a`, `:hover`, `.active` × 4 files.
-     **30 lines, 0 deltas har page par.**
+## ⚠ SAB SE AHEM SABAQ — CHHE DAFA PAKRA GAYA
 
-## ⚠ EK PURANA BUG JO NIKLA — AUR WO ABHI DO PAGES PAR ZINDA HAI
+**Rule ka text do files mein harf-ba-harf ek hona yeh sabit nahi karta ke wo ek jaisa paint
+karta hai.** Migrate shuda entry files kuch legacy token naamon ko naye tree ke roles par map
+karte hain aur kuch ko legacy literal par chhor dete hain. Nateeja: ek hi rule page ke hisab se
+alag rang deta hai. 15–16 Agast ko yeh **chhe** dafa nikla:
 
-`03-elements/typography.css`:50 par `a { color: inherit }` hai, `layer(elements)` mein.
-Layer order specificity se PEHLE tay hota hai, is liye wo `layer(legacy)` ke
-`.app-nav a { color: #C6D2E8 }` ko harata hai — selector ka wazan chahe kuch bhi ho. Link
-`.app-sidebar { color: #fff }` se **safed** inherit kar leta hai.
+| | |
+|---|---|
+| `.status-bar` | bank/library purana muted, blueprint naya bright — **do live palettes** |
+| `.type-checks` checkbox | bank `rgb(46,90,172)` 16px, blueprint `rgb(79,70,229)` 15px |
+| `.btn-primary` | **do live primary blues** — ab indigo par unify |
+| `--radius-btn` | bank **10px**, print **8px** |
+| `--bg` | bank aur print ke do alag grey |
+| `.btn-ghost` | **paanch pages, chaar shaklein** |
 
-Nateeja: **jo bhi page migrate hua, uske nav links safed ho gaye** — current aur baqi, dono.
-Farq sirf background tint aur rail se rehta hai.
+**Aur us ka doosra rukh, jo utna hi mehnga hai: `layer(legacy)` mein mara hua declaration
+component mein jaate hi ZINDA ho jata hai** — kyunke layer order specificity se pehle tay hota
+hai. `.filter-bar` ke do declarations aise hi zinda hue aur **75 deltas** de gaye, pakre gaye,
+hataye gaye. Yeh bhi mare hue mile: `.type-checks label` ke teen, `.modal-header h3` ka 16px,
+`.page-head h1` ka 22px, `.btn-primary:disabled` ka cursor.
 
-Yeh `pages/bank.css`:124 par ek line mein likha hua tha — *"Nav links go white and the canvas
-changes tint"* — 10 Agast se, "expected consequence" ke tor par. **Kisi ne faisla nahi kiya tha.**
-Irfan ne 14 Agast ko kiya: legacy rang qubool. `.sidenav__link` `layer(components)` mein hai,
-elements se upar, is liye re-class karne se rang wapas aa gaya.
+**Qaida: rule uthane se pehle har page par naapo ke wo compute kya hota hai — aur uthane ke
+baad dobara naapo.** `scripts/css_selector_probe.mjs` isi liye likha gaya.
 
-**`taqseem` aur `index` par ab bhi safed hai.** App mein do shaklein hain — aarzi, jaan-boojh kar,
-bilkul waise jaise navy ka masla settle hone se pehle tha.
+## AGLA QADAM — teen raaste, dono baqi faisle maangte hain
 
-## AGLA QADAM — do saaf raaste, dono jayaz
+**RAASTA A — `.btn-ghost`.** 5 pages (`bank`, `blueprint`, `library`, `slo`, `slo-health`),
+**chaar alag shaklein** — background, border, radius, padding, font-size aur height, sab par
+ikhtilaf. Yeh **chaar faisle** hain, refactor nahi.
 
-**RAASTA A — `taqseem` aur `index` ko bhi `.sidenav` par lao.**
-Faida: safed-links wali do-shakli khatam. Magar yeh chaar wale gutt jitna saaf NAHI hai:
+**RAASTA B — shell.** `.app-sidebar`, `.app-nav` (sirf padding baqi), `.brand` ×3,
+`.sidebar-foot` — **24 rules, chaar pages.** ROADMAP is ko "454 load-bearing" ka asal kaam
+kehta hai.
+  · `.app-sidebar` ka box `.o-shell` grid mein hai, magar in chaar par topbar hai hi nahi.
+  · **`.brand` ko component dena mana hai** — nau ke nau pages par live hai (UI-047b).
+  · `.sidebar-foot` ka koi component nahi.
 
-  · `taqseem` ka `.app-nav a` **alag hai** — `border-radius: var(--radius-sm)` (8px nahi),
-    aur uska `.active` `background: rgba(255,255,255,.10)` + `font-weight: 600` hai
-    (chaaron ka `.09` aur koi weight nahi). Yani **do asal faisle**: radius kis ka, aur
-    active bold ho ya nahi.
-  · `index` ka aur bhi alag hai — `.app-nav a[data-active="1"]` (class nahi, attribute;
-    `nav.css` mein us ke liye selector PEHLE SE mojood hai), plus `index.css`:63 ka
-    `.app-nav a svg { width: 19px }` aur `.brand .tag`.
-    ⚠ Wo 19px wala rule **shayad pehle se mara hua hai**: `static/app.css`:57 bare `.icon`
-      ko 17px par set karta hai aur wo **unlayered** hai, yani har `@layer` ko harata hai
-      (`main.css`:73-74). Yeh PARHA gaya hai, NAAPA nahi — `index` ko chhoone se pehle
-      `css_page_rule_probe.mjs` se tasdeeq karo.
-    `index` sab se bara page hai (783 elements, 224 inline styles).
+**RAASTA C — baqi 58% ka faisla.** 16 Agast ke audit se: `99-legacy` ke **682 distinct
+selectors mein se 581 sirf EK file mein hain**. Line ke hisab se **58% page-only hai — us ka
+koi component ban hi nahi sakta**, wo sirf `pages/*.css` mein shift hoga. Yani baqi drain ka
+zyada tar hissa **muntaqili hai, dedup nahi**. Kya usay zero tak le jana hai, ya "kaafi hai" par
+rokna hai — **yeh Irfan ka faisla hai aur abhi nahi hua.**
 
-**RAASTA B — chaar pages ke baqi 6 shell rules ka ghar banao.**
-Har page par abhi bhi: `.app-sidebar`, `.app-nav` (sirf padding baqi), `.brand`, `.brand .name`,
-`.brand small`, `.sidebar-foot` — **24 rules, chaar pages par**. Inme se **kisi ka koi component
-nahi hai**, aur yeh ROADMAP ka "454 load-bearing" wala asal kaam hai.
-  · `.app-sidebar` ka box `.o-shell` grid mein hai — magar in chaar par topbar hai hi nahi,
-    to poora grid apnana bara kaam hai (aur wohi `overflow` defect bhi theek kar dega, neeche).
-  · `.brand` ko component dena **mana hai** — wo nau ke nau pages par live hai (`UI-047b` ne
-    yehi tay kiya tha aur usay page-scope kiya tha).
-  · `.sidebar-foot` ka koi component nahi, aur `blueprint` par yeh element hai hi nahi.
+## ⚠ KHULE DEFECTS AUR NA-NAAPI CHEEZEIN
 
-Mera mashwara: **B se pehle A**, kyunke A do-shakli khatam karta hai aur uske faisle chhote hain.
-Magar yeh Irfan ka faisla hai.
+- **Hover kabhi naapa nahi gaya.** `b70cf99` ne `.app-nav a:hover` delete ki thi; probe hover
+  karta hi nahi. Kisi live page par ek nav link par mouse le jao — 10 second.
+- **`.btn-primary` ka box-shadow purane blue ka hai** aur ab har page par fill se thora
+  bemel hai (blueprint par migration se hi tha). Jaan-boojh kar chhora — apna faisla mangta hai.
+- **`.page-head` → `.pagehead` NAHI ho sakta jaise likha tha.** Component `display:flex` hai
+  aur mockup us ke andar ek wrapper `<div>` rakhta hai; chaaron `.page-head` pages ka markup
+  wrapper ke baghair hai. Pehle markup badlo, warna chaar pages ka header toot jayega.
+- **Sprint 5 chhua tak nahi** — 466 inline `style=""`, un mein 224 akele `index.html` par.
+- **`library.html`:186 par inline style** control ka padding tay karta hai, koi rule nahi.
 
-## ⚠ EK KHULA DEFECT — PAANCH LIVE PAGES PAR (aaj kuch nahi hua)
+## ⚠ JO GATE ANDHE HAIN — 0 ko coverage mat samjho
 
-`.app-sidebar` par `height: 100vh` hai aur `overflow` KOI NAHI. Content viewport se lamba ho
-to scroll nahi hota — painted box se BAHAR chhalak jata hai. Irfan ne 13 Agast ko browser
-mein pakra: `index` ka aakhri nav item navy background se bahar tha; wahan page-scoped
-`overflow-y: auto` se theek kiya. **`library`, `bank`, `slo`, `slo-health`, `taqseem` par
-wohi hole khula hai** — unki nav 209-294px hai, `index` ki 450px thi, is liye abhi nahi phata.
+`css_type_probe` in mein se kisi ko dekh hi nahi sakta:
+- `.status-bar` ki `.ok`/`.err`/`.warn` — inline JS lagata hai (`el.className = 'status-bar ' + type`)
+- `.modal-*` — sab `display:none` at rest, `.open` chahiye
+- **`blueprint` ka `.type-checks`** — JS template string mein banta hai (`blueprint.html`:642),
+  fresh load par mojood hi nahi. Ek probe run mein mila, agli mein nahi.
+- `.app-sidebar` ka `overflow` — captured property hi nahi
 
-KOI PROBE ISAY NAHI DEKH SAKTA — probe ka viewport 900px hai aur `overflow` captured property
-hi nahi. Fix 0 deltas dega; iska matlab "kuch bigra nahi", yeh nahi ke "kaam karta hai".
-
-Note: `04-objects/shell.css` ka `.o-shell__nav` mein `overflow: auto` **pehle se hai**. Jo bhi
-qadam in pages ko us grid par laye ga, wo yeh defect saath hi band kar de ga.
-
-## ⚠ EK CHEEZ JO NAAPI NAHI GAYI — HOVER
-
-`b70cf99` ne `.app-nav a:hover` delete ki. **Probe hover karta hi nahi**, is liye uska 0 kuch
-sabit nahi karta. Jo kiya gaya wo value-ba-value padhai hai:
-`--color-sidebar-hover` → `--overlay-white-07` → `rgba(255,255,255,0.07)` aur
-`--color-sidebar-fg-on` → `--white` → `#ffffff` — bilkul wahi jo purani rule likhti thi.
-`.active` wala hissa NAAPA GAYA hai (wo halat-e-sukoon mein hai).
-**Agle session mein kisi live page par ek nav link par mouse le jao aur dekh lo.** 10 second.
-
-## PEHLA QADAM HAMESHA ENUMERATION HOTA HAI, LIKHAI NAHI
-
-Is usool ne aaj phir kaam kiya, aur is baar usne KHUD BOARD ko pakra.
-
-**HANDOFF (13 Agast) kehta tha: "chaar pages ka re-class = 36 rules bahar, rang bilkul nahi
-badlega." Dono aadhe ghalat thay:**
-
-- 36 sahi tha — nau shell rules waqai chaaron files mein harf-ba-harf ek jaise hain.
-  **Magar `.sidenav` un nau mein se sirf TEEN ka ghar hai.** Baqi chhe ka koi component nahi.
-  Asal nateeja: **12 rules**, 36 nahi.
-- "rang nahi badlega" bhi ghalat tha — magar ULTI taraf se. Rang badla, aur behtar hui:
-  safed se `#C6D2E8`, kyunke ek purana bug theek ho gaya (upar dekho).
-
-Tareeqa jisne yeh pakra: `.sidenav*` ki har declaration ko chaar legacy files ki har
-declaration ke saamne rakh kar padhna — token resolve kar ke, `--text-body` = 15px tak.
-Ek bhi probe run se pehle. **Board ke daawe par bharosa mat karo, chahe wo kal ka ho.**
-
-Aur ek qaida jo mehnga sabit hua: **probe batata hai ke kya kho raha hai — yeh nahi ke kya
-rakhna chahiye.**
+In sab ke liye `css_selector_probe.mjs --add=` ya markup injection use karo.
 
 ## TOOLS
 
-  scripts/css_orphans.py <page> --rules --names     page kya khota hai + har rule ka ghar
-  scripts/css_page_rule_probe.mjs <url> [selector]  rule kis layer mein aaya + kitne match
-  scripts/css_type_probe.mjs <label> <outdir>       regression gate — 8 PAGES
-  scripts/css_type_diff.mjs <before> <after>        deltas  (`--names`, `--page` bhi hai)
-  scripts/css_drain_probe.mjs <page>                rule hataney se kya hilta hai
-  baqi probes: docs/ui/PROBES.md
+```
+scripts/css_selector_probe.mjs "<sel>" "<props>" [--add=<sel>:<class>] page...
+                                                  ek selector, har page par computed value
+scripts/css_type_probe.mjs <label> <outdir>       regression gate — 8 PAGES
+scripts/css_type_diff.mjs <before> <after>        deltas  (--names, --page)
+scripts/css_page_rule_probe.mjs <url> [selector]  rule kis layer mein aaya + kitne match
+scripts/css_drain_probe.mjs <page>                rule hataney se kya hilta hai
+scripts/css_orphans.py <page> --rules --names     (ab zyada kaam ka nahi — theme.css delete ho chuki)
+baqi: docs/ui/PROBES.md
+```
 
-Server: start-local.bat (uvicorn, port 8000). Agar wo na chale to seedha:
-`.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
+Server: `.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
+
+Gate chalane ka tareeqa jo is session mein har dafa kaam aaya:
+`git stash push -u` → probe `before` → `git stash pop` → probe `after` → `css_type_diff`.
 
 ⚠ `css_type_diff.mjs` ko **file** chahiye, directory nahi: `<outdir>\<label>.json`.
-⚠ Uski `--names` list **60 par cap** hai. Poori ginti chahiye to JSON khud parh lo.
-⚠ Probes headless Edge uthate hain — mehnga hai; jahan static HTML se jawab mil sakta ho wahan
-grep behtar hai. JSON hamesha scratchpad mein (har run ~15 MB), repo mein nahi — kaam ke baad
-delete kar dena. C: drive ek baar poori bhar chuki hai.
-
-⚠ JO PAGE MIGRATE HO RAHA HO, USAY css_type_probe KI LIST MEIN PEHLE DAALO. `taqseem` par yeh
-der se hua aur usne ek JHOOTA ALL-CLEAR paida kiya. JIS PAGE KO PROBE DEKH NAHI RAHA, USKA 0
-SABOOT NAHI. (Aaj chaaron pehle se list mein thay.)
+⚠ JSON hamesha scratchpad mein (har run ~13 MB), repo mein nahi — kaam ke baad delete karo.
+⚠ Probes headless Edge uthate hain — mehnga hai; jahan grep se jawab mile wahan grep karo.
 
 ## TEEN TRAPS JO LAG CHUKE HAIN
 
-1. `\b` wali grep hyphenated names par galat match deti hai (`app-sidebar`, `urdu-toggle-row`).
-   Class token check karna ho to poora attribute match karo:
-   `class="([^"]* )?(app|top|nav)( [^"]*)?"`
-2. `css_orphans` ka "orphan" sirf itna matlab rakhta hai ke page ki APNI legacy file usay
-   redeclare nahi karti. Naya tree usay cover karta hai ya nahi — wo tumhein khud dekhna hai.
-3. Raw hex COMMENT ke andar bhi `unsanctioned_hex` mein ginta hai. Yeh check is epic mein
-   DAS baar fail ho chuka hai, har baar comment ke zariye.
+1. **Raw hex COMMENT ke andar bhi `unsanctioned_hex` mein ginta hai.** Yeh check is epic mein
+   **baarah** dafa fail ho chuka hai — 16 Agast ko do dafa main ne kiya. `rgb()` mein likho.
+2. `\b` wali grep hyphenated names par ghalat match deti hai (`app-sidebar`).
+3. `css_orphans` ka "orphan" sirf itna matlab rakhta hai ke page ki APNI legacy file usay
+   redeclare nahi karti — naya tree usay cover karta hai ya nahi, wo tumhein dekhna hai.
 
-## DOOSRA KHULA KAAM — dead-code audit, adhoora
+## DOOSRA KHULA KAAM
 
-API layer ho chuka (13 Agast): 80 routes, 74 zinda. `export.docx` + `export.pdf` DELETE.
-⬜ `/api/syllabus-topics` ka koi caller nahi — faisla nahi hua.
-⬜ `blueprint-presets/{id}` aur `library/question-types` sirf tests se bulaye jaate hain.
-⬜ JS / CSS / services wala audit shuru bhi nahi hua.
-
-⚠ FastAPI routes ginte waqt: is version mein `app.routes` included routers ko
-`_IncludedRouter` objects mein rakhta hai jinpar `.path` hai hi nahi. `_IncludedRouter` ginlo
-(abhi 14) ya `app.openapi()["paths"]` parho.
-
-## STALE NUMBERS — batae gaye, theek nahi kiye
-
-- `PLAN.md`:313 kehta hai `docs/ui/` 2,655 lines hai. Asal ~4,000+.
-- `main.css`:117 kehta hai `theme.css` 6 pages par plain `<link>` hai. Wo file **mojood hi nahi**.
-- `docs/ui/NEXT-SESSION.md` **poori purani hai** — 12 Agast ki, "7 of 9 live" aur "UI-046 is the
-  next task" kehti hai. Uske upar ab ek warning banner laga diya gaya hai. Usme sirf
-  mechanism/traps wale hisse qaabil-e-etemaad hain, haalat wale nahi.
+- **Dead-code audit** — API layer ho chuka (13 Agast, `export.docx`/`export.pdf` delete).
+  ⬜ `/api/syllabus-topics` ka koi caller nahi, faisla nahi hua. ⬜ JS/CSS/services audit
+  shuru bhi nahi hua.
+- **Docs ka bojh.** `docs/ui/` **3,494 lines** hai. `NEXT-SESSION.md` akela **798 lines** hai
+  aur uske apne banner mein likha hai ke wo purani aur gumraah-kun hai — usay **delete hona
+  chahiye**, banner nahi lagna chahiye tha. Irfan ne 15 Agast ko yeh step manzoor kiya tha aur
+  wo abhi baqi hai.
+- **STALE:** `PLAN.md`:313 kehta hai `docs/ui/` 2,655 lines hai (asal 3,494)।
+  `main.css`:117 kehta hai `theme.css` 6 pages par link hai — wo file **mojood hi nahi**.
 
 ## PEHLA KAAM
 
-`docs/ui/ROADMAP.md` parho (order + estimates + khule items), phir upar "AGLA QADAM" ka
-A/B faisla mujh se lo. Enumeration pehle, likhai baad mein.
+`docs/ui/ROADMAP.md` parho, phir upar "AGLA QADAM" ka A/B/C faisla Irfan se lo.
+**Enumeration pehle, likhai baad mein — aur board ke daawe par bharosa mat karo, chahe wo kal
+ka ho.** 16 Agast ko board ke teen daawe naapne par ghalat nikle: `.page-head` ka "sasta win",
+`.type-checks` ka "kaunsa blue" wala faisla (jo mojood hi nahi tha), aur modal ke "18 agree
+rules" (chhe nikle).
