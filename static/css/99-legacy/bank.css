@@ -218,22 +218,22 @@
     background: rgba(0,0,0,.45); z-index: 999;
     align-items: center; justify-content: center; padding: 16px;
   }
-  .modal-backdrop.open { display: flex; }
+  /* .modal-backdrop.open: 05-components/modal.css (UI-042) */
   .modal {
     background: #fff; border-radius: 12px; padding: 24px 28px;
     width: min(640px, 96vw); max-height: 92vh; overflow-y: auto;
     box-shadow: 0 16px 48px rgba(0,0,0,.22);
   }
-  .modal-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
-  }
+  /* .modal-header: 05-components/modal.css (UI-042). The h3 stays: its only
+     live declaration is the colour — margin is reset.css's and the 16px loses
+     to typography.css, measured at 14px. */
   .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
   .modal-close {
     background: none; border: none; font-size: 22px; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;
   }
   .modal-close:hover { color: var(--ink); }
-  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  /* .modal-footer: 05-components/modal.css (UI-042) */
   .btn-cancel {
     padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
     background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;

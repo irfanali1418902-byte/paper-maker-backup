@@ -1,5 +1,47 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — modal chrome: six rules out of eighteen, and the other twelve are named
+
+**`legacy_css_lines` 2,036 → 2,032.** Three selectors × two files —
+`.modal-backdrop.open`, `.modal-header`, `.modal-footer` — into
+`05-components/modal.css`. **0 element × property deltas on all eight pages**, drift 0,
+`unsanctioned_hex` back to 385, ruff clean.
+
+**This app has THREE modal systems, not one**, and that is the first thing the enumeration
+returned:
+
+| | pages | classes |
+|---|---|---|
+| 1 | `bank`, `print` | `.modal-backdrop` `.modal-header` `.modal-footer` `.btn-cancel` `.btn-save` |
+| 2 | `index`, `library` | `.modal-overlay` `.modal-head` `.modal-title` `.modal-foot`/`.modal-body` |
+| 3 | `taqseem` | `.modal h3` `.modal-actions` |
+
+`.modal` itself names four different boxes and `.modal-close` four different buttons. Only
+system 1's shared chrome was taken.
+
+**The audit said eighteen rules agreed across `bank` and `print`. Six were takeable.**
+
+- **`.btn-cancel` / `.btn-save` and their three states — left, and NOT only because of the
+  values.** They look identical and are not: `--radius-btn` is **10px on bank, 8px on print**,
+  and the two `--bg` greys differ, so the shared `border-radius` and the cancel hover resolve
+  differently. They are also **buttons**, and `.btn-primary` (3 files), `.btn-ghost` (5),
+  `.btn-danger` / `.btn-edit` (2) are duplicated too. They belong in one button task beside
+  `05-components/btn.css`, where the radius is decided once instead of three times.
+- **`.modal-header h3` — left, because two of its three declarations are already dead.**
+  `margin: 0` is done by `02-generic/reset.css` in `layer(generic)`; `font-size: 16px` loses to
+  `03-elements/typography.css`'s `h3` in `layer(elements)` — **measured 14px on both pages, not
+  16**. Copying it up would have resurrected the 16px. What survives is one colour, and the
+  navy heading has no Tier 2 role; inventing one with a single consumer is what
+  `tokens.css`:145 warns against.
+- `.modal-backdrop` itself differs — `bank` pads 16px, `print` pads 0.
+
+**Everything here is `display: none` at rest, so `css_type_probe` cannot see any of it.**
+Verified by adding `.open` to the backdrop and reading the chrome on both pages before and
+after: byte-identical. The gate's 0 only says the rest of the app did not move.
+
+**`unsanctioned_hex` went 385 → 387 again, from two hex in a comment.** Twelfth time in this
+epic. Fixed the same way, with `rgb()`.
+
 ## 2026-08-16 — `.type-checks` joins `field.css`, and the decision it was scheduled on turned out not to exist
 
 **`legacy_css_lines` 2,042 → 2,036.** Four rules — the container and its label, from
