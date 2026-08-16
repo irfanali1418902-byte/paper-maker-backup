@@ -79,11 +79,25 @@ const BASE = 'http://127.0.0.1:8000/static';
 const page = process.argv[2];
 if (!page) {
   console.error('usage: node scripts/css_drain_probe.mjs <page> [--json <path>]');
+  console.error('                                        [--query=?a=b] [--warm="<js>"] [--wait=ms]');
   process.exit(2);
 }
 const jsonIdx = process.argv.indexOf('--json');
 const jsonOut = jsonIdx > 0 ? process.argv[jsonIdx + 1] : null;
-const url = `${BASE}/${page}.html`;
+
+/* --query / --warm / --wait: WITHOUT THESE, A ZERO ON A DATA-DRIVEN PAGE IS
+   MEANINGLESS. Most of these pages render their real content from JS after an
+   API call, so a probe that loads the bare page measures a DOM that no user ever
+   sees: the 2026-08-16 sweep returned 339 zero-delta candidates and 204 of them
+   were simply markup that had not been built yet. --query adds a query string
+   (print.html needs ?paper_id=<uuid>), --warm runs a snippet after load to
+   trigger a render, and --wait extends the settle time before the drain loop. */
+const qArg = process.argv.find((a) => a.startsWith('--query='));
+const warmArg = process.argv.find((a) => a.startsWith('--warm='));
+const waitArg = process.argv.find((a) => a.startsWith('--wait='));
+const WARM = warmArg ? warmArg.slice('--warm='.length) : null;
+const WAIT = waitArg ? Number(waitArg.slice('--wait='.length)) : 1200;
+const url = `${BASE}/${page}.html${qArg ? qArg.slice('--query='.length) : ''}`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const userDataDir = mkdtempSync(join(tmpdir(), 'drain-edge-'));
@@ -251,7 +265,23 @@ const DRAIN = (pageName) => String.raw`(() => {
   const loaded = onceEvent('Page.loadEventFired', sessionId);
   await send('Page.navigate', { url }, sessionId);
   await loaded;
-  await sleep(1200);
+  await sleep(WAIT);
+
+  if (WARM) {
+    /* Report what the warm-up produced. A warm-up that silently did nothing
+       gives the same zeros as no warm-up at all, and they read identically. */
+    const before = await evaluate(sessionId, 'document.querySelectorAll("*").length');
+    try {
+      await evaluate(sessionId, `(async () => { ${WARM} })()`);
+    } catch (e) {
+      console.error('WARM-UP THREW: ' + e.message);
+      process.exit(1);
+    }
+    await sleep(WAIT);
+    const after = await evaluate(sessionId, 'document.querySelectorAll("*").length');
+    console.log(`  warm-up: ${before} -> ${after} elements`);
+    if (after === before) console.log('  ⚠ warm-up added no elements — every zero below is still suspect');
+  }
 
   const res = await evaluate(sessionId, DRAIN(page));
   if (res && res.error) { console.error('ERROR: ' + res.error); process.exit(1); }

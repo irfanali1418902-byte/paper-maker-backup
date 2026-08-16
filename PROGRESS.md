@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — the drain probe learns to warm the page, and 38 rules are saved from deletion
+
+**No CSS changed and `legacy_css_lines` did not move.** This step removed nothing, and the
+reason it was worth doing is that it stopped 38 rules from being removed wrongly.
+
+`css_drain_probe.mjs` gains `--query=`, `--warm=` and `--wait=`. Without them it loads the bare
+page, and most of these pages render their real content from JS after an API call — so it was
+measuring a DOM no user ever sees.
+
+| page | cold | warmed | rules that were NOT dead |
+|---|---:|---:|---:|
+| `print` — `?paper_id=9ade2655…` | 78 dead | **58** | **19** |
+| `taqseem` — Pre Year 1 / Mathematics selected | 27 dead | **8** | **19** |
+
+**Both would have read as deletable and both are load-bearing.** `print` renders nothing at all
+without a paper id; `taqseem` shows an empty board until a class and subject with a plan are
+chosen, and `Pre Year 1` / `Mathematics` is the only pair that has one.
+
+**A longer wait alone changes nothing** — `bank`, `library` and `blueprint` return identical
+counts at 1,200ms and 3,500ms, and a spot check confirms their main content is already
+rendered (459, 24 and 1 elements). What those three still report as dead belongs to *other*
+states — modals, bulk-import results, empty states — each of which needs its own warm-up.
+
+**And after warming, `print` and `taqseem` have ZERO unreachable rules left.** Every remaining
+zero is a class something in the page can build. **The drain's supply of dead rules is
+exhausted**: across all nine files, ~47 were genuinely dead and all of them are already gone.
+Everything still in `99-legacy/*.css` is either live, or live in a state no probe has entered.
+
+The warm-up prints its own element delta and says so when it added nothing, because a warm-up
+that silently failed produces exactly the same zeros as no warm-up at all.
+
 ## 2026-08-16 — the `js-only` bucket, resolved without a browser: 9 of 216 can never match
 
 **`legacy_css_lines` 1,962 → 1,949**, 0 deltas on all eight pages, ratchet OK, ruff clean.
