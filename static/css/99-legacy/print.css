@@ -1,7 +1,7 @@
+  /* dead rules dropped (UI-060): * */
   /* Margin single-source: @page ka margin 0, saara page-margin .sheet padding se
      (var --page-margin). Pehle @page 14mm + .sheet padding 14mm = 28mm ho raha tha. */
   @page { size: A4; margin: 0; }
-  * { box-sizing: border-box; }
 
   :root {
     --primary: #2E5AAC;

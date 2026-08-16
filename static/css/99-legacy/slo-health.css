@@ -1,3 +1,4 @@
+  /* dead rules dropped (UI-060): *, .card h2, .page-head h1, a, select, table, th, th, td */
   :root {
     --primary: #2E5AAC; --primary-hover: #244a90; --navy: #16294A;
     --tint: #EAF1FB; --ink: #16213A; --muted: #5B6678; --border: #E3E8F1;
@@ -7,14 +8,12 @@
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
     --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
-  * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     color: var(--ink); background: var(--bg);
     display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
-  a { text-decoration: none; color: inherit; }
 
   .app-sidebar {
     width: 248px; flex-shrink: 0; background: var(--navy); color: #fff;
@@ -29,7 +28,6 @@
 
   .slo-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
   .page-head { margin-bottom: 24px; }
-  .page-head h1 { margin: 0; font-size: 22px; font-weight: 700; }
   .page-head p { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
 
   .draft-note {
@@ -42,14 +40,9 @@
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
   }
-  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
   .card .hint { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); }
 
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  select {
-    padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
-    font-size: 13.5px; font-family: inherit; background: #fff; color: var(--ink);
-  }
   .btn-ghost {
     background: var(--tint); color: var(--primary); border: 1px solid var(--border);
     display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-btn);
@@ -67,10 +60,6 @@
   .cov-in { color: var(--ok-tx); font-size: 12px; }
   .cov-miss { color: var(--err-tx); font-size: 12px; font-weight: 600; }
   .cov-empty { font-size: 13px; color: var(--muted); }
-
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   td.code { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
 

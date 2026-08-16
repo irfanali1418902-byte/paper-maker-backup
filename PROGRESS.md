@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — the drain runs on all eight files: 38 dead rules out, and `legacy_css_lines` goes under 2,000
+
+**2,008 → 1,962**, 46 lines. **0 element × property deltas on all eight pages**, drift 0,
+ratchet OK, ruff clean. `css_drain_probe.mjs` had only ever been taken all the way through on
+`slo`; this runs it on the other eight and acts on the result.
+
+**The survey's "391 dead rules" is not 391. Measured end to end, it is about 67, and the
+deletable-with-confidence set is 38.** The probe reported **339 zero-delta candidates** across
+the eight pages. Bucketing each one against why a zero can be a lie:
+
+| bucket | n | why the zero means nothing |
+|---|---:|---|
+| `js-only` | 204 | the class exists only inside a `<script>` template string |
+| `state` | 78 | `:hover` / `:focus`, and `[open]` / `[dir="rtl"]` / `[data-open]` |
+| `at-rule` | 15 | `@page`, `@font-face`, `:root` |
+| **genuinely dead** | **42** | present in static markup, no state, no media |
+
+**`@page` was in the candidate list and deleting it would have broken every printed paper.**
+The drain probe runs in screen media, where `@page` does nothing, so it reads 0. `print.css`:1-2
+records that this page's margin has been broken before. Attribute state was the same trap:
+`[open]` is a `<details>` the probe never opens and `[dir="rtl"]` is the Urdu toggle switched on
+— both read 0 at rest, neither is dead.
+
+**Two of the filters were wrong on the first pass and were caught by measurement, not review.**
+Reading `class="…"` out of the raw HTML counted template strings as static markup, which marked
+`blueprint`'s `.topic-check-row` deletable — a rule measured live earlier the same day. Stripping
+`<script>` blocks first moved 199 candidates down to 55. The `absent` bucket then failed too:
+`.qrow` had 8 hits and `td.code` 4, so every `absent` row was dropped from the delete set rather
+than trusted.
+
+**What went, and it is mostly the new tree already doing the job:** `*`, `a`, `body`,
+`html, body` on most pages (reset.css and typography.css), `select` / `table` / `th` on
+`slo-health` (forms.css, tables.css), `.page-head h1` on three pages (typography's `h1` beats it),
+`.pagehead` ×3 on `blueprint` (card.css owns them since UI-040), and `.icon` on `landing` plus
+`.app-nav a svg` on `index` — **both of which the previous handoff had flagged as "probably
+already dead, not measured". They are, and now it is measured.**
+
 ## 2026-08-16 — `.btn-primary` unifies on the locked indigo; the app had two primary blues
 
 **`legacy_css_lines` 2,032 → 2,008**, `unsanctioned_hex` 385 → **382**. Nine rules out of

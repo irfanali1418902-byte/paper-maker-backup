@@ -1,3 +1,4 @@
+  /* dead rules dropped (UI-060): *, .modal h3, a, html, body */
   /* Local aliases → theme.css tokens (ek source of truth; koi hardcoded hex).
      Purane naam (--primary/--ink/…) barqarar taake page-specific rules na tootein. */
   :root {
@@ -8,13 +9,10 @@
     --ok-bg: var(--green-bg); --ok-tx: var(--green);
     --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
   body {
     font-family: var(--font-body); color: var(--fg); background: var(--app-bg);
     display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
-  a { text-decoration: none; color: inherit; }
 
   /* ---- Sidebar (mockup: navy bg, gold active rail) ---- */
   .app-sidebar {
@@ -102,7 +100,6 @@
     background: var(--panel); border-radius: var(--radius); padding: 22px; width: 92%; max-width: 420px;
     box-shadow: 0 14px 44px rgba(19,34,68,.28);
   }
-  .modal h3 { margin: 0 0 8px; font-size: 16px; font-family: var(--font-display); }
   .modal p { margin: 0 0 8px; font-size: 13.5px; color: var(--fg); line-height: 1.5; }
   .modal .warn { color: var(--warn-tx); font-weight: 600; }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }

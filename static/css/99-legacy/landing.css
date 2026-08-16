@@ -1,3 +1,4 @@
+  /* dead rules dropped (UI-060): *, .icon, a, body, html, body */
   /* Palette index.html se — same brand system (koi naya color nahi). */
   :root {
     --primary: #2E5AAC;
@@ -13,17 +14,6 @@
     --radius-btn: 12px;
     --shadow: 0 2px 12px rgba(22,33,58,.05);
   }
-
-  * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: var(--ink);
-    background: var(--bg);
-    -webkit-font-smoothing: antialiased;
-  }
-  a { text-decoration: none; color: inherit; }
-  .icon { width: 22px; height: 22px; flex-shrink: 0; }
 
   .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px 56px; }
 

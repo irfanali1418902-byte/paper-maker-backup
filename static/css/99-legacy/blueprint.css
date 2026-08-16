@@ -1,3 +1,4 @@
+  /* dead rules dropped (UI-060): *, .pagehead, .pagehead h1, .pagehead p, a, body, html, body */
   :root {
     /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
        hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
@@ -18,10 +19,6 @@
     --radius-btn: 10px;
     --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; }
-  body { font-family: var(--font-body); color: var(--fg); background: var(--app-bg); -webkit-font-smoothing: antialiased; }
-  a { text-decoration: none; color: inherit; }
 
   /* Chrome (.app grid · .brand · .top · .nav · .main) theme.css se aata hai.
      Yahan sirf blueprint-specific content width. */
@@ -217,10 +214,7 @@
      Baaki (bina has-ch) cards apna purana look rakhte hain jab tak unka step na aaye. */
   .card.has-ch { padding: 0; border-radius: var(--radius); overflow: hidden; }
 
-  /* ---- Page header (mockup .pagehead) ---- */
-  .pagehead { display: flex; align-items: flex-end; gap: 14px; margin: 6px 0 18px; }
-  .pagehead h1 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.2px; color: var(--fg); }
-  .pagehead p { margin: 3px 0 0; color: var(--muted); font-size: 13.5px; }
+  /* ---- Page header: 05-components/card.css owns .pagehead (UI-040) ---- */
   .pagehead .spacer { flex: 1; }
 
   /* ---- Section card (mockup .sec / .sh / .body) ---- */
