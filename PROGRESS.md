@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — the `js-only` bucket, resolved without a browser: 9 of 216 can never match
+
+**`legacy_css_lines` 1,962 → 1,949**, 0 deltas on all eight pages, ratchet OK, ruff clean.
+
+**The 204 `js-only` candidates were not 204 dead rules. Nine of them are.** A `js-only` zero
+means only that the class was absent from the DOM when the probe ran. The decisive test needs
+no browser: `99-legacy/<page>.css` is imported by **exactly one page**, so if a class token
+appears nowhere in that page's HTML — not in markup, not in a template string, not in a
+`classList` call — nothing can ever put it in the DOM.
+
+**207 of 216 are reachable.** Something in the page can build them, so they must be verified by
+injecting markup, not by deleting on a zero. **The drain's supply of dead rules is now
+essentially exhausted**: 845 rules surveyed, ~47 genuinely dead across all nine files.
+
+**A naive substring grep disagreed with the token match on three of the nine, and the token
+match was right every time.** `sh` had 68 "hits" in `blueprint.html` — all inside words like
+`should`; there is no class named `sh`. `code` had 4 in `slo-health.html` — all inside
+`slo-codes`, `slo_code` and `cov-code`. `spacer` had 1 — inside `o-shell__spacer`. This is the
+hyphen/substring trap already on the project's list, and it would have kept three deletable
+rules alive rather than killing a live one, which is the safe direction to be wrong in.
+
+**What went:** `.opt-radio-label` (`bank`), `.pagehead .spacer` / `.sec .sh` / `.sec .sh b` /
+`.qrow` / `.qrow .qtxt` (`blueprint`), `.bloom-bar` (`index`), `td.code` / `.tag.err`
+(`slo-health`).
+
+**And 12 lines of my own noise went with them.** Both drain passes wrote a per-file
+`/* dead rules dropped: … */` marker listing what had been removed — a changelog inside a
+stylesheet, which is the same mistake `8ca7ed8` had just corrected at a larger scale. The first
+pass's nine deletions netted **one** line because of it. Git history and this file already
+record what was dropped.
+
 ## 2026-08-16 — the drain runs on all eight files: 38 dead rules out, and `legacy_css_lines` goes under 2,000
 
 **2,008 → 1,962**, 46 lines. **0 element × property deltas on all eight pages**, drift 0,

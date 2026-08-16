@@ -1,4 +1,3 @@
-  /* dead rules dropped (UI-060): *, .icon, a, body, html, body */
   /* Palette index.html se — same brand system (koi naya color nahi). */
   :root {
     --primary: #2E5AAC;

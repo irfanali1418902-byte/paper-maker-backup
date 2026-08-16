@@ -1,4 +1,3 @@
-  /* dead rules dropped (UI-060): *, .modal h3, a, html, body */
   /* Local aliases → theme.css tokens (ek source of truth; koi hardcoded hex).
      Purane naam (--primary/--ink/…) barqarar taake page-specific rules na tootein. */
   :root {
