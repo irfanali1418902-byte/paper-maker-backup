@@ -90,3 +90,42 @@
 .filter-bar input {
   min-height: 38px;
 }
+
+/* A row of checkbox + label pairs. Container and label only — measured
+   identical on bank and blueprint, the two pages that have it.
+
+   THE CHECKBOX RULE IS NOT HERE AND THAT IS THE WHOLE FINDING. Both legacy
+   files also carry `.type-checks input[type="checkbox"]` at 16px with the
+   page's --primary. On blueprint that rule is DEAD: blueprint.css:109's
+   `.topic-check-row input[type="checkbox"]` has equal specificity, sits later
+   in the same file and wins, so those boxes are 15px at rgb(79,70,229) with
+   flex-shrink: 0. Moving the .type-checks rule into layer(components) would
+   beat .topic-check-row — but only inside .type-checks. blueprint's OTHER
+   .topic-check-row boxes, in the topics list (blueprint.html:607), would stay
+   15px, and the page would carry two checkbox styles side by side. Unifying
+   them is a real task and it is not this one.
+
+   ALSO NOT HERE: font-size, font-weight and color from `.type-checks label`.
+   All three lose to 03-elements/forms.css's bare `label` in layer(elements) —
+   measured 12px / 600 / rgb(71,85,105) on both pages, not the 13.5px / 500 /
+   var(--ink) the legacy rule declares. Copying them up a layer would have
+   resurrected them, the same way .filter-bar's did earlier today.
+
+   AND blueprint's .type-checks IS JS-RENDERED — blueprint.html:642, inside a
+   section template. It does not exist on a fresh load, so a snapshot probe
+   sees it only if a section has been added. Do not read a 0 from the gate as
+   coverage of this page. */
+.type-checks {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.type-checks label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  margin: 0;
+}

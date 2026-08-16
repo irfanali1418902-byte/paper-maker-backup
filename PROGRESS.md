@@ -1,5 +1,38 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — `.type-checks` joins `field.css`, and the decision it was scheduled on turned out not to exist
+
+**`legacy_css_lines` 2,042 → 2,036.** Four rules — the container and its label, from
+`99-legacy/bank.css` and `blueprint.css`. **0 element × property deltas on all eight pages**,
+drift 0, `unsanctioned_hex` flat at 385, ruff clean.
+
+**The task was opened to settle a decision, and enumeration dissolved it.** The board entry said
+`.type-checks`' checkbox is `rgb(46,90,172)` at 16px on `bank` and `rgb(79,70,229)` at 15px on
+`blueprint`, so componentising it required choosing a blue. Irfan chose bank's. **That choice
+does not apply**, because `blueprint`'s `.type-checks input[type="checkbox"]` is **dead**:
+`blueprint.css`:109's `.topic-check-row input[type="checkbox"]` has equal specificity, sits
+later in the same file, and wins. The colour never came from the rule being discussed.
+
+**And componentising it anyway would have made the page worse, not better.**
+`.topic-check-row` renders at two sites on `blueprint` — inside `.type-checks`
+(`blueprint.html`:581) and in the topics list (`:607`). A `.type-checks` rule in
+`layer(components)` beats `.topic-check-row` **only inside `.type-checks`**, so the page would
+have ended up with 16px blue boxes next to 15px indigo ones. The checkbox rule was left in both
+legacy files. Unifying the two checkbox styles is a real task; it is not this one.
+
+**Three more declarations were dropped for the reason `.filter-bar` taught yesterday.**
+`.type-checks label`'s `font-size: 13.5px`, `font-weight: 500` and `color: var(--ink)` all lose
+to `03-elements/forms.css`'s bare `label` in `layer(elements)` — measured 12px / 600 /
+`rgb(71,85,105)` on both pages. Copying them into `layer(components)` would have resurrected
+them. The component carries only the five that are actually alive.
+
+**`blueprint`'s `.type-checks` is JS-rendered and the gate cannot see it.** It is built inside
+the section template at `blueprint.html`:642, so it does not exist on a fresh load — one probe
+run found it and the next did not, which is what exposed this. It was verified instead by
+**injecting the exact markup `renderSection()` produces** and reading the computed values
+before and after: byte-identical, including both checkbox sites. **A 0 from `css_type_probe` is
+not coverage of this element.**
+
 ## 2026-08-15 — `.field-row` + `.filter-bar` become a component, at zero deltas
 
 **`legacy_css_lines` 2,054 → 2,042.** Nineteen rules out of `99-legacy`'s `bank`, `blueprint`,

@@ -117,11 +117,8 @@
   /* ---- Bank-paper section ---- */
   .bp-card { border: 2px solid #c7d8f7; }   /* subtle blue border — distinguishes from add form */
   .bp-card .card-title { color: var(--primary); }
-  .type-checks { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
-  .type-checks label {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 13.5px; font-weight: 500; color: var(--ink); cursor: pointer; margin: 0;
-  }
+  /* .type-checks + its label: 05-components/field.css (UI-042). The checkbox
+     rule below stays — see that file's header for why. */
   .type-checks input[type="checkbox"] {
     width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--primary); cursor: pointer;
   }
