@@ -1,45 +1,25 @@
 /* =========================================================================
-   05-components/modal.css — the modal's chrome, and only the parts that are
-   shared AND alive.
+   05-components/modal.css — modal chrome, shared by bank and print only
 
-   THERE ARE THREE MODAL SYSTEMS IN THIS APP, not one. Measured 2026-08-16
-   from the markup, before anything was written:
+   ⚠ THIS APP HAS THREE MODAL SYSTEMS. `.modal-backdrop`/`-header`/`-footer`
+   (bank, print), `.modal-overlay`/`-head`/`-title` (index, library), and
+   `.modal h3`/`.modal-actions` (taqseem). `.modal` names four different boxes
+   and `.modal-close` four different buttons. Only system 1's shared chrome is
+   here, and nothing below assumes the three will ever be unified.
 
-     1  .modal-backdrop / .modal / .modal-header / .modal-footer   bank, print
-     2  .modal-overlay / .modal|.modal-box / .modal-head / .modal-title
-                                                            index, library
-     3  .modal / .modal h3 / .modal-actions                        taqseem
+   ⚠ WHAT WAS LEFT BEHIND, so it is not mistaken for an oversight:
+   · `.btn-cancel` / `.btn-save` and their states LOOK identical in both files
+     and are not — bank's --radius-btn is 10px, print's is 8px, and their --bg
+     greys differ. They are also buttons, and .btn-primary / .btn-ghost /
+     .btn-danger are duplicated across three to five files. One button task
+     next to btn.css decides the radius once instead of three times.
+   · `.modal-header h3` — two of its three declarations are already dead
+     (reset.css zeroes the margin; typography.css beats the 16px). Only a
+     colour survives, and that navy has no Tier 2 role yet.
+   · `.modal-backdrop` itself differs — bank pads 16px, print pads 0.
 
-   `.modal` itself means four different boxes and `.modal-close` four different
-   buttons. Only system 1's shared chrome is here. Unifying the three is a
-   design decision, not a refactor, and nothing in this file assumes it.
-
-   WHAT WAS LEFT IN THE LEGACY FILES, AND WHY — each measured, not assumed:
-
-   `.btn-cancel`, `.btn-save` and their states look identical in both files and
-   are not: bank's --radius-btn is 10px and print's is 8px, and their --bg
-   greys differ too (rgb(238,241,246) against rgb(245,247,251)), so the shared
-   border-radius and the cancel hover resolve differently. Written as rgb()
-   because a raw hex in a COMMENT still counts in the unsanctioned_hex ratchet,
-   and that check has now failed twelve times in this epic, every time through
-   a comment. They are also BUTTONS, and .btn-primary /
-   .btn-ghost / .btn-danger are duplicated across three to five files as well.
-   They belong in one button task next to 05-components/btn.css, where the
-   radius gets decided once instead of three times.
-
-   `.modal-header h3` is a rule whose only live declaration is a colour.
-   `margin: 0` is already done by 02-generic/reset.css in layer(generic) and
-   `font-size: 16px` loses to 03-elements/typography.css's h3 in
-   layer(elements) — the heading measures 14px on both pages, not 16. Copying
-   the rule up to layer(components) would have resurrected the 16px. What is
-   left is `color: var(--navy)`, and the navy heading has no Tier 2 role yet;
-   inventing one with a single consumer is what tokens.css:145 warns against.
-
-   `.modal-backdrop` itself differs — bank pads 16px, print pads 0.
-
-   MEASURED BY OPENING THE MODAL. Everything here is display:none at rest, so
-   no snapshot probe reaches it and css_type_probe returns 0 either way. The
-   values below were read after adding .open to the backdrop, on both pages.
+   ⚠ ALL OF THIS IS display:none AT REST, so css_type_probe cannot see it. Add
+   .open to the backdrop to measure. Numbers: PROGRESS.md 2026-08-16.
    ========================================================================= */
 
 .modal-backdrop.open {
