@@ -229,3 +229,50 @@
    If a button-specific ring is ever wanted, it needs a Tier 2 focus token
    and a decision about the whole tree's ring colour — not a component
    override. */
+
+/* -------------------------------------------------------------------------
+   THE LEGACY NAME `.btn-primary` — LIVE, unlike everything above it.
+
+   One hyphen, and it is the class three pages actually carry. bank, blueprint
+   and library declared this rule byte-identically; only the colour differed,
+   because blueprint's entry file maps --primary onto --color-action while bank
+   and library kept the legacy literal. This unifies them ON --color-action —
+   the palette tokens.css:10 records as locked — so that `.btn-primary` and
+   `.btn--primary` above cannot drift apart, and so a future re-class to
+   `class="btn btn--primary"` is a no-op rather than a recolour.
+
+   Irfan's call, 2026-08-16. bank and library move; blueprint does not.
+
+   The box-shadow stays the literal all three files carried. It is tinted to
+   the OLD blue and is now slightly off the fill on every page — true on
+   blueprint since its migration. Left rather than invented; it is a colour
+   decision of its own.
+   ------------------------------------------------------------------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-action);
+  color: var(--color-on-accent);
+  border: none;
+  min-height: 44px;
+  padding: 0 20px;
+  /* 10px literal, NOT --radius-control: that token is 11px and all three
+     pages measure 10px here. The token would move every one of them. */
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: var(--font-weight-heading);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46, 90, 172, 0.25);
+}
+
+.btn-primary:hover {
+  background: var(--color-action-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}

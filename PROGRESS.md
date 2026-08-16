@@ -1,5 +1,39 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-16 — `.btn-primary` unifies on the locked indigo; the app had two primary blues
+
+**`legacy_css_lines` 2,032 → 2,008**, `unsanctioned_hex` 385 → **382**. Nine rules out of
+`bank`, `blueprint` and `library`, into `05-components/btn.css` beside the `.btn--*` set.
+
+**The three files declared this rule byte-identically and rendered two different blues.**
+`bank` and `library` painted `rgb(46,90,172)`; `blueprint` painted `rgb(79,70,229)`, because
+`pages/blueprint.css`:82 maps `--brand` onto `--color-action` while the other two kept the
+legacy literal. `tokens.css`:10 records the palette as **locked 2026-07-28 — Modern, indigo
+action**, so blueprint was the one that was right and the other two had simply never been
+remapped.
+
+**Irfan asked for the better option rather than the safer one, and the deciding argument was
+not the palette lock.** `btn.css` already ships `.btn--primary` reading `--color-action`.
+Building `.btn-primary` at the old blue would have put **two primary blues inside one component
+layer** — the exact defect this drain keeps uncovering — and would have forced re-pointing
+`--color-action` itself later, which reaches blueprint's `--brand` and the focus ring. On
+indigo, a future re-class to `class="btn btn--primary"` is a no-op.
+
+**9 background changes, all intended** — 3 on `bank`, 6 on `library`, 0 on `blueprint`.
+
+**Two unintended deltas, kept deliberately.** `cursor: pointer → not-allowed` on the two
+disabled upload buttons and their SVG children: the legacy `.btn-primary:disabled` declared
+`not-allowed` and it was **dead in `layer(legacy)`**, losing to a `button { cursor: pointer }`
+higher up. In `layer(components)` it applies. Unlike `.filter-bar`'s resurrection this one is
+correct behaviour and matches the `.btn--primary:disabled` already in `btn.css`, so it stays.
+
+**`--radius-control` was nearly a silent regression.** The token is 11px; all three pages
+measure 10px. The component keeps the literal.
+
+**`.btn-ghost` was NOT taken.** Five pages, four different looks — `bank`, `blueprint`,
+`library`, `slo` and `slo-health` disagree on background, border, radius, padding, font-size
+and height. That is four decisions, not a refactor.
+
 ## 2026-08-16 — modal chrome: six rules out of eighteen, and the other twelve are named
 
 **`legacy_css_lines` 2,036 → 2,032.** Three selectors × two files —
