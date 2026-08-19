@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-19 — the sidebar shell becomes a component on four pages, at zero deltas
+
+**`legacy_css_lines` 1,916 → 1,880**, `unsanctioned_hex` 375 → **364**. Twenty rules — five
+selectors × `bank`, `library`, `slo`, `slo-health` — into `05-components/nav.css` as
+`.sidenav__panel`, `.sidenav__brand`, `.sidenav__brand-name`, `.sidenav__brand-sub` and
+`.sidenav__foot`. **0 element × property deltas on all eight pages**, drift 0, ruff clean.
+
+Zero deltas despite twenty rules moving *and* four HTML files changing, because the values were
+measured identical on all four pages before anything was written — `.app-sidebar`, `.brand`,
+`.brand .name`, `.brand small` and `.sidebar-foot`, every declaration.
+
+**The `.brand` ban was about the NAME, not the element, and that distinction is what made this
+possible.** `UI-047b` recorded that `.brand` may not have a component because it is live on all
+nine pages — true of a rule *named* `.brand` in `layer(components)`, which would repaint all
+nine the moment they link `main.css`. A differently-named rule that markup opts into reaches
+only the pages that ask, which is exactly what `.sidenav` did on 2026-08-14. The ban stands as
+written; it just never covered this route.
+
+**Two declarations were left behind because they were already dead.** `.brand small` also
+declared `font-size: 10.5px` and `color: #9DB0D0`; the subtitle measures **11.5px in slate** on
+all four pages. Carrying them up a layer would have resurrected them — the `.filter-bar` mistake
+of 2026-08-15, now caught before it shipped rather than after.
+
+**One token was promoted, on the same basis as the four before it.** `--navy-400` /
+`--color-sidebar-fg-muted` is the sidebar footer's own colour; `theme.css`:120 already records
+that the sidebar foregrounds are "the legacy sidebar's own values, promoted rather than
+invented". This is the fifth. Ratchet stays flat: `token_hex` +1, `total_hardcoded_hex` +1.
+
+**`.app-nav`'s `padding: 0 10px` was NOT taken.** Putting it on `.sidenav` reaches `blueprint`
+too, which runs the `.o-shell` grid — a different question, deliberately not answered here.
+
 ## 2026-08-19 — the drain's scope is decided, and `.btn-ghost` stops being two buttons
 
 **Two things, and the first governs everything after it.**

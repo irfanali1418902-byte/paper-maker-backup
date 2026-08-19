@@ -66,6 +66,7 @@
      are white at low alpha, so they sit correctly on any navy the page
      happens to use — and there are currently two (see theme.css). */
   --navy-900: #16294A;               /* the sidebar surface itself */
+  --navy-400: #8092b0;               /* sidebar footer text — the quietest step */
   --navy-200: #C6D2E8;               /* nav item text on a dark sidebar */
   --blue-400: #5B8DEF;               /* the active item's leading rail */
   --overlay-white-07: rgba(255, 255, 255, 0.07);   /* nav item hover */

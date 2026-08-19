@@ -181,3 +181,63 @@
   color: var(--color-sidebar-fg-on);
   border-left-color: var(--color-sidebar-rail);
 }
+
+/* -------------------------------------------------------------------------
+   THE SIDEBAR PANEL AND ITS BRAND — the navy box `.sidenav` lives inside.
+
+   Adopted by bank, library, slo and slo-health, whose six legacy shell rules
+   were measured identical on all four before any of this was written. Opt-in
+   by class, the same way `.sidenav` was: nothing here is named `.app-sidebar`
+   or `.brand`, so no page gets it without asking. That distinction is what
+   UI-047b's ban was actually about — a rule NAMED `.brand` in layer(components)
+   repaints all nine pages the moment they link main.css.
+
+   blueprint is not in this group: it runs 04-objects/shell.css's `.o-shell`
+   grid, which owns its sidebar box already.
+
+   Numbers and the before/after pairs: PROGRESS.md 2026-08-19.
+   ------------------------------------------------------------------------- */
+.sidenav__panel {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--color-sidebar-bg);
+  color: var(--color-sidebar-fg-on);
+  padding: 18px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  /* Without this the nav spills out of the painted box instead of scrolling.
+     Irfan found that in the browser on 2026-08-13; it was fixed page-scoped on
+     six pages and comes home here for these four. */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav__brand {
+  padding: 2px 22px 20px;
+}
+
+.sidenav__brand-name {
+  font-weight: var(--font-weight-heading);
+  font-size: 15.5px;
+  line-height: 1.15;
+}
+
+/* TWO DECLARATIONS OF THE LEGACY RULE ARE DELIBERATELY ABSENT. It also set
+   `font-size: 10.5px` and `color: #9DB0D0`, and both are already dead: the
+   subtitle measures 11.5px in slate on all four pages, not 10.5px in pale
+   blue. Carrying them into layer(components) would have brought them back —
+   the mistake .filter-bar made on 2026-08-15. */
+.sidenav__brand-sub {
+  display: block;
+  margin-top: 3px;
+}
+
+.sidenav__foot {
+  margin-top: auto;
+  padding: 14px 22px 4px;
+  font-size: 12px;
+  color: var(--color-sidebar-fg-muted);
+  line-height: 1.6;
+}

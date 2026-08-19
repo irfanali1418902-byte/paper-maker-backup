@@ -125,6 +125,10 @@
   --color-sidebar-hover:  var(--overlay-white-07);
   --color-sidebar-active: var(--overlay-white-09);
   --color-sidebar-rail:   var(--blue-400);          /* current item's edge */
+  /* The fifth foreground, promoted 2026-08-19 on the same basis as the four
+     above: it is the legacy sidebar's own footer colour, and it now has a
+     consumer in nav.css's .sidenav__foot. */
+  --color-sidebar-fg-muted: var(--navy-400);
 
   /* ── typography roles ─────────────────────────────────────────────────────
      The first three names COLLIDE with static/theme.css on purpose — see the
