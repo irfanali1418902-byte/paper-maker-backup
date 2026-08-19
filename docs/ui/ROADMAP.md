@@ -48,6 +48,34 @@ matters.
 about two, because `index` — carried here as the riskiest item in the epic — turned out to be
 the smallest migration in it.
 
+### 🛑 THE DRAIN DOES NOT GO TO ZERO — Irfan's decision, 2026-08-19
+
+**This overrides `UI-060..063`'s stated goal ("drain `99-legacy/<page>.css` to zero") and it is
+recorded here because a session that reads the old wording will do three to five sessions of
+work that was deliberately cut.** Same shape as the navy sidebar decision of 2026-08-13.
+
+Measured 2026-08-19, at `legacy_css_lines` **1,949** — of its 1,594 rule-block lines:
+
+| | lines | | verdict |
+|---|---:|---|---|
+| **page-only** — appears in one file, no component is possible | **999** | 63% | **SKIPPED** |
+| **shared but drifted** — `.btn-ghost`, shell, `.brand`, modal, card | **495** | 31% | **do it** |
+| **shared and identical** — cheap dedup | **100** | 6% | **do it** |
+
+**Why the 999 are skipped, and it is not fatigue.** Draining them means moving each rule from
+`99-legacy/<page>.css` into `pages/<page>.css`. **Both are already one file per page.** Merging
+two per-page files into one per-page file removes no duplication, no CSS and no lookup step —
+`legacy_css_lines` would fall to ~0 while the stylesheet count and the line count stayed where
+they are. The metric would move and nothing else would.
+
+**Where the value actually is: the 495.** Those are the rules where the app is visibly
+inconsistent with itself — `.btn-ghost` renders **four different ways across five pages**, the
+shell has drifted, `.brand` has drifted. Fixing them is user-visible and is the thing this epic
+was started for.
+
+**So the target is `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**
+Estimated 5–8 sessions. Anything below that number is the 999, and the 999 are not the work.
+
 ### Marhala D — Sprint 6, the actual cleanup · **6–12 sessions**
 
 Taken **before** B and C, deliberately — see "What is being skipped" below.
