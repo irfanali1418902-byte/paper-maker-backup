@@ -28,14 +28,6 @@
   .brand small { font-size: 10.5px; color: var(--sidebar-fg); display: block; margin-top: 3px;
     letter-spacing: .5px; text-transform: uppercase; opacity: .8; }
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
-  .app-nav a {
-    display: flex; align-items: center; gap: 11px; color: var(--sidebar-fg);
-    font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius-sm);
-    box-shadow: inset 3px 0 0 transparent;
-  }
-  .app-nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
-  .app-nav a.active { background: rgba(255,255,255,.10); color: #fff; font-weight: 600;
-    box-shadow: inset 3px 0 0 var(--sidebar-active); }
   .sidebar-foot { margin-top: auto; padding: 14px 20px 4px; font-size: 12px;
     color: var(--sidebar-fg); opacity: .75; line-height: 1.6; }
 

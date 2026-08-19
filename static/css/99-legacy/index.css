@@ -45,13 +45,6 @@
     font-size: 10.5px; color: #6E84AD; letter-spacing: .1em;
     padding: 6px 22px; text-transform: uppercase;
   }
-  .app-nav a {
-    display: flex; align-items: center; gap: 13px; padding: 12px 22px;
-    color: #C6D2E8; font-size: 14.5px; font-weight: 500;
-    border-left: 3px solid transparent; cursor: pointer;
-  }
-  .app-nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
-  .app-nav a[data-active="1"] { color: #fff; background: rgba(255,255,255,.08); border-left-color: #5B8DEF; }
   .sidebar-foot { margin-top: auto; padding: 14px 22px 4px; }
   .sidebar-foot .box {
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
@@ -245,8 +238,8 @@
   body.lang-ur .app-nav a, body.lang-ur .nav-i { line-height: 1.9; }
 
   /* RTL structural fixes for the bits dir=rtl doesn't get right on its own. */
-  [dir="rtl"] .app-nav a { border-left: none; border-right: 3px solid transparent; }
-  [dir="rtl"] .app-nav a[data-active="1"] { border-right-color: #5B8DEF; }
+  /* The two RTL nav rules moved to pages/index.css: .sidenav__link sets the
+     rail in layer(components) and would outrank them here. */
   [dir="rtl"] table.an th, [dir="rtl"] table.an td,
   [dir="rtl"] .summary-box th, [dir="rtl"] .summary-box td { text-align: right; }
   [dir="rtl"] table.an td.num, [dir="rtl"] table.an th.num { text-align: left; }

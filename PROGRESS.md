@@ -1,5 +1,33 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-19 — `taqseem` and `index` join `.sidenav`, and the white-links bug is finally gone
+
+**`legacy_css_lines` 1,880 → 1,865**, `unsanctioned_hex` 364 → **357**. Six rules out; 17 nav
+links re-classed. **567 deltas on `taqseem` (159) and `index` (408), 0 on the other six.**
+
+**The bug that was raised on 2026-08-14 and stayed open is closed.** `03-elements/typography.css`'s
+`a { color: inherit }` sits in `layer(elements)` and beat the legacy nav colour, so every
+migrated page's nav links turned white and inherited from the sidebar. Four pages were fixed by
+adopting `.sidenav`; `taqseem` and `index` kept the defect for five days. Measured before:
+white on both. After: `rgb(198,210,232)` on all three, identical to `slo`.
+
+`index`'s nav also changed shape, which Irfan approved knowing it: its links were full-bleed
+rows (`padding: 12px 22px`, no radius) and are now the group's inset pills (`10px 12px`,
+radius 8px, 3px rail).
+
+### The part no gate could have caught
+
+**Adopting `.sidenav__link` broke the Urdu rail on `index`, and nothing in the suite would have
+reported it.** The component sets `border-left: 3px` in `layer(components)`; the two
+`[dir="rtl"]` rules that flip the rail to the trailing edge were in `layer(legacy)` and lost.
+**Measured: both borders came out at 3px** — the rail on the wrong side and on both sides at
+once. The rules moved to `pages/index.css`, and both directions were then verified: LTR
+left 3px / right 0, RTL left 0 / right 3px with the rail at `rgb(91,141,239)`.
+
+**`css_selector_probe.mjs` gained `--attr=<selector>:<name>=<value>` to see it at all.** No probe
+in this repo has ever set `dir="rtl"`, so the entire RTL block — nav rail, table alignment, the
+legend dot — has been unmeasured for the whole epic. It is measurable now.
+
 ## 2026-08-19 — the sidebar shell becomes a component on four pages, at zero deltas
 
 **`legacy_css_lines` 1,916 → 1,880**, `unsanctioned_hex` 375 → **364**. Twenty rules — five

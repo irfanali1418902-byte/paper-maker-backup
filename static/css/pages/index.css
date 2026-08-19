@@ -115,6 +115,22 @@
     overflow-y: auto;
   }
 
+  /* THE URDU RAIL. index's nav adopted .sidenav__link on 2026-08-19, and that
+     rule sets `border-left: 3px` in layer(components). The two RTL overrides
+     that flip the rail to the trailing edge were in layer(legacy) and lost —
+     measured: both borders came out at 3px, so the rail appeared on the wrong
+     side AND on both sides at once. Moved here, where they outrank the
+     component. NOTHING IN THE SNAPSHOT GATE SEES THIS: no probe sets dir=rtl.
+     Verified with css_selector_probe.mjs --attr='html:dir=rtl'. */
+  [dir="rtl"] .sidenav__link {
+    border-left: none;
+    border-right: 3px solid transparent;
+  }
+
+  [dir="rtl"] .sidenav__link[data-active="1"] {
+    border-right-color: var(--color-sidebar-rail);
+  }
+
   /* index is the one page of four that stacks .field-row at 14px rather than
      10px below 760px. 05-components/field.css took the majority; this keeps
      index exactly where it was instead of quietly moving it. */

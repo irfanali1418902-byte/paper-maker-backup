@@ -78,6 +78,17 @@ const SEL = process.argv[2];
 const PROPS = process.argv[3].split(',');
 const rest = process.argv.slice(4);
 const addArg = rest.find((a) => a.startsWith('--add='));
+/* --attr=<selector>:<name>=<value> — the same idea as --add, for state that is an
+   ATTRIBUTE rather than a class. index's Urdu toggle sets dir="rtl", and a whole
+   block of RTL rules hangs off it that no snapshot probe has ever entered. */
+const attrArg = rest.find((a) => a.startsWith('--attr='));
+let ATTR = null;
+if (attrArg) {
+  const spec = attrArg.slice('--attr='.length);
+  const i = spec.indexOf(':');
+  const [name, ...v] = spec.slice(i + 1).split('=');
+  ATTR = { sel: spec.slice(0, i), name, value: v.join('=') };
+}
 const PAGES = rest.filter((a) => !a.startsWith('--'));
 /* "--add=<selector>:<class>" — last colon splits, so selectors may contain none. */
 let ADD = null;
@@ -89,6 +100,12 @@ if (addArg) {
 
 const EXPR = String.raw`(() => {
   const ADD = ${JSON.stringify(ADD)};
+  const ATTR = ${JSON.stringify(ATTR)};
+  let at = null, hadAttr = null;
+  if (ATTR) {
+    at = document.querySelector(ATTR.sel);
+    if (at) { hadAttr = at.getAttribute(ATTR.name); at.setAttribute(ATTR.name, ATTR.value); }
+  }
   let target = null, added = false;
   if (ADD) {
     target = document.querySelector(ADD.sel);
@@ -103,6 +120,7 @@ const EXPR = String.raw`(() => {
     for (const p of ${JSON.stringify(PROPS)}) o[p] = cs.getPropertyValue(p);
   }
   if (added) target.classList.remove(ADD.cls);
+  if (at) { if (hadAttr === null) at.removeAttribute(ATTR.name); else at.setAttribute(ATTR.name, hadAttr); }
   return o;
 })()`;
 
@@ -112,7 +130,7 @@ async function main() {
   for (let i = 0; i < 200; i++) { if (existsSync(portFile)) { const f = readFileSync(portFile, 'utf8').split('\n')[0].trim(); if (f) { port = Number(f); break; } } await sleep(100); }
   const v = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
   ws = await connect(v.webSocketDebuggerUrl);
-  console.log(`selector: ${SEL}${ADD ? `   (+ .${ADD.cls} on ${ADD.sel})` : ''}`);
+  console.log(`selector: ${SEL}${ADD ? `   (+ .${ADD.cls} on ${ADD.sel})` : ''}${ATTR ? `   (+ [${ATTR.name}="${ATTR.value}"] on ${ATTR.sel})` : ''}`);
   for (const page of PAGES) {
     const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
