@@ -54,13 +54,6 @@
   .btn-secondary:hover { background: var(--tint); }
   .btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
 
-  .btn-ghost {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: var(--panel); border: 1px solid var(--line); color: var(--ink);
-    min-height: 36px; padding: 0 14px; border-radius: 9px;
-    font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
-  }
-  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 
   .btn-danger-sm {
     background: var(--err-bg); border: 1px solid var(--red); color: var(--err-tx);

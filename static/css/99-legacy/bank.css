@@ -122,13 +122,6 @@
   /* ---- Buttons ---- */
   /* .btn-primary + states: 05-components/btn.css (UI-041) */
 
-  .btn-ghost {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
-    min-height: 36px; padding: 0 14px; border-radius: 9px;
-    font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
-  }
-  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 
   /* ---- Topic image strip ---- */
   .topic-img-strip { margin: 10px 0 4px; }

@@ -1,5 +1,45 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-19 — the drain's scope is decided, and `.btn-ghost` stops being two buttons
+
+**Two things, and the first governs everything after it.**
+
+### The drain does not go to zero — Irfan's decision
+
+Recorded in `ROADMAP.md`, not only here, because `UI-060..063` says "drain to zero" and a
+session reading that would do 3–5 sessions of work that was deliberately cut. Measured at
+`legacy_css_lines` 1,949, of 1,594 rule-block lines:
+
+| | lines | | |
+|---|---:|---|---|
+| page-only, no component possible | **999** | 63% | **skipped** |
+| shared but drifted | **495** | 31% | do it |
+| shared and identical | **100** | 6% | do it |
+
+Draining the 999 means moving rules from `99-legacy/<page>.css` to `pages/<page>.css`, and
+**both are already one file per page** — it removes no duplication, no CSS and no lookup step.
+`legacy_css_lines` would reach ~0 while the line count stayed put. **Target is ~1,200–1,400 and
+a coherent app, not 0.**
+
+### `.btn-ghost` — one class, two buttons, five pages
+
+**`legacy_css_lines` 1,949 → 1,916**, `unsanctioned_hex` 381 → **375**. Ten rules out; the
+legacy name is joined to every `.btn--ghost` selector in `btn.css` rather than given its own
+rule, so the two cannot drift again.
+
+It rendered **two ways**: an outline button on `bank`, `blueprint` and `library` (white fill,
+grey border, dark text) and a **tinted** one on `slo` and `slo-health` (light-blue fill, blue
+text). Irfan chose the outline — the variant the component already defines, the same argument
+that settled `.btn-primary`.
+
+**369 element × property deltas on five pages, 0 on the other three.** All of them on
+`.btn-ghost`, its SVG children, or the `.filter-bar` siblings that re-laid out when the button
+went 40px → 36px. `slo` also gained `cursor: pointer`, which its rule never had.
+
+**And `btn.css`'s header had been false for three days.** It still opened "PREPARED, NOT LIVE.
+Nothing on any page carries these classes yet" — untrue since `.btn-primary` landed on
+2026-08-16. Corrected where it was written.
+
 ## 2026-08-16 — the drain probe learns to warm the page, and 38 rules are saved from deletion
 
 **No CSS changed and `legacy_css_lines` did not move.** This step removed nothing, and the

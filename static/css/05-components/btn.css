@@ -1,15 +1,20 @@
 /* =========================================================================
    05-components/btn.css — the button component (UI-041)
-   PREPARED, NOT LIVE. Nothing on any page carries these classes yet.
-   -------------------------------------------------------------------------
-   THIS FILE IS IMPORTED BY main.css AND REACHES ALL THREE LIVE PAGES
-   (slo, slo-health, library) — AND CHANGES NOTHING ON THEM. That is not a
-   hope, it is the shape of the selectors: every rule below is a `.btn--*`
-   class, and `.btn--` appears in ZERO markup in this repo. A rule that
-   matches no element cannot move a computed style. Measured before and
-   after with scripts/css_type_probe.mjs over 44 properties: 0 element x
-   property deltas on all three pages. Same shape as 05-components/urdu.css,
-   which has been imported since UI-044a and still paints nothing.
+
+   ⚠ THIS FILE IS NOW LIVE, AND THE `.btn--*` HALF OF IT STILL IS NOT.
+   Two legacy class names have been joined to it and they ARE in markup:
+   `.btn-primary` on bank, blueprint and library (2026-08-16, unified on
+   --color-action) and `.btn-ghost` on those three plus slo and slo-health
+   (2026-08-19, unified on the outline variant). Everything spelled with the
+   DOUBLE hyphen — `.btn--primary`, `.btn--ghost`, `.btn--accent` — is still
+   prepared and inert, because `.btn--` appears in zero markup in this repo.
+   The one-hyphen names are the live API; the two-hyphen names are what the
+   markup will be re-classed to. They share every selector list below on
+   purpose, so the two cannot drift apart.
+
+   (This header used to open "PREPARED, NOT LIVE. Nothing on any page carries
+   these classes yet." That was true until 2026-08-16 and was false for three
+   days. Corrected where it was written, not only in the log.)
 
    THERE IS DELIBERATELY NO BARE `.btn { }` RULE, AND REMOVING THAT
    CONSTRAINT BREAKS A LIVE PAGE. slo.html carries class="btn" on two real
@@ -100,8 +105,15 @@
    The explicit `color` on each variant below is also what settles D27: an
    <a class="btn--ghost"> and a <button class="btn--ghost"> paint the same,
    which the legacy classes do not manage today. */
+/* `.btn-ghost` — the LEGACY name, one hyphen — is joined to every `.btn--ghost`
+   selector below rather than given its own rule, so the two cannot drift apart
+   again. It is the class five pages actually carry, and it rendered TWO ways:
+   an outline button on bank, blueprint and library, and a tinted one on slo and
+   slo-health. Irfan's call 2026-08-19: one ghost, the outline the component
+   already defines. See PROGRESS.md for what moved. */
 .btn--primary,
 .btn--ghost,
+.btn-ghost,
 .btn--accent {
   display: inline-flex;
   align-items: center;
@@ -171,7 +183,8 @@
   background: var(--color-action-hover);
 }
 
-.btn--ghost {
+.btn--ghost,
+.btn-ghost {
   min-height: 36px;
   padding: 0 14px;
   border: 1px solid var(--color-border);
@@ -181,7 +194,8 @@
   font-weight: var(--font-weight-strong);
 }
 
-.btn--ghost:hover {
+.btn--ghost:hover,
+.btn-ghost:hover {
   border-color: var(--color-action);
   color: var(--color-action);
 }
@@ -201,6 +215,7 @@
    measurement — nothing in this repo declares a disabled ghost. */
 .btn--primary:disabled,
 .btn--ghost:disabled,
+.btn-ghost:disabled,
 .btn--accent:disabled {
   opacity: 0.5;
   cursor: not-allowed;
