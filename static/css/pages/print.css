@@ -185,4 +185,36 @@
   @media print {
     body { line-height: normal; }
   }
+
+  /* THE WHITE-LINKS BUG, STILL OPEN ON THIS PAGE. Closed on the other eight on
+     2026-08-19 by adopting `.sidenav__link`; print was recorded as closed with
+     them and was not. Measured 2026-08-20: `.app-nav a` renders white at rest,
+     where 99-legacy/print.css:50 asks for a pale blue. 03-elements/typography
+     .css:50's `a { color: inherit }` is in layer(elements) and outranks
+     layer(legacy), so the link takes the navy panel's own white.
+
+     Visible cost was not the contrast — white on navy reads fine — it was that
+     HOVER SAID NOTHING. The other seven pages go pale blue -> white on hover;
+     print went white -> white.
+
+     `--color-sidebar-fg` rather than print's own literal, deliberately: the
+     legacy value is a hair off the shade the other seven render and it has not
+     painted since the migration, so there is no current appearance to preserve
+     and no reason to reintroduce a ninth near-duplicate of one colour.
+
+     THE :hover RULE IS NOT OPTIONAL. Without it the base rule above — now in
+     layer(components) — would outrank 99-legacy/print.css:53 in layer(legacy)
+     and hold the link pale blue while hovered, replacing the dead signal with a
+     different dead signal. This is rule 2 of the epic's three, arriving through
+     the fix rather than the migration.
+
+     The hover BACKGROUND is left alone: legacy paints it at .08 and the other
+     seven at .07, which is below noticing and not what this rule is about. */
+  .app-nav a {
+    color: var(--color-sidebar-fg);
+  }
+
+  .app-nav a:hover {
+    color: var(--color-sidebar-fg-on);
+  }
 }

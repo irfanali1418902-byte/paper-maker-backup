@@ -1,5 +1,62 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — hover measured for the first time, and it found the white-links bug still open on `print`
+
+**`unsanctioned_hex` 356 → 354**, `legacy_css_lines` 1,869 → 1,874 (a five-line comment).
+**25 element × property deltas, all on `print`; 0 on the other eight.** Ratchet clean.
+
+### Hover had never been measured, on any page, for the whole epic
+
+`b70cf99` deleted `.app-nav a:hover` and nothing in the suite would have reported it. Measured
+now with `CSS.forcePseudoState` over CDP rather than a mouse move — flake-free and independent
+of where the element sits.
+
+**Seven pages are identical and correct.** `index`, `taqseem`, `bank`, `library`, `slo`,
+`slo-health`, `blueprint`: at rest `rgb(198,210,232)` on transparent, hovered
+`rgb(255,255,255)` on `rgba(255,255,255,.07)`. `.sidenav__link:hover` is doing the job the
+deleted rule used to.
+
+### `print` was the eighth, and it still had the 2026-08-14 bug
+
+The 2026-08-19 entry says the white-links bug is closed on all nine pages. **It was not.**
+
+`03-elements/typography.css:50`'s `a { color: inherit }` sits in `layer(elements)` and outranks
+`99-legacy/print.css:50`'s `color`, so `print`'s nav links took the navy panel's own white.
+Measured: `rgb(255,255,255)` at rest, `rgb(255,255,255)` on hover. **The visible cost was not
+contrast** — white on navy reads fine — **it was that hover said nothing at all**, while the
+other seven brighten pale blue → white.
+
+**Nothing caught it because nothing measured this page in screen media.** `print` was
+deliberately outside `css_type_probe`'s list, with `css_print_probe` owning it in print media.
+That comment ended "if a screen regression on print.html ever matters, this is the list it
+joins" — so it has joined, **without `?paper_id=`**: the shell renders either way and the shell
+is where the regression lived, whereas hardcoding a paper UUID would make the gate quietly
+measure an empty page the day that row goes. The body stays `css_print_probe`'s.
+
+### The fix, and the trap inside the fix
+
+`pages/print.css`'s existing `@layer components` block gets the colour, reading
+`--color-sidebar-fg` rather than `print`'s own literal — that literal is a hair off the shade
+the other seven render and it had not painted since the migration, so there was no current
+appearance to preserve and no reason to keep a ninth near-duplicate of one colour.
+
+**The `:hover` rule beside it is not optional, and leaving it out would have re-armed rule 2.**
+The base rule is now in `layer(components)` and outranks `99-legacy/print.css:53` in
+`layer(legacy)`, so without its own hover the link would have held pale blue while hovered —
+a dead signal replaced by a different dead signal.
+
+Both dead legacy declarations were then removed. **Re-running the gate produced the same 25
+deltas, which is the proof they were dead**, and dropped two raw hex.
+
+**All 25 deltas are five links × five properties.** One is `color` — the fix. The other four
+are `border-*-color` following `color` on elements measured at `border-style: none`, 0px on
+every side. The hover background is left at `.08` against the other seven's `.07`: below
+noticing, and not what this rule is about.
+
+**Still different, and deliberately out of scope:** `print`'s links are not `.sidenav__link`,
+so they have no 3px rail (`slo` measures `border-left-width: 3px`, `print` 0px). Putting
+`print` on the component is a bigger change to the page a teacher prints from.
+
 ## 2026-08-20 — `index` joins `.sidenav__panel`, and layer order nearly took the mobile view
 
 **`legacy_css_lines` 1,865 → 1,869**, `unsanctioned_hex` 357 → **356**. Eight rule lines out of

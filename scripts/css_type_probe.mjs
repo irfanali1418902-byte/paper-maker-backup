@@ -42,9 +42,21 @@ mkdirSync(outdir, { recursive: true });
 // reason this line gave for excluding taqseem — "no Urdu rule at all" — was about the
 // Urdu half of this probe and was never a reason to skip the computed-style half.
 //
-// print is live too (UI-047f, 2026-08-11) and is deliberately NOT here: css_print_probe
+// print is live too (UI-047f, 2026-08-11) and was deliberately NOT here: css_print_probe
 // owns it and measures it in print media, which is the media its regressions live in.
-// If a screen regression on print.html ever matters, this is the list it joins.
+// This line then said "if a screen regression on print.html ever matters, this is the
+// list it joins" — and on 2026-08-20 one did. print was the only page still carrying the
+// white-links bug: `a { color: inherit }` in layer(elements) beat its legacy nav colour,
+// so its sidebar links rendered white and hover changed nothing. It had been recorded as
+// fixed along with the other eight the day before. Nothing caught it because nothing on
+// this page was measured in SCREEN media by anything, which is the same silent gap
+// taqseem's late entry above describes.
+//
+// ⚠ IT IS ADDED WITHOUT `?paper_id=`, SO THE PAPER BODY IS NOT COVERED HERE. print.html
+// renders its shell either way and the shell is where this regression lived; the paper
+// itself needs a row that exists in the local DB, and hardcoding a UUID would make the
+// gate quietly measure an empty page the day that row goes. The body stays
+// css_print_probe's, in the media it prints in.
 //
 // blueprint added 2026-08-13 with UI-047b — on time, unlike taqseem — and index the same day
 // as the SUBJECT of UI-047c, before that migration rather than after it. index is the largest
@@ -62,6 +74,7 @@ const PAGES = [
   { page: 'bank', url: `${BASE}/bank.html`, role: 'subject — the Urdu fix' },
   { page: 'landing', url: `${BASE}/landing.html`, role: 'subject — UI-047d migration' },
   { page: 'index', url: `${BASE}/index.html`, role: 'subject — UI-047c migration' },
+  { page: 'print', url: `${BASE}/print.html`, role: 'LIVE — shell only, no paper_id' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
