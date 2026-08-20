@@ -1,5 +1,87 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — School server: ek launcher, aur wo cheezein check karta hai jo khamoshi se ghalat jaati hain
+
+Docker **nahi** — is machine par Docker installed hi nahi (`docker: command not found`), to koi
+bhi image likh kar main use build ya test na kar pata aur sab kuch "unverified" jaata. Yeh
+raasta chuna gaya kyunki **har cheez isi machine par naapi ja sakti thi**, aur naapi gayi.
+
+### `PAPER_MAKER_API_KEY` bhi zaya ho raha tha — auth, LAN par
+
+`DB_PATH` wale bug ki doosri shakl, aur zyada sanjeeda. `app/api/auth.py`:25 `API_KEY` ko
+module import par parhta hai aur wo file `database` import **nahi** karti. Yeh sirf ittefaq se
+chal raha tha: `app/main.py`:14 ka pandrah-module block `app.core.database` kheench laata hai
+(jahan `load_dotenv()` hai) aur line 30 ka `auth` import us ke **baad** hai.
+
+**Us ek import ko do line ooper le jane par key khamoshi se khali reh jaati.** Saboot, fix
+hataa kar naapa gaya:
+
+```
+FIX ke BAGHAIR:  API_KEY -> ''
+                 "PAPER_MAKER_API_KEY set nahi hai — /api endpoints UNPROTECTED hain."
+FIX ke SAATH:    API_KEY -> 'ZZ-secret-from-dotenv'
+```
+
+School ke WiFi par iska matlab chup-chaap khula darwaza hai — koi error nahi, koi log nahi.
+
+**Fix:** `load_dotenv()` ab `app/__init__.py` mein hai, jo pehle **0 bytes** thi. Koi bhi
+`app.*` import us se pehle yeh file chalata hai, to tarteeb ab load-bearing nahi rahi.
+`database.py` wali call ehtiyatan rehne di — dobara chalna be-zarar hai.
+
+**Tarjeeh naapi gayi:** asli environment variable > `.env` > code default.
+
+### Do launchers, do config files, aur dono par dev ka flag
+
+| pehle | ab |
+|---|---|
+| `start-local.bat` → `env.local.bat` → `--reload` | **shim** — `start-school.bat` bulata hai |
+| `start.bat` → `.env` (manual parse) → `--reload` | **dev launcher**, saaf label ke saath |
+| — | **`start-school.bat`** — production, `--reload` nahi |
+
+**`--reload` school server par nuqsaan-deh hai:** uvicorn files watch karta rehta hai aur code
+chhune par **restart** kar deta hai — kisi teacher ka aadha bana paper ja sakta hai. Dono
+launchers 20 Agast tak isi flag par chal rahe the.
+
+**`start-local.bat` delete nahi ki.** `SETUP-LOCAL.md` §9 school ko kehta aaya hai ke uski
+shortcut `shell:startup` mein rakho; naam badalne se wo shortcut chup-chaap tootti — PC chalu
+hota, server nahi, aur subah pehla teacher hi is se takraata.
+
+**Manual `.env` parse loop nikal diya.** Wo isi liye tha ke app ke module-level vars `.env` se
+pehle parhe jaate the. Ab app khud load karti hai, to do jagah do tareeqe rakhne ka sabab
+khatam.
+
+### Launcher wo cheezein check karta hai jo error nahi deteen
+
+| check | kyun |
+|---|---|
+| `.venv` | banane ka command dikhata hai |
+| **DB file waqai mojood hai** | ghalat `DB_PATH` **error nahi deta** — nayi khali DB banti hai, folder samet, aur school ko lagta hai saare papers urh gaye |
+| `PAPER_MAKER_API_KEY` | batata hai ke LAN par `/api` khula hai |
+| firewall rule | teachers ke "connection timed out" ka sab se aam sabab |
+
+DB check ka khayal ittefaq se aaya: mere apne probe ne `C:\PaperMakerData\ZZ_probe.db` bana di
+thi — bilkul wahi manzar jis se bachna hai.
+
+### Naapa gaya — asli browser/shell mein, farz nahi kiya
+
+| | nateeja |
+|---|---|
+| `start-school.bat` chala | port 8000 LISTEN, `HTTP 200` |
+| DB ghayab hone par | warning aayi, **N** par band, **na DB bani na folder** ✓ |
+| `start-local.bat` (shim) | `start-school.bat` ko bulaya ✓ |
+| `start.bat` (parse loop ke baghair) | port 8000 LISTEN ✓ |
+| firewall rule na hone par | poora `netsh` command dikhaya ✓ |
+
+**890 pytest pass, ruff clean** (`app/__init__.py` ke baad chalaye; us ke baad sirf `.bat` aur
+docs badle).
+
+### Docs
+
+`.env.example` ka wo jumla theek kiya jis ne poora bug chhupaya — *"python-dotenv loads `.env`
+automatically, so you do NOT need to export these manually."* **Ab wo sach hai**, aur uske saath
+likha hai ke 20 Agast tak nahi tha aur kya toot raha tha. `SETUP-LOCAL.md` §5 ab `env.local.bat`
+ke bajaye `.env` kehta hai, aur §7/§9 naye launcher par.
+
 ## 2026-08-20 — `.env` ka `DB_PATH` khamoshi se zaya ho raha tha
 
 School PC ka kaam shuru karte hi nikla, dhoondha nahi tha. **890 pytest pass, ruff clean.**

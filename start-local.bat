@@ -1,50 +1,24 @@
 @echo off
-REM ============================================================
-REM  AII Smart Paper Maker - Local Server launcher (Windows)
-REM  Double-click to start. Secrets env.local.bat se aati hain.
-REM ============================================================
-title AII Paper Maker - Local Server
+REM ============================================================================
+REM  SHIM - asli launcher ab start-school.bat hai.
+REM
+REM  Yeh file DELETE NAHI ki gayi, aur wajah yeh hai: SETUP-LOCAL.md step 9 school
+REM  ko kehta aaya hai ke iski shortcut `shell:startup` folder mein rakho, taake
+REM  PC on hote hi server chalu ho jaye. Naam badalne ya hatane se woh shortcut
+REM  chup-chaap toot jaati - PC chalu hota, server nahi, aur subah pehla teacher
+REM  hi is se takraata.
+REM
+REM  Purani file do cheezein karti thi jo school ke liye ghalat theen:
+REM    * uvicorn --reload ke saath chalati thi (development ka flag; server code
+REM      chhune par restart kar deta hai)
+REM    * config env.local.bat se parhti thi, jabke start.bat .env se - do
+REM      launchers, do config files, aur admin ko pata nahi kaunsi asli hai
+REM
+REM  Dono ab ek jagah tay hain: .env, aur start-school.bat.
+REM ============================================================================
 cd /d "%~dp0"
-
-REM --- Local secrets/config (gitignored). env.local.bat banao is content ke saath:
-REM       set DB_PATH=C:\PaperMakerData\paper_maker.db
-REM       set PAPER_MAKER_API_KEY=your-long-random-key
-REM       set GEMINI_API_KEY=your-gemini-key
-if exist "env.local.bat" (
-  call env.local.bat
-) else (
-  echo [!] env.local.bat nahi mila - DB_PATH default (repo) use hoga, keys unset.
-  echo     SETUP-LOCAL.md step 5 dekhein.
-)
-
-REM --- Virtual environment
-if exist ".venv\Scripts\activate.bat" (
-  call ".venv\Scripts\activate.bat"
-) else (
-  echo [X] .venv nahi mila. Pehle chalao:
-  echo        python -m venv .venv
-  echo        .venv\Scripts\activate ^&^& pip install -r requirements.txt
-  pause
-  exit /b 1
-)
-
 echo(
-echo ============================================================
-echo   AII Smart Paper Maker - Local Server
-echo ============================================================
-echo   Is PC ke addresses (192.168.x.x wala note karein):
-echo ------------------------------------------------------------
-ipconfig | findstr /C:"IPv4"
-echo ------------------------------------------------------------
-echo   Is PC par:       http://localhost:8000
-echo   Teachers (LAN):  http://[upar-wala-192.168-IP]:8000
-echo   Band karne ke liye: Ctrl+C
-echo ============================================================
+echo [i] start-local.bat ab sirf start-school.bat ko chalata hai.
+echo     Apni shortcut seedha start-school.bat par bana lein to behtar hai.
 echo(
-
-REM --reload: code save karte hi server khud naya module load kare (stale-server se bacho)
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-echo(
-echo Server band ho gaya. Koi key dabayein.
-pause >nul
+call "%~dp0start-school.bat"

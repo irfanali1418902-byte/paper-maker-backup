@@ -64,14 +64,25 @@ taake git operations/updates se mehfooz rahe:
 
 ## 5. Configuration (env vars)
 
-Repo root mein ek **`env.local.bat`** file banao (ye **gitignored** hai — secrets safe).
-`start-local.bat` isko khud load kar leta hai. Content:
+Repo root mein **`.env`** file banao — `.env.example` ki copy. Ye **gitignored** hai.
 
-```bat
-set DB_PATH=C:\PaperMakerData\paper_maker.db
-set PAPER_MAKER_API_KEY=your-long-random-key
-set GEMINI_API_KEY=your-gemini-key
 ```
+DB_PATH=C:\PaperMakerData\paper_maker.db
+PAPER_MAKER_API_KEY=your-long-random-key
+GEMINI_API_KEY=your-gemini-key
+```
+
+> **20 Agast se pehle yeh guide `env.local.bat` kehti thi, aur wo ab nahi chahiye.**
+> Do launchers do alag config files parhte the (`start-local.bat` → `env.local.bat`,
+> `start.bat` → `.env`) aur admin ke liye koi tareeqa nahi tha ke kaunsi asli hai. Ab
+> **sirf `.env`** hai, aur app khud use load karti hai. Agar aap ke school PC par
+> `env.local.bat` pehle se hai to uski qeematein `.env` mein copy kar dein.
+
+> ⚠ **`DB_PATH` sab se ahem line hai.** Ghalat ya typo'd path par app **error nahi
+> deti** — wo us jagah nayi khali database bana leti hai, folder samet, aur school ko
+> lagta hai saare papers urh gaye jabke asli file apni jagah salamat hoti hai.
+> `start-school.bat` chalne se pehle check karta hai ke file waqai mojood hai, aur na
+> ho to poochta hai.
 
 Vars ka matlab:
 
@@ -94,14 +105,31 @@ netsh advfirewall firewall add rule name="Paper Maker 8000" dir=in action=allow 
 
 ## 7. Server chalao
 
-**Aasan:** repo mein `start-local.bat` par double-click (venv activate + env + server + IP
-dikhata hai).
+**Aasan:** repo mein **`start-school.bat`** par double-click.
+
+Chalne se pehle wo chaar cheezein check karta hai jo khamoshi se ghalat ja sakti hain:
+
+| check | agar ghalat ho |
+|---|---|
+| `.venv` mojood hai | banane ka command dikhata hai |
+| **database file waqai mojood hai** | rukta hai aur poochta hai — nayi khali DB banne se pehle |
+| `PAPER_MAKER_API_KEY` set hai | batata hai ke LAN par `/api` khula hai |
+| firewall rule mojood hai | poora `netsh` command dikhata hai |
+
+Phir LAN IP dikha kar server chalata hai.
+
+> `start-local.bat` ab sirf isi ko chalata hai (purani shortcuts ke liye rakha gaya).
+> **`start.bat` development ke liye hai** — us mein `--reload` hai, jo school server par
+> nahi hona chahiye: wo files watch karta hai aur code chhune par server restart kar deta
+> hai, yani teacher ka aadha bana paper ja sakta hai.
 
 **Ya manually** (venv active hote hue):
 ```
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 `--host 0.0.0.0` zaroori hai — isi se doosre devices LAN par connect kar paate hain.
+`--reload` **mat** lagayen. Aur is command ko **repo folder ke andar se** chalayen —
+`.env` current folder se ooper talash hota hai.
 
 ---
 
@@ -121,7 +149,8 @@ kholenge **http://192.168.1.25:8000**.
 
 ## 9. Server ko chalta rakhna (recommended)
 
-- **Simple:** `start-local.bat` ki shortcut `shell:startup` folder mein — PC on hote hi chalu.
+- **Simple:** `start-school.bat` ki shortcut `shell:startup` folder mein — PC on hote hi chalu.
+  (Purani `start-local.bat` wali shortcut bhi chalti rahegi, wo isi ko bulati hai.)
 - **Service jaisa (auto-restart, background):** [NSSM](https://nssm.cc/download) se —
   ```
   nssm install PaperMaker "C:\path\paper-maker-mvp\.venv\Scripts\python.exe" "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
