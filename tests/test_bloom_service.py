@@ -6,6 +6,8 @@ bring it back. We sweep small totals exhaustively because that's where the
 bug originally surfaced.
 """
 
+import pytest
+
 from app.services.bloom_service import calculate_bloom_distribution, calculate_marks
 
 # ---- calculate_bloom_distribution -------------------------------------------
@@ -47,6 +49,63 @@ class TestCalculateBloomDistribution:
         dist = calculate_bloom_distribution("foundational", 30)
         assert dist["EVALUATE"] == 0
         assert dist["CREATE"] == 0
+
+    # ---- WHICH level got the questions, not just how many --------------------
+    #
+    # Har upar wala test sirf JORH dekhta hai, aur isi khali jagah mein ek bug
+    # barson chhupa raha: trim loop `max(result, key=result.get)` istemal karta
+    # tha, jo barabar qeematon mein PEHLI key deti hai, aur dict REMEMBER se
+    # shuru hota hai. Chhoti ginti par har level `ceil` se 1 hota hai, to katai
+    # hamesha neeche wale levels kha jaati thi. Naapa gaya 2026-08-21, fix se
+    # pehle: balanced/3 = ANALYZE 1, EVALUATE 1, CREATE 1 — yani ek chhote
+    # paper mein sirf sab se mushkil sawal. Jorh phir bhi 3 tha, isliye poora
+    # suite hara rehta tha.
+
+    @pytest.mark.parametrize("n", [1, 2, 3, 4, 5])
+    def test_small_balanced_papers_start_from_the_bottom(self, n):
+        """Chhota balanced paper foundational levels se bharta hai, CREATE se
+        nahi. Ek bacche ko teen CREATE-level sawal dena "balanced" nahi hai."""
+        dist = calculate_bloom_distribution("balanced", n)
+        assert dist["REMEMBER"] >= 1
+        assert dist["CREATE"] == 0
+
+    def test_balanced_never_leaves_the_low_levels_empty_while_high_ones_fill(self):
+        """Koi bhi n par: agar kisi ooncha level ko sawal mila hai to us se
+        neeche wale khaali nahi ho sakte."""
+        order = ["REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE"]
+        for n in range(1, 40):
+            dist = calculate_bloom_distribution("balanced", n)
+            for i, lvl in enumerate(order):
+                if dist[lvl] == 0:
+                    assert all(dist[higher] == 0 for higher in order[i + 1 :]), (
+                        f"n={n}: {lvl} khaali hai magar upar wale bhare hain — {dist}"
+                    )
+
+    @pytest.mark.parametrize("n", [3, 5, 10, 30])
+    def test_foundational_always_keeps_remember(self, n):
+        """REMEMBER foundational ka 40% hai — us ka sab se bara hissa. Purana
+        trim `min(surplus, bucket)` se poori bucket ek saath kha jaata tha, aur
+        sab se bari bucket wahi hoti thi jis ki distribution ko sab se zyada
+        zaroorat hai; foundational/3 REMEMBER ke baghair wapas aata tha."""
+        dist = calculate_bloom_distribution("foundational", n)
+        assert dist["REMEMBER"] >= 1
+
+    def test_foundational_weights_hold_at_a_round_number(self):
+        """10 par hissa saaf naapa ja sakta hai: 40/30/20/10."""
+        dist = calculate_bloom_distribution("foundational", 10)
+        assert dist == {
+            "REMEMBER": 4,
+            "UNDERSTAND": 3,
+            "APPLY": 2,
+            "ANALYZE": 1,
+            "EVALUATE": 0,
+            "CREATE": 0,
+        }
+
+    @pytest.mark.parametrize("dist_type", ["balanced", "foundational", "advanced"])
+    def test_sum_holds_for_every_distribution(self, dist_type):
+        for n in range(0, 40):
+            assert sum(calculate_bloom_distribution(dist_type, n).values()) == n
 
     def test_foundational_small_totals_never_overflow(self):
         for n in range(0, 25):

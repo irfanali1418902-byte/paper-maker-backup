@@ -72,14 +72,41 @@ def calculate_bloom_distribution(dist_type: str, total_questions: int) -> dict:
     # total_questions, especially for small counts — trim the surplus off
     # the largest buckets (looping, since one bucket alone may not be
     # enough) so the paper always has exactly the requested number.
+    #
+    # TIES ARE BROKEN FROM THE TOP OF BLOOM DOWN, AND THAT IS THE WHOLE FIX.
+    # `max(result, key=result.get)` returns the FIRST key holding the maximum,
+    # and this dict runs REMEMBER -> CREATE, so every tie used to be trimmed off
+    # REMEMBER first. At small totals every level ceils to 1, so the trim ate the
+    # foundational levels and left only the hardest ones. Measured 2026-08-21,
+    # before the fix:
+    #
+    #     balanced, 3   ->  REMEMBER 0  UNDERSTAND 0  APPLY 0
+    #                       ANALYZE 1   EVALUATE 1    CREATE 1
+    #
+    # "Balanced" was handing a young class three CREATE-level questions, and
+    # "foundational" lost REMEMBER — its most important level — first. Reversing
+    # the tie-break is surgical: where the buckets genuinely differ, `max` still
+    # picks the real largest and nothing changes (balanced at 10 is untouched);
+    # only the all-equal case moves, which is exactly the broken one.
+    #
+    # THE OLD TESTS ALL PASSED THROUGH THIS. They assert the SUM equals the
+    # total and that all six keys exist — never which level got the questions.
+    # The count was right the whole time; the paper was not.
+    order = list(result)  # REMEMBER -> CREATE, the dict's own order
     surplus = sum(result.values()) - total_questions
     while surplus > 0:
-        largest_level = max(result, key=result.get)
+        # reversed() makes ties resolve to the highest Bloom level present.
+        largest_level = max(reversed(order), key=lambda lvl: result[lvl])
         if result[largest_level] == 0:
             break  # nothing left to trim, total_questions is unreachable with this split
-        take = min(surplus, result[largest_level])
-        result[largest_level] -= take
-        surplus -= take
+        # ONE AT A TIME, not min(surplus, bucket). Taking the whole bucket empties
+        # whichever level happens to be biggest, which is the level the chosen
+        # distribution cares about MOST. `foundational` at 3 lost REMEMBER that
+        # way — its 40% share ceils to 2, the largest bucket, so the entire thing
+        # went and a "foundational" paper came back with no REMEMBER at all.
+        # Trimming one at a time spreads the surplus and the shape survives.
+        result[largest_level] -= 1
+        surplus -= 1
 
     return result
 
