@@ -76,6 +76,13 @@ was started for.
 **So the target is `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**
 Estimated 5–8 sessions. Anything below that number is the 999, and the 999 are not the work.
 
+**Re-derive the split with `scripts/css_duplication_audit.py`** — it is a repo file so this
+decision does not rest on a number nobody can check. **The three figures move as work lands**
+and will not reproduce 999 / 100 / 495 exactly: every rule that becomes a component leaves the
+`agree` or `disagree` bucket. What must stay true for the decision to hold is the *shape* —
+roughly two thirds page-only. Read the script's header before quoting it: it compares
+declaration TEXT, and text that matches can still paint differently.
+
 ### Marhala D — Sprint 6, the actual cleanup · **6–12 sessions**
 
 Taken **before** B and C, deliberately — see "What is being skipped" below.
