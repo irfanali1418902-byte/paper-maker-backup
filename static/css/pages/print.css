@@ -217,4 +217,108 @@
   .app-nav a:hover {
     color: var(--color-sidebar-fg-on);
   }
+
+  /* -------------------------------------------------------------------------
+     SAWAL KA RANGE — "Q5 se Q12 chhapo" (2026-08-20).
+
+     Yahan, `99-legacy/print.css` mein nahi: wo file append-never hai (DEFERRED
+     D36). Page-scoped hai aur rehna chahiye — range ka koi doosra consumer nahi.
+
+     SCREEN PAR CHHUPTA NAHI, DHUNDLA HOTA HAI. Teacher ko dikhna chahiye ke kya
+     bahar hai, warna wo yeh nahi jaan sakta ke range theek hai — `display: none`
+     use karne par safha khali dikhta aur ghalti pakarhne ka koi zariya na hota.
+     Kaghaz par dono poori tarah ghayab hain.
+     ------------------------------------------------------------------------- */
+  .q-excluded {
+    opacity: 0.32;
+  }
+
+  .sec-excluded {
+    opacity: 0.32;
+  }
+
+  /* `!important` legacy ki naqal hai, sanad nahi: 99-legacy/print.css:221-222 ka
+     `.app-sidebar`/`.no-print` bhi isi tarah likha hai, aur `.question` par inline
+     style pohnch sakta hai. Ek hi jagah, ek hi media. */
+  @media print {
+    .q-excluded,
+    .sec-excluded {
+      display: none !important;
+    }
+  }
+
+  /* Panel ka apna row. Steppers ke barabar dikhta hai magar stepper nahi —
+     range do adad hai, aur bare paper par +/- dabate rehna bekaar hai. */
+  .ps-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ps-range input {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 8px;
+    border: 1px solid var(--color-sidebar-hover);
+    border-radius: 7px;
+    background: var(--color-sidebar-hover);
+    color: var(--color-sidebar-fg-on);
+    font: inherit;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .ps-range input:focus {
+    outline: none;
+    border-color: var(--color-sidebar-rail);
+  }
+
+  .ps-range-sep {
+    color: var(--color-sidebar-fg);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .ps-range-all {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 7px;
+    background: var(--color-sidebar-hover);
+    color: var(--color-sidebar-fg-on);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .ps-range-all:hover {
+    background: var(--color-sidebar-active);
+  }
+
+  .ps-range-info {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--color-sidebar-fg-muted);
+  }
+
+  /* Range chalu hai — teacher ko yeh chup-chaap nahi guzarna chahiye, kyunke
+     kaghaz par Total Marks bhi is ke saath badal chuka hai. */
+  .ps-range-info.is-partial {
+    color: var(--color-sidebar-rail);
+    font-weight: var(--font-weight-strong);
+  }
+
+  /* Ulta range. `.is-partial` is soorat mein lagta hi nahi (kuch chhupta nahi), to
+     dono ek saath nahi aate aur tarteeb par jhagra nahi.
+
+     RANG YAHAN LITERAL HAI AUR NAYA NAHI. `--color-status-err-fg` gehra surkh hai
+     — wo `--color-status-err-bg` ke halke tint ke saath bana tha aur is navy panel
+     par parha nahi jayega. Jo cheez is panel par pehle se error ka rang hai wo
+     99-legacy/print.css ki `.ps-status.err` hai; yeh wahi qeemat hai, nayi nahi.
+     Role isliye nahi banaya ke us ke do hi consumer honge aur tokens.css:145 kehta
+     hai file isi tarah sarhti hai. */
+  .ps-range-info.is-error {
+    color: rgb(255, 179, 179);
+    font-weight: var(--font-weight-strong);
+  }
 }

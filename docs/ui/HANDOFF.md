@@ -95,6 +95,12 @@ se kisi ko nahi dekhta:
 | **`print` ka paper body** — gate mein sirf shell hai, `?paper_id=` ke baghair | `css_print_probe`, ya `--query=` ke saath alag run |
 | `taqseem` ka board bina class+subject | `--warm=` se `Pre Year 1` / `Mathematics` chuno |
 
+⚠ **GATE "element daala gaya" aur "element ka style badla" mein FARQ NAHI KAR SAKTA.** Wo
+element ko DOM path se pehchanta hai (`DIV[3]`, `DIV[4]`…). Panel ke beech mein ek row daalne
+par 20 Agast ko `print` par **22 deltas** aaye aur ek bhi asli nahi tha — sab neeche khisak gaye
+the. Jab bhi markup mein kuch INSERT karo, deltas ko selector se dobara naapo
+(`css_selector_probe.mjs`), path se nahi.
+
 **19 Agast ko RTL ne kaat liya, 20 Agast ko viewport aur hover ne.** Teeno dafa suite khamosh
 rahi. Jo bhi `@media`, `:hover`, `[dir="rtl"]`, `.lang-ur`, ya nav ke border ko chhuye — us ka
 apna probe chalao, gate ka 0 kaafi nahi.

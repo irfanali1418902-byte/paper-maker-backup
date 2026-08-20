@@ -52,6 +52,21 @@
           <button type="button" onclick="stepPrint('page_margin',1)" aria-label="Margin zyada">+</button>
         </div>
       </div>
+      <!-- Sawal ka range. Baqi teen knobs class ki pasand hain aur DB mein jaate
+           hain; ye ek khaas paper ki baat hai, isliye Save is par nahi lagta aur
+           /api/print-settings ko chhua bhi nahi gaya. -->
+      <div class="ps-row">
+        <span class="ps-label">Sawal (range)</span>
+        <div class="ps-range">
+          <input type="number" id="psRangeFrom" min="1" step="1" aria-label="Pehla sawal"
+                 oninput="setPrintRange()">
+          <span class="ps-range-sep">se</span>
+          <input type="number" id="psRangeTo" min="1" step="1" aria-label="Aakhri sawal"
+                 oninput="setPrintRange()">
+          <button type="button" class="ps-range-all" onclick="resetPrintRange()">Sab</button>
+        </div>
+        <div class="ps-range-info" id="psRangeInfo"></div>
+      </div>
       <div class="ps-actions">
         <button type="button" class="ps-save" id="psSaveBtn" onclick="savePrintSettings()">Is class ke liye mehfooz karein</button>
         <button type="button" class="ps-reset" onclick="resetPrintSettings()">Reset (default par)</button>
@@ -498,6 +513,8 @@ function _reRenderQuestion(qid, updatedQ) {
   el.outerHTML = renderQuestion(updatedQ, num);
   // Re-inject suggest badge if question still qualifies (e.g. edit saved but no image added).
   _maybeInjectBadgeForQ(updatedQ);
+  // Naya markup range ko nahi jaanta, aur marks bhi badle ho sakte hain.
+  applyPrintRange();
 }
 
 // Close on backdrop click or Esc key
@@ -598,6 +615,125 @@ function resetPrintSettings() {
   _setPsStatus('Default par reset — mehfooz karne ke liye Save dabaayein.', 'ok');
 }
 
+// ============================================================================
+// Sawal ka range — "Q5 se Q12 chhapo". Sirf screen/print ka masla hai: koi fetch
+// nahi, koi DB nahi, aur POST /api/print-settings ka payload waise ka waisa hai.
+// Wajah: font/gap/margin class ki pasand hain, range ek paper ki baat hai.
+//
+// TEEN CHEEZEIN SAATH BADALNI PARTI HAIN, warna kaghaz par ghalat adad chhapta
+// hai — Irfan ke teen faisle, 2026-08-20:
+//   1. header ka Total Marks = sirf chune huay sawalon ka jorh (DB ka total nahi)
+//   2. sawal ke number ASLI rehte hain — Q5 kaghaz par bhi Q5
+//   3. jis section ka koi sawal range mein na ho wo poora ghayab; jo aadha hai
+//      us ke marks dobara ginay jaate hain
+// ============================================================================
+let _printRange      = { from: null, to: null };   // dono null = sab
+let _paperTotalMarks = null;                       // DB ka total, "Sab" par wapas
+
+const _qEls = () => [...document.querySelectorAll('.question[data-num]')];
+const _qNum = (el) => Number(el.dataset.num);
+const _qMarks = (el) => Number(el.dataset.marks) || 0;
+
+function _rangeBounds() {
+  const nums = _qEls().map(_qNum);
+  return nums.length ? { lo: Math.min(...nums), hi: Math.max(...nums) } : { lo: 1, hi: 1 };
+}
+
+function _rangeIsAll() {
+  const { lo, hi } = _rangeBounds();
+  return _printRange.from == null || _printRange.to == null
+      || (_printRange.from <= lo && _printRange.to >= hi);
+}
+
+function resetPrintRange() {
+  _printRange = { from: null, to: null };
+  _renderRangeInputs();
+  applyPrintRange();
+}
+
+// Inputs se parhta hai. Khaali chhorna = us taraf koi hadd nahi, isliye har keystroke
+// par clamp NAHI karta — "1" type karte waqt "12" banne se pehle chheen lena kharab
+// lagta hai. Clamp applyPrintRange mein hota hai, jahan wo nazar aata hai.
+function setPrintRange() {
+  const f = document.getElementById('psRangeFrom').value.trim();
+  const t = document.getElementById('psRangeTo').value.trim();
+  _printRange = {
+    from: f === '' ? null : Number(f),
+    to:   t === '' ? null : Number(t),
+  };
+  applyPrintRange();
+}
+
+function _renderRangeInputs() {
+  const { lo, hi } = _rangeBounds();
+  const fromEl = document.getElementById('psRangeFrom');
+  const toEl   = document.getElementById('psRangeTo');
+  fromEl.max = toEl.max = hi;
+  fromEl.min = toEl.min = lo;
+  fromEl.placeholder = lo;
+  toEl.placeholder   = hi;
+  if (_printRange.from == null) fromEl.value = '';
+  if (_printRange.to   == null) toEl.value   = '';
+}
+
+// Har render ke baad chalao — loadPaper ke akhir mein, aur edit-swap ke baad bhi,
+// warna naya markup range ko nahi jaanta.
+function applyPrintRange() {
+  const { lo, hi } = _rangeBounds();
+  const from = _printRange.from == null ? lo : Math.max(lo, Math.min(hi, _printRange.from));
+  const to   = _printRange.to   == null ? hi : Math.max(lo, Math.min(hi, _printRange.to));
+
+  // ULTA RANGE KUCH NAHI CHHUPATA. Pehle yeh clamp ho kar "Q20–Q1" ban jaata tha
+  // aur sifar sawal chunta tha — yani ek ghalat keystroke se teacher khaali kaghaz
+  // chhaap deta. Swap bhi nahi karte: "12" type karte waqt beech mein "1" hota hai,
+  // aur us lamhe inputs ka aapas mein palat jaana type karne ko na-qabil bana deta.
+  // Isliye: nazar-andaz karo, poora paper dikhao, aur wajah likh do.
+  const reversed = _printRange.from != null && _printRange.to != null && from > to;
+  const all = reversed || _rangeIsAll();
+
+  let kept = 0, keptMarks = 0;
+  for (const el of _qEls()) {
+    const n  = _qNum(el);
+    const inRange = !all ? (n >= from && n <= to) : true;
+    el.classList.toggle('q-excluded', !inRange);
+    if (inRange) { kept++; keptMarks += _qMarks(el); }
+  }
+
+  // Sections: khali wale poore ghayab, aadhe wale ke marks dobara. Asli ginti
+  // pehli dafa data-marks-all mein mehfooz — "Sab" par wahi wapas aati hai, taake
+  // DB ka adad dobara na ginna pare.
+  for (const block of document.querySelectorAll('.section-block')) {
+    const qs = [...block.querySelectorAll('.question[data-num]')];
+    const inc = qs.filter(el => !el.classList.contains('q-excluded'));
+    block.classList.toggle('sec-excluded', qs.length > 0 && inc.length === 0);
+
+    const marksEl = block.querySelector('.sec-marks');
+    if (!marksEl) continue;
+    if (marksEl.dataset.marksAll == null) marksEl.dataset.marksAll = marksEl.textContent;
+    marksEl.textContent = all
+      ? marksEl.dataset.marksAll
+      : `Total Marks: ${inc.reduce((s, el) => s + _qMarks(el), 0)}`;
+  }
+
+  // Header ka total. "Sab" par DB ka apna adad — wo sawalon ke jorh se alag ho
+  // sakta hai aur us par yahan faisla nahi karna.
+  const metaEl = document.getElementById('metaMarks');
+  if (metaEl && _paperTotalMarks != null) {
+    metaEl.textContent = all ? _paperTotalMarks : keptMarks;
+  }
+
+  const info = document.getElementById('psRangeInfo');
+  if (info) {
+    info.textContent = reversed
+      ? `Range ulta hai (${_printRange.from} se ${_printRange.to}) — filhaal poora paper chhapega.`
+      : all
+        ? `Poora paper — ${kept} sawal, ${keptMarks} marks.`
+        : `Q${from}–Q${to} — ${kept} sawal, ${keptMarks} marks chhapenge.`;
+    info.classList.toggle('is-partial', !all);
+    info.classList.toggle('is-error', reversed);
+  }
+}
+
 async function savePrintSettings() {
   if (!_currentClassName) return;
   const btn = document.getElementById('psSaveBtn');
@@ -696,7 +832,7 @@ function renderQuestion(q, num) {
   }
 
   return `
-    <div class="question" data-qid="${escapeHtml(q.id)}" data-num="${num}">
+    <div class="question" data-qid="${escapeHtml(q.id)}" data-num="${num}" data-marks="${q.marks || 0}">
       <div class="qhead">
         <div><span class="qnum">Q${num}.</span> ${qtextInHead}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -910,6 +1046,7 @@ async function loadPaper() {
     document.getElementById('paperTitle').textContent = paper.paper_title || `${paper.subject} — Examination Paper`;
     document.getElementById('metaClass').textContent = paper.class_name || '';
     document.getElementById('metaMarks').textContent = paper.total_marks;
+    _paperTotalMarks = paper.total_marks;   // "Sab" par yehi wapas aata hai
 
     // Per-class print settings (Marhala 4A/4B) — global defaults school-settings se
     // (Reset inhi par le jaata hai), phir class-resolved values apply + controls init.
@@ -962,6 +1099,12 @@ async function loadPaper() {
     document.getElementById('status').style.display = 'none';
     document.getElementById('sheet').style.display = 'block';
     document.getElementById('toolbarInfo').textContent = `${questions.length} questions, ${paper.total_marks} marks`;
+
+    // Range ke inputs sawal chhapne ke BAAD initialize hote hain — hadd (min/max,
+    // placeholder) rendered markup se aati hai, paper object se nahi, taake dono
+    // raaste (blueprint sections aur legacy A/B) ek hi jagah se naapay jaayen.
+    _renderRangeInputs();
+    applyPrintRange();
 
     _currentPaperId = paperId;
     checkAutoSuggest(questions);

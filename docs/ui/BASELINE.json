@@ -651,6 +651,7 @@
       "onclick=\"uploadImage()\""
     ],
     "print.html": [
+      "data-marks=\"${q.marks || 0}\"",
       "data-num=\"${num}\"",
       "data-q=\"${escapeHtml(JSON.stringify(q))}\"",
       "data-qid=\"${CSS.escape(q.id)}\"",
@@ -697,6 +698,9 @@
       "id=\"psGapVal\"",
       "id=\"psHint\"",
       "id=\"psMarginVal\"",
+      "id=\"psRangeFrom\"",
+      "id=\"psRangeInfo\"",
+      "id=\"psRangeTo\"",
       "id=\"psSaveBtn\"",
       "id=\"psStatus\"",
       "id=\"schoolAddress\"",
@@ -722,6 +726,7 @@
       "onclick=\"openEditModal(this)\"",
       "onclick=\"openLibraryPicker('${q.id}','${q.syllabus_topic_id}')\"",
       "onclick=\"printWithImagesLoaded()\"",
+      "onclick=\"resetPrintRange()\"",
       "onclick=\"resetPrintSettings()\"",
       "onclick=\"savePrintSettings()\"",
       "onclick=\"saveQuestion()\"",

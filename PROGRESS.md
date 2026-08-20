@@ -1,5 +1,87 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — Print: sawal ka range ("Q5 se Q12 chhapo")
+
+Teacher `print.html` ke Print Settings mein do adad daalta hai aur sirf wahi sawal chhapte
+hain. **890 pytest pass**, ratchet flat, 0 gate deltas on the other eight pages.
+
+**Frontend only — koi backend, koi migration, koi API badla nahi.** `POST /api/print-settings`
+ka payload waise ka waisa hai. Font/gap/margin class ki pasand hain aur DB mein jaate hain;
+range ek paper ki baat hai, isliye Save us par lagta hi nahi.
+
+### Teen cheezein saath badalni parti theen, warna kaghaz par ghalat adad chhapta
+
+Irfan ke teen faisle, aur teeno ka sabab yeh tha ke sirf sawal chhupana kaafi nahi:
+
+| | faisla |
+|---|---|
+| header ka **Total Marks** | sirf chune huay sawalon ka jorh — DB ka `paper.total_marks` nahi. Warna student 8 sawal hal karta aur kaghaz 50 ka kehta |
+| **numbering** | asli rehti hai — Q5 kaghaz par bhi Q5 |
+| **sections** | jis section ka koi sawal range mein na ho wo poora ghayab; jo aadha hai us ke apne marks dobara ginay jaate hain |
+
+"Sab" par teeno wapas asli haalat par jaate hain — `paper.total_marks` dobara nahi ginta,
+section ke asli marks `data-marks-all` mein mehfooz rehte hain.
+
+### Ulta range khaali kaghaz chhaap raha tha
+
+Pehli soorat mein `from=999, to=1` clamp ho kar `Q20–Q1` ban jaata aur **sifar sawal** chunta —
+yani ek ghalat keystroke se teacher blank paper nikaal deta. Ab ulta range **kuch nahi
+chhupata**, poora paper dikhta hai aur wajah likhi aati hai. Swap deliberately nahi kiya: "12"
+type karte waqt beech mein "1" hota hai, aur us lamhe inputs ka palat jaana type karne ko
+na-qabil bana deta.
+
+### Naapa gaya, farz nahi kiya
+
+Teen asli papers par, asli browser mein — `CLAUDE.md` §12.10 kehta hai frontend badle to
+browser laazmi hai:
+
+| paper | poora | range Q1–Q5 | "Sab" ke baad |
+|---|---|---|---|
+| `0d04c750` (20Q, 0 images) | 2 safhe | **1** | 2 ✓ |
+| `a5015cda` (20Q, 19 images) | 6 safhe | **2** | 6 ✓ |
+| `9ade2655` (25Q, 25 images) | 7 safhe | **2** | 7 ✓ |
+
+**Poore paper ke teeno adad `MEASURED.md` ke darj shuda 2 / 6 / 7 se bilkul milte hain** — yani
+feature ne aam printing ko chhua tak nahi.
+
+⚠ **Ek paimaishi dhoka pakra:** `9ade2655` ki pehli `printToPDF` **6** safhe deti thi aur doosri
+**7**. `img.decode()` ka intezar kaafi nahi tha — layout abhi settle nahi hua tha. Ek warm-up
+PDF le kar phenkne se teeno paper apne darj shuda adad par aa gaye. Yeh wahi shakl hai jis se
+`MEASURED.md` ka webfont wala qaida aaya tha.
+
+### Gate ne 22 deltas dikhaye aur ek bhi asli nahi tha
+
+`print` par 22 deltas aaye. **Sab artifact.** Gate element ko DOM path se pehchanta hai
+(`DIV[3]`, `DIV[4]`…), aur naya row `.ps-actions` se pehle daalne par sab ek khaana khisak gaye
+— gate `.ps-actions` ka moqabla naye row se kar raha tha.
+
+**Selector se dobara naapa** (`css_selector_probe.mjs`, path se nahi): `.ps-actions`,
+`#psStatus`, `#psHint` — har wo property jo gate ne flag ki thi, **before aur after byte-identical**.
+Asli tabdeeli sirf `.ps-body` ki height thi, 530px → 618px, kyunke panel mein ek row zyada hai.
+
+**Yeh gate ki apni hadd hai aur HANDOFF mein likh di gayi:** wo "element daala gaya" aur
+"element ka style badla" mein farq nahi kar sakta.
+
+### Do process cheezein
+
+**1. `--write` maine chala kar wapas lautaya.** Test kehta hai "declare it in the task scope,
+then --write", magar `css_baseline.py` ka docstring kehta hai `--write` **task ka kaam nahi**,
+"a conversation, not a command". Chala diya, aur us ne inventory ke saath **metrics ka baseline
+bhi** dobara pin kar diya — `unsanctioned_hex` 429 → 354, `legacy_css_lines` 2115 → 1874. Har
+PROGRESS entry aur HANDOFF "429 →" aur "2,115 (baseline) →" likhte hain, to yeh reporting ki
+bunyad chupke se badal deta. **File revert ki, aur sirf paanch inventory entries haath se
+jorheen.** Metrics 429 / 2115 par barqarar hain. Poora re-baseline chahiye to wo alag faisla hai.
+
+**Task scope (declared):** `id="psRangeFrom"`, `id="psRangeTo"`, `id="psRangeInfo"`,
+`onclick="resetPrintRange()"`, aur `.question` par `data-marks`. Paanchon **ADDED** — koi
+REMOVED nahi, koi RENAMED nahi, jo §12.7 ka asal maqsad hai.
+
+**2. Guard 38% handlers ko dekhta hi nahi — D39.** `FROZEN_ATTR_RE` sirf `id`/`onclick`/`name`/
+`data-*` par lagta hai. Gina gaya: `onclick=` **123** (guarded), `onchange=` **59**, `oninput=`
+**17** — **76 handler guard se bahar**. Is feature ke apne `oninput="setPrintRange()"` bina
+kisi shikayat ke andar chale gaye. Khud nahi badla (§12.6): regex barhane par 76 entries ek
+saath baseline mein aayengi aur `--write` chahiye hoga.
+
 ## 2026-08-20 — `NEXT-SESSION.md` is gone, and it could not just be deleted
 
 **798 lines out, 316 back in as `docs/ui/MEASURED.md`, eleven citations repointed.** Approved
