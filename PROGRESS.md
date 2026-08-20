@@ -1,5 +1,130 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-21 — "Balanced" chhote papers ko sirf sab se mushkil sawal de raha tha
+
+Ratio Phase 2 ka kaam shuru karte hi nikla, dhoondha nahi tha. **934 pytest pass**, ruff clean.
+
+`calculate_bloom_distribution` har level ko `ceil` karta hai, phir surplus kaat-ta hai. Do
+cheezein ghalat theen, aur dono ka nateeja ek: **paper ke foundational levels saaf ho jaate the.**
+
+**1. Tie hamesha neeche se katti thi.** `max(result, key=result.get)` barabar qeematon mein
+**pehli** key deta hai, aur dict `REMEMBER → CREATE` chalta hai. Chhoti ginti par har level
+`ceil` se 1 hota hai, to katai `REMEMBER` se shuru hoti thi:
+
+```
+balanced, 3   ->  REMEMBER 0  UNDERSTAND 0  APPLY 0
+                  ANALYZE 1   EVALUATE 1    CREATE 1
+```
+
+Yani ek chhote "balanced" paper mein **sirf CREATE/EVALUATE level ke sawal** — bacche ke liye
+bilkul ulta.
+
+**2. `take = min(surplus, bucket)` poori bucket ek saath kha jaata tha** — aur sab se bari
+bucket wahi hoti hai jis ki us distribution ko sab se zyada zaroorat hai. `foundational` (jahan
+REMEMBER 40% hai) 3 par **REMEMBER ke baghair** wapas aata tha.
+
+**Fix:** tie ab ooncha level se katti hai (`reversed(order)`), aur katai **ek-ek kar ke** hoti
+hai. Ab:
+
+| | pehle | ab |
+|---|---|---|
+| `balanced` 3 | ANALYZE/EVALUATE/CREATE | REMEMBER/UNDERSTAND/APPLY |
+| `balanced` 1 | CREATE 1 | REMEMBER 1 |
+| `foundational` 3 | REMEMBER 0 | REMEMBER 1 |
+| `foundational` 10 | — | 4/3/2/1 — theek 40/30/20/10 |
+| `balanced` 10, 20, 30 | — | **koi tabdeeli nahi** |
+
+### Yeh bug isliye chhupa raha ke tests sirf JORH dekhte the
+
+`test_bloom_service.py` ke saare purane tests `sum(dist.values()) == n` jaisi cheez naapte hain,
+aur ek bhi yeh nahi dekhta ke **sawal kis level par gaya**. Ginti hamesha theek thi; paper nahi.
+**Chhe naye tests** wahi khala bharte hain — chhota balanced paper neeche se bharta hai,
+`foundational` REMEMBER kabhi nahi khota, aur koi ooncha level tab tak nahi bharta jab tak neeche
+wale khaali hon.
+
+**Har paper path is se guzarta hai** — normal, custom-ratio, sections. 934 pass, yani kisi
+mojooda bartao ka tootna naapa nahi gaya.
+
+## 2026-08-21 — Ratio Phase 2: section ke ANDAR qism-wise theek ginti
+
+ROADMAP feature #2 — **aur uska bara hissa kal hi ship ho chuka tha.**
+
+"3 MCQ / 4 short / 3 essay" sections mode se pehle se mumkin tha: teen sections, ek-ek qism,
+counts 3/4/3. Jo **nahi** ho sakta tha wo yeh hai — **ek hi section ke andar** qism-wise theek
+ginti. Repository ka SQL `question_type IN (...) ORDER BY usage_count ASC LIMIT n` hai, to ek
+section mein do qismein daalne par andar ka mix usage counts par chhut jata tha.
+
+Aur ek baat jo naapne se saaf hui: **aaj koi paper bina headings ke chhapta hi nahi.**
+`custom-ratio` wale papers bhi hardcoded "Section A — Objective" / "Section B — Subjective" ke
+saath aate hain, kyunke `_assemble_by_ratio` `sections_meta` set nahi karta. To PRD R5 ki
+"counts without sections" wali shakl mojood hi nahi thi.
+
+**Faisla (Irfan):** wahi khala bharo — section ke andar qism-wise ginti.
+
+### Shakl
+
+```json
+{ "heading": "Section A", "type_counts": [
+    { "question_type": "multiple-choice", "count": 3 },
+    { "question_type": "short-answer",    "count": 4 } ] }
+```
+
+`type_counts` **LIST hai, dict nahi** — tarteeb ma'ni rakhti hai: sawal kaghaz par isi tarteeb
+mein chhapte hain, to teacher tay karta hai ke pehle MCQ aayen ya short-answer. **Naapa gaya:**
+`["essay","essay","true-false","true-false"]`.
+
+Purani shakl (`question_types + count`) waise ki waisi hai. Dono ek saath dena **422** — dono
+ginti tay karte hain, aur khamoshi se ek chun lena teacher ko aisa paper de deta jo usne maanga
+hi nahi.
+
+### Per-type kami kaghaz par — print.html bilkul nahi chhua
+
+`shortfall: 2` teacher ko yeh nahi batata ke **kaunsi** qism kam pari, aur `type_counts` ki poori
+baat hi qism-wise ginti hai. `shortfall_reason` blueprint ki apni key hai jise `print.html`
+**pehle se render karta hai** (`.sf-reason`) — to per-type breakdown muft mein mil gaya. Browser
+mein naapa:
+
+```
+"multiple-choice: 3 maange, 2 mile · short-answer: 4 maange, 3 mile"
+```
+
+Saada shakl par yeh key **nahi** aati (wahan qism ek hi hoti hai, adad khud kaafi hai) — kal ka
+bartao waisa ka waisa, aur uska apna test hai.
+
+### UI — per-section toggle
+
+Har section row par "Har qism ki alag ginti". Off par section ki ek ginti; on par har chuni hui
+qism ka apna input aur section wali ginti ghayab. Do shaklein server par bhi alag hain, isliye
+mila-jula UI banane ka matlab wahi 422 client par dobara likhna hota.
+
+Toggle on karne par mojooda ginti qismon par baant di jaati hai — teacher ne jo likha hai wo
+zaya nahi jata.
+
+### Naapa gaya
+
+| | nateeja |
+|---|---|
+| exact counts | 3 MCQ + 4 short maange, theek 3 aur 4 mile (seeded bank) ✓ |
+| tarteeb | `type_counts` ki tarteeb par chalti hai ✓ |
+| per-type kami | `shortfall_reason` mein qism ka naam ✓, aur print par nazar aata hai ✓ |
+| saada shakl | reason `null`, meta ki keys kal jaisi ✓ |
+| dono ek saath | 422 ✓ · ek qism do dafa 422 ✓ · dono mein se koi nahi 422 ✓ |
+| ek paper mein dono | chalta hai ✓ |
+| UI toggle | ginti hatti/aati hai, payload shakl badalta hai ✓ |
+| **E2E: UI se click** | dono shaklein ek paper mein, per-type reason samet ✓ |
+
+**934 passed** (908 + 12 sections + 14 bloom), ruff clean, ratchet flat (`inline_style_attrs`
+466, `unsanctioned_hex` 354), frozen inventory mein **koi tabdeeli nahi**.
+
+⚠ **D39 phir:** naye `onchange`/`oninput` handlers (`onSectionExact`, `onSectionTypeCount`) guard
+se bahar hain — isi liye inventory khamosh rahi.
+
+### Ek ghalati jo maine ki
+
+Pehle edit mein `selected_ids.extend(ids)` / `selected_questions.extend(questions)` ki do lines
+gir gayin, to har paper khaali bana aur **kal ke 8 tests foran fail** ho gaye. Suite ne wahi
+pakra jis ke liye wo likhe gaye the.
+
 ## 2026-08-20 — Sections mode (A/B/C): teacher apne sections khud tay karta hai
 
 ROADMAP ka feature #1. **908 pytest pass** (890 + 18 naye), ratchet flat, browser mein

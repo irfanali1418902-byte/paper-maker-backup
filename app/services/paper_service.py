@@ -245,26 +245,56 @@ def _assemble_by_sections(req: GeneratePaperRequest) -> dict | None:
     sections_meta: list[dict] = []
 
     for spec in req.sections or []:
-        distribution = bloom_service.calculate_bloom_distribution(
-            req.bloom_distribution, spec.count
-        )
-        ids, questions = _pick_questions(
-            req.subject,
-            distribution,
-            req.difficulty,
-            list(spec.question_types),
-            req.language_filter,
-        )
+        if spec.type_counts:
+            # Ratio Phase 2 (PRD R5): har qism apni ginti tak alag uthti hai.
+            # Ek hi _pick_questions call mein saari qismein daalna yeh nahi kar
+            # sakta — repository `question_type IN (...) ORDER BY usage_count`
+            # karti hai, to andar ka mix usage counts par chhut jata hai.
+            # Tarteeb type_counts ki hai: sawal kaghaz par isi tarteeb mein aayenge.
+            ids: list[str] = []
+            questions: list[dict] = []
+            gaps: list[str] = []
+            for tc in spec.type_counts:
+                dist = bloom_service.calculate_bloom_distribution(
+                    req.bloom_distribution, tc.count
+                )
+                t_ids, t_qs = _pick_questions(
+                    req.subject, dist, req.difficulty, [tc.question_type], req.language_filter
+                )
+                ids.extend(t_ids)
+                questions.extend(t_qs)
+                if len(t_qs) < tc.count:
+                    gaps.append(f"{tc.question_type}: {tc.count} maange, {len(t_qs)} mile")
+        else:
+            distribution = bloom_service.calculate_bloom_distribution(
+                req.bloom_distribution, spec.count
+            )
+            ids, questions = _pick_questions(
+                req.subject,
+                distribution,
+                req.difficulty,
+                list(spec.question_types or []),
+                req.language_filter,
+            )
+            gaps = []
+
         selected_ids.extend(ids)
         selected_questions.extend(questions)
-        sections_meta.append(
-            {
-                "heading": spec.heading,
-                "question_ids": ids,
-                "marks": sum(q["marks"] for q in questions),
-                "shortfall": spec.count - len(questions),
-            }
-        )
+
+        section_meta = {
+            "heading": spec.heading,
+            "question_ids": ids,
+            "marks": sum(q["marks"] for q in questions),
+            "shortfall": spec.wanted - len(questions),
+        }
+        # `shortfall_reason` blueprint ki key hai aur print.html use PEHLE SE
+        # render karta hai (sf-reason). Sirf ek adad — "2 kam" — teacher ko yeh
+        # nahi batata ke kaunsi qism kam pari, aur type_counts ki poori baat hi
+        # qism-wise ginti hai. Isliye jahan qism-wise maanga gaya wahan wajah
+        # bhi qism-wise likhi jaati hai; kaghaz par wo apne aap aa jaati hai.
+        if gaps:
+            section_meta["shortfall_reason"] = " · ".join(gaps)
+        sections_meta.append(section_meta)
 
     # Ek bhi sawal na mila to purane raaston jaisa hi 404 — caller isay map karta hai.
     if not selected_questions:

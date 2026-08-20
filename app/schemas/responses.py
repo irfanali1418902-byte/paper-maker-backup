@@ -204,6 +204,12 @@ class PaperSection(BaseModel):
     #: Sections mode shortfall par fail nahi hota, use REPORT karta hai —
     #: normal path chup-chaap kam sawal de deta hai, yeh wajah dikhata hai.
     shortfall: int
+    #: Sirf `type_counts` wale sections par: qism-wise kami ("multiple-choice:
+    #: 3 maange, 1 mile"). Blueprint ki apni key hai aur print.html ise pehle se
+    #: render karta hai, isliye per-type kami kaghaz par muft mein aa jaati hai.
+    #: Saada `question_types + count` wale section par yeh set NAHI hoti — wahan
+    #: qism ek hi hoti hai to `shortfall` ka adad khud kaafi hai.
+    shortfall_reason: Optional[str] = None
 
 
 class GeneratePaperResponse(BaseModel):

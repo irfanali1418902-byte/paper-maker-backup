@@ -260,3 +260,188 @@ def test_duplicate_types_within_a_section_collapse(client):
     assert r.status_code == 200
     stored = json.loads(papers_repository.find_by_id(r.json()["paper_id"])["sections_meta"])
     assert stored[0]["shortfall"] == 2 - len(stored[0]["question_ids"])
+
+
+# ---- Ratio Phase 2 — section ke ANDAR qism-wise theek ginti ----------------
+#
+# PRD R5. `question_types + count` yeh nahi kar sakta: repository ka SQL
+# `question_type IN (...) ORDER BY usage_count ASC LIMIT n` hai, to ek section
+# mein do qismein daal kar bhi andar ka mix usage counts par chhut jata hai.
+
+
+def test_type_counts_give_exactly_what_was_asked(client):
+    _seed_types()
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "Mixed",
+                "type_counts": [
+                    {"question_type": "multiple-choice", "count": 3},
+                    {"question_type": "short-answer", "count": 4},
+                ],
+            }
+        ],
+    )
+    assert r.status_code == 200
+    body = r.json()
+    by_id = {q["id"]: q for q in body["questions"]}
+    got = [by_id[i]["question_type"] for i in body["sections"][0]["question_ids"]]
+    assert got.count("multiple-choice") == 3
+    assert got.count("short-answer") == 4
+    assert len(got) == 7
+
+
+def test_type_counts_keep_their_order(client):
+    """Sawal kaghaz par isi tarteeb mein chhapte hain, isliye type_counts LIST
+    hai dict nahi — teacher tay karta hai ke pehle kaunsi qism aaye."""
+    _seed_types()
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "Order",
+                "type_counts": [
+                    {"question_type": "essay", "count": 2},
+                    {"question_type": "true-false", "count": 2},
+                ],
+            }
+        ],
+    )
+    body = r.json()
+    by_id = {q["id"]: q for q in body["questions"]}
+    got = [by_id[i]["question_type"] for i in body["sections"][0]["question_ids"]]
+    assert got == ["essay", "essay", "true-false", "true-false"]
+
+
+def test_type_counts_shortfall_names_the_type(client):
+    """`shortfall: 2` teacher ko yeh nahi batata ke kaunsi qism kam pari, aur
+    type_counts ki poori baat hi qism-wise ginti hai. shortfall_reason blueprint
+    ki apni key hai jise print.html pehle se render karta hai."""
+    _seed_types()
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "Kami",
+                "type_counts": [
+                    {"question_type": "short-answer", "count": 2},
+                    {"question_type": "fill-blank", "count": 5},
+                ],
+            }
+        ],
+    )
+    assert r.status_code == 200
+    sec = r.json()["sections"][0]
+    assert sec["shortfall"] == 5
+    assert "fill-blank" in sec["shortfall_reason"]
+    assert "short-answer" not in sec["shortfall_reason"]
+
+    stored = json.loads(papers_repository.find_by_id(r.json()["paper_id"])["sections_meta"])
+    assert "shortfall_reason" in stored[0]
+
+
+def test_simple_section_has_no_shortfall_reason(client):
+    """Saada shakl ka bartao 2026-08-20 wala hi rehna chahiye — wahan qism ek
+    hi hoti hai, to adad khud kaafi hai aur meta mein nayi key nahi aati."""
+    _seed_types()
+    # count seeded ginti se zyada, taake shortfall zaroor bane — sawal yeh hai ke
+    # SHORTFALL hone par bhi saada shakl reason NAHI likhti.
+    r = _generate(client, [{"heading": "A", "question_types": ["essay"], "count": 99}])
+    assert r.status_code == 200
+    assert r.json()["sections"][0]["shortfall"] > 0
+    assert r.json()["sections"][0]["shortfall_reason"] is None
+    stored = json.loads(papers_repository.find_by_id(r.json()["paper_id"])["sections_meta"])
+    assert set(stored[0]) == {"heading", "question_ids", "marks", "shortfall"}
+
+
+def test_type_counts_shortfall_counts_the_sum(client):
+    _seed_types()
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "Sum",
+                "type_counts": [
+                    {"question_type": "fill-blank", "count": 4},
+                    {"question_type": "essay", "count": 2},
+                ],
+            }
+        ],
+    )
+    sec = r.json()["sections"][0]
+    assert sec["shortfall"] == 6 - len(sec["question_ids"])
+
+
+def test_both_shapes_at_once_is_refused(client):
+    """Dono ginti tay karte hain — khamoshi se ek chun lena teacher ko aisa
+    paper de deta jo usne maanga hi nahi."""
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "A",
+                "question_types": ["essay"],
+                "count": 3,
+                "type_counts": [{"question_type": "essay", "count": 3}],
+            }
+        ],
+    )
+    assert r.status_code == 422
+
+
+def test_neither_shape_is_refused(client):
+    assert _generate(client, [{"heading": "A"}]).status_code == 422
+
+
+def test_duplicate_type_in_type_counts_is_refused(client):
+    """Ek hi qism do dafa: kaun si ginti sahi hai, is ka koi jawab nahi."""
+    r = _generate(
+        client,
+        [
+            {
+                "heading": "A",
+                "type_counts": [
+                    {"question_type": "essay", "count": 2},
+                    {"question_type": "essay", "count": 3},
+                ],
+            }
+        ],
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        [{"question_type": "essay", "count": 0}],
+        [{"question_type": "not-a-type", "count": 2}],
+        [],
+    ],
+)
+def test_bad_type_counts_are_422(client, bad):
+    assert _generate(client, [{"heading": "A", "type_counts": bad}]).status_code == 422
+
+
+def test_type_counts_and_simple_sections_mix_in_one_paper(client):
+    """Ek paper mein dono shaklein saath chal saken — warna teacher ko poora
+    paper ek hi tareeqe mein likhna parta."""
+    _seed_types()
+    r = _generate(
+        client,
+        [
+            {"heading": "A", "question_types": ["multiple-choice", "true-false"], "count": 4},
+            {
+                "heading": "B",
+                "type_counts": [
+                    {"question_type": "short-answer", "count": 2},
+                    {"question_type": "essay", "count": 2},
+                ],
+            },
+        ],
+    )
+    assert r.status_code == 200
+    body = r.json()
+    by_id = {q["id"]: q for q in body["questions"]}
+    b_types = [by_id[i]["question_type"] for i in body["sections"][1]["question_ids"]]
+    assert b_types == ["short-answer", "short-answer", "essay", "essay"]

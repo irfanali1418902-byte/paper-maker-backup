@@ -1329,16 +1329,38 @@ function resetSectionsToDefault() {
   // Wahi do hisse jo print.html abhi bina poochhe banata hai — teacher ko
   // shuruat mein wahi mile jo aaj milta hai, phir wo badal le.
   _sections = [
-    { heading: 'Section A — Objective',  types: ['multiple-choice', 'true-false'], count: 5 },
-    { heading: 'Section B — Subjective', types: ['short-answer'],                  count: 5 },
+    { heading: 'Section A — Objective',  types: ['multiple-choice', 'true-false'], count: 5, exact: false, counts: {} },
+    { heading: 'Section B — Subjective', types: ['short-answer'],                  count: 5, exact: false, counts: {} },
   ];
   renderSectionRows();
 }
 
 function addSectionRow() {
   const letter = String.fromCharCode(65 + _sections.length);   // A, B, C...
-  _sections.push({ heading: `Section ${letter}`, types: ['short-answer'], count: 5 });
+  _sections.push({ heading: `Section ${letter}`, types: ['short-answer'], count: 5, exact: false, counts: {} });
   renderSectionRows();
+}
+
+// "Har qism ki alag ginti" — Ratio Phase 2. Off par section ki ek ginti chalti
+// hai aur andar ka mix bank par chhut jata hai; on par har chuni hui qism apni
+// ginti leti hai. Do shaklein server par bhi alag hain (question_types+count vs
+// type_counts) aur wahan ek saath bhejna 422 hai, isliye yeh toggle hai — dono
+// ka mila jula UI banane ka matlab woh 422 client par dobara likhna hota.
+function onSectionExact(idx, checked) {
+  const s = _sections[idx];
+  s.exact = checked;
+  if (checked) {
+    // Section ki ginti ko qismon par baant do taake teacher ko sifar se shuru
+    // na karna pare — jo ginti wo pehle likh chuka hai wo zaya na jaye.
+    const per = Math.max(1, Math.round((s.count || 0) / Math.max(1, s.types.length)));
+    s.types.forEach(t => { if (!(s.counts[t] > 0)) s.counts[t] = per; });
+  }
+  renderSectionRows();
+}
+
+function onSectionTypeCount(idx, type, value) {
+  _sections[idx].counts[type] = parseInt(value, 10) || 0;
+  renderSectionsSummary();
 }
 
 function removeSectionRow(idx) {
@@ -1368,41 +1390,73 @@ function renderSectionRows() {
       <div class="sec-row__top">
         <input class="sec-row__heading" value="${escapeHtml(s.heading)}" placeholder="Section ka naam"
                oninput="onSectionField(${i}, 'heading', this.value)" />
+        ${s.exact ? '' : `
         <input class="sec-row__count" type="number" min="1" value="${s.count}" title="Kitne sawal"
-               oninput="onSectionField(${i}, 'count', this.value)" />
+               oninput="onSectionField(${i}, 'count', this.value)" />`}
         <button type="button" class="ghost-btn sec-row__remove" title="Section hatao"
                 onclick="removeSectionRow(${i})">✕</button>
       </div>
       <div class="sec-row__types">
-        ${SECTION_TYPES.map(t => `
+        ${SECTION_TYPES.map(t => {
+          const on = s.types.includes(t.value);
+          return `
           <label class="sec-row__type">
-            <input type="checkbox" ${s.types.includes(t.value) ? 'checked' : ''}
+            <input type="checkbox" ${on ? 'checked' : ''}
                    onchange="onSectionType(${i}, '${t.value}', this.checked)" />
             ${t.label}
-          </label>`).join('')}
+            ${s.exact && on ? `
+            <input class="sec-row__typecount" type="number" min="1" title="${t.label} ke kitne sawal"
+                   value="${s.counts[t.value] || 1}"
+                   oninput="onSectionTypeCount(${i}, '${t.value}', this.value)" />` : ''}
+          </label>`;
+        }).join('')}
       </div>
+      <label class="sec-row__exact">
+        <input type="checkbox" ${s.exact ? 'checked' : ''}
+               onchange="onSectionExact(${i}, this.checked)" />
+        Har qism ki alag ginti
+      </label>
     </div>`).join('');
   renderSectionsSummary();
+}
+
+/** Ek section se kitne sawal maange ja rahe hain — dono shaklon ka ek jawab. */
+function sectionWanted(s) {
+  return s.exact
+    ? s.types.reduce((n, t) => n + (s.counts[t] || 0), 0)
+    : (s.count || 0);
+}
+
+function sectionIsIncomplete(s) {
+  if (!s.heading.trim() || !s.types.length) return true;
+  return s.exact ? s.types.some(t => !(s.counts[t] > 0)) : !(s.count > 0);
 }
 
 function renderSectionsSummary() {
   const el = document.getElementById('sectionsSummary');
   if (!el) return;
-  const total = _sections.reduce((n, s) => n + (s.count || 0), 0);
-  const bad = _sections.filter(s => !s.heading.trim() || !s.types.length || !(s.count > 0)).length;
+  const total = _sections.reduce((n, s) => n + sectionWanted(s), 0);
+  const bad = _sections.filter(sectionIsIncomplete).length;
   el.textContent = bad
-    ? `${_sections.length} section — ${bad} adhoora (naam, kam az kam ek qism, aur ginti chahiye)`
+    ? `${_sections.length} section — ${bad} adhoora (naam, kam az kam ek qism, aur har ginti chahiye)`
     : `${_sections.length} section — kul ${total} sawal maange jayenge`;
 }
 
-/** buildPaper() ke liye: sections array, ya null agar mode chalu nahi. */
+/** buildPaper() ke liye: sections array, ya null agar mode chalu nahi.
+ *  Do shaklein server ki hain: `question_types + count`, ya `type_counts`.
+ *  Dono ek saath bhejna wahan 422 hai, isliye yahan bhi ek hi bhejta hai. */
 function collectSections() {
   if (val('paperType') !== 'sections') return null;
-  return _sections.map(s => ({
-    heading: s.heading.trim(),
-    question_types: s.types,
-    count: s.count,
-  }));
+  return _sections.map(s => s.exact
+    ? {
+        heading: s.heading.trim(),
+        type_counts: s.types.map(t => ({ question_type: t, count: s.counts[t] || 0 })),
+      }
+    : {
+        heading: s.heading.trim(),
+        question_types: s.types,
+        count: s.count,
+      });
 }
 
 async function generateQuestions() {
@@ -1456,10 +1510,11 @@ async function buildPaper() {
   const sections = collectSections();
   if (sections) {
     if (!sections.length) { setStatus('Kam az kam ek section chahiye.'); return; }
-    const adhoora = sections.find(s => !s.heading || !s.question_types.length || !(s.count > 0));
-    if (adhoora) {
+    // Dono shaklein alag se dekhni parti hain — `count` type_counts wale section
+    // par hota hi nahi, aur us par `.length` lagana yahan chup-chaap gir jata.
+    if (_sections.some(sectionIsIncomplete)) {
       // Server bhi 422 deta, magar wahan se message teacher ke kaam ka nahi hota.
-      setStatus('Har section ka naam, kam az kam ek qism, aur ginti zaroori hai.');
+      setStatus('Har section ka naam, kam az kam ek qism, aur har ginti zaroori hai.');
       return;
     }
     body.sections = sections;

@@ -30,17 +30,63 @@ QuestionType = Literal[
 ]
 
 
+class SectionTypeCount(BaseModel):
+    """Ek qism aur us ki theek ginti — "3 MCQ", "4 short-answer"."""
+
+    question_type: QuestionType
+    count: int = Field(ge=1)
+
+
 class PaperSectionSpec(BaseModel):
     """Ek section: uska heading, kaunsi qism ke sawal, aur kitne.
 
     Sawal QISM se section mein jaate hain (Irfan ka faisla, 2026-08-20) — yani
     do sections ek hi qism nahi le sakte, aur yeh us hardcoded do-hisse wale
     split ka seedha barha hua roop hai jo print.html abhi karta hai.
+
+    DO SOORATEIN, aur EK HI dena hai:
+
+      question_types + count   "7 sawal, MCQ ya short-answer mein se"
+      type_counts              "theek 3 MCQ aur 4 short-answer"
+
+    Doosri soorat Ratio Phase 2 hai (PRD R5). Pehli soorat ek se zyada qismein
+    de kar bhi ANDAR ka mix tay nahi kar sakti — repository ka SQL
+    `WHERE question_type IN (...) ORDER BY usage_count ASC LIMIT n` hai, yani
+    mix usage counts par chhora hua hai. `type_counts` wahi khala bharta hai.
+
+    `type_counts` LIST hai, dict nahi, kyunke TARTEEB ma'ni rakhti hai: sawal
+    kaghaz par isi tarteeb mein chhapte hain, to teacher tay karta hai ke pehle
+    MCQ aayen ya short-answer.
     """
 
     heading: str = Field(min_length=1, max_length=120)
-    question_types: List[QuestionType] = Field(min_length=1)
-    count: int = Field(ge=1)
+    question_types: Optional[List[QuestionType]] = None
+    count: Optional[int] = Field(default=None, ge=1)
+    type_counts: Optional[List[SectionTypeCount]] = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _one_shape_only(self) -> "PaperSectionSpec":
+        simple = self.question_types is not None or self.count is not None
+        if simple and self.type_counts:
+            raise ValueError(
+                "section mein ya to question_types+count dein ya type_counts — dono nahi"
+            )
+        if self.type_counts:
+            seen = [tc.question_type for tc in self.type_counts]
+            if len(set(seen)) != len(seen):
+                # Ek hi qism do dafa: kaun si ginti sahi hai, is ka jawab nahi.
+                raise ValueError("type_counts mein ek qism do dafa nahi aa sakti")
+            return self
+        if not self.question_types or self.count is None:
+            raise ValueError("section ko question_types+count chahiye, ya type_counts")
+        return self
+
+    @property
+    def wanted(self) -> int:
+        """Is section se kitne sawal maange gaye — dono shaklon ke liye ek jawab."""
+        if self.type_counts:
+            return sum(tc.count for tc in self.type_counts)
+        return self.count or 0
 
     @field_validator("heading")
     @classmethod
@@ -53,7 +99,12 @@ class PaperSectionSpec(BaseModel):
 
     @field_validator("question_types")
     @classmethod
-    def _dedupe_types(cls, v: List[str]) -> List[str]:
+    def _dedupe_types(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        # None tab aata hai jab section type_counts wali shakl mein hai.
+        if v is None:
+            return v
+        if not v:
+            raise ValueError("question_types khaali nahi ho sakti")
         # Ek hi type do dafa dene se pick badalti nahi, sirf meta ganda hota hai.
         seen: list[str] = []
         for t in v:

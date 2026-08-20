@@ -315,4 +315,23 @@
     font-weight: normal;
     font-size: 13px;
   }
+
+  /* Ratio Phase 2 — "har qism ki alag ginti" on ho to har chuni hui qism ke
+     saath uska apna number input aata hai, aur section wali ek ginti hat jaati
+     hai (dono shaklein server par bhi alag hain aur saath bhejna 422 hai). */
+  .sec-row__typecount {
+    width: 56px;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .sec-row__exact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    font-weight: normal;
+    font-size: 12px;
+    color: var(--muted);
+  }
 }
