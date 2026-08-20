@@ -226,4 +226,93 @@
   .summary-row:last-child {
     border-bottom: none;
   }
+
+  /* -------------------------------------------------------------------------
+     SECTIONS MODE ka builder (2026-08-20) — generate screen par teacher apne
+     sections banata hai.
+
+     YEH SAB YAHAN HAI, INLINE style= MEIN NAHI, aur wo ek naapi hui majboori
+     hai. Pehli koshish aas-paas ke markup ki naqal mein inline styles ke saath
+     likhi gayi thi; ratchet ne foran roka — `inline_style_attrs` 466 -> 477
+     (+11) aur `inline_style_non_display` 385 -> 391. Sprint 5 ka poora maqsad
+     wo 466 girana hai, to naya feature unhein barhaye to wo epic ke khilaf kaam
+     hai. Rows JS template se bante hain, magar wo template bhi isi file ka
+     hissa hai — ratchet use markup ki tarah ginta hai.
+     ------------------------------------------------------------------------- */
+  .sections-block {
+    margin: 2px 0 12px;
+  }
+
+  /* JS `.style.display` ke bajaye class toggle karta hai; wahi wajah upar. */
+  .sections-block.is-hidden {
+    display: none;
+  }
+
+  .sections-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .sections-summary {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .sections-hint {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .sec-row {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .sec-row__top {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  /* min-width:0 flex item ko sikurhne deta hai — iske baghair lambi heading
+     row ko chaura kar ke count aur remove button bahar dhakel deti hai. */
+  .sec-row__heading {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sec-row__count {
+    width: 78px;
+    flex-shrink: 0;
+  }
+
+  .sec-row__remove {
+    flex-shrink: 0;
+  }
+
+  .sec-row__types {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  /* `font-weight: normal` aur `margin: 0` yahan laazmi hain: form ka apna
+     `label` bold aur bottom-margin wala hai, aur ye checkbox labels us ke
+     andar hain. */
+  .sec-row__type {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-weight: normal;
+    font-size: 13px;
+  }
 }

@@ -189,11 +189,31 @@ class SyllabusZipImportResponse(BaseModel):
     files: List[SyllabusZipFileResult]
 
 
+class PaperSection(BaseModel):
+    """Sections mode ka ek section, jaisa paper row ki sections_meta mein jata hai.
+
+    Shakl blueprint_paper_service.py se aayi hai aur static/print.html isay parhta
+    hai — teeno jagah ek hi keys. `marks` sirf record ke liye hai: print.html
+    section ke marks sawalon se KHUD jorhta hai (sectionMarks), is field se nahi.
+    """
+
+    heading: str
+    question_ids: List[str]
+    marks: int
+    #: Kitne sawal kam pare (maange gaye minus mile). 0 = poore mil gaye.
+    #: Sections mode shortfall par fail nahi hota, use REPORT karta hai —
+    #: normal path chup-chaap kam sawal de deta hai, yeh wajah dikhata hai.
+    shortfall: int
+
+
 class GeneratePaperResponse(BaseModel):
     paper_id: str
     total_marks: int
     questions: List[PaperQuestion]
     balance_summary: PaperBalanceSummary
+    #: Sirf sections mode bhejta hai. None = purana raasta, jahan print.html apne
+    #: hardcoded A/B split par girta hai.
+    sections: Optional[List[PaperSection]] = None
 
 
 class AdaptiveLevel(BaseModel):

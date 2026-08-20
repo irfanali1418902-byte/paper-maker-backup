@@ -132,7 +132,28 @@
               <option value="mcq" data-i18n="opt.mcq">MCQ-only</option>
               <option value="subjective" data-i18n="opt.subjective">Subjective</option>
               <option value="custom-ratio" data-i18n="opt.customRatio">Custom ratio (MCQ vs Subjective)</option>
+              <option value="sections" data-i18n="opt.sections">Sections (A / B / C)</option>
             </select>
+
+            <!-- Sections mode. Rows JS se bante hain (renderSectionRows) — markup
+                 mein koi row hardcoded nahi, warna do jagah ek hi shakl rakhni parti.
+                 Yahan "Total questions" ka koi asar nahi: ginti sections se aati hai.
+
+                 KOI INLINE style= NAHI, aur ye jaan boojh kar hai: aas-paas ka
+                 markup un se bhara hai, magar ratchet (inline_style_attrs) unhein
+                 sirf neeche jaane deta hai. Sab kuch pages/index.css mein hai. -->
+            <div id="sectionsBlock" class="sections-block is-hidden">
+              <div id="sectionRows"></div>
+              <div class="sections-actions">
+                <button type="button" class="ghost-btn" onclick="addSectionRow()">+ Section</button>
+                <span id="sectionsSummary" class="sections-summary"></span>
+              </div>
+              <p class="sections-hint">
+                Har section apni qism ke sawal uthata hai. Bank mein us qism ke kam sawal
+                hon to paper phir bhi banta hai — kami print par us section ke neeche
+                likhi aati hai. Upar wala "Total questions" sections mode mein nahi lagta.
+              </p>
+            </div>
 
             <div id="ratioBlock" style="display:none; margin:2px 0 12px;">
               <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
@@ -618,6 +639,7 @@ const I18N = {
     'opt.balanced': 'Balanced', 'opt.foundational': 'Foundational', 'opt.advanced': 'Advanced',
     'opt.mixed': 'Mixed (all types)', 'opt.mcq': 'MCQ-only', 'opt.subjective': 'Subjective',
     'opt.customRatio': 'Custom ratio (MCQ vs Subjective)',
+    'opt.sections': 'Sections (A / B / C)',
     'form.mcqPercent': 'MCQ % (rest subjective)',
     'btn.genQuestions': '1. Generate questions (AI)',
     'btn.buildPaper': '2. Build paper from bank',
@@ -711,6 +733,7 @@ const I18N = {
     'opt.balanced': 'متوازن', 'opt.foundational': 'بنیادی', 'opt.advanced': 'اعلیٰ',
     'opt.mixed': 'ملا جلا (تمام اقسام)', 'opt.mcq': 'صرف MCQ', 'opt.subjective': 'موضوعی',
     'opt.customRatio': 'حسبِ ضرورت تناسب (MCQ بمقابلہ موضوعی)',
+    'opt.sections': 'حصے (الف / ب / ج)',
     'form.mcqPercent': 'MCQ فیصد (باقی موضوعی)',
     'btn.genQuestions': '۱۔ سوالات بنائیں (اے آئی)',
     'btn.buildPaper': '۲۔ بینک سے پرچہ بنائیں',
@@ -1270,13 +1293,116 @@ function getSelectedQuestionTypes() {
 }
 
 function onPaperTypeChange() {
-  // Ratio controls sirf "custom-ratio" par dikhein.
-  const isRatio = val('paperType') === 'custom-ratio';
-  document.getElementById('ratioBlock').style.display = isRatio ? 'block' : 'none';
+  // Ratio controls sirf "custom-ratio" par, sections wale sirf "sections" par.
+  const type = val('paperType');
+  document.getElementById('ratioBlock').style.display = type === 'custom-ratio' ? 'block' : 'none';
+  // classList, .style.display nahi — markup mein `style="display:none"` likhna
+  // ratchet ke inline_style_attrs ko upar le jaata hai (ratioBlock upar wala
+  // purana tareeqa hai aur waise hi chhora gaya).
+  document.getElementById('sectionsBlock').classList.toggle('is-hidden', type !== 'sections');
+  if (type === 'sections' && !_sections.length) resetSectionsToDefault();
 }
 
 function setRatioPreset(mcqPercent) {
   document.getElementById('mcqPercent').value = mcqPercent;
+}
+
+// ============================================================================
+// SECTIONS MODE — teacher apne sections khud tay karta hai (A/B/C).
+//
+// Sawal QISM se section mein jaate hain. State yahan ek plain array hai aur
+// markup har tabdeeli par dobara banta hai; rows par `data-idx` se handler
+// judte hain, JSON.stringify onclick ke andar NAHI jaata — us trap ne pehle
+// bhi is codebase mein ek button chalu aur doosra khamosh chhora hai.
+// ============================================================================
+const SECTION_TYPES = [
+  { value: 'multiple-choice', label: 'MCQ' },
+  { value: 'true-false',      label: 'True/False' },
+  { value: 'short-answer',    label: 'Short' },
+  { value: 'fill-blank',      label: 'Fill blank' },
+  { value: 'essay',           label: 'Essay' },
+];
+
+let _sections = [];
+
+function resetSectionsToDefault() {
+  // Wahi do hisse jo print.html abhi bina poochhe banata hai — teacher ko
+  // shuruat mein wahi mile jo aaj milta hai, phir wo badal le.
+  _sections = [
+    { heading: 'Section A — Objective',  types: ['multiple-choice', 'true-false'], count: 5 },
+    { heading: 'Section B — Subjective', types: ['short-answer'],                  count: 5 },
+  ];
+  renderSectionRows();
+}
+
+function addSectionRow() {
+  const letter = String.fromCharCode(65 + _sections.length);   // A, B, C...
+  _sections.push({ heading: `Section ${letter}`, types: ['short-answer'], count: 5 });
+  renderSectionRows();
+}
+
+function removeSectionRow(idx) {
+  _sections.splice(idx, 1);
+  renderSectionRows();
+}
+
+function onSectionField(idx, field, value) {
+  _sections[idx][field] = field === 'count' ? (parseInt(value, 10) || 0) : value;
+  renderSectionsSummary();
+}
+
+function onSectionType(idx, type, checked) {
+  const types = _sections[idx].types;
+  const at = types.indexOf(type);
+  if (checked && at < 0) types.push(type);
+  if (!checked && at >= 0) types.splice(at, 1);
+  renderSectionsSummary();
+}
+
+function renderSectionRows() {
+  const host = document.getElementById('sectionRows');
+  // Yahan bhi koi inline style= nahi — ye template string file ka hissa hai, to
+  // ratchet ise ginta hai bilkul waise jaise markup ko.
+  host.innerHTML = _sections.map((s, i) => `
+    <div class="sec-row">
+      <div class="sec-row__top">
+        <input class="sec-row__heading" value="${escapeHtml(s.heading)}" placeholder="Section ka naam"
+               oninput="onSectionField(${i}, 'heading', this.value)" />
+        <input class="sec-row__count" type="number" min="1" value="${s.count}" title="Kitne sawal"
+               oninput="onSectionField(${i}, 'count', this.value)" />
+        <button type="button" class="ghost-btn sec-row__remove" title="Section hatao"
+                onclick="removeSectionRow(${i})">✕</button>
+      </div>
+      <div class="sec-row__types">
+        ${SECTION_TYPES.map(t => `
+          <label class="sec-row__type">
+            <input type="checkbox" ${s.types.includes(t.value) ? 'checked' : ''}
+                   onchange="onSectionType(${i}, '${t.value}', this.checked)" />
+            ${t.label}
+          </label>`).join('')}
+      </div>
+    </div>`).join('');
+  renderSectionsSummary();
+}
+
+function renderSectionsSummary() {
+  const el = document.getElementById('sectionsSummary');
+  if (!el) return;
+  const total = _sections.reduce((n, s) => n + (s.count || 0), 0);
+  const bad = _sections.filter(s => !s.heading.trim() || !s.types.length || !(s.count > 0)).length;
+  el.textContent = bad
+    ? `${_sections.length} section — ${bad} adhoora (naam, kam az kam ek qism, aur ginti chahiye)`
+    : `${_sections.length} section — kul ${total} sawal maange jayenge`;
+}
+
+/** buildPaper() ke liye: sections array, ya null agar mode chalu nahi. */
+function collectSections() {
+  if (val('paperType') !== 'sections') return null;
+  return _sections.map(s => ({
+    heading: s.heading.trim(),
+    question_types: s.types,
+    count: s.count,
+  }));
 }
 
 async function generateQuestions() {
@@ -1326,6 +1452,22 @@ async function buildPaper() {
   };
   if (paperType === 'custom-ratio') {
     body.mcq_percent = parseInt(val('mcqPercent'));
+  }
+  const sections = collectSections();
+  if (sections) {
+    if (!sections.length) { setStatus('Kam az kam ek section chahiye.'); return; }
+    const adhoora = sections.find(s => !s.heading || !s.question_types.length || !(s.count > 0));
+    if (adhoora) {
+      // Server bhi 422 deta, magar wahan se message teacher ke kaam ka nahi hota.
+      setStatus('Har section ka naam, kam az kam ek qism, aur ginti zaroori hai.');
+      return;
+    }
+    body.sections = sections;
+    // "sections" sirf is UI ka mode hai; server ka paper_type us se waqif nahi
+    // aur sections ke saath use dekhta bhi nahi. "mixed" bhejna is ko saaf
+    // rakhta hai — aur custom-ratio bhejna server par 422 hai (dono ginti tay
+    // karte hain), isliye yahan wo ho hi nahi sakta.
+    body.paper_type = 'mixed';
   }
   try {
     const res = await apiFetch('/api/generate-paper', {

@@ -30,6 +30,8 @@ def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
     """Picks Bloom-balanced questions (least-used first), bumps their
     usage_count, persists the paper. Returns the paper dict, or None if no
     questions matched any bucket (caller maps that to 404)."""
+    if req.sections:
+        return _assemble_by_sections(req)
     if req.paper_type == "custom-ratio":
         return _assemble_by_ratio(req)
 
@@ -217,6 +219,76 @@ def replace_question(paper_id: str, old_question_id: str, new_question_id: str) 
     }
 
 
+def _assemble_by_sections(req: GeneratePaperRequest) -> dict | None:
+    """Sections mode: har section apni qism ke sawal apni ginti tak uthata hai,
+    aur sections_meta paper row mein likhi jaati hai.
+
+    Yahan `sections_meta` ki shakl EEJAAD nahi ki ja rahi — wo pehle se tay hai.
+    blueprint_paper_service.py use likhti hai aur static/print.html use parhta
+    hai; ye function bas usi shakl mein likhta hai, isliye print par sections
+    apne aap chalne lagte hain aur wahan ek line badalne ki zaroorat nahi.
+
+    SHORTFALL YAHAN ERROR NAHI HAI, aur ye custom-ratio se jaan-boojh kar alag
+    hai. Ratio kam questions par QuestionBankEmpty phenkta hai; blueprint kami
+    bardasht karta hai aur print.html us ke liye shortfall panel pehle se render
+    karta hai. Sections blueprint wala rawaiya apnate hain, do wajahon se:
+      * teacher ne heading khud likhi hai — usay dikhna chahiye ke us section
+        mein kya mila, na ke poora paper fail ho jaye
+      * bank mein sab types barabar nahi hain (2026-08-20: short-answer 370,
+        multiple-choice 61, true-false 28, aur fill-blank/essay SIFAR), to
+        hard error is feature ko aam halat mein na-qabil-e-istemal bana deta
+    Har section ka Bloom balance apne andar banta hai, poore paper par nahi —
+    ye qism-se-taqseem ka laazmi nateeja hai, side effect nahi.
+    """
+    selected_ids: list[str] = []
+    selected_questions: list[dict] = []
+    sections_meta: list[dict] = []
+
+    for spec in req.sections or []:
+        distribution = bloom_service.calculate_bloom_distribution(
+            req.bloom_distribution, spec.count
+        )
+        ids, questions = _pick_questions(
+            req.subject,
+            distribution,
+            req.difficulty,
+            list(spec.question_types),
+            req.language_filter,
+        )
+        selected_ids.extend(ids)
+        selected_questions.extend(questions)
+        sections_meta.append(
+            {
+                "heading": spec.heading,
+                "question_ids": ids,
+                "marks": sum(q["marks"] for q in questions),
+                "shortfall": spec.count - len(questions),
+            }
+        )
+
+    # Ek bhi sawal na mila to purane raaston jaisa hi 404 — caller isay map karta hai.
+    if not selected_questions:
+        return None
+
+    title = _resolve_title(req.paper_title, req.subject, req.class_name)
+    paper_id, total_marks = _persist_paper(
+        subject=req.subject,
+        class_name=req.class_name,
+        selected_ids=selected_ids,
+        selected_questions=selected_questions,
+        paper_title=title,
+        exam_no=req.exam_no,
+        sections_meta=sections_meta,
+    )
+    return {
+        "paper_id": paper_id,
+        "total_marks": total_marks,
+        "questions": selected_questions,
+        "sections": sections_meta,
+        "balance_summary": item_analysis_service.summarize_paper_balance(selected_questions),
+    }
+
+
 def _assemble_by_ratio(req: GeneratePaperRequest) -> dict | None:
     """custom-ratio: total_questions ko MCQ vs Subjective groups mein mcq_percent
     ke hisaab se baant kar, har group ke andar wahi Bloom distribution laga kar
@@ -325,9 +397,13 @@ def _persist_paper(
     selected_questions: list[dict],
     paper_title: Optional[str] = None,
     exam_no: Optional[int] = None,
+    sections_meta: Optional[list[dict]] = None,
 ) -> tuple[str, int]:
     """Annotate expected difficulty, persist the paper row, return (id, marks).
     exam_no: paper kis exam se tag hua (coverage ke liye). None = Unassigned.
+    sections_meta: sirf sections mode bhejta hai. None rehne par column NULL
+    rehta hai aur print.html apne hardcoded A/B split par girta hai — yani har
+    purana raasta bilkul waisa ka waisa.
     NOTE: saare callers keyword args bhejte hain — positional se exam_no ghalat
     parameter (paper_title) mein na chala jaye."""
     _annotate_expected_difficulty(selected_questions)
@@ -341,6 +417,7 @@ def _persist_paper(
         question_ids=selected_ids,
         paper_title=paper_title,
         exam_no=exam_no,
+        sections_meta=sections_meta,
     )
     return paper_id, total_marks
 

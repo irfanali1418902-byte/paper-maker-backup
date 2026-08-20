@@ -1,5 +1,98 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — Sections mode (A/B/C): teacher apne sections khud tay karta hai
+
+ROADMAP ka feature #1. **908 pytest pass** (890 + 18 naye), ratchet flat, browser mein
+end-to-end naapa gaya: UI → API → DB → print.
+
+### Aadha kaam pehle se bana hua tha, aur ROADMAP ki row ka ek tihai stale tha
+
+| tukra | haal |
+|---|---|
+| DB column `sections_meta` | pehle se ✓ |
+| print.html mein sections render | pehle se ✓ |
+| blueprint papers ko sections | pehle se ✓ |
+| **normal papers ko sections** | nahi the — yehi kaam tha |
+| **"Word" export** | **mojood hi nahi** |
+
+ROADMAP kehta hai "headings + per-section marks in UI/print/**Word**". DOCX/PDF export commit
+`e2bdcc4` mein **jaan boojh kar delete** hua tha — *"621 lines nothing calls, and a LibreOffice
+dependency"* — aur Irfan ka apna tareeqa browser print hai. **Row ka teesra hissa stale hai;
+daira UI + print raha.**
+
+`_persist_paper()` `sections_meta` bhejta hi nahi tha, to har generate/adaptive/bank paper ke
+liye wo NULL rehta aur print ek hardcoded do-hisse wale split par girta: "Section A —
+Objective" (mcq/true-false) aur "Section B — Subjective" (baqi). Teacher kuch tay nahi kar
+sakta tha — na naam, na ginti, na kaunsa sawal kahan.
+
+### Faisle (Irfan, 2026-08-20)
+
+- **Sections generate ke waqt bante hain**, paper ke saath DB mein — blueprint ki tarah
+- **Sawal QISM se section mein jaate hain** (MCQ / short / essay …), na ke ginti se
+
+### Shakl EEJAAD nahi ki, mojooda contract istemal kiya
+
+`sections_meta` ki keys `blueprint_paper_service.py` likhta hai aur `print.html` parhta hai.
+Naya code usi shakl mein likhta hai — **isi liye print.html mein ek line badalni nahi pari**,
+aur wo daawa browser mein naapa gaya, maana nahi gaya.
+
+⚠ Ek baareek baat: print `sec.marks` **use nahi karta**, wo sawalon se khud jorhta hai
+(`sectionMarks`). Meta ka `marks` sirf record hai.
+
+### Shortfall error nahi, report hai — aur ye custom-ratio se jaan-boojh kar alag hai
+
+`custom-ratio` kami par `QuestionBankEmpty` phenkta hai. Sections nahi. Wajah asli bank hai —
+Mathematics mein naapa gaya: short-answer **240**, multiple-choice **61**, true-false **28**,
+aur `fill-blank`/`essay` **sifar**. Hard error is feature ko aam halat mein na-qabil-e-istemal
+bana deta.
+
+Faida ye hua ke **sections wo cheez dikhate hain jo normal path chhupata hai**: `total 5,
+mixed` maangne par normal path chup-chaap **2** sawal deta hai; sections `shortfall: 4` likhte
+hain aur print us ka panel dikhata hai. (Wajah `calculate_bloom_distribution` hai — ginti chhe
+Bloom levels par bantti hai jabke bank mein sirf teen aabaad hain. Ye pehle se aisa hai, is
+feature ka nateeja nahi.)
+
+### Ratchet ne mujhe pakra, aur theek pakra
+
+Pehla UI markup aas-paas ke code ki naqal mein inline `style=` ke saath likha gaya tha:
+
+```
+inline_style_attrs went UP: 466 -> 477 (+11)
+inline_style_non_display   385 -> 391 (+6)
+```
+
+Sprint 5 ka poora maqsad wo 466 girana hai — naya feature use barhaye to wo epic ke khilaf kaam
+hai. **Re-baseline nahi kiya, markup theek kiya**: sab kuch `pages/index.css` mein classes ban
+gaya, aur `#sectionsBlock` ab `.style.display` ke bajaye `classList.toggle('is-hidden')` se
+chhupta hai. Dono metric wapas **466 / 385** — bilkul baseline par.
+
+### Naapa gaya
+
+| | nateeja |
+|---|---|
+| API: teen sections | sections_meta durust, shortfall samet ✓ |
+| print.html, **bina kisi tabdeeli ke** | 3 sections, headings, per-section marks, shortfall panel ✓ |
+| khali section | heading + wajah ke saath aata hai, ghayab nahi ✓ |
+| UI builder | add / remove / heading / count / types / validation ✓ |
+| **E2E: UI se click** | paper bana, print par sections aaye ✓ |
+| em-dash aur Urdu heading | DB tak salamat ✓ |
+
+**Frozen inventory (§12.7) — task scope, chhaon ADDED, koi REMOVED/RENAMED nahi:**
+`id=sectionsBlock` · `id=sectionRows` · `id=sectionsSummary` · `onclick=addSectionRow()` ·
+`onclick=removeSectionRow(${i})` · `data-i18n=opt.sections`. Metrics dobara **nahi** pin kiye —
+429 / 466 par barqarar.
+
+⚠ **D39 phir laga:** is feature ke `oninput`/`onchange` handlers (`onSectionField`,
+`onSectionType`) guard se bahar hain, kyunki `FROZEN_ATTR_RE` sirf `id`/`onclick`/`name`/
+`data-*` dekhta hai.
+
+### Daire se bahar, darj
+
+`ManualQuestionRequest` (`requests.py`) ke Literal mein **`essay` nahi hai** — teacher haath se
+essay sawal nahi likh sakta, jabke `_PAPER_TYPE_FILTERS`, `bloom_service` aur `ai_service` sab
+use support karte hain. Sections mode us qism ka section bana sakta hai magar bank mein wo sawal
+aayega kahan se.
+
 ## 2026-08-20 — School server: ek launcher, aur wo cheezein check karta hai jo khamoshi se ghalat jaati hain
 
 Docker **nahi** — is machine par Docker installed hi nahi (`docker: command not found`), to koi

@@ -16,6 +16,52 @@ class GenerateQuestionsRequest(BaseModel):
     learning_outcome: Optional[str] = None
 
 
+#: Har wo question type jo app mein waqai mojood hai. paper_service.py ke
+#: _PAPER_TYPE_FILTERS / _RATIO_* groups isi set se bante hain.
+#: NOTE: ManualQuestionRequest ka apna Literal is se CHHOTA hai — us mein "essay"
+#: nahi hai, yani teacher haath se essay nahi likh sakta jabke baqi app use poori
+#: tarah support karti hai. Wo alag masla hai, yahan theek nahi kiya ja raha.
+QuestionType = Literal[
+    "multiple-choice",
+    "true-false",
+    "short-answer",
+    "fill-blank",
+    "essay",
+]
+
+
+class PaperSectionSpec(BaseModel):
+    """Ek section: uska heading, kaunsi qism ke sawal, aur kitne.
+
+    Sawal QISM se section mein jaate hain (Irfan ka faisla, 2026-08-20) — yani
+    do sections ek hi qism nahi le sakte, aur yeh us hardcoded do-hisse wale
+    split ka seedha barha hua roop hai jo print.html abhi karta hai.
+    """
+
+    heading: str = Field(min_length=1, max_length=120)
+    question_types: List[QuestionType] = Field(min_length=1)
+    count: int = Field(ge=1)
+
+    @field_validator("heading")
+    @classmethod
+    def _strip_heading(cls, v: str) -> str:
+        # Kaghaz par chhapta hai — trailing spaces heading ko tirha dikhate hain.
+        v = v.strip()
+        if not v:
+            raise ValueError("heading khaali nahi ho sakta")
+        return v
+
+    @field_validator("question_types")
+    @classmethod
+    def _dedupe_types(cls, v: List[str]) -> List[str]:
+        # Ek hi type do dafa dene se pick badalti nahi, sirf meta ganda hota hai.
+        seen: list[str] = []
+        for t in v:
+            if t not in seen:
+                seen.append(t)
+        return seen
+
+
 class GeneratePaperRequest(BaseModel):
     subject: str
     class_name: Optional[str] = None
@@ -31,6 +77,29 @@ class GeneratePaperRequest(BaseModel):
     # Paper kis exam se tag ho (coverage ke liye). None = Unassigned. UI dropdown
     # bhejta hai (Marhala 6). ge=0 — 0 bhi Unassigned; upar N ki hadd taqseem/global.
     exam_no: Optional[int] = Field(default=None, ge=0)
+    # Sections mode. None ya khaali = purana behaviour bilkul waisa ka waisa
+    # (sections_meta NULL, aur print.html apne hardcoded A/B split par girta hai).
+    # Diya jaye to har section apni qism ke sawal khud uthata hai aur sections_meta
+    # paper row mein likha jata hai, jise print.html pehle se render karta hai.
+    #
+    # sections ke saath total_questions/paper_type NAZAR-ANDAZ hote hain — ginti
+    # sections se aati hai. Neeche wala validator custom-ratio ke saath saaf mana
+    # karta hai, bajaye khamoshi se ek ko doosre par tarjeeh dene ke.
+    sections: Optional[List[PaperSectionSpec]] = None
+
+    @model_validator(mode="after")
+    def _sections_rules(self) -> "GeneratePaperRequest":
+        if self.sections:
+            if self.paper_type == "custom-ratio":
+                raise ValueError(
+                    "sections aur custom-ratio ek saath nahi — dono ginti tay karte hain. "
+                    "Sections chahiyen to paper_type custom-ratio mat bhejein."
+                )
+            headings = [s.heading.casefold() for s in self.sections]
+            if len(set(headings)) != len(headings):
+                # Do sections ka ek naam kaghaz par teacher ko dhoka deta hai.
+                raise ValueError("do sections ka heading ek jaisa nahi ho sakta")
+        return self
 
 
 class AdaptivePaperRequest(BaseModel):
