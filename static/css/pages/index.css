@@ -110,9 +110,32 @@
      THE SAME HOLE IS OPEN ON THE OTHER FIVE PAGES and is deliberately not
      touched here: they are live, their navs are shorter so nothing has
      spilled yet, and five live pages want their own gate run rather than a
-     drive-by. Recorded rather than silently fixed. */
-  .app-sidebar {
-    overflow-y: auto;
+     drive-by. Recorded rather than silently fixed.
+
+     THE PAGE-SCOPED FIX IS GONE — `.sidenav__panel` carries `overflow-y: auto`
+     itself (05-components/nav.css), so index gets it from the component now.
+     The history stays here because this is the page it was found on. */
+
+  /* THE MOBILE SIDEBAR, AND THE REASON IT HAD TO LEAVE layer(legacy).
+     99-legacy/index.css hid the sidebar below 760px, where index swaps to a
+     topbar plus a bottom tab bar. `.sidenav__panel` declares `display: flex`
+     in layer(components), and main.css:42 orders legacy BEFORE components —
+     layer order is resolved before specificity AND before media queries, so
+     the component would have won at every width and put the full navy rail
+     back on top of the mobile chrome. Measured: `display` computes `none` at
+     720px before the adoption and has to keep computing `none` after.
+
+     Here it wins because pages/index.css:60 imports main.css first and then
+     opens this block, so at an equal 0,1,0 it is simply later in the same
+     layer. Same move as the RTL rail below, for the same reason.
+
+     ⚠ NOTHING IN THE GATE SEES THIS. css_type_probe.mjs and
+     css_selector_probe.mjs are both fixed at 1280x900. Verified with a
+     viewport override at 720px. */
+  @media (max-width: 760px) {
+    .app-sidebar {
+      display: none;
+    }
   }
 
   /* THE URDU RAIL. index's nav adopted .sidenav__link on 2026-08-19, and that

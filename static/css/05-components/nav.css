@@ -186,7 +186,12 @@
    THE SIDEBAR PANEL AND ITS BRAND — the navy box `.sidenav` lives inside.
 
    Adopted by bank, library, slo and slo-health, whose six legacy shell rules
-   were measured identical on all four before any of this was written. Opt-in
+   were measured identical on all four before any of this was written, and by
+   index on 2026-08-20 — the panel and the brand name only. index's `.brand` is
+   a flex row around a 40px logo and its `.tag` is a live `<div>`, so neither
+   `.sidenav__brand` nor `.sidenav__brand-sub` is on it. index also hid this
+   panel below 760px, and that override had to move UP into pages/index.css to
+   outrank the `display: flex` below. Opt-in
    by class, the same way `.sidenav` was: nothing here is named `.app-sidebar`
    or `.brand`, so no page gets it without asking. That distinction is what
    UI-047b's ban was actually about — a rule NAMED `.brand` in layer(components)
@@ -208,7 +213,7 @@
   height: 100vh;
   /* Without this the nav spills out of the painted box instead of scrolling.
      Irfan found that in the browser on 2026-08-13; it was fixed page-scoped on
-     six pages and comes home here for these four. */
+     six pages and comes home here for the five that adopt this panel. */
   overflow-y: auto;
   display: flex;
   flex-direction: column;

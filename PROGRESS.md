@@ -1,5 +1,59 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — `index` joins `.sidenav__panel`, and layer order nearly took the mobile view
+
+**`legacy_css_lines` 1,865 → 1,869**, `unsanctioned_hex` 357 → **356**. Eight rule lines out of
+`99-legacy/index.css`, twelve comment lines in, so the informational line count went **up by
+four** — recorded rather than dressed up. The dedup is real: ten `.app-sidebar` declarations
+now come from `05-components/nav.css` instead of being index's own.
+
+**7 element × property deltas, all on one `<div>`, none of them painting.** 0 on the other
+seven pages, drift 0, ratchet clean.
+
+### The board said this page was the cheap one. It was not.
+
+The handoff called `index` "panel aur name bilkul yaksan — seedha adopt, 0 deltas." The eleven
+panel declarations **are** identical, including the two that go through tokens — `--navy` and
+`--color-sidebar-bg` are both the same navy, `#fff` and `--color-sidebar-fg-on` both the same
+white. Adopting anyway would have broken the page below 760px.
+
+`99-legacy/index.css` hid the sidebar in a `@media (max-width: 760px)` block, where `index`
+swaps to a topbar plus a bottom tab bar. `.sidenav__panel` declares `display: flex` in
+`layer(components)`, and `main.css:42` orders `legacy` before `components`. **Layer order is
+resolved before specificity and before media queries**, so the component wins at every width
+and the full navy rail returns on top of the mobile chrome. This is rule 2 of the epic's three,
+for the fourth time.
+
+**`index` is the only page this catches.** The other five reshape `.app-sidebar` into a
+horizontal strip at that breakpoint instead of hiding it, so the four pages already on this
+component never met it.
+
+The media query moved up into `pages/index.css`, which imports `main.css` first and then opens
+its own `@layer components` block — at an equal `0,1,0` it is simply later in the same layer.
+Same move as the RTL rail on 2026-08-19, for the same reason.
+
+**No probe in this repo could see it.** `css_type_probe.mjs` and `css_selector_probe.mjs` are
+both fixed at 1280×900. Measured with a throwaway viewport override: `display` computes `none`
+at 720px before **and** after, box 0×0 both times. RTL was re-checked too — LTR left 3px /
+right 0, RTL left 0 / right 3px, unchanged.
+
+### What was left behind, deliberately
+
+| | verdict |
+|---|---|
+| `.app-sidebar` → `.sidenav__panel` | adopted, 11/11 declarations identical |
+| `.brand .name` → `.sidenav__brand-name` | adopted, `700` = `--font-weight-heading`, 15.5px/1.15 already the component's |
+| `.sidebar-foot` → `.sidenav__foot` | adopted; the 7 deltas are here |
+| `.brand` → `.sidenav__brand` | **skipped** — index's brand is a flex row round a 40px logo; the component is padding only, and adding the flex to it would put text and `<small>` side by side on the four pages already on it |
+| `.brand .tag` → `.sidenav__brand-sub` | **skipped** — `nav.css` calls `10.5px` and the pale blue dead, which is true of the `<small>` on four pages but not of index's `<div class="tag">`, where both are live at `0,2,0` |
+
+**The 7 deltas are on `<div.sidebar-foot>` and every one is invisible.** `font-size`,
+`line-height` and `color` are inherited values that `.box` — index's foot text is wrapped, the
+other four pages' is not — re-declares on itself and therefore wins as a direct declaration.
+The other four are `border-*-color` following `color`, on a div measured at `border-style: none`
+and 0px on all four sides. `.box` itself measured byte-identical before and after, and the
+foot's box stayed 248×84.
+
 ## 2026-08-19 — `taqseem` and `index` join `.sidenav`, and the white-links bug is finally gone
 
 **`legacy_css_lines` 1,880 → 1,865**, `unsanctioned_hex` 364 → **357**. Six rules out; 17 nav
