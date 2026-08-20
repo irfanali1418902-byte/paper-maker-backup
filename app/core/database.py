@@ -8,12 +8,36 @@ import os
 import sqlite3
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# `.env` YAHAN load hota hai, DB_PATH parhne se PEHLE — aur yeh zaroori hai.
+#
+# load_dotenv() pehle sirf app/services/ai_service.py mein tha, jo AI keys ke liye
+# theek hai kyunki wo request ke waqt parhti hain. DB_PATH module import par parha
+# jata hai, aur import order ne is file ko ai_service se pehle rakha. Naapa gaya
+# 2026-08-20, alag folder mein jahan .env sirf DB_PATH rakhta tha:
+#
+#     shell env DB_PATH : None
+#     app ne use kiya   : <repo>\paper_maker.db      <- default, GHALAT
+#     os.environ ab     : C:\PaperMakerData\...      <- .env se aaya, magar DER se
+#
+# Yani `.env` ka DB_PATH khamoshi se zaya ho raha tha aur app repo folder mein ek
+# nayi khali DB bana leti. School PC par iska matlab "saara data urh gaya" jaisa
+# dikhta, jabke asli file apni jagah salamat hoti. `.env.example` ne is ke ulta
+# waada kiya hua tha ("python-dotenv loads .env automatically") — ab wo waada sach
+# hai. Bachao sirf yeh tha ke start-*.bat var ko shell mein set karte hain; us par
+# tikay rehna ek launcher ki ghalti ko data ki ghalti bana deta.
+#
+# DB_PATH module-level constant HI rehta hai: tests/conftest.py:19 use
+# monkeypatch.setattr se badalte hain, to ise function banana suite tor deta.
+load_dotenv()
+
 # app/core/database.py se project root tak teen levels upar.
 _DEFAULT_DB_PATH = Path(__file__).parent.parent.parent / "paper_maker.db"
-# DB_PATH env override — production (Railway) par persistent volume path
-# (e.g. /data/paper_maker.db) point karne ke liye. Set na ho to project root
-# wali file (local dev). Ephemeral container FS par volume zaroori hai, warna
-# har redeploy par saara data ud jata hai.
+# DB_PATH env override — persistent volume ya school ka data folder point karne ke
+# liye (e.g. C:\PaperMakerData\paper_maker.db). Set na ho to project root wali file.
+# Asli environment variable `.env` par jeetta hai — load_dotenv() mojooda vars ko
+# override nahi karta — to `set DB_PATH=...` ab bhi sab se oopar hai.
 DB_PATH = Path(os.environ.get("DB_PATH") or _DEFAULT_DB_PATH)
 
 

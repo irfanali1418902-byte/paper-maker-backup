@@ -1,5 +1,50 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — `.env` ka `DB_PATH` khamoshi se zaya ho raha tha
+
+School PC ka kaam shuru karte hi nikla, dhoondha nahi tha. **890 pytest pass, ruff clean.**
+
+`app/core/database.py` `DB_PATH` ko **module import par** parhta hai. `load_dotenv()` sirf
+`app/services/ai_service.py`:30 mein tha — jo AI keys ke liye theek hai, kyunki wo request ke
+waqt parhti hain — magar import order ne `database` ko `ai_service` se pehle rakha. **Naapa
+gaya**, ek alag folder mein jahan `.env` sirf `DB_PATH` rakhta tha:
+
+```
+shell env DB_PATH : None
+app ne use kiya   : <repo>\paper_maker.db      <- default, GHALAT
+os.environ ab     : C:\PaperMakerData\...      <- .env se aaya, magar DER se
+```
+
+**Iska matlab school par kya hota.** `.env.example` khud likhta hai *"python-dotenv loads
+`.env` automatically, so you do NOT need to export these variables manually."* Admin yeh maan
+kar `DB_PATH` `.env` mein daalta, app use nazar-andaz kar ke **repo folder mein nayi khali DB**
+bana leti, aur school ko lagta saara data urh gaya — jabke asli file apni jagah salamat hoti.
+
+**Aaj tak bacha hua kyun tha:** `start-local.bat` aur `start.bat` var ko **shell** mein set
+karte hain, python chalne se pehle. Yani wo "faaltu" lagne wala loop hi wahid cheez tha jo data
+bacha raha tha. Ek launcher ki ghalti data ki ghalti ban jaati.
+
+**Fix:** `load_dotenv()` ab `database.py` mein hai, `DB_PATH` parhne se pehle. `DB_PATH`
+**module-level constant hi rehta hai** — `tests/conftest.py`:19 use `monkeypatch.setattr` se
+badalte hain, to ise function banana suite tor deta.
+
+Chaar shaklein naapi gayeen, fix ke baad:
+
+| soorat | nateeja |
+|---|---|
+| `.env` mein `DB_PATH` | ab pohnchta hai ✓ (pehle nahi pohnchta tha) |
+| shell var + `.env` dono | **shell jeetta hai** ✓ — `load_dotenv()` mojooda vars override nahi karta |
+| na `.env`, na shell var | default repo-root file ✓ |
+| cwd = repo root (asli shakl) | default ✓ |
+
+⚠ **`.env` cwd se OOPER talash hota hai.** Test ke dauran ek sub-folder se chalane par parent
+ka `.env` uth aaya. `start-*.bat` `cd /d "%~dp0"` karte hain to asli shakl mein hamesha repo
+root wala `.env` milta hai — magar kisi aur folder se server chalana yeh badal sakta hai.
+
+⚠ **Typo'd `DB_PATH` khamoshi se nayi khali DB banata hai**, folder samet — probe ne ghalti se
+`C:\PaperMakerData\ZZ_probe.db` bana diya (saaf kar diya). Yeh wahi "data urh gaya" wala manzar
+hai. `start-school.bat` mein iski warning aa rahi hai.
+
 ## 2026-08-20 — Print: sawal ka range ("Q5 se Q12 chhapo")
 
 Teacher `print.html` ke Print Settings mein do adad daalta hai aur sirf wahi sawal chhapte
