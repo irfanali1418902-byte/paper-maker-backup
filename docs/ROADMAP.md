@@ -27,7 +27,7 @@
 | # | Finding | Action |
 |---|---------|--------|
 | R1 | Prod question bank thin on subjective types | Seed prod: generate short-answer/essay sets per class/subject (guided script or checklist). |
-| ~~R2~~ ✅ | ~~Export tests don't assert content (Urdu text, marks, sections)~~ | **DONE (PR #6):** docx content assertions for EN/UR question text, options, total-marks value. Sections deferred — feature not built yet. |
+| ~~R2~~ ✅ | ~~Export tests don't assert content (Urdu text, marks, sections)~~ | **DONE (PR #6):** docx content assertions for EN/UR question text, options, total-marks value. Sections deferred — feature not built yet. **⚠ YEH ROW AB TAAREEKH HAI, ZINDA TESTS NAHI:** DOCX/PDF export `e2bdcc4` mein delete ho chuka aur uske saath ye assertions bhi. Aaj paper ka output browser print hai (`static/print.html`), aur sections 2026-08-20 ko ban chuke (order 1 dekhein). |
 | ~~R3~~ ✅ | ~~Adaptive papers ignore paper_type/ratio — undefined interaction~~ | **DONE (PR #8):** adaptive now honors `paper_type` (mcq/mixed/subjective) via the shared `_PAPER_TYPE_FILTERS`; `custom-ratio` deliberately rejected for adaptive (422 via `_reject_ratio_for_adaptive` validator) — weakness-distribution × ratio-split combo left out of scope. Tested: type filter + custom-ratio rejection. |
 | ~~R4~~ ✅ | ~~Provider fallback (Gemini→Anthropic) untested~~ | **DONE (PR #6):** locked actual behavior — selection-by-priority (no runtime fallback exists); mocked-HTTP error-wrapping + no-key-leak tests. |
 
@@ -40,7 +40,7 @@
 
 | Order | Feature | Why | Size |
 |-------|---------|-----|------|
-| 1 | **Sections mode (A/B/C)** — headings + per-section marks in UI/print/Word | Matches real Pakistani exam format; biggest teacher-visible win | M–L |
+| ~~1~~ ✅ | ~~**Sections mode (A/B/C)** — headings + per-section marks in UI/print/Word~~ | **DONE 2026-08-20** (`e2e517a`). Teacher generate screen par apne sections banata hai (naam, qismein, ginti); `sections_meta` paper ke saath store hoti hai aur `print.html` use pehle se render karta hai. **"Word" is row ka stale hissa tha** — DOCX/PDF export `e2bdcc4` mein jaan-boojh kar delete hua ("621 lines nothing calls, and a LibreOffice dependency") aur Irfan browser se print karta hai, to daira UI + print raha. Kami par paper fail nahi hota, shortfall report hota hai. Tafseel PROGRESS.md 2026-08-20 | M–L |
 | 2 | **Ratio Phase 2** — exact counts per type (3/4/3) | Finer control; builds on ratio v1 | S–M |
 | 3 | **Prod seeding tool** — one-click "build starter bank" per class | Removes empty-bank friction for new subjects | S |
 | 4 | **Lesson Plan module** — plans linked to topics + coverage report | Your original vision; new module, do after core is polished | L |
@@ -55,8 +55,18 @@ Session 1  → P0 cleanup (H1–H6) — one branch chore/repo-hygiene, one PR
 Session 2  → R2 + R4 tests; decide & implement R3 (adaptive×type)
 Session 3  → R1 prod seeding + full prod regression checklist
 Session 4  → O1 migration dry-run (MIGRATION.md) — before credit deadline
-Session 5+ → Feature roadmap order 1 (Sections mode): plan-first → build
+Session 5+ → Feature roadmap order 1 (Sections mode): plan-first → build   ✅ 2026-08-20
+Aage      → order 2 (Ratio Phase 2). Sections ke qareeb hai: dono ginti tay
+             karte hain, aur GeneratePaperRequest un dono ko ek saath lene se
+             saaf inkaar karta hai (422) — us faisle ko dobara mat kholo bina
+             yeh tay kiye ke teacher ko kaunsa jeetna chahiye.
 ```
+
+> **2026-08-20 ka note — is list ke daawe naapne par ghalat nikalte hain.**
+> Order 1 ki row kehti thi "UI/print/**Word**" jabke Word export mahine pehle
+> delete ho chuka tha, aur uska aadha kaam (`sections_meta` column, print ka
+> renderer, blueprint papers) **pehle se bana hua tha**. Kaam uthane se pehle
+> repo mein naap lo ke kya mojood hai — row par bharosa mat karo.
 
 ## E. Standing Reminders
 
