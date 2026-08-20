@@ -105,8 +105,11 @@ jo abhi `.sidenav__panel` par nahi hain, har ek ki apni qeematein (naapi hui, PR
 - **Sprint 5 chhua tak nahi** — 466 inline `style=""`, 224 akele `index.html` par.
 - **Drain ki mari hui rules KHATAM ho chuki hain** — 845 ka survey, ~47 waqai dead, sab ja
   chuki. Ab jo bhi `99-legacy` mein hai wo zinda hai, ya kisi state mein zinda hai.
-- **`docs/ui/NEXT-SESSION.md` (798 lines) delete hona chahiye** — uske apne banner mein likha
-  hai ke wo purani aur gumraah-kun hai. Irfan ne 15 Agast ko manzoor kiya, abhi baqi hai.
+- ~~`docs/ui/NEXT-SESSION.md` delete~~ — **HO GAYA 20 Agast.** Seedha delete nahi ho sakta tha:
+  **gyarah jagah us ka hawala saboot ke taur par tha** (`PLAN.md` ×3, `STATUS.md` ×3,
+  `DEFERRED.md` ×2, `ROADMAP.md`, `PROGRESS.md`, aur `scripts/css_margin_probe.mjs` ×2). Jo
+  zinda tha — §📐, print ke F1/F2/F3, margin harness, test-data UUIDs, `pre-commit` warning —
+  wo `docs/ui/MEASURED.md` mein hai, aur gyaraho hawale us par mor diye gaye.
 - **STALE:** `PLAN.md`:313 kehta hai `docs/ui/` 2,655 lines hai. `main.css`:117 kehta hai
   `theme.css` 6 pages par link hai — wo file mojood hi nahi.
 

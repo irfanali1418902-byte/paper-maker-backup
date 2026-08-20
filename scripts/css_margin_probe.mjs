@@ -1,6 +1,6 @@
 /* UI-032 — THE MARGIN / SPACE-TOKEN TEST for print.html.
  *
- * The one test NEXT-SESSION.md calls deciding and records as never run. It answers a
+ * The one test MEASURED.md calls deciding and records as never run. It answers a
  * question the earlier before/after diff could not: 12 element-instances changed each of
  * padding-top/right/bottom/left (48 deltas) and WHICH elements those are was never
  * identified. If any of them is `.sheet` or sits on the margin chain, the printed page
@@ -276,7 +276,7 @@ async function main() {
 
       // Wait for the paper to actually render — this page fetches it. A blank page
       // measures nothing and produces a 1-page PDF, which is how ?id= vs ?paper_id=
-      // cost time twice (NEXT-SESSION.md).
+      // cost time twice (MEASURED.md).
       let questions = 0;
       for (let i = 0; i < 100; i++) {
         questions = await evaluate(sessionId, `document.querySelectorAll('.question').length`);

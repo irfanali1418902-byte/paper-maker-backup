@@ -1,5 +1,35 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-20 — `NEXT-SESSION.md` is gone, and it could not just be deleted
+
+**798 lines out, 316 back in as `docs/ui/MEASURED.md`, eleven citations repointed.** Approved
+2026-08-15 and open since.
+
+**A straight `rm` would have broken eleven references, and that is why this took longer than
+the one minute it was quoted at.** The file was cited as *evidence* by `PLAN.md` (×3),
+`STATUS.md` (×3), `DEFERRED.md` (×2), `ROADMAP.md`, `PROGRESS.md` — and by
+`scripts/css_margin_probe.mjs` (×2), which is a repo script, not a doc. Three of `PLAN.md`'s
+point at §📐 as the reason `UI-043` came off the critical path; `DEFERRED.md`'s D36 leans on the
+test-data table for the page counts that resolved it.
+
+**The file's own banner said the same thing** and it had been ignored: *"What IS still worth
+reading here, and it is a lot"* — §📐, the `print` findings F1/F2/F3, the margin harness, the
+test-data paper UUIDs, the webfont-line-box rule, the `pre-commit run --all-files` warning.
+**The banner was right.** Roughly 285 lines were measurements that never expired.
+
+Those sections are in `MEASURED.md` verbatim, under the banner's own rule, which is reprinted
+at the top: *if a sentence says what is DONE or NEXT, do not believe it; if it says how
+something WORKS or was MEASURED, it is still good.* Everything dropped was the first kind —
+"7 of 9 live", `UI-046` as "the next task", six HELD pages, `index` blocked, `print` unshipped
+with no `pages/print.css`. That was the half that misled the 2026-08-14 session.
+
+**Fixed on the way past:** `PLAN.md`:317 claimed `docs/ui/` was 2,655 lines against 1,753 of
+new CSS. Re-counted: **3,004 against 3,495**. HANDOFF had this flagged as stale. The docs are
+no longer the larger half, and that is because the CSS tree grew — not because the docs shrank.
+
+**Still stale, not touched:** `main.css`:117 says `theme.css` is linked on 6 pages; that file
+does not exist.
+
 ## 2026-08-20 — hover measured for the first time, and it found the white-links bug still open on `print`
 
 **`unsanctioned_hex` 356 → 354**, `legacy_css_lines` 1,869 → 1,874 (a five-line comment).
@@ -934,7 +964,7 @@ through a comment.
 ## 2026-08-12 — UI-043 came off the critical path, and no CSS was written to do it
 
 **Sprint 4b, UI-ARCH epic.** Docs only. Full board: `docs/ui/STATUS.md`, evidence block in
-`docs/ui/NEXT-SESSION.md` §📐.
+`docs/ui/MEASURED.md` §📐.
 
 **What the board said.** Both remaining pages — `blueprint` and `index` — were held on
 `UI-043`, a component task, for its `.chip` and its `.tag`. The order was `UI-043` → `UI-046`

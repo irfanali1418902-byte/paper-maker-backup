@@ -195,7 +195,7 @@ because no page has been taken through it.
 
 - **Marhala B** — `UI-042` (modal/field), `UI-043` (status-bar + 7 domain families), 3–4
   sessions. **No held page waits on either**, and `UI-043` was measured off the critical path
-  on 2026-08-12 (`NEXT-SESSION.md` §📐).
+  on 2026-08-12 (`MEASURED.md` §📐).
 - **Marhala C** — Sprint 5, the 466 inline `style=""`, 3–5 sessions. Much of it is expected to
   fall out of Sprint 6 anyway, when the legacy files those styles compete with are drained.
 

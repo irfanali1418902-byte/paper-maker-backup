@@ -99,7 +99,7 @@ after `legacy` in `main.css`:42 and cannot lose to it).
 > OK, `unsanctioned_hex` **429**, zero raw hex in `btn.css` including comments).
 >
 > **Three notes were left unfixed at round 4 and are fixed in this commit** — a stale
-> `shared_css_lines` figure in the ledger row, and `NEXT-SESSION.md` being one round behind.
+> `shared_css_lines` figure in the ledger row, and `NEXT-SESSION.md` (deleted 2026-08-20, extract at `MEASURED.md`) being one round behind.
 
 > **Like UI-044a, this ships nothing today.** `static/css/05-components/btn.css` is imported by
 > `main.css` and therefore reaches all three live pages — and **matches zero elements on them**.
@@ -569,7 +569,7 @@ UI-044a's file, which already exists.**
 
 ### The margin test — **BOTH halves are now run**, and the margin is clean
 
-The deciding test `NEXT-SESSION.md` recorded as unrun has been run end to end: BEFORE at HEAD,
+The deciding test `MEASURED.md` recorded as unrun has been run end to end: BEFORE at HEAD,
 then the one-line swap, then AFTER in **print media**, then revert. **These numbers stand on
 their own and should not be re-measured:**
 
@@ -592,7 +592,7 @@ printed page margin is `.sheet`'s padding and every ancestor above it is zero. *
 zeroes it in print media.
 
 **A number on the board disagreed with HEAD, and the disagreement turned out to be the finding.**
-`NEXT-SESSION.md`'s test-data table gives `0d04c750` as **3 pages**; at HEAD it is **2**, and
+`MEASURED.md`'s test-data table gives `0d04c750` as **3 pages**; at HEAD it is **2**, and
 **migrated it is 3**. The table's figure was almost certainly recorded from the *migrated* state
 in the first `print` session — so it was never a typo, it was **D36 showing up a session early
 and being read as test data.** The other two reproduce exactly (`a5015cda` 6, `9ade2655` 7).
