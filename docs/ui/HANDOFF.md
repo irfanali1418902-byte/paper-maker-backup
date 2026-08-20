@@ -1,5 +1,15 @@
 # Handoff — 2026-08-20 (`legacy_css_lines` 1,874 · `unsanctioned_hex` 354 · gate is 9 pages now)
 
+> # 🛑 CSS EPIC ROKA HUA HAI — 20 Agast. YEH AGLA KAAM NAHI HAI.
+>
+> Irfan ne CSS rok kar features par jane ka faisla kiya. **Product roadmap
+> `docs/ROADMAP.md` mein hai; agli cheez school PC / Docker.** Tafseel neeche
+> §"CSS EPIC ROKA HUA HAI" mein.
+>
+> Yeh file phir bhi mukammal aur durust hai — CSS dobara khule to yahin se shuru karo.
+> Banner isliye hai ke `NEXT-SESSION.md` ka sabaq yeh tha: **ghalat simt wali file ko apni
+> simt upar likhni chahiye, warna agla banda 180 lines parh kar hi jaanega.**
+
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 **dobara likhi jaati hai** — purani cheezein jorhi nahi jaatin, hamesha sirf aakhri haalat.
 
@@ -173,10 +183,27 @@ Gate chalane ka tareeqa jo har dafa kaam aaya:
 2. `\b` wali grep hyphenated names par ghalat match deti hai. 16 Agast ko `sh` ke 68 "hits"
    aaye, sab `should` jaise lafzon ke andar. Token match karo: `(?<![\w-])x(?![\w-])`.
 
+## 🛑 CSS EPIC ROKA HUA HAI — Irfan ka faisla, 20 Agast
+
+**Yeh file CSS epic ki hai, aur wo abhi agla kaam NAHI hai.** 20 Agast ko, `index` aur `print`
+ke baad, Irfan ne CSS rok kar features par jane ka faisla kiya. Usi din pehla feature bhi
+ship hua — print ka "sawal ka range" (`97a3450`).
+
+**Wajah:** target `legacy_css_lines` ~1,200–1,400 hai, abhi 1,874 — yani 5–8 session aur, aur
+un mein teacher ko koi naya kaam ka feature nahi milta. Jo ho chuka wo apni jagah mukammal hai,
+adhoora nahi chhoota.
+
+**Product roadmap `docs/ROADMAP.md` mein hai. Agli cheez: school PC / Docker.**
+(Us file mein "page range" ka zikr nahi tha — wo Irfan ki apni tarteeb se aaya, aur uska matlab
+"safha" nahi "sawal" nikla. Feature ka naam poochh kar tay hua tha, farz kar ke nahi.)
+
+**Neeche "AGLA QADAM" ka A/B tab ke liye hai jab CSS dobara khule.** Us waqt bhi: faisla Irfan
+se lo, tajweez de kar aage mat barho.
+
 ## PEHLA KAAM
 
-`docs/ui/ROADMAP.md` ka §"THE DRAIN DOES NOT GO TO ZERO" parho, phir upar "AGLA QADAM" ka
-A/B faisla Irfan se lo — **faisla lo, tajweez de kar aage mat barho.**
+Agar CSS dobara khule: `docs/ui/ROADMAP.md` ka §"THE DRAIN DOES NOT GO TO ZERO" parho, phir
+upar "AGLA QADAM" ka A/B faisla Irfan se lo.
 
 **Enumeration pehle, likhai baad mein — aur board ke daawe par bharosa mat karo, chahe wo kal
 ka ho.** Is epic mein board ke chhe daawe naapne par ghalat nikle: `.page-head` ka "sasta win",
