@@ -55,7 +55,9 @@ def insert(question_row: dict) -> None:
     conn.close()
 
 
-def _apply_language_filter(query: str, params: list, language_filter: Optional[str]) -> tuple[str, list]:
+def _apply_language_filter(
+    query: str, params: list, language_filter: Optional[str]
+) -> tuple[str, list]:
     """language_filter='en' → sirf English questions; 'ur' → sirf Urdu; None → sab."""
     if language_filter == "en":
         query += " AND question_en IS NOT NULL AND question_en != ''"
@@ -170,25 +172,41 @@ def find_for_bank_paper(
     question_types: Optional[list] = None,
     source: Optional[str] = None,
     language_filter: Optional[str] = None,
+    grade: Optional[str] = None,
 ) -> list:
     """Bloom distribution ke bina direct query — bank-paper assembly ke liye.
-    source=None means sab, source='manual' means sirf teacher-written."""
+    source=None means sab, source='manual' means sirf teacher-written.
+
+    grade: wahi INNER JOIN jo `find_least_used()` aur `list_for_slo_export()` ka
+    hai — case/whitespace-insensitive, aur bin-syllabus sawal (NULL
+    `syllabus_topic_id`) grade dene par bahar. None = koi filter nahi.
+
+    `syllabus_topic_id` is se ZYADA baareek filter hai (ek topic vs poora grade);
+    dono aayen to dono lagte hain, jo mantiqi tor par usi ek topic par simat-ta
+    hai. bank.html ka cascade subject -> grade -> topic isi tarteeb par hai.
+    """
     conn = get_connection()
     cur = conn.cursor()
-    query = "SELECT * FROM questions WHERE 1=1"
+    query = "SELECT q.* FROM questions q"
     params: list = []
+    if grade:
+        query += " JOIN syllabus_topics st ON q.syllabus_topic_id = st.id"
+    query += " WHERE 1=1"
+    if grade:
+        query += " AND LOWER(TRIM(st.grade)) = LOWER(TRIM(?))"
+        params.append(grade)
     if subject:
-        query += " AND subject = ?"
+        query += " AND q.subject = ?"
         params.append(subject)
     if syllabus_topic_id:
-        query += " AND syllabus_topic_id = ?"
+        query += " AND q.syllabus_topic_id = ?"
         params.append(syllabus_topic_id)
     if question_types:
         placeholders = ",".join("?" for _ in question_types)
-        query += f" AND question_type IN ({placeholders})"
+        query += f" AND q.question_type IN ({placeholders})"
         params.extend(question_types)
     if source:
-        query += " AND source = ?"
+        query += " AND q.source = ?"
         params.append(source)
     query, params = _apply_language_filter(query, params, language_filter)
     query += " ORDER BY usage_count ASC"

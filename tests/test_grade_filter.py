@@ -218,7 +218,97 @@ def test_unknown_grade_gives_no_paper_rather_than_a_wrong_one(two_grades):
     )
 
 
+# ── bank paper ────────────────────────────────────────────────────────────────
+#
+# Wahi masla doosre raaste par. bank.html ka cascade subject -> grade -> topic hai,
+# aur topic OPTIONAL hai: sirf subject+grade chunne wale teacher ko us subject ke
+# saare grades ke sawal milte the. Aaj ye latent tha (Grade 4 ka koi manual sawal
+# hai hi nahi, bank-paper sirf source='manual' se banta hai) -- teacher ke pehla
+# Grade 4 sawal likhte hi zinda ho jata.
+
+
+def test_bank_paper_query_filters_by_grade(two_grades):
+    rows = questions_repository.find_for_bank_paper(subject="Mathematics", grade="Grade 4")
+    assert {r["id"] for r in rows} == {"g4-a", "g4-b"}
+
+
+def test_bank_paper_query_without_grade_is_unchanged(two_grades):
+    """Opt-in guard -- bina grade ke wahi sab kuch jo pehle aata tha."""
+    rows = questions_repository.find_for_bank_paper(subject="Mathematics")
+    assert {r["id"] for r in rows} == {"g4-a", "g4-b", "py1-a", "py1-b", "orphan"}
+
+
+def test_bank_paper_topic_is_narrower_than_grade(two_grades):
+    """Dono aayen to dono lagte hain. Topic ek grade ke andar hota hai, to nateeja
+    usi topic par simat-ta hai -- aur ghalat jori par khali, jo durust hai."""
+    same = questions_repository.find_for_bank_paper(
+        subject="Mathematics", grade="Grade 4", syllabus_topic_id=two_grades["g4"]
+    )
+    assert {r["id"] for r in same} == {"g4-a", "g4-b"}
+
+    mismatched = questions_repository.find_for_bank_paper(
+        subject="Mathematics", grade="Grade 4", syllabus_topic_id=two_grades["py1"]
+    )
+    assert mismatched == []
+
+
+def test_bank_paper_grade_still_honours_source_filter(two_grades):
+    """JOIN ne query ki shakl badli hai -- baqi filters us ke baad bhi lagne chahiyen.
+    Fixture ke saare sawal source='manual' hain, to 'gemini' maangne par khali."""
+    assert (
+        questions_repository.find_for_bank_paper(
+            subject="Mathematics", grade="Grade 4", source="gemini"
+        )
+        == []
+    )
+    rows = questions_repository.find_for_bank_paper(
+        subject="Mathematics", grade="Grade 4", source="manual"
+    )
+    assert {r["id"] for r in rows} == {"g4-a", "g4-b"}
+
+
+def test_bank_paper_request_accepts_grade():
+    from app.schemas.requests import BankPaperRequest
+
+    assert BankPaperRequest(subject="Mathematics", grade="Grade 4").grade == "Grade 4"
+    assert BankPaperRequest(subject="Mathematics").grade is None
+
+
+def test_assembled_bank_paper_only_has_the_requested_grade(two_grades):
+    from app.schemas.requests import BankPaperRequest
+
+    paper = paper_service.assemble_bank_paper(
+        BankPaperRequest(subject="Mathematics", grade="Grade 4", source_filter="manual")
+    )
+    assert paper is not None
+    assert {q["id"] for q in paper["questions"]} == {"g4-a", "g4-b"}
+
+
 # ── frontend wiring ───────────────────────────────────────────────────────────
+
+
+def test_generate_bank_paper_defines_grade_before_sending_it():
+    """Ye test ek asal bug se aayi hai. `bpGrade` dropdown bank.html mein pehle se
+    tha aur `onBpGradeChange()` us ki value parhta tha, magar `generateBankPaper()`
+    mein `grade` ka koi const nahi tha. Sirf `body.grade = grade` likh dene se
+    ReferenceError aata -- aur wo tab tak na dikhta jab tak koi button na dabata.
+    Isi liye dono baatein alag alag jaanchi ja rahi hain.
+
+    NOTE -- pehli koshish mein ye test KAAM NAHI KARTI thi. Wo `"bpGrade" in
+    region` naapti thi, aur usi function ke comment mein lafz "bpGrade" mojood
+    hai, to `const grade` hata dene par bhi test hari rehti thi (aazma kar dekha).
+    Isi liye ab asal CODE ki shakl naapi jati hai -- `getElementById('bpGrade')` --
+    jo kisi comment mein nahi aata."""
+    from pathlib import Path
+
+    html = (Path(__file__).parent.parent / "static" / "bank.html").read_text(encoding="utf-8")
+    start = html.index("async function generateBankPaper")
+    region = html[start : html.index("\nasync function ", start + 10)]
+    assert "getElementById('bpGrade')" in region, (
+        "generateBankPaper() ne bpGrade parhna band kar diya -- body.grade "
+        "ReferenceError dega aur wo sirf button dabane par dikhega"
+    )
+    assert "body.grade" in region, "generateBankPaper() ne grade bhejna band kar diya"
 
 
 def test_build_paper_sends_grade_not_just_class_name():

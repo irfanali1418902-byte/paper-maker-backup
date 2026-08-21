@@ -204,7 +204,7 @@ class UpdateQuestionRequest(BaseModel):
 
     question_en: Optional[str] = None
     question_ur: Optional[str] = None
-    options_en: Optional[str] = None   # JSON-encoded list, e.g. '["a","b","c","d"]'
+    options_en: Optional[str] = None  # JSON-encoded list, e.g. '["a","b","c","d"]'
     options_ur: Optional[str] = None
     correct_answer_en: Optional[str] = None
     correct_answer_ur: Optional[str] = None
@@ -250,12 +250,21 @@ class UpdateQuestionRequest(BaseModel):
         if all(
             v is None
             for v in (
-                self.question_en, self.question_ur,
-                self.options_en, self.options_ur,
-                self.correct_answer_en, self.correct_answer_ur,
-                self.marks, self.answer_lines, self.image_size,
-                self.learning_outcome, self.estimated_time, self.keywords,
-                self.source_book, self.page_number, self.status,
+                self.question_en,
+                self.question_ur,
+                self.options_en,
+                self.options_ur,
+                self.correct_answer_en,
+                self.correct_answer_ur,
+                self.marks,
+                self.answer_lines,
+                self.image_size,
+                self.learning_outcome,
+                self.estimated_time,
+                self.keywords,
+                self.source_book,
+                self.page_number,
+                self.status,
             )
         ):
             raise ValueError("Kam az kam ek field dena zaroori hai.")
@@ -298,11 +307,20 @@ class BulkUpdateMetaRequest(BaseModel):
     @model_validator(mode="after")
     def _at_least_one_meta(self) -> "BulkUpdateMetaRequest":
         if not (self.model_fields_set & _BULK_META_FIELDS):
-            raise ValueError("Kam az kam ek field (keywords, category, ya question_types) dena zaroori hai.")
+            raise ValueError(
+                "Kam az kam ek field (keywords, category, ya question_types) dena zaroori hai."
+            )
         return self
 
 
-_BULK_Q_META_FIELDS = {"keywords", "source_book", "page_number", "status", "learning_outcome", "estimated_time"}
+_BULK_Q_META_FIELDS = {
+    "keywords",
+    "source_book",
+    "page_number",
+    "status",
+    "learning_outcome",
+    "estimated_time",
+}
 
 
 class BulkUpdateQuestionMetaRequest(BaseModel):
@@ -331,7 +349,15 @@ class BulkUpdateQuestionMetaRequest(BaseModel):
         return self
 
 
-_SMART_FIELDS = {"name", "syllabus_topic_id", "keywords", "question_types", "category", "source_book", "page_number"}
+_SMART_FIELDS = {
+    "name",
+    "syllabus_topic_id",
+    "keywords",
+    "question_types",
+    "category",
+    "source_book",
+    "page_number",
+}
 
 
 class UpdateLibraryImageRequest(BaseModel):
@@ -382,6 +408,14 @@ class BankPaperRequest(BaseModel):
     question_types: Optional[List[str]] = None
     total_questions: Optional[int] = Field(default=None, ge=1)
     class_name: Optional[str] = None
+    # grade = syllabus class string; questions isi se filter hote hain. class_name
+    # yahan free-text input hai (bank.html:305 ka placeholder hi "Class 7A" hai),
+    # to filter ke liye wo istemal nahi ho sakta — wahi taqseem jo
+    # GeneratePaperRequest aur BlueprintPaperRequest karti hain.
+    #
+    # None = koi grade filter nahi (purana behaviour). syllabus_topic_id is se
+    # zyada baareek hai; dono bheje ja sakte hain.
+    grade: Optional[str] = None
     paper_title: Optional[str] = None
     # Paper kis exam se tag ho (coverage). None = Unassigned.
     exam_no: Optional[int] = Field(default=None, ge=0)
@@ -470,9 +504,18 @@ class ManualQuestionUpdateRequest(BaseModel):
         if all(
             v is None
             for v in (
-                self.question_text, self.is_urdu, self.options, self.correct_answer,
-                self.marks, self.answer_lines, self.learning_outcome, self.estimated_time,
-                self.keywords, self.source_book, self.page_number, self.status,
+                self.question_text,
+                self.is_urdu,
+                self.options,
+                self.correct_answer,
+                self.marks,
+                self.answer_lines,
+                self.learning_outcome,
+                self.estimated_time,
+                self.keywords,
+                self.source_book,
+                self.page_number,
+                self.status,
                 self.slo_ids,
             )
         ):
@@ -489,7 +532,12 @@ class SetQuestionSloRequest(BaseModel):
 
 _VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 _VALID_BLOOM_LEVELS = {
-    "REMEMBER", "UNDERSTAND", "APPLY", "ANALYZE", "EVALUATE", "CREATE",
+    "REMEMBER",
+    "UNDERSTAND",
+    "APPLY",
+    "ANALYZE",
+    "EVALUATE",
+    "CREATE",
 }
 
 

@@ -121,6 +121,61 @@ saara JS nikaal kar `node --check` (saaf), aur chalte hue server par asal HTTP
 request. Frontend ki line ek object literal mein ek property hai, aur ek test
 `buildPaper()` mein `grade:` ki mojoodgi par pehra deti hai.
 
+### Bank-paper mein bhi grade — aur us ne do asli ghaltiyan pakdin
+
+**963 pass, ruff clean.** Paper ke teen raaste hain; upar wala fix sirf
+`/api/generate-paper` ka tha. `/api/bank-paper` mein wohi khala thi.
+
+`find_for_bank_paper()` mein `grade`, `BankPaperRequest.grade`, aur `bank.html`
+se bhejna. UI ka **aadha kaam pehle se bana hua tha** — `bpGrade` dropdown line
+277 par mojood hai aur cascade `bpSubject -> bpGrade -> bpTopic` chal raha hai;
+bas request mein grade jaata nahi tha. Asal HTTP se naapa: **3/3**.
+
+Iski jaldi kam thi aur ye naapa hua hai — bank-paper sirf `source='manual'` se
+banta hai:
+
+```
+manual sawal 459   Pre Year 1 329 · (syllabus link nahi) 130 · Grade 4 SIFAR
+```
+
+Yani aaj is raaste par grade ghalat ho hi nahi sakta tha. Ye **latent** bug tha —
+teacher ke pehla Grade 4 manual sawal likhte hi zinda ho jata.
+
+#### Ghalti 1: frontend par `grade` define hi nahi tha
+
+`body.grade = grade` likhne laga to dekha ke `generateBankPaper()` mein `grade`
+ka koi `const` hai hi nahi — line 1512 wala `grade` ek **doosre** function
+(`onBpGradeChange()`) ka tha. Aise chhorne se `ReferenceError` aata, aur wo tab
+tak na dikhta jab tak koi button na dabata. Yehi wo qism ki ghalti hai jis se ye
+repo pehle jal chuki hai (CLAUDE.md §12.7).
+
+#### Ghalti 2: meri apni test JHOOTI thi
+
+Guard test pehle `"bpGrade" in region` naapti thi. Maine `const grade` hata kar
+aazmaya — **test phir bhi hari rahi**, kyunke usi function mein maine jo comment
+likha tha us mein lafz "bpGrade" mojood hai. Test comment se poori ho rahi thi,
+code se nahi.
+
+Ab wo `getElementById('bpGrade')` naapti hai — jo kisi comment mein nahi aata —
+aur dobara aazma kar dekha: `const` hatate hi **FAIL** hoti hai, wapas daalte hi
+pass. Ye wajah test ke docstring mein likh di hai.
+
+(Us aazmaish mein ek aur ghalti hui: mera `replace(..., 1)` **pehli** match par
+laga, jo `onBpGradeChange()` ki line thi, meri nahi — to pehla mutation test hi
+be-mani tha. Doosri dafa line number se kiya.)
+
+#### 7 nayi tests
+
+Repository (grade filter, bina grade purana behaviour, topic grade se zyada
+baareek hai, `source` filter JOIN ke baad bhi lagta hai), schema, `assemble_bank_paper`
+ka poora raasta, aur frontend guard.
+
+**Blueprint jaan-boojh kar chhora.** `BlueprintPaperRequest.grade` mojood hai
+magar `papers.py:74` par wo sirf `class_tier` (Bloom standard) banata hai —
+questions filter **nahi** karta. Sections apne `topic_ids` se scope hote hain, jo
+grade se zyada baareek hai; khali `topic_ids` par wo bachao nahi rehta. Ye alag
+kaam hai aur alag faisla maangta hai.
+
 ## 2026-08-21 — ROADMAP #3: bank seeding tool (`scripts/seed_bank.py`)
 
 **934 pytest pass, ruff clean.** Script bana, dry-run chala, phir do topics par

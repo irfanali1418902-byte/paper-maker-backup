@@ -1542,6 +1542,7 @@ async function onBpGradeChange() {
 // ================================================================
 async function generateBankPaper() {
   const subject = document.getElementById('bpSubject').value;
+  const grade   = document.getElementById('bpGrade').value;
   const topicId = document.getElementById('bpTopic').value;
   const title   = document.getElementById('bpTitle').value.trim();
   const cls     = document.getElementById('bpClass').value.trim();
@@ -1558,6 +1559,12 @@ async function generateBankPaper() {
 
   const body = { source_filter: 'manual' };
   if (subject)              body.subject = subject;
+  // bpGrade se questions FILTER hote hain (syllabus_topics.grade par JOIN).
+  // bpClass free-text hai ("Class 7A") aur sirf paper ke title/row mein jata hai —
+  // us se filter nahi ho sakta. Is ke baghair subject+grade chunne wale teacher ko
+  // us subject ke SAARE grades ke sawal milte the; topic chuna ho to wo pehle se
+  // zyada baareek filter hai, magar topic optional hai.
+  if (grade)                body.grade = grade;
   if (topicId)              body.syllabus_topic_id = topicId;
   if (checkedTypes.length)  body.question_types = checkedTypes;
   if (title)                body.paper_title = title;

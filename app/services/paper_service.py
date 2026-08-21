@@ -129,6 +129,7 @@ def assemble_bank_paper(req: BankPaperRequest) -> dict | None:
         syllabus_topic_id=req.syllabus_topic_id,
         question_types=req.question_types,
         source=source_arg,
+        grade=req.grade,
     )
 
     if not questions:
