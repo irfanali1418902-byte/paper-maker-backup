@@ -36,76 +36,94 @@ def resolve_distribution_type(requested: str, difficulty: str) -> str:
     return requested
 
 
+#: Har distribution ka apna hissa. Ginti in se `ceil` kar ke banti hai — AUR
+#: surplus ki katai bhi inhi se hoti hai. Ye do kaam ek jagah rakhna hi asal
+#: baat hai: katai ki SIMT hardcode karna wo bug tha jo `advanced` ko ulta
+#: chala raha tha (tafseel neeche).
+_DISTRIBUTION_SHARES = {
+    "balanced": {
+        "REMEMBER": 0.20,
+        "UNDERSTAND": 0.20,
+        "APPLY": 0.20,
+        "ANALYZE": 0.15,
+        "EVALUATE": 0.15,
+        "CREATE": 0.10,
+    },
+    "foundational": {
+        "REMEMBER": 0.40,
+        "UNDERSTAND": 0.30,
+        "APPLY": 0.20,
+        "ANALYZE": 0.10,
+        "EVALUATE": 0.0,
+        "CREATE": 0.0,
+    },
+    "advanced": {
+        "REMEMBER": 0.10,
+        "UNDERSTAND": 0.15,
+        "APPLY": 0.20,
+        "ANALYZE": 0.25,
+        "EVALUATE": 0.20,
+        "CREATE": 0.10,
+    },
+}
+
+
 def calculate_bloom_distribution(dist_type: str, total_questions: int) -> dict:
     """Given a distribution type (balanced/foundational/advanced) and a total
     question count, returns how many questions should belong to each Bloom
     level."""
-    distributions = {
-        "balanced": {
-            "REMEMBER": math.ceil(total_questions * 0.20),
-            "UNDERSTAND": math.ceil(total_questions * 0.20),
-            "APPLY": math.ceil(total_questions * 0.20),
-            "ANALYZE": math.ceil(total_questions * 0.15),
-            "EVALUATE": math.ceil(total_questions * 0.15),
-            "CREATE": math.ceil(total_questions * 0.10),
-        },
-        "foundational": {
-            "REMEMBER": math.ceil(total_questions * 0.40),
-            "UNDERSTAND": math.ceil(total_questions * 0.30),
-            "APPLY": math.ceil(total_questions * 0.20),
-            "ANALYZE": math.ceil(total_questions * 0.10),
-            "EVALUATE": 0,
-            "CREATE": 0,
-        },
-        "advanced": {
-            "REMEMBER": math.ceil(total_questions * 0.10),
-            "UNDERSTAND": math.ceil(total_questions * 0.15),
-            "APPLY": math.ceil(total_questions * 0.20),
-            "ANALYZE": math.ceil(total_questions * 0.25),
-            "EVALUATE": math.ceil(total_questions * 0.20),
-            "CREATE": math.ceil(total_questions * 0.10),
-        },
-    }
-    result = distributions.get(dist_type, distributions["balanced"])
+    shares = _DISTRIBUTION_SHARES.get(dist_type, _DISTRIBUTION_SHARES["balanced"])
+    result = {level: math.ceil(total_questions * share) for level, share in shares.items()}
 
     # Rounding (ceil on each level) can push the total slightly above
     # total_questions, especially for small counts — trim the surplus off
     # the largest buckets (looping, since one bucket alone may not be
     # enough) so the paper always has exactly the requested number.
     #
-    # TIES ARE BROKEN FROM THE TOP OF BLOOM DOWN, AND THAT IS THE WHOLE FIX.
-    # `max(result, key=result.get)` returns the FIRST key holding the maximum,
-    # and this dict runs REMEMBER -> CREATE, so every tie used to be trimmed off
-    # REMEMBER first. At small totals every level ceils to 1, so the trim ate the
-    # foundational levels and left only the hardest ones. Measured 2026-08-21,
-    # before the fix:
+    # KATAI DISTRIBUTION KE APNE HISSE SE HOTI HAI — KISI TAY-SHUDA SIMT SE NAHI.
+    # Yahan do bug guzar chuke hain, dono ek hi din naape gaye (2026-08-21), aur
+    # doosra pehle ki adhoori fix se paida hua tha:
     #
-    #     balanced, 3   ->  REMEMBER 0  UNDERSTAND 0  APPLY 0
-    #                       ANALYZE 1   EVALUATE 1    CREATE 1
+    # BUG 1 — katai neeche se shuru hoti thi. `max(result, key=result.get)` barabar
+    # qeematon mein PEHLI key deta hai, aur dict REMEMBER -> CREATE chalta hai.
+    # Chhoti ginti par har level `ceil` se 1 hota hai, to:
     #
-    # "Balanced" was handing a young class three CREATE-level questions, and
-    # "foundational" lost REMEMBER — its most important level — first. Reversing
-    # the tie-break is surgical: where the buckets genuinely differ, `max` still
-    # picks the real largest and nothing changes (balanced at 10 is untouched);
-    # only the all-equal case moves, which is exactly the broken one.
+    #     balanced, 3   ->  ANALYZE 1  EVALUATE 1  CREATE 1   (buniyadi levels saaf)
     #
-    # THE OLD TESTS ALL PASSED THROUGH THIS. They assert the SUM equals the
-    # total and that all six keys exist — never which level got the questions.
-    # The count was right the whole time; the paper was not.
+    # BUG 2 — us ka ilaj `max(reversed(order), ...)` tha, yani "hamesha ooper se
+    # kaato". Wo `balanced`/`foundational` par theek chala aur unhi par naapa gaya.
+    # `advanced` par kisi ne nahi naapa, aur wahan ye BILKUL ULTA hai — us ka sab
+    # se kam-ahem level REMEMBER (10%) hai, jo NEECHE hai:
+    #
+    #     advanced, 3   ->  REMEMBER 1  UNDERSTAND 1  APPLY 1  (sab se asaan sawal)
+    #     advanced, 1   ->  REMEMBER 1
+    #
+    # Teacher "advanced" maangta tha aur usay buniyadi sawal milte the. Ek hardcoded
+    # simt dono ko theek kar hi nahi sakti — `balanced` ki kam-ahem levels ooper hain,
+    # `advanced` ki neeche. Isi liye ab simt ka koi zikr nahi: jo level apni
+    # distribution mein SAB SE KAM hissa rakhta hai, wahi pehle kata hai. Ye khud
+    # ba khud teeno ke liye durust simt chun leta hai.
+    #
+    # DONO BUG PURANE TESTS SE GUZAR GAYE. Wo JORH naapte hain (`sum == total`) aur
+    # ye ke chhe keys mojood hain — kabhi ye nahi ke sawal KIS level par gaya.
+    # Ginti hamesha theek thi; paper nahi.
     order = list(result)  # REMEMBER -> CREATE, the dict's own order
     surplus = sum(result.values()) - total_questions
     while surplus > 0:
-        # reversed() makes ties resolve to the highest Bloom level present.
-        largest_level = max(reversed(order), key=lambda lvl: result[lvl])
-        if result[largest_level] == 0:
+        # Tarteeb: (1) sab se bari bucket, taake shakl mutanasib rahe; (2) barabari
+        # mein wo level jis ka hissa sab se kam hai; (3) phir bhi barabari ho to
+        # ooncha level (yani `balanced` 10 par wahi purana nateeja).
+        trim_level = min(
+            order,
+            key=lambda lvl: (-result[lvl], shares[lvl], -order.index(lvl)),
+        )
+        if result[trim_level] == 0:
             break  # nothing left to trim, total_questions is unreachable with this split
-        # ONE AT A TIME, not min(surplus, bucket). Taking the whole bucket empties
-        # whichever level happens to be biggest, which is the level the chosen
-        # distribution cares about MOST. `foundational` at 3 lost REMEMBER that
-        # way — its 40% share ceils to 2, the largest bucket, so the entire thing
-        # went and a "foundational" paper came back with no REMEMBER at all.
-        # Trimming one at a time spreads the surplus and the shape survives.
-        result[largest_level] -= 1
+        # EK EK KAR KE, `min(surplus, bucket)` se nahi. Poori bucket lene se wo level
+        # khali ho jata tha jis ki us distribution ko sab se zyada zaroorat hai —
+        # `foundational` 3 par REMEMBER isi tarah gaya tha (40% hissa 2 par ceil hota
+        # hai, yani sab se bari bucket, aur poori ki poori chali jati thi).
+        result[trim_level] -= 1
         surplus -= 1
 
     return result

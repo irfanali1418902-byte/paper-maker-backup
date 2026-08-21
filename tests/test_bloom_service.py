@@ -14,7 +14,6 @@ from app.services.bloom_service import calculate_bloom_distribution, calculate_m
 
 
 class TestCalculateBloomDistribution:
-
     def test_balanced_distribution_sum_equals_total(self):
         dist = calculate_bloom_distribution("balanced", 10)
         assert sum(dist.values()) == 10
@@ -102,6 +101,70 @@ class TestCalculateBloomDistribution:
             "CREATE": 0,
         }
 
+    # ---- `advanced` — wahi khala, doosri simt mein -----------------------------
+    #
+    # Upar wale level-naapne wale tests SIRF balanced/foundational par likhe gaye
+    # the, aur unhein theek karne wala fix "hamesha ooper se kaato" tha. Wo un dono
+    # par durust hai magar `advanced` par bilkul ULTA, kyunke advanced ka sab se
+    # kam-ahem level REMEMBER (10%) hai — neeche, ooper nahi. Kisi ne advanced par
+    # naapa nahi tha. Naapa gaya 2026-08-21, doosre fix se pehle:
+    #
+    #     advanced/1  ->  REMEMBER 1                          (sab se asaan)
+    #     advanced/3  ->  REMEMBER 1, UNDERSTAND 1, APPLY 1
+    #
+    # Yani teacher "advanced" maangta tha aur usay buniyadi sawal milte the. Jorh
+    # phir bhi theek tha, isliye poora suite hara raha — bilkul pehle bug ki tarah.
+
+    @pytest.mark.parametrize("n", [1, 2, 3, 4])
+    def test_small_advanced_papers_stay_high_up_the_taxonomy(self, n):
+        """Chhota advanced paper ooper se bharta hai. ANALYZE advanced ka sab se
+        bara hissa hai (25%), to ek hi sawal ho to wo ANALYZE hona chahiye —
+        REMEMBER (10%, sab se chhota hissa) nahi."""
+        dist = calculate_bloom_distribution("advanced", n)
+        assert dist["ANALYZE"] >= 1
+        assert dist["REMEMBER"] == 0
+
+    def test_advanced_never_leans_lower_than_balanced(self):
+        """Kisi bhi n par advanced, balanced se neeche nahi jhuk sakta. Purani
+        simt-wali katai par ye ULTA ho jata tha — advanced/3 ka REMEMBER 1 tha
+        jabke balanced/3 ka bhi 1, aur advanced ke ooncha levels sifar.
+
+        Ye SAKHT (`>`) nahi ho sakta, aur ye code ki kami nahi hai: n=5, 6, 11, 12
+        par dono taqseemein bilkul barabar aati hain (chhe levels, ginti kam —
+        dono ek hi jagah se kaat-ti hain). Naapa gaya, isi liye `>=`."""
+        for n in range(1, 40):
+            adv = calculate_bloom_distribution("advanced", n)
+            bal = calculate_bloom_distribution("balanced", n)
+            assert adv["REMEMBER"] <= bal["REMEMBER"], f"n={n}: adv={adv} bal={bal}"
+            assert (adv["ANALYZE"] + adv["EVALUATE"]) >= (bal["ANALYZE"] + bal["EVALUATE"]), (
+                f"n={n}: adv={adv} bal={bal}"
+            )
+
+    def test_advanced_weights_hold_at_a_round_number(self):
+        """20 par advanced ka hissa saaf naapa ja sakta hai: 10/15/20/25/20/10."""
+        dist = calculate_bloom_distribution("advanced", 20)
+        assert dist == {
+            "REMEMBER": 2,
+            "UNDERSTAND": 3,
+            "APPLY": 4,
+            "ANALYZE": 5,
+            "EVALUATE": 4,
+            "CREATE": 2,
+        }
+
+    @pytest.mark.parametrize("dist_type", ["balanced", "foundational", "advanced"])
+    def test_trim_never_starves_the_distributions_own_biggest_share(self, dist_type):
+        """Har distribution ka sab se bara hissa jis level ka hai, wo level kabhi
+        khali nahi hona chahiye jab tak paper mein sawal hain. Yehi wo ek usool
+        hai jo teeno par ek saath lagta hai — aur jise simt-wali katai tod deti
+        thi (foundational ne REMEMBER khoya, advanced ne ANALYZE)."""
+        biggest = {"balanced": "REMEMBER", "foundational": "REMEMBER", "advanced": "ANALYZE"}[
+            dist_type
+        ]
+        for n in range(1, 40):
+            dist = calculate_bloom_distribution(dist_type, n)
+            assert dist[biggest] >= 1, f"{dist_type}/{n}: {biggest} khali hai — {dist}"
+
     @pytest.mark.parametrize("dist_type", ["balanced", "foundational", "advanced"])
     def test_sum_holds_for_every_distribution(self, dist_type):
         for n in range(0, 40):
@@ -135,7 +198,7 @@ class TestCalculateBloomDistribution:
                 dist = calculate_bloom_distribution(dist_type, n)
                 for level, count in dist.items():
                     assert count >= 0, (
-                        f"negative count at n={n}, dist={dist_type}, " f"level={level}: {count}"
+                        f"negative count at n={n}, dist={dist_type}, level={level}: {count}"
                     )
 
     def test_large_total_balanced_proportions(self):
@@ -154,7 +217,6 @@ class TestCalculateBloomDistribution:
 
 
 class TestCalculateMarks:
-
     def test_remember_easy_mcq_is_one(self):
         """REMEMBER (1) + multiple-choice (0) + easy (0) = 1."""
         assert calculate_marks("REMEMBER", "multiple-choice", "easy") == 1
