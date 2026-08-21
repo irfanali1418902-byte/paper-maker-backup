@@ -1,5 +1,63 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-21 — Grade ka filter kahin hai hi nahi — seeding teacher tak pohanchti hi nahin
+
+Naapa gaya, koi code nahi badla. **Ye aaj ki sab se aham baat hai, aur is se kal ka
+plan badalta hai.**
+
+Maine oopar likha tha ke "Grade 4 par ab paper ban sakta hai" — wo maine sirf ginti
+se nikala tha. Chala kar dekha to daawa ghalat nikla.
+
+### `class_name` sawal chunta hi nahi
+
+`GeneratePaperRequest.class_name` sirf do jagah jata hai: `_resolve_title()` (paper
+ka naam) aur `_persist_paper()` (paper row). **`_pick_questions()` use dekhta bhi
+nahi** — wo sirf `subject`, `bloom_level`, `difficulty`, `question_types` aur
+`language_filter` par chalta hai. Yani "Grade 4" sirf sarwarq par likha lafz hai.
+
+### Nateeja: Grade 4 ka paper pre-school ka nikalta hai
+
+```
+Mathematics ke kul sawal   372
+  Pre Year 1               329   <- 88%
+  Grade 4                   43
+```
+
+`find_least_used` khud chala kar dekha (kuch likha nahi) — 10-sawal balanced paper:
+
+```
+REMEMBER    Pre Year 1
+UNDERSTAND  Pre Year 1   Name a solid shape you see in everyday objects...
+APPLY       Pre Year 1   Count the candies and match with the correct number.
+APPLY       Pre Year 1   Count the carrots and match with the correct number.
+ANALYZE     GRADE 4      In the number 55,200, how is the value of the first '5'...
+ANALYZE     GRADE 4      A student tried to write "Three million, seventy-two..."
+
+Grade 4 ke sawal: 2 / 8
+```
+
+**"Count the candies" — Grade 4 ke paper mein.** Aur 10 maange the, 8 mile
+(EVALUATE/CREATE khali).
+
+### Is se kal ka kaam ULTA nuqsan dega
+
+Pre Year 2/3 seed karne se **700 aur pre-school sawal** usi Mathematics pool mein
+jayenge jis mein se Grade 4 ka paper uthta hai. Aaj Grade 4 ke paper mein 88%
+ghalat-grade sawal aate hain; us ke baad 97% aayenge. **Seeding se pehle filter
+chahiye, warna har naya sawal masla barhata hai.**
+
+### Fix ka raasta pehle se mojood hai
+
+`questions_repository.py:292` mein `syllabus_topics.grade` par JOIN **pehle se likha
+hua hai** (case/whitespace-insensitive), magar sirf SLO-export walay function mein.
+Paper wala `find_least_used()` us se nahi guzarta. Yani ye naya design nahi, ek
+mojooda pattern ko doosri jagah lagana hai.
+
+Ek aur baat: `BankPaperRequest` mein `syllabus_topic_id` hai — yani **ek** topic se
+paper ban sakta hai, magar "poore Grade 4 se" nahi.
+
+**Kuch badla nahi gaya — ye faisla Irfan ka hai.**
+
 ## 2026-08-21 — ROADMAP #3: bank seeding tool (`scripts/seed_bank.py`)
 
 **934 pytest pass, ruff clean.** Script bana, dry-run chala, phir do topics par
@@ -238,6 +296,10 @@ Grade 4 par ab ek sections-wala paper waqai ban sakta hai: chaaron qismein 9 se
 zyada hain, yani 5 MCQ + 5 short-answer + 3 essay jaisi darkhwast poori hogi.
 **Ye naapa nahi gaya — sirf ginti se nikala gaya hai;** asal paper generate kar ke
 dekhna abhi baqi hai.
+
+> **2026-08-21 (baad mein) — ye daawa NAAPNE PAR GHALAT nikla.** Paper ban to jata
+> hai, magar wo Grade 4 ka nahi hota. Tafseel neeche: "Grade ka filter kahin hai
+> hi nahi".
 
 ### RUKO — "khali bank" ka asal masla seeding nahi, JAALI SYLLABUS hai
 
