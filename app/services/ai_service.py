@@ -92,6 +92,9 @@ SUBJECT: {subject}
 TOPIC: {topic}{outcome_line}
 DIFFICULTY: {difficulty}
 QUESTION TYPES TO USE: {types_str}
+USE EVERY TYPE IN THAT LIST. Spread the questions across all of them — if a type is
+listed, at least one question must be of that type. Do NOT fall back to only
+multiple-choice and short-answer when other types are listed.
 
 DIFFICULTY CALIBRATION:
 {difficulty_guidance}
@@ -140,6 +143,34 @@ RESPONSE FORMAT (JSON ONLY):
       "options_ur": [],
       "correct_answer_en": "model answer...",
       "correct_answer_ur": "نمونہ جواب...",
+      "explanation_en": "...",
+      "explanation_ur": "...",
+      "visual_emoji": null,
+      "visual_count": null
+    }},
+    {{
+      "bloom_level": "UNDERSTAND",
+      "question_type": "fill-blank",
+      "question_en": "A sentence with the missing word shown as __________.",
+      "question_ur": "جملہ جس میں غائب لفظ __________ کے طور پر دکھایا گیا ہو۔",
+      "options_en": [],
+      "options_ur": [],
+      "correct_answer_en": "the word that fills the blank",
+      "correct_answer_ur": "وہ لفظ جو خالی جگہ پُر کرے",
+      "explanation_en": "...",
+      "explanation_ur": "...",
+      "visual_emoji": null,
+      "visual_count": null
+    }},
+    {{
+      "bloom_level": "EVALUATE",
+      "question_type": "essay",
+      "question_en": "An open question needing several sentences, may have parts a) and b).",
+      "question_ur": "کھلا سوال جس کے کئی جملوں میں جواب کی ضرورت ہو، الف) اور ب) حصے ہو سکتے ہیں۔",
+      "options_en": [],
+      "options_ur": [],
+      "correct_answer_en": "the key points a good answer must cover",
+      "correct_answer_ur": "وہ اہم نکات جو ایک اچھے جواب میں ہونے چاہئیں",
       "explanation_en": "...",
       "explanation_ur": "...",
       "visual_emoji": null,
