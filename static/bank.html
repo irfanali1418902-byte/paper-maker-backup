@@ -109,6 +109,7 @@
       <option value="fill-blank">Fill in the Blank</option>
       <option value="true-false">True / False</option>
       <option value="short-answer">Short Answer</option>
+      <option value="essay">Essay (Long Answer)</option>
     </select>
 
     <!-- Urdu toggle -->
@@ -386,6 +387,7 @@
           <option value="fill-blank">Fill-blank</option>
           <option value="true-false">True/False</option>
           <option value="short-answer">Short-answer</option>
+          <option value="essay">Essay</option>
         </select>
       </div>
       <div>
@@ -749,14 +751,31 @@ function toggleSmartDetails(id, toggleEl) {
 // ================================================================
 // Type toggle — show/hide form sections
 // ================================================================
-const TYPE_SECTIONS = { 'multiple-choice': 'sec-mcq', 'fill-blank': 'sec-fill', 'true-false': 'sec-tf', 'short-answer': 'sec-short' };
-const TYPE_MARKS    = { 'multiple-choice': 1, 'fill-blank': 1, 'true-false': 1, 'short-answer': 2 };
+// essay JAAN-BOOJH KAR short-answer ka hi section share karta hai. Zaroorat
+// bilkul wahi hai — sawal ka text aur kitni lines — aur alag section banane ke
+// liye teen naye id chahiye the, jo CSS ratchet ka frozen inventory badal dete
+// aur `--write` maangte. `--write` is repo mein insani faisla hai
+// (scripts/css_baseline.py ka docstring: "a conversation, not a command"), aur
+// wo abhi multawi hai. Farq sirf label ka reh jata hai, jo neeche set hota hai.
+const TYPE_SECTIONS = { 'multiple-choice': 'sec-mcq', 'fill-blank': 'sec-fill', 'true-false': 'sec-tf', 'short-answer': 'sec-short', 'essay': 'sec-short' };
+const TYPE_MARKS    = { 'multiple-choice': 1, 'fill-blank': 1, 'true-false': 1, 'short-answer': 2, 'essay': 5 };
 
 function onTypeChange() {
   const type = document.getElementById('fType').value;
   Object.values(TYPE_SECTIONS).forEach(id => document.getElementById(id).style.display = 'none');
   if (TYPE_SECTIONS[type]) document.getElementById(TYPE_SECTIONS[type]).style.display = '';
   document.getElementById('fMarks').value = TYPE_MARKS[type] || 1;
+
+  // Shared section, magar default alag: print.html ka answerSpace() essay par
+  // 5 lines + diagram box deta hai aur short-answer par 4 lines. Label wahi
+  // kahe jo print par waqai hoga, warna teacher ko jhoot dikhta hai.
+  const isEssay = type === 'essay';
+  const linesEl = document.getElementById('q-short-lines');
+  if (linesEl && linesEl.options.length) {
+    linesEl.options[0].textContent = isEssay ? 'Default (5 lines + diagram box)' : 'Default (4 lines)';
+  }
+  const shortText = document.getElementById('q-short-text');
+  if (shortText) shortText.placeholder = isEssay ? 'Lamba sawal likhein...' : 'Sawal likhein...';
   // Re-apply Urdu toggle to the newly visible textarea
   applyUrduMode(document.getElementById('isUrdu').checked);
 }
@@ -771,6 +790,7 @@ function getActiveTextarea() {
     'fill-blank':      'q-fill-text',
     'true-false':      'q-tf-text',
     'short-answer':    'q-short-text',
+    'essay':           'q-short-text',   // shared section — dekhein TYPE_SECTIONS
   };
   return document.getElementById(map[type] || 'q-mcq-text');
 }
@@ -1050,7 +1070,7 @@ async function submitQuestion() {
   const diff     = document.getElementById('fDifficulty').value;
 
   // Get question text from active section
-  const textMap = { 'multiple-choice': 'q-mcq-text', 'fill-blank': 'q-fill-text', 'true-false': 'q-tf-text', 'short-answer': 'q-short-text' };
+  const textMap = { 'multiple-choice': 'q-mcq-text', 'fill-blank': 'q-fill-text', 'true-false': 'q-tf-text', 'short-answer': 'q-short-text', 'essay': 'q-short-text' };
   const qtext = document.getElementById(textMap[type]).value.trim();
 
   setAddStatus('', '');
@@ -1093,7 +1113,7 @@ async function submitQuestion() {
     body.correct_answer = document.querySelector('input[name="tf-answer"]:checked')?.value || 'True';
   }
 
-  if (type === 'short-answer') {
+  if (type === 'short-answer' || type === 'essay') {
     const lines = document.getElementById('q-short-lines').value;
     if (lines !== '') body.answer_lines = parseInt(lines, 10);
   }
@@ -1243,6 +1263,7 @@ function typeBadge(t) {
     'fill-blank':      ['badge-fill', 'Fill-blank'],
     'true-false':      ['badge-tf',   'True/False'],
     'short-answer':    ['badge-short','Short-ans'],
+    'essay':           ['badge-essay','Essay'],
   };
   const [cls, label] = map[t] || ['badge-short', t];
   return `<span class="type-badge ${cls}">${label}</span>`;

@@ -18,9 +18,9 @@ class GenerateQuestionsRequest(BaseModel):
 
 #: Har wo question type jo app mein waqai mojood hai. paper_service.py ke
 #: _PAPER_TYPE_FILTERS / _RATIO_* groups isi set se bante hain.
-#: NOTE: ManualQuestionRequest ka apna Literal is se CHHOTA hai — us mein "essay"
-#: nahi hai, yani teacher haath se essay nahi likh sakta jabke baqi app use poori
-#: tarah support karti hai. Wo alag masla hai, yahan theek nahi kiya ja raha.
+#: 2026-08-21: `ManualQuestionRequest` ka Literal ab is ke barabar hai — pehle
+#: us mein "essay" nahi tha, yani teacher haath se essay nahi likh sakta tha
+#: jabke baqi app use poori tarah support karti hai (D40).
 QuestionType = Literal[
     "multiple-choice",
     "true-false",
@@ -441,7 +441,11 @@ class ManualQuestionRequest(BaseModel):
 
     question_text: str
     is_urdu: bool = False  # True → question_ur field mein save, False → question_en
-    question_type: Literal["multiple-choice", "fill-blank", "true-false", "short-answer"]
+    # QuestionType hi istemal hota hai, apni chhoti nakal nahi — pehle yahan ek
+    # alag Literal tha jis mein "essay" nahi tha, aur wohi D40 ka bug tha: bank
+    # mein AI ke essay maujood the magar teacher ek bhi haath se nahi likh sakta.
+    # Ek hi source rakhne se wo farq dobara paida nahi ho sakta.
+    question_type: QuestionType
     options: Optional[List[str]] = None  # sirf MCQ ke liye, 2-4 items
     correct_answer: Optional[str] = None
     marks: int = Field(default=1, ge=1)

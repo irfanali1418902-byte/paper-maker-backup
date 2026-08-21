@@ -1,5 +1,68 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-21 — D40: teacher ab haath se essay likh sakta hai
+
+**975 pass, ruff clean, CSS ratchet OK.**
+
+`ManualQuestionRequest` ka apna Literal chhota tha — us mein `essay` nahi tha,
+jabke `_PAPER_TYPE_FILTERS`, `_RATIO_SUBJECTIVE_GROUP`, `bloom_service`
+(`"essay": 3`), `ai_service` aur `print.html` ka `answerSpace()` sab use jaante
+hain. Aaj ye masla aur nazar aane laga tha: bank mein AI ke banaye **11 essay**
+maujood the aur teacher un jaisa ek bhi khud nahi likh sakta tha.
+
+Fix qeematein barhana nahi tha — **do alag list rakhna hi bug tha.** Ab wo field
+shared `QuestionType` hi use karta hai, to farq dobara paida nahi ho sakta. Ek
+test isi baat par pehra deti hai (annotation ka `is QuestionType` hona), qeematon
+ki fehrist par nahi.
+
+Backend mein aur kuch nahi badla — `save_manual_question()` pehle se poori tarah
+type-agnostic hai, aur `ManualQuestionUpdateRequest` mein `question_type` hai hi
+nahi, to edit ka raasta bhi mehfooz tha.
+
+### UI ke teen chhote khale, jo naapne par mile
+
+| | pehle | ab |
+|---|---|---|
+| add form ka type dropdown | essay nahi tha | mojood |
+| list ka Type filter | essay nahi tha — **11 mojooda essay filter hi nahi ho sakte the** | mojood |
+| `typeBadge()` | essay `badge-short` par girta tha (short-answer jaisa dikhta) | apna `badge-essay` |
+
+### CSS ratchet ne mujhe roka, aur wo theek tha
+
+Pehle maine essay ka apna form section banaya (`sec-essay`, `q-essay-text`,
+`q-essay-lines`). `scripts/css_baseline.py` ne foran fail kiya:
+
+```
+inline_style_attrs        466 -> 468  (+2)   FAIL
+inline_style_non_display  385 -> 386  (+1)   FAIL
+frozen inventory: ADDED id="sec-essay" ... - declare it in the task scope, then --write
+```
+
+`--write` is repo mein insani faisla hai — script ka apna docstring kehta hai
+*"a conversation, not a command"* — aur wo abhi multawi hai. To maine wo section
+**hata diya**: essay ab short-answer ka hi section share karta hai. Zaroorat dono
+ki bilkul ek hai (sawal ka text + kitni lines), koi naya id nahi, koi nayi inline
+style nahi. Ratchet ab saaf hai.
+
+Farq sirf label ka reh jata tha, aur wo `onTypeChange()` mein set hota hai:
+essay par *"Default (5 lines + diagram box)"* — kyunke `print.html` ka
+`answerSpace()` essay ko yehi deta hai — warna teacher ko galat waada dikhta.
+
+### 12 nayi tests, aur dono taraf se aazmayi hui
+
+Purana chhota Literal wapas daal kar chalayin: **7 fail**. Wapas theek kar ke:
+12 pass. Yani ye pehra asli hai, sirf sajawat nahi.
+
+**Baqi:** form abhi model answer nahi poochta — magar short-answer bhi nahi
+poochta, to ye essay ki kami nahi, poore form ka alag sawal hai. API use qubool
+karti hai (test mojood hai).
+
+**Naapa NAHI gaya:** browser extension connected nahi thi, to asli browser mein
+click kar ke nahi dekha. Jo ho saka: page ka JS `node --check` (saaf), CSS ratchet,
+aur chaar tests jo dropdown/filter/badge/section-mapping par pehra deti hain.
+`badge-essay` ne `99-legacy/bank.css` mein **1 line** barhayi (do raw hex, apne
+parosi badges ke andaz par).
+
 ## 2026-08-21 — Grade ka filter kahin hai hi nahi — seeding teacher tak pohanchti hi nahin
 
 Naapa gaya, koi code nahi badla. **Ye aaj ki sab se aham baat hai, aur is se kal ka
