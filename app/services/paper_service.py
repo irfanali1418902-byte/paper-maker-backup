@@ -40,7 +40,7 @@ def assemble_balanced_paper(req: GeneratePaperRequest) -> dict | None:
     )
     question_types = _PAPER_TYPE_FILTERS.get(req.paper_type)
     selected_ids, selected_questions = _pick_questions(
-        req.subject, distribution, req.difficulty, question_types, req.language_filter
+        req.subject, distribution, req.difficulty, question_types, req.language_filter, req.grade
     )
     if not selected_questions:
         return None
@@ -78,6 +78,13 @@ def assemble_adaptive_paper(req: AdaptivePaperRequest) -> dict | None:
     distribution = adaptive_service.build_adaptive_distribution(breakdown, req.total_questions)
 
     question_types = _PAPER_TYPE_FILTERS.get(req.paper_type)
+    # Grade filter yahan JAAN-BOOJH KAR nahi hai. `AdaptivePaperRequest` mein
+    # `grade` hai hi nahi, aur usay yahan eejaad karna ghalat hoga: adaptive apna
+    # subject source paper se leta hai taake wo weakness signal se alag na ho
+    # jaye, magar `papers` row mein grade nahi — sirf free-text `class_name` hai.
+    # To grade "wahi jo source paper ka tha" bharosay se nikala hi nahi ja sakta.
+    # Ye alag faisla hai (2026-08-21), aur usay tab karna jab papers row mein
+    # grade darj hone lage.
     selected_ids, selected_questions = _pick_questions(
         subject, distribution, req.difficulty, question_types
     )
@@ -110,6 +117,7 @@ def assemble_bank_paper(req: BankPaperRequest) -> dict | None:
     resolved_subject = req.subject or ""
     if req.syllabus_topic_id and not resolved_subject:
         from app.services import syllabus_service  # local import — no circular dependency
+
         topic_row = syllabus_service.get_topic(req.syllabus_topic_id)
         if topic_row:
             resolved_subject = topic_row["subject"]
@@ -255,11 +263,14 @@ def _assemble_by_sections(req: GeneratePaperRequest) -> dict | None:
             questions: list[dict] = []
             gaps: list[str] = []
             for tc in spec.type_counts:
-                dist = bloom_service.calculate_bloom_distribution(
-                    req.bloom_distribution, tc.count
-                )
+                dist = bloom_service.calculate_bloom_distribution(req.bloom_distribution, tc.count)
                 t_ids, t_qs = _pick_questions(
-                    req.subject, dist, req.difficulty, [tc.question_type], req.language_filter
+                    req.subject,
+                    dist,
+                    req.difficulty,
+                    [tc.question_type],
+                    req.language_filter,
+                    req.grade,
                 )
                 ids.extend(t_ids)
                 questions.extend(t_qs)
@@ -275,6 +286,7 @@ def _assemble_by_sections(req: GeneratePaperRequest) -> dict | None:
                 req.difficulty,
                 list(spec.question_types or []),
                 req.language_filter,
+                req.grade,
             )
             gaps = []
 
@@ -340,7 +352,9 @@ def _assemble_by_ratio(req: GeneratePaperRequest) -> dict | None:
         distribution = bloom_service.calculate_bloom_distribution(
             req.bloom_distribution, group_count
         )
-        ids, questions = _pick_questions(req.subject, distribution, req.difficulty, group_types, req.language_filter)
+        ids, questions = _pick_questions(
+            req.subject, distribution, req.difficulty, group_types, req.language_filter, req.grade
+        )
         if not questions:
             raise QuestionBankEmpty(
                 f"Is subject mein {group_label} questions kaafi nahi (chahiye the {group_count}). "
@@ -383,10 +397,19 @@ def _pick_questions(
     difficulty: str | None,
     question_types: list[str] | None = None,
     language_filter: str | None = None,
+    grade: str | None = None,
 ) -> tuple[list[str], list[dict]]:
     """Pick least-used questions per Bloom level for the given distribution,
     bumping each picked question's usage_count. Shared by balanced + adaptive.
-    question_types diya jaye to sirf un types se pick hota hai (paper_type filter)."""
+    question_types diya jaye to sirf un types se pick hota hai (paper_type filter).
+
+    grade diya jaye to sirf usi syllabus grade ke questions uthte hain. Ye
+    2026-08-21 ko dala gaya, kyunke us se pehle grade kahin filter karta hi nahi
+    tha: `class_name` sirf paper ke title aur row tak jata tha, aur "Grade 4" ka
+    paper poore Mathematics bank se uthata tha. Naapa gaya — 10-sawal balanced
+    Grade 4 paper mein 8 mein se sirf 2 sawal Grade 4 ke aate the, baqi Pre Year 1
+    ke ("Count the candies and match with the correct number").
+    """
     selected_ids: list[str] = []
     selected_questions: list[dict] = []
     for level, count in distribution.items():
@@ -399,6 +422,7 @@ def _pick_questions(
             limit=count,
             question_types=question_types,
             language_filter=language_filter,
+            grade=grade,
         )
         for row in rows:
             selected_ids.append(row["id"])
@@ -407,9 +431,7 @@ def _pick_questions(
     return selected_ids, selected_questions
 
 
-def _resolve_title(
-    paper_title: Optional[str], subject: str, class_name: Optional[str]
-) -> str:
+def _resolve_title(paper_title: Optional[str], subject: str, class_name: Optional[str]) -> str:
     """Return teacher-supplied title, or auto-generate from subject+class+date."""
     if paper_title and paper_title.strip():
         return paper_title.strip()

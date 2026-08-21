@@ -71,13 +71,33 @@ def find_least_used(
     limit: int,
     question_types: Optional[list] = None,
     language_filter: Optional[str] = None,
+    grade: Optional[str] = None,
 ) -> list:
     """Returns N matching questions ordered by usage_count ASC (least-used first).
-    question_types diya jaye to sirf un types ke questions (IN filter)."""
+    question_types diya jaye to sirf un types ke questions (IN filter).
+
+    grade: `syllabus_topics.grade` par JOIN (case/whitespace-insensitive), wahi
+    pattern jo `list_for_slo_export()` use karta hai. Isi tarah yahan bhi INNER
+    JOIN hai, yani jin questions ka `syllabus_topic_id` NULL hai wo grade dene
+    par EXCLUDE hote hain — 2026-08-21 ko English ke 130 sawal isi haal mein hain.
+
+    grade=None (default) = koi filter nahi, bilkul purana behaviour. Ye filter
+    OPT-IN hai isi liye: bina grade ke paper banane wale saare purane raaste
+    jyun ke tyun chalte rehte hain.
+    """
     conn = get_connection()
     cur = conn.cursor()
-    query = "SELECT * FROM questions WHERE subject = ? AND bloom_level = ?"
-    params: list = [subject, bloom_level]
+    if grade:
+        query = (
+            "SELECT q.* FROM questions q"
+            " JOIN syllabus_topics st ON q.syllabus_topic_id = st.id"
+            " WHERE LOWER(TRIM(st.grade)) = LOWER(TRIM(?))"
+            " AND q.subject = ? AND q.bloom_level = ?"
+        )
+        params: list = [grade, subject, bloom_level]
+    else:
+        query = "SELECT * FROM questions WHERE subject = ? AND bloom_level = ?"
+        params = [subject, bloom_level]
     if difficulty:
         query += " AND difficulty = ?"
         params.append(difficulty)

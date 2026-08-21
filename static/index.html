@@ -1501,6 +1501,14 @@ async function buildPaper() {
     // Chuna hua class paper mein daalo — warna SLO coverage ka universe kabhi
     // nahi banega (class None reh jaata). Grade na chuna ho to null (koi regression nahi).
     class_name: val('gradeSelect') || null,
+    // Wahi qeemat DOBARA, `grade` ke tor par — aur ye naqal jaan-boojh kar hai.
+    // class_name paper ke title/row ke liye hai; `grade` se questions FILTER hote
+    // hain (syllabus_topics.grade par JOIN). 2026-08-21 se pehle sirf class_name
+    // jata tha, aur us se koi filter nahi hota tha: "Grade 4" ka paper poore
+    // Mathematics bank se uthata tha aur 8 mein se 6 sawal Pre Year 1 ke aate the.
+    // gradeSelect ki values seedha syllabus se bharti hain, isliye ye string
+    // syllabus_topics.grade se hamesha milti hai.
+    grade: val('gradeSelect') || null,
     // Exam taqseem tag (coverage ke liye). Unassigned ("") => null (0 nahi).
     exam_no: val('paperExamNo') ? parseInt(val('paperExamNo'), 10) : null,
   };

@@ -116,6 +116,16 @@ class PaperSectionSpec(BaseModel):
 class GeneratePaperRequest(BaseModel):
     subject: str
     class_name: Optional[str] = None
+    # grade = syllabus class string (e.g. "Grade 4", "Pre Year 1") — questions isi
+    # se filter hote hain, `syllabus_topics.grade` par JOIN kar ke. class_name
+    # free-text hai aur sirf paper ke title/row mein jata hai, filter ke liye
+    # bharosay ke laiq nahi — wahi taqseem jo BlueprintPaperRequest pehle se
+    # karti hai.
+    #
+    # None = koi grade filter nahi (purana behaviour). Ye OPT-IN isi liye hai ke
+    # jin questions ka syllabus_topic_id NULL hai wo grade dene par bahar ho jate
+    # hain (2026-08-21: English ke saare 130 sawal aise hi hain).
+    grade: Optional[str] = None
     total_questions: int = 10
     bloom_distribution: str = "balanced"
     difficulty: Optional[str] = None

@@ -58,6 +58,69 @@ paper ban sakta hai, magar "poore Grade 4 se" nahi.
 
 **Kuch badla nahi gaya — ye faisla Irfan ka hai.**
 
+### FIX HO GAYA — grade ab waqai filter karta hai
+
+**956 pass, ruff clean.** Naapa hua nateeja, wahi paper jo pehle "Count the
+candies" de raha tha:
+
+```
+bina grade (purana)   Grade 4 ke sawal: 2 / 8
+grade="Grade 4"       Grade 4 ke sawal: 8 / 8
+```
+
+Aur asal HTTP request se (server chala kar, `POST /api/generate-paper`): **4/4**.
+6 maange the, 4 mile — Grade 4 mein EVALUATE/CREATE ke sawal hain hi nahi, to
+kami dikhana hi durust rawaiya hai.
+
+**`class_name` ko filter NAHI banaya.** `BlueprintPaperRequest` pehle se ye
+taqseem kar chuki hai aur us ka comment saaf kehta hai: *"class_name free-text
+hota hai (e.g. 'Class 8A'), tier ke liye reliable nahi"*. To wahi convention
+apnayi — `GeneratePaperRequest` mein alag `grade` field, aur `class_name` jyun ka
+tyun sirf title/row ke liye.
+
+Chaar jagah tabdeeli:
+
+| file | kya |
+|---|---|
+| `questions_repository.py` | `find_least_used()` mein `grade` — `syllabus_topics.grade` par JOIN, wahi case/whitespace-insensitive pattern jo `list_for_slo_export()` ka hai |
+| `paper_service.py` | `_pick_questions()` se ho kar chaar call sites (balanced, sections × 2, ratio) |
+| `requests.py` | `GeneratePaperRequest.grade` |
+| `static/index.html` | `buildPaper()` ab `grade` bhi bhejta hai |
+
+**Frontend ki line ke baghair ye sab bekaar tha.** UI ka `gradeSelect` pehle se
+syllabus se bharta hai (yani values bilkul `syllabus_topics.grade` wali hain),
+magar wo sirf `class_name` bhejta tha — jis se koi filter nahi hota.
+
+#### Do jaan-boojh kar liye gaye faisle
+
+**Filter opt-in hai** (`grade=None` = bilkul purana behaviour). Wajah: JOIN INNER
+hai, to jin sawalon ka `syllabus_topic_id` NULL hai wo grade dene par bahar ho
+jate hain — aaj English ke saare 130 sawal aise hi hain. Opt-in hone se koi
+mojooda raasta nahi tootta.
+
+**Adaptive paper is se bahar hai.** `AdaptivePaperRequest` mein `grade` hai hi
+nahi, aur usay eejaad karna ghalat hota: adaptive apna subject source paper se
+leta hai, magar `papers` row mein grade darj hi nahi hota — sirf free-text
+`class_name`. Wajah code mein comment ke tor par likh di hai.
+
+#### 13 nayi tests (`tests/test_grade_filter.py`)
+
+Repository (default = sab kuch, doosre grade bahar, bin-link sawal bahar, case/
+whitespace, baqi filters ke saath jorh), schema, aur poora raasta request se paper
+tak. Ek test ulta rukh naapti hai (Pre Year 1 maangne par sirf Pre Year 1) — akela
+Grade 4 wala test ye sabit nahi karta ke filter waqai grade par chal raha hai.
+
+Ek test likhte waqt maine daawa kiya tha ke "bina grade ke paper sab kuch milata
+hai" aur wo fail hui — **code theek tha, daawa ghalat tha**: `balanced` 6 par har
+Bloom level ko 1 milta hai, aur fixture mein sirf do levels thay, to sample hi
+chhota tha. Us ki jagah upar wali aaina-test lagayi.
+
+**Jo naapa NAHI ja saka:** browser extension connected nahi thi, to asli browser
+mein click kar ke nahi dekha (CLAUDE.md ka usool yehi hai). Jo ho saka: page ka
+saara JS nikaal kar `node --check` (saaf), aur chalte hue server par asal HTTP
+request. Frontend ki line ek object literal mein ek property hai, aur ek test
+`buildPaper()` mein `grade:` ki mojoodgi par pehra deti hai.
+
 ## 2026-08-21 — ROADMAP #3: bank seeding tool (`scripts/seed_bank.py`)
 
 **934 pytest pass, ruff clean.** Script bana, dry-run chala, phir do topics par
