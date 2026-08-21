@@ -13,15 +13,21 @@
 
 ## B. Audit Findings — What NEEDS FIXING ⚠️ (with priority)
 
-### P0 — Hygiene & risk (do first, ~1 short session)
-| # | Finding | Action |
+### P0 — Hygiene & risk ✅ BAND (naapa gaya 2026-08-21)
+
+> **Ye rows mahinon se ghalat khuli pari thin.** 2026-08-21 ko file-by-file naapa
+> gaya: H1–H4 aur H6 kab ke ho chuke the, sirf yahan kaati nahi gayin. Isi wajah
+> se us din ki ginti bhi ghalat di gayi thi ("7 rows khuli"). **Row par bharosa
+> mat karo — repo mein naapo.**
+
+| # | Finding | Haalat (2026-08-21 ko naapi hui) |
 |---|---------|--------|
-| H1 | `.env.txt` (318 B) on disk — likely an old key copy. Untracked, but a leak-in-waiting. | Check contents → delete file. If it held a real Gemini key, rotate that key when aistudio access works. |
-| H2 | `maker.zip` (1.4 MB) in repo root on disk | Delete (backups don't live in the working tree). |
-| H3 | Loose root scripts: `import_syllabus.py`, `seed_large_class.py` | Move to `scripts/` + one-line README each. |
-| H4 | Fixture CSVs in root (4 files, one named `…csv.csv`) and git-tracked | Move to `tests/fixtures/` (or `data/`), fix double extension, update any paths. |
-| H5 | `master` not protected on GitHub | Enable branch protection: require PR, forbid direct push. |
-| H6 | `API_VERSIONING.md` (8 KB) — over-long for current stage | Trim to one paragraph; add small `DECISIONS.md` for future ADRs. |
+| ~~H1~~ ✅ | ~~`.env.txt` (318 B) on disk~~ | **File mojood nahi.** Gemini key rotation ab bhi multawi hai (§E dekhein) |
+| ~~H2~~ ✅ | ~~`maker.zip` (1.4 MB) in repo root~~ | **Mojood nahi** |
+| ~~H3~~ ✅ | ~~Loose root scripts~~ | **`scripts/` mein hain** — `scripts/import_syllabus.py`, `scripts/seed_large_class.py` |
+| ~~H4~~ ✅ | ~~Fixture CSVs in root~~ | **`tests/fixtures/` mein hain** — `happy_birds_pre_year_{1,2,3}.csv`, `syllabus_topics_unit1_sample.csv`; double extension bhi theek |
+| **H5** ⛔ | `master` not protected on GitHub | **Ho hi nahi sakta, aur zaroorat bhi nahi.** GitHub API 403: *"Upgrade to GitHub Pro or make this repository public"* — private repo par branch protection paid feature hai. Aur ye Irfan ke asal tareeqe se takrata bhi hai: wo khud GitHub Desktop se `backup` remote par push karta hai, PR flow use nahi karta. **Row band — isay "baqi kaam" mat ginno** |
+| ~~H6~~ ✅ | ~~`API_VERSIONING.md` (8 KB) over-long~~ | **File mojood nahi.** `DECISIONS.md` bhi nahi bana — us ki jagah `docs/ui/DECISIONS-FOR-IRFAN.md` aur `DEFERRED.md` ye kaam kar rahe hain |
 
 ### P1 — Product robustness (next 1–2 sessions)
 | # | Finding | Action |
@@ -34,7 +40,7 @@
 ### P2 — Ops decision (before Railway day ~28)
 | # | Finding | Action |
 |---|---------|--------|
-| O1 | Railway credit expires; card not added (correct) | Pick target (Render free tier suggested) → write MIGRATION.md → dry-run: deploy from GitHub, copy volume DB, set 4 env vars, smoke test → switch. |
+| O1 ⏸ | Railway credit expires; card not added (correct) | **Plan likha ja chuka: `docs/MIGRATION.md`** (Railway → Northflank, decisions locked, "awaiting implement karo"). Magar amal ruka hua hai aur shayad hona bhi nahi chahiye — **repo mein sirf EK remote hai (`backup`), koi hosting remote nahi**, aur Irfan ka asal tareeqa GitHub Desktop se backup push hai, cloud deploy nahi. Roadmap ki simt bhi ab school PC / Docker package hai. **`docs/MIGRATION.md` ka status line is se purana hai — usay parhne se pehle ye row parhein.** Faisla Irfan ka: plan zinda rakhna hai ya band karna |
 
 ## C. Feature Roadmap (after P0/P1)
 
@@ -51,20 +57,37 @@
 ## D. Suggested Session Plan (step-by-step)
 
 ```
-Session 1  → P0 cleanup (H1–H6) — one branch chore/repo-hygiene, one PR
-Session 2  → R2 + R4 tests; decide & implement R3 (adaptive×type)
-Session 3  → R1 prod seeding + full prod regression checklist
-Session 4  → O1 migration dry-run (MIGRATION.md) — before credit deadline
-Session 5+ → Feature roadmap order 1 (Sections mode): plan-first → build   ✅ 2026-08-20
+Session 1  → P0 cleanup (H1–H6)                                   ✅ ho chuka
+Session 2  → R2 + R4 tests; R3 (adaptive×type)                     ✅ PR #6/#8
+Session 3  → R1 prod seeding + regression checklist                ✅ auzaar bana
+Session 4  → O1 migration dry-run (MIGRATION.md)                   ⏸ plan likha, amal ruka
+Session 5+ → order 1 (Sections mode)                               ✅ 2026-08-20
 Aage      → order 2 (Ratio Phase 2). Sections ke qareeb hai: dono ginti tay
              karte hain, aur GeneratePaperRequest un dono ko ek saath lene se
              saaf inkaar karta hai (422) — us faisle ko dobara mat kholo bina
              yeh tay kiye ke teacher ko kaunsa jeetna chahiye.   ✅ 2026-08-21
              → order 3 (seeding tool)                            ✅ 2026-08-21
-Aage      → baqi 5 khali syllabi seed karo (R1), phir order 4 (Lesson Plan).
+Aage      → baqi khali syllabi seed karo (R1), phir order 4 (Lesson Plan).
              Seeding ka auzaar tayyar hai — sirf chalana hai:
              python -m scripts.seed_bank --subject X --grade Y --write
 ```
+
+> **2026-08-21 — yeh plan poora ho chuka hai, aur do bare kaam is mein hain hi nahi.**
+> Upar wali saari sessions ho chuki hain. Jo asal mein bacha hai:
+>
+> * **CSS epic (`docs/ui/`)** — apna alag plan, apni STATUS.md. Us ka NEXT
+>   **Sprint 6 (the drain)** hai. Ye is roadmap mein kahin darj nahi, jabke sab se
+>   bara bacha hua kaam yehi hai.
+> * **Feature order 4 (Lesson Plan module, size L)** — doosra bara kaam.
+>
+> Baqi sab chhote tukde hain: bank bharna (quota par ruka), aur `docs/ui/DEFERRED.md`
+> ki khuli rows.
+>
+> **Ek aur baat jo darj honi chahiye:** 2026-08-21 ka kaam is plan ke bahar tha —
+> seeding karte hue teen bug nikle (AI essay banata hi nahi tha, `advanced` bloom
+> ulta chalta tha, aur grade kahin filter hi nahi karta tha). Un ke baghair seeding
+> ka koi faida na hota: bhara hua bank teacher tak pohanchta hi nahi. Plan se hatna
+> theek tha; **plan ki dastaveiz update na karna ghalat tha.**
 
 > **2026-08-20 ka note — is list ke daawe naapne par ghalat nikalte hain.**
 > Order 1 ki row kehti thi "UI/print/**Word**" jabke Word export mahine pehle
