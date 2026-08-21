@@ -1,5 +1,402 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-21 — ROADMAP #3: bank seeding tool (`scripts/seed_bank.py`)
+
+**934 pytest pass, ruff clean.** Script bana, dry-run chala, phir do topics par
+asal `--write` chala. **Bank 459 → 467** (Math Grade 4 ke pehle do topics, 8 sawal).
+
+### Row ne masla chhota bataya tha, naapne par bara nikla
+
+ROADMAP row #3 kehti hai *"Removes empty-bank friction for new subjects"*, size **S**.
+Aaj `paper_maker.db` naapi:
+
+```
+kul sawal 459 — sirf 2 mazameen
+English       short-answer 130   <- sirf ek qism, aur syllabus se juda ek bhi nahi
+Mathematics   short-answer 240 · MCQ 61 · true-false 28   <- sab Pre Year 1
+
+syllabus_topics    8 subject×grade jore, 310 topics
+sawal rakhne wale  2
+KHALI              6   <- Geography G8, Science G7, Math G4/G5/G6, Pre Year 2, Pre Year 3
+```
+
+Aur `fill-blank` = **0**, `essay` = **0** — poore bank mein, sirf Math mein nahi.
+Pichhli session ne ise "Mathematics mein essay khali hai" likha tha; wo daawa
+sach se chhota tha. Asal baat: **teacher ne jo 8 syllabus load kiye, un mein se
+6 par paper ban hi nahi sakta.**
+
+### Kaam kya karta hai
+
+`syllabus_service.list_topics()` se topics uthata hai aur har topic par wahi do
+service calls karta hai jo `/api/generate-questions` route karta hai —
+`question_service.generate_for_topic()` + `persist_batch()`. Raw SQL nahi,
+validation bypass nahi (`seed_large_class.py` wala hi usool).
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Grade 4"           # dry run
+python -m scripts.seed_bank --subject Mathematics --grade "Grade 4" --write   # asal
+```
+
+**Dry run default hai.** Wajah: sab se bara syllabus 87 topics ka hai, to ek
+be-dhyani ki command 87 AI calls ban jati. `--max-topics` ka cap 10 hai.
+
+Pehle se seeded topics khud chhut jaate hain (`syllabus_topic_id` se check),
+isliye dobara chalane par duplicate nahi bante — top-up hota hai.
+
+### Ek cheez jaan-boojh kar daali: "maanga tha magar aaya nahi" warning
+
+Script ke aakhir mein **jo qismein waqai bani** unki ginti chhapti hai, aur agar
+koi maangi hui qism sifar aayi to warning deta hai. Ye hi is script ka asal
+maqsad hai: **essay maangna aur essay milna ek baat nahi.** Agar AI `essay`/`fill-blank`
+nazarandaaz karta hai to ye baat pehli run mein pakri jayegi, na ke teen mahine
+baad jab teacher ka Essay section khali aayega. Us soorat mein `ai_service.py`
+ka prompt dekhna paregi — dobara chalane se theek nahi hoga.
+
+### Naapa hua
+
+| chalaya | nateeja |
+|---|---|
+| Math Grade 4 (khali) | 10 topic x 4 = 40 sawal, 10 AI call |
+| Math Pre Year 1 (bhara) | 71 topic seeded mil kar chhode gaye |
+| Grade 99 (ghalat) | saaf error + mojood 8 syllabi ki list |
+| `--types mcq,essay` | `mcq` reject, AI call se **pehle** |
+| `--per-topic 0` | reject |
+
+Windows console ne `×` aur `·` ko `?` bana diya tha — output ASCII kar diya
+(cp1252, naapa gaya aaj).
+
+### Asal run ka nateeja — aur warning pehli hi run mein bajj gayi
+
+```
+Kul mehfooz: 8 sawal, 2/2 topics
+  multiple-choice  2 · short-answer  5 · fill-blank  1
+  WARNING: maanga gaya magar ek bhi nahi aaya: essay
+```
+
+Sawal khud **achhe hain** — dono zabanon mein, Bloom sahi tagged, jawab durust,
+syllabus se juday. Misal: *"A student tried to write 'Three million, seventy-two
+thousand, five hundred' as 3,720,500. Identify the mistake"* (ANALYZE, 6 marks).
+
+**Magar essay ki ginti sifar rahi — maangne ke bawajood.** Yani bank mein essay
+ka na hona is wajah se NAHI hai ke kisi ne generate nahi kiye; **pipeline maangne
+par bhi essay nahi banati.** Seeding tool akela is khala ko nahi bhar sakta.
+
+Do mumkin wajuhat, dono `ai_service.py` mein:
+
+1. **`RESPONSE FORMAT` ka namoona sirf `multiple-choice` aur `short-answer`
+   dikhata hai** (line ~122 aur ~136). Hidayat #3 essay ka zikr karti hai, magar
+   JSON misal mein essay/fill-blank kahin nahi — model misal ki pairvi karta hai.
+2. **Bloom ki taqseem structurally essay ke khilaf hai.** `balanced` + 4 sawal
+   aaj ke fix ke baad REMEMBER/UNDERSTAND/APPLY par bharta hai (dekhein isi din
+   ki agli entry), aur essay qudrati tor par ANALYZE/EVALUATE/CREATE hai. Chhote
+   per-topic par essay ki jagah hi nahi banti.
+
+Ye faisla naapne se hoga, andaze se nahi: ek topic par `--bloom advanced
+--types essay --per-topic 3` = ek AI call. Agar essay tab bhi na aaye to wajah
+(1) hai; aa jaye to wajah (2).
+
+#### Naapa gaya — aur wajah (2) GHALAT nikli
+
+Diagnostic chala (`--types essay --per-topic 3 --bloom advanced`): **essay 3/3
+bane**, aur behtareen bane — multi-part, poore model answers, durust Urdu,
+`options_en` khali (jaisa prompt kehta hai). Misal:
+
+> *"Describe, in your own words, the steps you would take to compare two
+> different whole numbers, such as 345 and 354…"* (UNDERSTAND, 6 marks)
+
+Magar asal baat ye hai — **us run mein Bloom levels bhi neeche hi thay:**
+
+```
+advanced n=3  ->  REMEMBER 1, UNDERSTAND 1, APPLY 1     <- koi ooncha level nahi
+balanced n=4  ->  REMEMBER 1, UNDERSTAND 1, APPLY 1, ANALYZE 1
+```
+
+Yani jis run mein essay bane aur jis mein nahi bane, **dono ki Bloom shakl tqreeban
+ek jaisi thi.** To Bloom wajah nahi ho sakta. Farq sirf ek tha: **qismon ka
+muqabla.** Chaar qismein dene par AI ne wohi do chuni jo `RESPONSE FORMAT` ke
+JSON namoone mein mojood hain (`multiple-choice`, `short-answer`); essay akela
+maangne par foran bana diya.
+
+**Wajah (1) durust hai:** `ai_service.py` ka namoona sirf do qismein dikhata hai,
+aur ikhtiyar milne par model namoone ki pairvi karta hai. Hidayat #3 mein essay
+ka zikr hona kaafi nahi. Fix = namoone mein essay + fill-blank ki misal daalna.
+
+Bank ab **470** (459 → 467 → 470).
+
+#### FIX HO GAYA — prompt mein essay + fill-blank ke namoone
+
+`ai_service.py` mein do tabdeeliyan:
+
+1. `RESPONSE FORMAT` mein ab **chaaron** qismon ke namoone hain (pehle sirf
+   `multiple-choice` aur `short-answer`) — `fill-blank` (khali jagah `__________`,
+   `options` khali) aur `essay` (khula sawal, `correct_answer` mein aham nukat).
+2. `QUESTION TYPES TO USE` ke saath ek sarahat: *"USE EVERY TYPE IN THAT LIST…
+   Do NOT fall back to only multiple-choice and short-answer."*
+
+Naapa gaya — wahi command jo pehle essay sifar deti thi:
+
+| | pehle (8 sawal) | ab (4 sawal) |
+|---|---|---|
+| multiple-choice | 2 | 1 |
+| short-answer | 5 | 1 |
+| fill-blank | 1 | 1 |
+| **essay** | **0** | **1** |
+
+Chaaron qismein, ek-ek — aur warning nahi bajji. Essay ki quality bhi asli:
+
+> *"Explain why the number 247 rounds to 250 when rounded to the nearest 10,
+> but rounds to 200 when rounded to the nearest 100."* (ANALYZE, 8 marks)
+
+Bank ab **474**. **Ye tests se sabit nahi ho sakta tha** — prompt ka theek dikhna
+aur AI ka theek jawab dena do alag baatein hain, aur farq sirf ek asal call se
+pata chalta hai.
+
+### Us naapne se ek aur bug nikla: `advanced` chhote papers par ULTA chalta hai
+
+Aaj subah wale fix ka jurwaan bhai — bilkul ulti shakl:
+
+```
+advanced n=1   ->  REMEMBER 1                      <- "advanced" ka sab se asaan level
+advanced n=3   ->  REMEMBER 1, UNDERSTAND 1, APPLY 1
+advanced n=6   ->  chhe ke chhe levels 1-1         <- theek
+advanced n=10  ->  R1 U2 A2 An2 E2 C1              <- theek
+```
+
+Teacher "advanced" maange aur chhota paper bane, to usay **sab se buniyadi**
+sawal milte hain. Wajah `bloom_service.py:95` ka `max(reversed(order), ...)` hai:
+chhoti ginti par har level `ceil` se 1 ho jata hai, phir katai **ooncha level
+pehle** kaat-ti hai. `balanced`/`foundational` ke liye ye theek hai (unki kam-ahem
+levels ooper hain), magar `advanced` ki sab se kam-ahem level **REMEMBER (10%)**
+hai — neeche. Ek hardcoded simt dono ko theek nahi kar sakti.
+
+Fix ki shakl: katai simt se nahi, **distribution ke apne fees'ad se** honi chahiye —
+jo level jis distribution mein sab se kam hissa rakhta hai, wahi pehle kate.
+Subah wale fix ka comment khud kehta hai "reversing the tie-break is surgical" —
+wo `advanced` par naapa nahi gaya tha.
+
+#### FIX HO GAYA — 943 pass, ruff clean
+
+`_DISTRIBUTION_SHARES` ab fees'ad alag rakhta hai, aur ginti bhi unhi se banti hai
+aur katai bhi unhi se hoti hai. Katai ki tarteeb: **(1)** sab se bari bucket
+(shakl mutanasib rahe), **(2)** barabari mein jis level ka hissa sab se kam ho,
+**(3)** phir bhi barabari to ooncha level. Simt ka ab kahin zikr nahi — har
+distribution apni durust simt khud chun leta hai.
+
+| | pehle | ab |
+|---|---|---|
+| `advanced` 1 | REMEMBER | **ANALYZE** |
+| `advanced` 3 | REMEMBER/UNDERSTAND/APPLY | **APPLY/ANALYZE/EVALUATE** |
+| `advanced` 20 | — | 2/3/4/5/4/2 — theek 10/15/20/25/20/10 |
+| `balanced` 1, 3, 10 | — | **koi tabdeeli nahi** |
+| `foundational` 3, 10 | — | **koi tabdeeli nahi** (10 par 4/3/2/1) |
+
+**9 nayi tests** (`tests/test_bloom_service.py`), aur wo wahi khala bharti hain jo
+dono bug chhupa gayi: `advanced` par **kaunsa level** bhara, sirf jorh nahi.
+Purane code par ye fail hoti hain — `advanced/1` REMEMBER deta tha, test
+`REMEMBER == 0` maangti hai.
+
+Ek test likhte waqt maine `>` likha aur wo fail hui — **code theek tha, mera
+daawa ghalat tha.** n = 5, 6, 11, 12 par advanced aur balanced bilkul barabar aa
+jate hain (chhe levels, ginti kam, dono ek hi jagah se kaat-te hain). Test ab
+`>=` par hai aur ye wajah us ke docstring mein likhi hai, taake koi agla banda
+use "kamzor test" samajh kar sakht na kar de.
+
+### Ek aur cheez jo sawal parhne se mili: MCQ options ki shakl mustaqil nahi
+
+```
+topic 1  ['Hundreds', 'Thousands', 'Ten Thousands', 'Tens']
+topic 2  ['a) Hundreds', 'b) Thousands', 'c) Ten Thousands', 'd) Hundred Thousands']
+```
+
+`print.html:817` har option ke aage khali `<span class="circle">` lagata hai,
+letter nahi — to "a)" doosri dafa nahi chhapta, magar **ek hi paper par do alag
+shaklein** aa jati hain. Ziyada aham: `correct_answer_en` `"b) Thousands"` ban
+jaata hai, jo answer-key milaan ke liye bhurbhura hai. Prompt kahin nahi kehta
+ke options par label mat lagao. Chhota kaam, alag se.
+
+### Math Grade 4 poora ho gaya — 11/11 topics
+
+Baqi 7 topics ek hi run mein (`--max-topics 20 --write`): **7/7 kamyab, 28 sawal,
+har qism ke theek 7.** Saat mustaqil AI calls par yaksan nateeja — yani prompt fix
+ittefaq nahi tha.
+
+```
+Math Grade 4    short-answer 13 · essay 11 · multiple-choice 10 · fill-blank 9
+                11 / 11 topics seeded
+
+POORA BANK      459  ->  502
+                essay       0  ->  11
+                fill-blank  0  ->   9
+```
+
+**Dono sifar khatam.** Jo khala 2026-08-20 ko `paper_service.py:238` ke comment
+mein darj hui thi ("fill-blank/essay SIFAR", is wajah se sections par hard error
+nahi dala ja sakta) — wo ab Grade 4 par mojood nahi. Us comment ko chhua nahi
+gaya kyunke baqi bank par abhi bhi sach hai.
+
+Grade 4 par ab ek sections-wala paper waqai ban sakta hai: chaaron qismein 9 se
+zyada hain, yani 5 MCQ + 5 short-answer + 3 essay jaisi darkhwast poori hogi.
+**Ye naapa nahi gaya — sirf ginti se nikala gaya hai;** asal paper generate kar ke
+dekhna abhi baqi hai.
+
+### RUKO — "khali bank" ka asal masla seeding nahi, JAALI SYLLABUS hai
+
+Baqi syllabi seed karte hi Geography Grade 8 ka pehla topic aaya:
+**"Adding fractions with like denominators"**. Naapa gaya — har syllabus ke
+topic-titles ka fingerprint:
+
+```
+9ad26045  Geography     Grade 8      11
+9ad26045  Mathematics   Grade 4      11
+9ad26045  Mathematics   Grade 5      11
+9ad26045  Mathematics   Grade 6      11
+9ad26045  Science       Grade 7      11
+df3be17c  Mathematics   Pre Year 1   81
+ab940d05  Mathematics   Pre Year 2   87
+02dcf09d  Mathematics   Pre Year 3   87
+```
+
+**Paanch syllabi bilkul ek jaisi hain** — wohi 11 Grade-4 mathematics topics,
+lafz-ba-lafz. Geography aur Science ke syllabus mein *place value* aur *long
+division* hain. Ye placeholder data hai, asal syllabus nahi.
+
+Sirf **teen syllabi asli hain**: Pre Year 1 (81), Pre Year 2 (87), Pre Year 3 (87)
+— teenon ka fingerprint alag, aur Pre Year 1 mein 71 topics pehle se asal sawalon
+ke saath seeded hain.
+
+Yani "228 topics khali hain" wala hisab **ghalat tha**. Asal soorat:
+
+| | topics | kya chahiye |
+|---|---|---|
+| Pre Year 2 + Pre Year 3 | 174 | **asal kaam** — seeding |
+| Pre Year 1 (bacha hua) | 10 | seeding |
+| Geography G8, Science G7, Math G5, G6 | 44 | **seeding NAHI — pehle asal syllabus import** |
+
+Math Grade 4 wala kaam theek hai: topics mathematics ke hain aur subject bhi
+Mathematics, to mazmoon mutabiq hai. Magar G5/G6 seed karne ka koi faida nahi —
+wo bilkul wohi Grade-4 topics dobara denge.
+
+#### Is se 44 kachra sawal ban gaye — hataana baqi hai
+
+Geography Grade 8 ki run kamyab ho gayi thi (11/11) us se pehle ke masla nazar
+aata. Ab bank mein **44 aise sawal hain jinka `subject` = "Geography" hai magar
+mazmoon khalis hisab hai**:
+
+```
+subject=Geography  topic=Place value up to 100,000
+  "What is the place value of the digit '7' in the number 67,315?"
+  "Explain how the value of the digit '3' is different in 320 and 32,000."
+```
+
+Bank abhi **546** hai; ye 44 nikalne par 502 rahega. **Abhi hataye nahi —
+Irfan ke faisle ka intezaar hai.**
+
+Science Grade 7 ki run ittefaq se bach gayi: us ke 11 ke 11 topics **HTTP 429
+(Gemini rate limit)** par fail hue, to us se koi kachra nahi bana.
+
+#### Kachra hata diya gaya
+
+Backup (`paper_maker_backup_before_geo_cleanup_20260821.db`) ke baad 44 Geography
+sawal delete: **546 → 502**. Pehle taalluqat naape gaye — koi SLO link nahi, koi
+paper reference nahi, koi student result nahi, sab aaj 03:56–03:59 ke andar bane.
+`questions_repository.delete()` in par chalta hi nahi (wo sirf `source='manual'`
+hataata hai, aur ye `source='gemini'` hain), isliye ye ek dafa ka direct cleanup tha.
+
+#### Rate limit — aur ek ghalat ilaj se bacha gaya
+
+44 calls tez tez chalne ke baad Gemini ne 429 diya aur agli poori run (Science, 11
+topics) zaya gayi. Pehla khayal tha "script mein retry daalo" — **naapne par wo
+ghalat nikla:** `ai_service._with_retry` mein retry **pehle se mojood hai** aur isi
+raaste par chalta hai (3 koshishein, backoff 2s + 4s, statuses 429/503/529). Us ke
+ooper apni retry lagana un koshishon ko zarb de deta.
+
+Jo cheez wahan **nahi** thi wo do hain, aur wohi daali gayin:
+
+1. **`--delay` (default 4s) topics ke darmiyan.** Free-tier quota per-minute hota
+   hai; 6 second us ke reset ke liye kaafi nahi. Wafqa sirf topics ke *darmiyan*
+   lagta hai, aakhri ke baad nahi.
+2. **Musalsal 3 rate-limit ke baad run khud ruk jati hai.** Science wali run mein
+   11 ke 11 topics fail hue aur har ek ne 3 koshishein ki — **33 be-faida calls.**
+   Quota khatam ho to agla topic bhi nahi chalega. Ab 3 par ruk kar batati hai ke
+   kitne topics chhu-e bhi nahi gaye.
+
+Permanent errors (401/400) par run **nahi** rukti — ek topic ka DB masla poori run
+nahi giraana chahiye. Ye farq `is_rate_limited()` karta hai: pehle asal HTTP status
+dekhta hai (wahi tareeqa jo `_with_retry` ka hai), phir message par girta hai.
+
+Naapa gaya (network ke baghair, naqli errors se):
+
+| soorat | AI calls | run ruki? |
+|---|---|---|
+| sab 429 | **3** (pehle 10 hote) | haan |
+| sab permanent error | 10 | nahi |
+| sab kamyab | 10 | nahi |
+
+`--delay 0.5` par 3 topics ne 1.01s liye — yani theek do wafqe. Default 4s par
+Pre Year 2 (87 topics) ke sirf wafqe ~5.7 minute banenge.
+
+### Pre Year 2/3 — syllabus asli hai, magar default types wahan GHALAT hain
+
+Seed karne se pehle syllabus **muft mein parh liya** (5 AI calls kharch kar ke
+ye pata karna be-faida tha jo table se seedha dikhta hai). Teenon Pre Year
+syllabi **asli hain** — fingerprint alag, aur mazmoon waqai pre-school ka:
+
+```
+Pre Year 2   "Introduction of number '1' and '2', it's value and shape"
+             "Concept of small and big"
+             "Identifying Yellow and Green Colors"
+Pre Year 3   "Introduction of number 1,2,3..."  /  "Practice and review of numbers (1-9)"
+```
+
+**Char saal ke bachay se essay nahi likhwaya ja sakta** — aur na hi fill-blank,
+kyunke wo abhi likhna hi seekh raha hai. Pre Year 1 ke 329 mojooda sawal isi
+baat ki tasdeeq karte hain:
+
+```
+qism    short-answer 240 · multiple-choice 61 · true-false 28   <- essay/fill-blank SIFAR
+bloom   REMEMBER 130 · APPLY 125 · UNDERSTAND 74                <- koi ANALYZE/EVALUATE/CREATE nahi
+```
+
+Yani script ke defaults (chaaron qismein, `balanced`) is umar ke liye ghalat hain.
+Pre Year 2/3 ke liye durust command:
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational --write
+```
+
+Ek aur baat naapi: Pre Year 1 ke **sifar** sawalon mein `visual_emoji` hai, jabke
+prompt ki hidayat #6 chhote bachon ke liye emoji maangti hai. Ye alag se dekhne
+wali cheez hai.
+
+### RUK GAYA — Gemini ka rozana quota khatam
+
+Pre Year 2 ki chhoti run (5 topics) 429 par giri. Probe se tafseel mili:
+**"quota, please check your plan and billing details"** — ye per-minute throttle
+nahi, free tier ka **rozana** quota hai, jo aaj ki ~60 calls ne khatam kar diya.
+Aaj aur seeding mumkin nahi.
+
+**Naya stop-early logic ne apna kaam kar dikhaya:** run 5 ke bajaye **3 par ruk
+gayi**, yani 2 topics × 3 koshishein = 6 be-faida calls bache. Aur kuch adhoora
+nahi likha — Pre Year 2 mein sifar sawal gaye, bank 502 par hi hai.
+
+Kal (ya quota reset ke baad) wahi command dobara chalani hai; jo topics ban chuke
+hain wo khud chhut jayenge.
+
+### Agla qadam
+
+**D40 raasta nahi rokta tha** (teacher haath se essay nahi likh sakta) — aur ab
+uska doosra hissa bhi hal ho gaya, kyunke AI essay likh raha hai. Manual entry ka
+Literal abhi bhi essay nahi jaanta; wo alag chhota kaam hai.
+
+Baqi:
+* Grade 4 par asal paper generate kar ke dekhna (ginti se nikala hua daawa naapna)
+* baqi 5 khali areas — Geography G8, Science G7, Math G5/G6/Pre Year 2/Pre Year 3
+* topic "Comparing and ordering numbers" mein sirf 3 essay hain (diagnostic run ka
+  natija) — baqi qismein us par nahi hain
+* MCQ options ka `a) b) c)` wala bug — abhi mojood hai
+* UI ka "one-click" button — ab is ki bunyad ban chuki hai
+
 ## 2026-08-21 — "Balanced" chhote papers ko sirf sab se mushkil sawal de raha tha
 
 Ratio Phase 2 ka kaam shuru karte hi nikla, dhoondha nahi tha. **934 pytest pass**, ruff clean.
