@@ -1,3 +1,17 @@
+> # ⛔ ARCHIVE — YE SPEC MAT CHALAO (2026-08-22)
+>
+> **Ye is repo ki sab se khatarnak stale file thi.** §1 kehti hai *"theme.css
+> `static/` mein rakho / replace karo"* — magar `static/theme.css` **delete ho chuka
+> hai** (UI-064 part 1, 2026-08-13, 212 lines). Is par amal karne wala aaj wo file
+> wapas banayega jo jaan-boojh kar hataayi gayi thi, aur `unsanctioned_hex` dobara
+> 400 par le jayega.
+>
+> Ye poori spec **Classic navy/gold** palette par likhi hai, jo **Modern** se
+> supersede ho chuki. Nau ke nau pages ab ITCSS tree (`static/css/`) par hain.
+>
+> **Aaj ki asal jagah:** `docs/ui/STATUS.md` (haalat), `docs/ui/PLAN.md` (plan),
+> `static/css/` (khud CSS). Ye file sirf tareekh ke liye rakhi hai.
+
 # PaperMaker — Poore App par Theme Rollout (CLI Spec)
 
 **Maqsad:** Sirf blueprint nahi — **saare pages** (My Papers, Analytics, Question Bank, Image Library, SLO Health, Blueprint, Exam Taqseem, Coverage, More/Settings) ek-jaisa mockup-Classic look mein. Micro-steps ke bajaye ek `theme.css` + har page par ek `<link>` line.

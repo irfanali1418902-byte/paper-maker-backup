@@ -1,3 +1,15 @@
+> # ⛔ ARCHIVE — YE SPEC MAT CHALAO (2026-08-22)
+>
+> **Classic navy/gold** palette par likhi hui hai, jo **Modern** se supersede ho
+> chuki. Header khud kehta hai *"`static/theme.css` already exists from Round 1"* —
+> wo file ab **mojood nahi** (UI-064 mein delete).
+>
+> `blueprint.html` us ke baad migrate ho chuka: `UI-047b`, 2026-08-13, aur ab wo
+> ITCSS tree (`static/css/pages/blueprint.css`) par live hai.
+>
+> **Aaj ki asal jagah:** `docs/ui/STATUS.md` (haalat), `docs/ui/PLAN.md` (plan).
+> Ye file sirf tareekh ke liye rakhi hai.
+
 # PaperMaker — Blueprint Visual Redesign Spec (Round 2)
 
 **For:** Claude Code CLI

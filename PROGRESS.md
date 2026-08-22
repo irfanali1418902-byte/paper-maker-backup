@@ -1,5 +1,73 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-22 — D4: teen mari hui spec files repo root se archive mein
+
+Teenon **Classic navy/gold** palette par likhi hain, jo **Modern** se supersede ho
+chuki. `git mv` se `docs/design/archive/` mein gayin — root ab sirf zinda dastaveiz
+rakhta hai.
+
+**UI-064 ka intezar nahi kiya (D4 row wahan bhejti thi), aur wajah ye hai:**
+`ROLLOUT_all_pages.md` §1 aaj bhi kehti thi *"theme.css `static/` mein rakho — agar
+purana chhota hai to isse replace karo"*. Magar `static/theme.css` **UI-064 part 1
+mein delete ho chuka hai** (2026-08-13, 212 lines), aur usi delete se
+`unsanctioned_hex` 429 → 400 gira tha. Yani ye spec sirf gumraah-kun nahi thi —
+**us par amal karne wala wo file wapas bana deta jo jaan-boojh kar hataayi gayi
+thi.** Ek deferred row ke peeche ye chhorna theek nahi tha.
+
+Har file ke oopar ⛔ tanbeeh lagi hai: kya supersede hua, kaunsa hawala ab jhoot hai,
+aur aaj asal jagah kaun si hai (`docs/ui/STATUS.md`, `docs/ui/PLAN.md`,
+`static/css/`). Sirf hata dena kaafi nahi hota — jo shakhs purana link khole use
+wahin par pata chalna chahiye.
+
+**Hawale naape gaye pehle:** teenon ka bahar se koi link nahi tha — sirf apne andar
+ke ("Read X fully before writing code") aur `DEFERRED.md` ki D4 row. Kuch nahi toota.
+
+**Naapa gaya:** `test_css_architecture.py` 32 pass (ye files CSS metrics mein nahi
+aatin).
+
+**Ek aur jhooti row jo isi dauran nazar aayi, theek NAHI ki:** `docs/ROADMAP.md` ki
+**H6** row kehti hai *"`API_VERSIONING.md` — **File mojood nahi**"*. Wo file repo
+root mein **mojood hai**. Ye aaj ka chautha aisa daawa hai. Alag kaam hai, apne
+gate ke saath — magar darj kar raha hoon taake dobara na chhupe.
+
+## 2026-08-22 — `.app-sidebar` ka "OPEN DEFECT" kab ka band ho chuka tha
+
+**Ek line bhi CSS nahi likhi gayi. Kaam sirf do jhoote comment hatane ka nikla.**
+
+`docs/ui/STATUS.md` ye kehti thi:
+
+> **OPEN DEFECT, not fixed and not forgotten:** `.app-sidebar` has `height:100vh`
+> and no `overflow`, on all six pages that use it. `index` ... is fixed
+> page-scoped; **the other five are untouched.**
+
+Fix likhne se pehle naapa (file-ba-file, comment ke bharose nahi) — aur **saaton
+pages pehle se dhaki hui hain**:
+
+| page | overflow kahan se |
+|---|---|
+| `bank`, `library`, `slo`, `slo-health`, `taqseem` | apni `pages/*.css`, `@layer components` |
+| `index` | `.sidenav__panel` — `05-components/nav.css`:217 |
+| `print` | apni legacy base rule mein pehle se (`overflow-y: auto`) |
+
+**Koi bhi media query ke peeche nahi** — ye alag se dekha, warna "fix mojood hai"
+kehna aur sirf desktop par lagna do alag baatein hotin.
+
+Doosra jhoota comment `static/css/pages/index.css`:110 par tha — *"THE SAME HOLE IS
+OPEN ON THE OTHER FIVE PAGES"*. Us waqt ye sach tha; un paanchon ka apna gate baad
+mein chala aur ye jumla peechhe reh gaya.
+
+**Dono jagah mitaya nahi, kaata gaya** aur neeche naapi hui haqeeqat likhi — kyunke
+paanch pages ko us waqt na chherne ki wajah durust thi ("five live pages want their
+own gate run rather than a drive-by"), aur agle bande ko wo wajah dikhni chahiye.
+
+**Naapa gaya:** CSS metrics 0 delta (sirf `shared_css_lines` +12, yani comment ki
+lines — ye ratcheted metric nahi). `test_css_architecture.py` 32 pass.
+
+**Ye is repo ki asal bimari ka teesra namoona hai aaj.** Pehla: ROADMAP ki R1 row
+("5 khali" magar 6 ginwaye). Doosra: `css_baseline.py` ka CLI exit 0 deta hai jabke
+suite fail hoti hai. Teesra ye. **Kaam uthane se pehle naapo — row, comment aur CLI,
+teenon jhoot bol sakte hain.**
+
 ## 2026-08-22 — #3: blueprint ka class box ab tajweez deta hai (19 July plan)
 
 `HANDOVER_19July.md` ke "BAQI PENDING" mein **#3 — class dropdown** likha tha:

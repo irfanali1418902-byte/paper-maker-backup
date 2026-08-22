@@ -1,3 +1,16 @@
+> # ⛔ ARCHIVE — YE SPEC MAT CHALAO (2026-08-22)
+>
+> **Classic navy/gold** palette par likhi hui hai, jo **Modern** se supersede ho
+> chuki. §0 jis "base style" ka faisla maangti hai wo kab ka ho chuka, aur §2 ke
+> tokens `config/brand.json` / `static/theme.css` ki taraf ishara karte hain —
+> `theme.css` ab mojood hi nahi (UI-064 mein delete).
+>
+> Nau ke nau pages ab ITCSS tree (`static/css/`) par hain, jo is handoff ke
+> "incrementally update karo" wale tareeqe se bilkul mukhtalif hai.
+>
+> **Aaj ki asal jagah:** `docs/ui/STATUS.md` (haalat), `docs/ui/PLAN.md` (plan),
+> `CLAUDE.md` §11–12 (qawaid). Ye file sirf tareekh ke liye rakhi hai.
+
 # PaperMaker — UI Design Implementation Handoff
 
 **For:** Claude Code CLI (implementer)
