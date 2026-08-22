@@ -7,13 +7,13 @@
     "inline_style_non_display": 385,
     "hardcoded_hex": 0,
     "hardcoded_hex_inline": 76,
-    "legacy_css_lines": 2115,
-    "shared_css_lines": 2526,
-    "total_css_lines": 2115,
-    "stylesheet_hex": 373,
-    "total_hardcoded_hex": 449,
-    "token_hex": 20,
-    "unsanctioned_hex": 429
+    "legacy_css_lines": 1875,
+    "shared_css_lines": 3764,
+    "total_css_lines": 1875,
+    "stylesheet_hex": 309,
+    "total_hardcoded_hex": 385,
+    "token_hex": 29,
+    "unsanctioned_hex": 356
   },
   "per_page": {
     "bank.html": {
@@ -252,6 +252,7 @@
       "id=\"bloomSuggestionBox\"",
       "id=\"bloomSuggestionText\"",
       "id=\"bpClassName\"",
+      "id=\"bpClassOptions\"",
       "id=\"bpCoverageWarn\"",
       "id=\"bpExamNo\"",
       "id=\"bpGrade\"",

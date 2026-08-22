@@ -99,7 +99,8 @@
       </div>
       <div>
         <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="bpClassName" placeholder="e.g. Class 8A" />
+        <input type="text" id="bpClassName" list="bpClassOptions" placeholder="e.g. Pre Year 1" />
+        <datalist id="bpClassOptions"></datalist>
       </div>
     </div>
     </div><!-- /.cb -->
@@ -229,9 +230,31 @@ async function loadSyllabusGrades() {
       o.value = s; o.textContent = s;
       sel.appendChild(o);
     });
+    fillClassNameOptions();
   } catch (e) {
     console.error('syllabus-grades load fail:', e);
   }
+}
+
+// Class name ka box free-text tha, aur usi se `Jasmine` / `NUrsery` / `play`
+// jaise gande class aaye jo coverage tod dete hain. Ab wahi grades tajweez hoti
+// hain jo syllabus mein waqai mojood hain -- yani wahi jo generator ka
+// `gradeSelect` dikhata hai, taake naam poore app mein ek jaisa rahe.
+//
+// `<select>` jaan-boojh kar NAHI: SLO/syllabus se bahar ki class (misal ek
+// section "8A") likhne ka raasta khula rakhna hai. `<datalist>` dono deta hai --
+// tajweez + apni marzi ka matn -- aur `.value` waisa hi rehta hai, is liye
+// bhejne wala code (943, 1110) chhua nahi gaya.
+function fillClassNameOptions() {
+  const list = document.getElementById('bpClassOptions');
+  if (!list) return;
+  const grades = [...new Set(_allGrades.map(g => g.grade))].sort();
+  list.innerHTML = '';
+  grades.forEach(g => {
+    const o = document.createElement('option');
+    o.value = g;
+    list.appendChild(o);
+  });
 }
 
 function onSubjectChange() {
