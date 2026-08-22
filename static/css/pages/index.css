@@ -107,10 +107,22 @@
      the leading, and that crossed the threshold on Irfan's screen. A short
      enough window would have shown it before, too.
 
-     THE SAME HOLE IS OPEN ON THE OTHER FIVE PAGES and is deliberately not
-     touched here: they are live, their navs are shorter so nothing has
-     spilled yet, and five live pages want their own gate run rather than a
-     drive-by. Recorded rather than silently fixed.
+     THE OTHER FIVE PAGES WERE LEFT OPEN HERE, deliberately: they were live,
+     their navs shorter so nothing had spilled yet, and five live pages wanted
+     their own gate run rather than a drive-by. Recorded rather than silently
+     fixed.
+
+     [2026-08-22 — THAT HOLE IS NOW CLOSED EVERYWHERE. Measured file by file,
+     not taken from this comment: all seven pages that use `.app-sidebar` have
+     `overflow-y: auto`, none of it behind a media query.
+       bank, library, slo, slo-health, taqseem → their own pages/*.css,
+         in layer(components)
+       index                                   → `.sidenav__panel`
+         (05-components/nav.css:217)
+       print                                   → its own legacy base rule
+     The five got their gate runs after this was written; the sentence above
+     simply outlived them. Kept, not deleted, because the reasoning for the
+     delay was sound and the next person deserves to see it.]
 
      THE PAGE-SCOPED FIX IS GONE — `.sidenav__panel` carries `overflow-y: auto`
      itself (05-components/nav.css), so index gets it from the component now.
