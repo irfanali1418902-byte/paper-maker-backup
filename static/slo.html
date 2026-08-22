@@ -48,9 +48,15 @@
 </aside>
 
 <main class="slo-main">
-  <div class="page-head">
-    <h1>Student Learning Outcomes (SLO)</h1>
-    <p>Excel se SLO import karo. Same <code>slo_code</code> dobara import = update (draft correction). Bloom khali ho to text ke verb se auto-suggest.</p>
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side, which is what blueprint.html did until 2026-08-15. Same pattern as
+       blueprint.html:56. -->
+  <div class="pagehead">
+    <div>
+      <h1>Student Learning Outcomes (SLO)</h1>
+      <p>Excel se SLO import karo. Same <code>slo_code</code> dobara import = update (draft correction). Bloom khali ho to text ke verb se auto-suggest.</p>
+    </div>
   </div>
 
   <!-- Import card -->

@@ -121,7 +121,7 @@ Sab se kam ta'alluq wale pehle, taake har slice akela naapa ja sake:
 
 | slice | rules | kyun yahan | barood |
 |---|---|---|---|
-| **S1 — pagehead** | 6, 7 | dono ka ghar **pehle se mojood**, kul 15 deltas | koi nahi |
+| **S1 — pagehead** ✅ **DONE 2026-08-22** | 6, 7 | dono ka ghar **pehle se mojood** | ⚠ do cheezein niklin — neeche |
 | **S2 — badges** | 16–20, 22, 23, 24 | shell se bilkul azad; `.pill*` `status.css` ki mojooda `ok/err/warn` trio par baithte hain | `.bloom` (2294) ka ghar tay karna |
 | **S3 — card + row + btn + inputs** | 8–14 | yahin dono barood phatte hain | bare `.card` + bare `.btn`, teen live pages |
 | **S4 — shell + mop-up** | 2–5, 25, phir 15, 21, aur aakhir mein 1 | `.o-shell` par jana; `:root` yahan khud girta hai | sab se bara qadam |
@@ -132,6 +132,46 @@ chahiyen.
 
 **Gate har slice par**: `node scripts/css_drain_probe.mjs slo` + `css_type_probe` HEAD ke
 khilaf, aur `python scripts/css_baseline.py` (`legacy_css_lines` sirf **neeche** jaye).
+
+---
+
+### S1 — pagehead. **DONE 2026-08-22. LIVE.** `legacy_css_lines` pehli dafa gira: **1875 → 1873**
+
+`slo.css` ke do rules gaye; `slo.html`:51 ab `.pagehead` (`card.css`:83) pehnta hai.
+
+| gate | nateeja |
+|---|---|
+| baaqi 8 pages, element × property | **0 deltas har page par** — koi bleed nahi |
+| `slo` ke deltas | **7**, aur saaton **usi ek `<div>`** par |
+| drift | **0/0** har page, dono runs |
+| drain probe LIVE rules | 18 → **16** |
+| pytest / ruff / ratchet | 1055 pass · saaf · har ratcheted metric **+0** |
+
+**`.pagehead` `display:flex` hai — inner `<div>` lazmi hai.** Us ke baghair `h1` aur `p`
+flex items ban kar **ek doosre ke baghal mein** aa jate hain. `blueprint.html` ne yehi
+ghalti ki thi aur 2026-08-15 tak aisi hi chali; us ka markup (`:53–61`) is commit ka
+namoona hai. **Isi liye S1 "koi faisla nahi" wala slice nahi tha** — wo daawa is board
+par ghalat likha gaya tha aur markup parhne par toota.
+
+**Saat deltas mein se chhe maqsood hain**, Modern target ke mutabiq (`mockup-modern.html`
+:97–99): `display` block→flex, `column-gap`/`row-gap` →14px, `align-items`→flex-end,
+`margin-top` 0→6px, `margin-bottom` 24px→22px (`--space-gap`).
+
+**Saatwan — `height` 45.95px → 68.52px — dekhne wali cheez hai.** Sabab: `.pagehead p`
+ka `max-width: 620px`. Subtitle pehle 949px chaura tha aur **ek line** thi; ab 620px par
+**do lines** mein lipatta hai (p ki height 19.56 → 39.13px). `h1` bilkul nahi hila —
+font, size, weight, colour, line-height sab wahi.
+
+**Aur ek cheez jo naapne par hi mili: contrast neeche gaya.** `p` ka rang legacy
+`rgb(91,102,120)` (**5.47:1**) se component ke `rgb(100,116,139)` (**4.48:1**) par gaya —
+AA ki hadd 4.5:1 se **0.02 neeche**. **Ye is task ka paida karda nahi**: `blueprint` yehi
+value 2026-08-15 se dikha raha hai, usi run ke BEFORE snapshot se tasdeeq-shuda. Poori
+tafseel aur wajah ke ye S1 ke andar theek kyun nahi kiya gaya — **D41**.
+
+**`99-legacy/slo.css` mein koi wazahati comment nahi chhora**, jaan-boojh kar: wo file
+append-never hai, aur do line ka comment theek utni lines le leta jitni do rules ne
+chhori thin — `legacy_css_lines` 1875 par jama rehta aur Sprint 6 ka poora maqsad fauat
+ho jata. Wazahat yahan hai, wahan nahi.
 
 
 ## NEXT TASK → **Sprint 6 (`UI-060..064`) — the drain.** ~~`UI-047c`~~ ✅ **DONE 2026-08-13: `index` is LIVE and every page is migrated.** From here CSS goes DOWN for the first time: `99-legacy/*` is **2,115 lines** across nine files, and **`static/theme.css` is GONE — deleted 2026-08-13 in `UI-064` part 1, 212 lines, 0 deltas on all nine pages.** `unsanctioned_hex` fell 429 → 400 with it, the first ratcheted metric to drop through deletion rather than through care. **`static/app.css` remains** — all nine pages still link its 57 lines for the `@font-face` block and the `.icon` sprite, and it goes with the rest of `UI-064`. **The real work of Sprint 6 has not started**: `legacy_css_lines` is still 2,115 and has not moved a line. **[2026-08-21 — YEH JUMLA AB GHALAT HAI. Naapa gaya: `legacy_css_lines` = 1,875 (−240), abhi bhi 9 files. `unsanctioned_hex` = 356, na ke 400. Sprint 6 waqai shuru ho chuka hai. Neeche ki poori row us waqt ki hai jab ye adad 2,115 the — us ke har adad ko isi shak se parhein aur `python scripts/css_baseline.py` se naap lein. Jo cheez ab bhi sach hai: NEXT TASK Sprint 6 hi hai, aur Sprint 5 (inline styles, 466 par jama) abhi tak chhua nahi gaya.]** Sprints 5 (inline styles) and the rest of Sprint 4 (`UI-042`, `UI-043`) are deliberately skipped — nothing waits on them and much of Sprint 5 is expected to fall out of the drain. See `ROADMAP.md`. ~~**OPEN DEFECT, not fixed and not forgotten: `.app-sidebar` has `height:100vh` and no `overflow`, on all six pages that use it.** `index` was the first with a nav tall enough to spill and is fixed page-scoped; the other five are untouched.~~ **✅ BAND — naapa gaya 2026-08-22.** Saaton pages jo `.app-sidebar` use karti hain un par `overflow-y: auto` mojood hai, aur koi bhi media query ke peeche nahi: `bank`/`library`/`slo`/`slo-health`/`taqseem` apni `pages/*.css` mein (layer components), `index` ko `.sidenav__panel` se milta hai (`05-components/nav.css`:217), aur `print` ki apni legacy base rule mein pehle se tha. Row ne likhne ke baad hone wale kaam ko darj nahi kiya — **is file ka har daawa isi shak se parhein.** ORIGINAL ROW → **`UI-047c`** (`index`) — the last page, and **nothing stands in front of it**. `UI-046` and `UI-047b` both landed 2026-08-13 and **`blueprint` is LIVE: 8 of 9 pages.** That migration verified UI-046 for the first time — its nine rules went from `matches:0`, unverifiable because `blueprint` loaded no layered sheet at all, to live on real markup. **`index` was recorded as blocked on D22 in six places and that was wrong**; `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04 and the correction had not propagated. D22 is a technical constraint whose fix can only land in the commit that re-classes markup (Sprint 6), not a decision. The real blocker was narrower — `index`'s two اردو toggle buttons lose Nastaliq because `forms.css`:101's `button { font-family: inherit }` outranks `99-legacy/index.css`:34 by layer order — and **Irfan answered it A on 2026-08-13: page-scoped in `index`'s entry file.** `index` is unblocked.
