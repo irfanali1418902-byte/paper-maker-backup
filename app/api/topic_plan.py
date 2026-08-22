@@ -4,12 +4,15 @@
 ValueError -> 400, NotFound -> 404, baqi sab -> 500 with a DB-error message.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import Response
 
 from app.schemas.requests import TopicWeekMoveRequest
-from app.services import topic_week_service
+from app.services import topic_week_import_service, topic_week_service
 
 router = APIRouter()
+
+_XLSX_MEDIA = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 @router.get("/api/topic-plan")
@@ -27,6 +30,36 @@ def get_topic_plan(subject: str, grade: str):
         raise HTTPException(
             status_code=500, detail=f"Hafta-war plan fetch fail hui (DB error): {e}"
         ) from e
+
+
+@router.get("/api/topic-plan/template")
+def download_topic_plan_template(subject: str, grade: str):
+    """Us (subject, grade) ke topics ka Excel — syllabus_topic_id + title +
+    current week_no. Teacher sirf `week_no` column bharta hai aur
+    /api/topic-plan/assign-import par wapas upload karta hai.
+
+    Route ko PATCH /{topic_id} se PEHLE rakhna zaroori hai, warna "template"
+    ek topic_id samjha jayega."""
+    if not subject.strip() or not grade.strip():
+        raise HTTPException(status_code=400, detail="subject aur grade dono chahiye.")
+    xlsx = topic_week_import_service.build_template_xlsx(subject, grade)
+    filename = topic_week_import_service.template_filename(subject, grade)
+    return Response(
+        content=xlsx,
+        media_type=_XLSX_MEDIA,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/api/topic-plan/assign-import")
+def import_topic_plan(file: UploadFile = File(...)):
+    """Bhari hui sheet se topics ka hafta replace-set karo.
+    Returns: {updated, cleared, errors, warnings}."""
+    fname = (file.filename or "").lower()
+    if not (fname.endswith(".xlsx") or fname.endswith(".xls") or fname.endswith(".csv")):
+        raise HTTPException(status_code=400, detail="Sirf .xlsx / .xls / .csv file allowed hai.")
+    contents = file.file.read()
+    return topic_week_import_service.import_assignments(contents, file.filename or "plan.xlsx")
 
 
 @router.patch("/api/topic-plan/{topic_id}")

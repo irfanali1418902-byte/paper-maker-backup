@@ -1,5 +1,52 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-22 — R7 Marhala 2: Excel template + import (backend; UI abhi nahi)
+
+**1055 pass** (1026 → 1055, **29 nayi**), ruff saaf, CSS ratchet ka har metric **+0**
+(is kaam ne CSS chhua hi nahi). Spec: `docs/TOPIC_WEEK_PLAN.md` §7.
+
+Marhala 1 ne table/service/API di thi magar plan bharne ka koi zariya nahi tha. Ye
+wo zariya hai — Irfan ke "data Excel se aayega" wale faisle par:
+
+| naya | kya karta hai |
+|---|---|
+| `GET /api/topic-plan/template` | us (subject, grade) ke saare topics ka sheet |
+| `POST /api/topic-plan/assign-import` | bhari hui sheet se plan replace-set |
+| `topic_week_import_service.py` | dono ka kaam (184 lines) |
+
+`question_slo_import_service` ka aaina: header lower-case, match **`syllabus_topic_id`
+se — title se nahi**, aur ghalat/gayab id par us row ka saaf error.
+
+### Teen faisle jo SLO import se jaan-boojh kar mukhtalif hain
+
+**1. Unknown id = ERROR, warning nahi.** SLO import mein unknown `slo_code` sirf
+warning hai kyunke baqi links phir bhi ban jate hain. Yahan `week_no` poori row ka
+maqsad hai — ghalat hua to karne ko kuch bacha hi nahi, aur chup-chaap 0 (Unassigned)
+likh dena teacher ko dhoka dena hoga.
+
+**2. Khali `week_no` = plan CLEAR, na ke skip.** Sheet "template" bhi hai aur "export"
+bhi — current `week_no` pehle se bhara aata hai, to cell khali karna teacher ka saaf
+iraada hai. Response mein `cleared` alag ginti hai taake ye khamoshi se na ho.
+
+**3. Tanbeeh Excel cell-comment mein, alag note-row mein nahi.** Note-row daalte to
+wahi file dobara upload karne par header toot jata. Header ek hi hai, machine-readable.
+
+Saari rows pehle parhi jati hain, phir **ek dafa** likha jata hai — aadha-laga plan sab
+se bura nateeja hai, teacher ko pata nahi chalta kaunsi rows lagin. Id-tasdeeq bhi ek
+hi DB round mein (`existing_topic_ids`), har row par query nahi.
+
+### Jo ab bhi baqi hai — ye feature teacher tak nahi pahunchta
+
+`grep` se naapa: **`static/` mein in dono endpoints ka sifar zikr hai.** API zinda aur
+green hai, magar koi button/page us se juda nahi. `slo.html` ka `/api/slo/assign-import`
+ek **alag purana** endpoint hai — us se dhoka na khayein.
+
+Chhoti baat, darj isliye ke chupi na rahe: import service `topic_week_service._week_count()`
+bulata hai — doosre module ka private function. Kaam karta hai, magar Marhala 3 mein
+public karna behtar hoga.
+
+**Agla:** ya to R7 ka UI (in endpoints ko page se jorna), ya Marhala 3 (coverage).
+
 ## 2026-08-22 — R7 Marhala 1: hafta-war plan ki buniyad (UI abhi nahi)
 
 **1026 pass** (976 → 1026, **50 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md`.

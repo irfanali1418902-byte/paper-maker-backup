@@ -116,3 +116,78 @@ def test_topic_plan_is_scoped_to_its_grade(test_db):
 
     ids = [t["syllabus_topic_id"] for t in res.json()["unassigned"]]
     assert ids == ["t1"]
+
+
+# ---- Marhala 2: template + import ----
+
+
+def test_template_downloads_as_xlsx(test_db):
+    _topic("t1", "Number 50")
+
+    res = client.get("/api/topic-plan/template",
+                     params={"subject": "Mathematics", "grade": "Pre Year 2"})
+
+    assert res.status_code == 200
+    assert "spreadsheetml" in res.headers["content-type"]
+    assert "topic_week_plan_Mathematics_Pre_Year_2.xlsx" in res.headers["content-disposition"]
+    assert res.content[:2] == b"PK"  # xlsx = zip
+
+
+def test_template_path_resolves_to_the_template_handler(test_db):
+    """`/api/topic-plan/template` template hi de, kisi `{topic_id}` handler ko na
+    jaye.
+
+    AAJ ye fail nahi ho sakti aur ye baat saaf likhi jani chahiye: `{topic_id}`
+    wala akela route PATCH hai, to GET /template us se takra hi nahi sakta.
+    Ye pehra AAGE ke liye hai -- Marhala 3/4 mein GET /api/topic-plan/{topic_id}
+    aana bilkul mumkin hai, aur agar wo /template se pehle likha gaya to
+    "template" ek topic id samjha jayega aur 404 milega. Tab ye test bolegi."""
+    _topic("t1", "Number 50")
+
+    res = client.get("/api/topic-plan/template",
+                     params={"subject": "Mathematics", "grade": "Pre Year 2"})
+
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/vnd")
+
+
+def test_template_requires_subject_and_grade(test_db):
+    assert client.get("/api/topic-plan/template",
+                      params={"subject": " ", "grade": "Pre Year 2"}).status_code == 400
+
+
+def test_import_assigns_weeks_end_to_end(test_db):
+    import io as _io
+
+    import openpyxl as _openpyxl
+
+    _topic("t1", "Number 50")
+    wb = _openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["syllabus_topic_id", "subtopic_title", "unit_no", "week_no"])
+    ws.append(["t1", "Number 50", 1, 5])
+    buf = _io.BytesIO()
+    wb.save(buf)
+
+    res = client.post(
+        "/api/topic-plan/assign-import",
+        files={"file": ("plan.xlsx", buf.getvalue(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+
+    assert res.status_code == 200
+    assert res.json()["updated"] == 1
+
+    plan = client.get("/api/topic-plan",
+                      params={"subject": "Mathematics", "grade": "Pre Year 2"}).json()
+    assert [t["syllabus_topic_id"] for t in plan["weeks"][4]["topics"]] == ["t1"]
+
+
+def test_import_rejects_wrong_file_type(test_db):
+    res = client.post(
+        "/api/topic-plan/assign-import",
+        files={"file": ("plan.txt", b"kuch bhi", "text/plain")},
+    )
+
+    assert res.status_code == 400
+    assert "allowed" in res.json()["detail"]
