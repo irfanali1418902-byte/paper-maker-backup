@@ -33,6 +33,107 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 
 ---
 
+## UI-060 — `slo.css` ka drain map. **2026-08-22. NAQSHA HAI, KOI CODE NAHI BADLA.**
+
+Sprint 6 ka pehla page. Ye section **sirf naap aur naqsha** hai — `slo.css`, `slo.html`
+aur kisi component file ko is commit mein chhua nahi gaya. Irfan ne "pehle naqsha,
+phir code" chuna (B), kyunke is epic ne chaar dafa "parh kar raay banana" fail kiya.
+
+### Pehla nateeja: is file mein ek bhi rule aisa nahi jo naap kar delete ho sake
+
+`node scripts/css_drain_probe.mjs slo` — 25 rules, 931 elements, 1280×900:
+
+```
+DEAD (0 deltas, candidates): 7
+LIVE (load-bearing):        18
+```
+
+**Saaton zeros false positive hain**, probe ke apne char documented hudood par parkhne
+se — ye us header ka "a zero is a CANDIDATE, not a verdict" pehli dafa waqai kaam aaya:
+
+| rule | probe 0 kyun bola | tasdeeq |
+|---|---|---|
+| `.btn:hover`, `.btn:disabled` | STATE — rest par match nahi | — |
+| `.pill`, `.pill.add`, `.pill.upd`, `.pill.err` | JS-RENDERED | `slo.html`:69 `.summary` shuru mein `display:none`; pills :170 `innerHTML` se bante, :179 par summary khulti hai |
+| `@media (max-width: 720px)` | VIEWPORT | 1280 par apply hi nahi hota |
+
+**To drain "murda rules hatao" nahi, poori migration hai.** File 59 lines ki hai —
+chhoti — magar 25 ke 25 rules zinda hain. **Line count kaam ka paimana nahi**; ye file
+"sab se aasan" isi ghalat paimane par chuni gayi thi.
+
+### Doosra nateeja: `:root` ko alag se mat chhero — wo aakhir mein khud marega
+
+`:root` ke **1232** deltas sirf isliye hain ke **isi file ke baaqi 24 rules** us ke
+`var(--ink)` / `var(--muted)` / `var(--primary)` parhte hain. Jaise-jaise wo rules tree
+ke tokens par jayenge, `:root` bekaar hota jayega aur aakhri qadam par khali file ke
+saath uthega. Ise pehle hatane ki koshish poori page tor degi.
+
+### Naqsha — 25 rules, har ek ka ghar
+
+Har "mojood hai" cell code se tasdeeq-shuda hai, yaad se nahi.
+
+| # | rule | deltas | ghar | halat |
+|--:|---|--:|---|---|
+| 1 | `:root` (17 tokens) | 1232 | — | **aakhir mein khud marega** |
+| 2 | `html, body` | 3 | `04-objects/shell.css` | `.o-shell` ka `height:100vh` ise ghair-zaroori kar deta hai |
+| 3 | `body {display:flex}` | 865 | `.o-shell` | **mojood** (`shell.css`:83) |
+| 4 | `.app-nav` | 9 | `.o-shell__nav` + `.sidenav` | **mojood**; 9 deltas = `padding-right`, milana paregi |
+| 5 | `.slo-main` | 609 | `.o-shell__main` | **mojood** (`shell.css`:137) |
+| 6 | `.page-head` | 1 | `.pagehead` | **mojood** (`card.css`:83) |
+| 7 | `.page-head p` | 14 | `.pagehead p` | **mojood** (`card.css`:104) |
+| 8 | `.card` | 609 | `card.css` | ⚠ **bare `.card` mojood NAHI, jaan-boojh kar** |
+| 9 | `.card .hint` | 79 | `card.css` | naya rule chahiye |
+| 10 | `.row` | 46 | `.field-row` | **mojood** (`field.css`:34), markup re-class |
+| 11 | `.btn` | 54 | `.btn--primary` | ⚠ **bare `.btn` mojood NAHI, jaan-boojh kar** |
+| 12 | `.btn:hover` | state | `.btn--primary:hover` | **mojood** (`btn.css`:182) |
+| 13 | `.btn:disabled` | state | `btn.css` | `.btn--accent:disabled` hai, primary ka dekhna hoga |
+| 14 | `input[type=file], select, input[type=text]` | 56 | `03-elements/forms.css` | **mojood** (:57–81) |
+| 15 | `.summary` | 42 | page entry file | JS toggle, page-scoped rahe |
+| 16 | `.pills` | 4 | `status.css` | naya |
+| 17–20 | `.pill` + `.add`/`.upd`/`.err` | JS | `status.css` | **wahi teen semantics** jo `.status-bar.ok/.err/.warn` (`status.css`:34–46) |
+| 21 | `td.code` | 925 | ⚠ **koi ghar nahi** | `tables.css` element-only hai apne contract se; `td.code` class hai |
+| 22 | `.bloom` | 2294 | ⚠ **koi ghar nahi** | badge — naya component ya `status.css` |
+| 23 | `.bloom.empty` | 30 | wahi | |
+| 24 | `.empty-state` | 9 | `status.css` | naya |
+| 25 | `@media (max-width:720px)` | **UNMEASURED** | `.o-shell` grid | 1280 par naapa hi nahi ja sakta |
+
+**Sidebar ka aadha kaam pehle se hua para hai** — `slo.html`:12–47 dohri class rakhta hai
+(`app-sidebar sidenav__panel`, `app-nav sidenav`, `sidebar-foot sidenav__foot`). Legacy
+naam wahan waise hi latke hain; shell slice unhe utha legi.
+
+### DO BAROOD — dono `05-components/` ke apne headers mein pehle se darj
+
+Ye is page ka masla nahi, **poore Sprint 6 ka** hai, aur dono ek hi shakal ke hain:
+
+- **`btn.css`:37** — bare `.btn { }` jaan-boojh kar nahi hai. `slo.html` ke **2** buttons
+  `class="btn"` rakhte hain aur `99-legacy/slo.css`:50 se rangte hain. `layer(components)`
+  legacy ko haraata hai, to bare `.btn` un dono ko **foran** repaint kar dega.
+- **`card.css`:6** — bare `.card { }` bhi nahi hai, aur us ka header saaf kehta hai:
+  *adding one repaints three live pages*. `.card.has-ch` / `.card > .ch` / `.card > .cb`
+  isi liye abhi tak inert hain.
+
+**Dono sirf usi commit mein khul sakte hain jo us page ka markup re-class karta hai.**
+Yeh Sprint 6 ka markazi qaida hai: **component pehle nahi, migration ke saath.**
+
+### Tajweez-kardah tarteeb — chaar slice, har slice par apna 0-delta gate
+
+Sab se kam ta'alluq wale pehle, taake har slice akela naapa ja sake:
+
+| slice | rules | kyun yahan | barood |
+|---|---|---|---|
+| **S1 — pagehead** | 6, 7 | dono ka ghar **pehle se mojood**, kul 15 deltas | koi nahi |
+| **S2 — badges** | 16–20, 22, 23, 24 | shell se bilkul azad; `.pill*` `status.css` ki mojooda `ok/err/warn` trio par baithte hain | `.bloom` (2294) ka ghar tay karna |
+| **S3 — card + row + btn + inputs** | 8–14 | yahin dono barood phatte hain | bare `.card` + bare `.btn`, teen live pages |
+| **S4 — shell + mop-up** | 2–5, 25, phir 15, 21, aur aakhir mein 1 | `.o-shell` par jana; `:root` yahan khud girta hai | sab se bara qadam |
+
+**S1 pehla isliye nahi ke chhota hai — isliye ke us mein koi faisla nahi hai.** S2 ka
+`.bloom` aur S3 ke dono bare rules asal faisle hain aur Irfan ke saamne alag se aane
+chahiyen.
+
+**Gate har slice par**: `node scripts/css_drain_probe.mjs slo` + `css_type_probe` HEAD ke
+khilaf, aur `python scripts/css_baseline.py` (`legacy_css_lines` sirf **neeche** jaye).
+
+
 ## NEXT TASK → **Sprint 6 (`UI-060..064`) — the drain.** ~~`UI-047c`~~ ✅ **DONE 2026-08-13: `index` is LIVE and every page is migrated.** From here CSS goes DOWN for the first time: `99-legacy/*` is **2,115 lines** across nine files, and **`static/theme.css` is GONE — deleted 2026-08-13 in `UI-064` part 1, 212 lines, 0 deltas on all nine pages.** `unsanctioned_hex` fell 429 → 400 with it, the first ratcheted metric to drop through deletion rather than through care. **`static/app.css` remains** — all nine pages still link its 57 lines for the `@font-face` block and the `.icon` sprite, and it goes with the rest of `UI-064`. **The real work of Sprint 6 has not started**: `legacy_css_lines` is still 2,115 and has not moved a line. **[2026-08-21 — YEH JUMLA AB GHALAT HAI. Naapa gaya: `legacy_css_lines` = 1,875 (−240), abhi bhi 9 files. `unsanctioned_hex` = 356, na ke 400. Sprint 6 waqai shuru ho chuka hai. Neeche ki poori row us waqt ki hai jab ye adad 2,115 the — us ke har adad ko isi shak se parhein aur `python scripts/css_baseline.py` se naap lein. Jo cheez ab bhi sach hai: NEXT TASK Sprint 6 hi hai, aur Sprint 5 (inline styles, 466 par jama) abhi tak chhua nahi gaya.]** Sprints 5 (inline styles) and the rest of Sprint 4 (`UI-042`, `UI-043`) are deliberately skipped — nothing waits on them and much of Sprint 5 is expected to fall out of the drain. See `ROADMAP.md`. ~~**OPEN DEFECT, not fixed and not forgotten: `.app-sidebar` has `height:100vh` and no `overflow`, on all six pages that use it.** `index` was the first with a nav tall enough to spill and is fixed page-scoped; the other five are untouched.~~ **✅ BAND — naapa gaya 2026-08-22.** Saaton pages jo `.app-sidebar` use karti hain un par `overflow-y: auto` mojood hai, aur koi bhi media query ke peeche nahi: `bank`/`library`/`slo`/`slo-health`/`taqseem` apni `pages/*.css` mein (layer components), `index` ko `.sidenav__panel` se milta hai (`05-components/nav.css`:217), aur `print` ki apni legacy base rule mein pehle se tha. Row ne likhne ke baad hone wale kaam ko darj nahi kiya — **is file ka har daawa isi shak se parhein.** ORIGINAL ROW → **`UI-047c`** (`index`) — the last page, and **nothing stands in front of it**. `UI-046` and `UI-047b` both landed 2026-08-13 and **`blueprint` is LIVE: 8 of 9 pages.** That migration verified UI-046 for the first time — its nine rules went from `matches:0`, unverifiable because `blueprint` loaded no layered sheet at all, to live on real markup. **`index` was recorded as blocked on D22 in six places and that was wrong**; `DECISIONS-FOR-IRFAN.md`:67 corrected it on 2026-08-04 and the correction had not propagated. D22 is a technical constraint whose fix can only land in the commit that re-classes markup (Sprint 6), not a decision. The real blocker was narrower — `index`'s two اردو toggle buttons lose Nastaliq because `forms.css`:101's `button { font-family: inherit }` outranks `99-legacy/index.css`:34 by layer order — and **Irfan answered it A on 2026-08-13: page-scoped in `index`'s entry file.** `index` is unblocked.
 
 ### UI-047a — **`taqseem`'s migration. DONE 2026-08-12. LIVE.**
