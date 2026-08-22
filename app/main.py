@@ -26,6 +26,7 @@ from app.api import (
     stats,
     syllabus,
     taqseem,
+    topic_plan,
 )
 from app.api.auth import require_api_key
 from app.core.database import init_db
@@ -103,6 +104,7 @@ app.include_router(slo.router, dependencies=_api_auth)
 app.include_router(stats.router, dependencies=_api_auth)
 app.include_router(taqseem.router, dependencies=_api_auth)
 app.include_router(coverage.router, dependencies=_api_auth)
+app.include_router(topic_plan.router, dependencies=_api_auth)
 
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi
 # launch ho, file resolve ho jaye.

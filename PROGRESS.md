@@ -1,5 +1,75 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-22 — R7 Marhala 1: hafta-war plan ki buniyad (UI abhi nahi)
+
+**1026 pass** (976 → 1026, **50 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md`.
+
+Irfan ke do faisle jin par ye khara hai: daira **taqseem-e-auqat + coverage** hai
+(sabaq ka mazmoon nahi), aur data **Excel se** bharega (manual form nahi — wahi wajah
+jo `HANDOVER_19July.md` mein likhi hai).
+
+### Ye naya module nahi — aadhi machinery mojood thi
+
+"Planned vs actual" ki shakal repo mein pehle se do dafa bani hai: taqseem
+(`slo_exam_plan`) + `coverage_service`. **Jo waqai naya hai wo sirf waqt ka dimension
+hai** — kaunsa topic kab. Is liye ROADMAP ka "size L" naapne par zyada laga; andaza
+ab **~2 hafte** hai.
+
+`topic_week_plan` `slo_exam_plan` ka **hu-ba-hu aaina** hai — table, repository ki
+ordering, upsert, aur Unassigned bucket ka rule (0 / NULL / >N). Naya design isliye
+nahi banaya ke wo rule pehle se aazmaya hua hai.
+
+| naya | kis ka aaina |
+|---|---|
+| `topic_week_plan` table + index | `slo_exam_plan` |
+| `topic_week_plan_repository.py` | `slo_exam_plan_repository` |
+| `topic_week_service.py` | `taqseem_service` |
+| `api/topic_plan.py` | `api/taqseem.py` (ValueError→400, NotFound→404) |
+
+### Ek daawa jo naapne par poora sach nahi nikla
+
+`coverage_service` ka docstring kehta hai `_assemble_coverage` "DB-FREE hai taake
+dobara istemal ho". **Wo waada SLO ke daire ke andar tha** (draft question_ids).
+Function khud **SLO-keyed** hai — `s["slo_id"]` aur `strand` par chalta hai. Topic ke
+liye us ki key parameterize karni paregi. **Ye Marhala 3 ka kaam hai, aur us ke
+mojooda tests hi gate honge — SLO coverage tootni nahi chahiye.**
+
+Plan mein maine pehle likh diya tha "coverage dobara likhne ki zaroorat nahi" — wo
+zyada tha, aur spec mein durust kar diya gaya.
+
+### Auto-generate jaan-boojh kar nahi banaya
+
+`taqseem_service` mein `generate_plan()` hai (SLO ko N exams mein baraabar baant do).
+Yahan wo **nahi** — Irfan ne Excel chuna, aur andhi taqseem ye nahi jaanti kaunsa
+topic bhaari hai. 87 topics ko 36 hafton par baraabar baant dena aisa plan deta jo
+har hafte badalna parta.
+
+### `week_count`: column haan, settings API nahi
+
+`school_settings.week_count` (default 36) migration se add hui — `exam_count` ka
+aaina. Magar **`SchoolSettings` model aur `save_settings()` jaan-boojh kar nahi chhue
+gaye**: `/api/school-settings` ka partial POST baqi fields wipe kar deta hai, to us
+surface ko chherna apna alag gate maangta hai (Marhala 4, jab UI ise edit karega).
+`_week_count()` column na hone par bhi 36 par chalti hai — dono suraton mein
+mehfooz.
+
+### Tests: 50, aur teenon parton par
+
+repository **14** · service **26** · API **10**
+
+Jo edge jaan-boojh kar likhe: N ghatne par purane hafte (>N) Unassigned mein girein
+aur **gum na hon**; `week_no` 0 = Unassigned, error nahi; khali syllabus par crash
+nahi (PRD §6); ghalat input par **DB mein aadha kaam na ho** (validate pehle, likhna
+baad mein); aur bin-plan topics `list_resolved` mein aayen warna teacher ko kabhi
+pata na chale kitna kaam baqi hai.
+
+**Ruff ne ek asal cheez pakdi:** `raise ValueError(...)` bina `from e` — B904. Theek
+kiya.
+
+**Naapa NAHI gaya:** koi UI nahi (Marhala 4), koi Excel import nahi (Marhala 2),
+coverage ka hisaab nahi (Marhala 3). Ye teen endpoint abhi sirf `curl` se kaam ke
+hain.
+
 ## 2026-08-22 — D4: teen mari hui spec files repo root se archive mein
 
 Teenon **Classic navy/gold** palette par likhi hain, jo **Modern** se supersede ho
