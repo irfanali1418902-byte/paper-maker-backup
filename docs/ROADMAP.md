@@ -32,7 +32,7 @@
 ### P1 — Product robustness (next 1–2 sessions)
 | # | Finding | Action |
 |---|---------|--------|
-| ~~R1~~ ⚠ | ~~Prod question bank thin on subjective types~~ | **AUZAAR BAN GAYA 2026-08-21** (`scripts/seed_bank.py`), magar **kaam adhoora hai**: sirf Math Grade 4 seed hua (11/11 topics). Syllabus ke 8 subject×grade joron mein se **5 abhi bhi bilkul khali** hain — Geography G8, Science G7, Math G5, G6, Pre Year 2, Pre Year 3. Row tab band karein jab wo bhi ho jayen. |
+| ~~R1~~ ⚠ | ~~Prod question bank thin on subjective types~~ | **AUZAAR BAN GAYA 2026-08-21** (`scripts/seed_bank.py`), kaam **abhi adhoora**. Naapa gaya **2026-08-22** (`syllabus_topics` LEFT JOIN `questions`, na ke row ke bharose): <br><br>`Math Grade 4` 11/11 (43 sawal) · `Math Pre Year 1` 71/81 (329) · `Math Pre Year 2` **23/87 (92, 2026-08-22)** · **khali:** `Math Pre Year 3` 0/87, `Math G5` 0/11, `Math G6` 0/11, `Science G7` 0/11, `Geography G8` 0/11. Bank kul **594**. <br><br>⚠ **Purani row ne "5 khali" kaha aur 6 ginwaye** — ye wahi bimari hai jis se P0 rows mahinon jhooti khuli rahin. Adad DB se naapein. <br><br>**Ahem: baqi 5 khali joron mein se sirf `Pre Year 3` seed karne ke qabil hai.** Chaar (`G5`, `G6`, `Science G7`, `Geography G8`) wahi **jaali duplicate rows** hain — paanchon mein wohi 11 Grade-4 maths topics hain (dekhein PROGRESS.md 2026-08-21). **Un ko seed karna mana hai jab tak asal syllabus import na ho** — Geography par yehi ho chuka aur 44 sawal delete karne pare. <br><br>Row tab band karein jab PY2 (64 baqi) + PY3 (87) mukammal hon **aur** chaar jaali syllabi asal data se badal jayen. Rukawat: Gemini free-tier ka **rozana** quota — 2026-08-22 ko sirf 26 calls chalein. |
 | ~~R2~~ ✅ | ~~Export tests don't assert content (Urdu text, marks, sections)~~ | **DONE (PR #6):** docx content assertions for EN/UR question text, options, total-marks value. Sections deferred — feature not built yet. **⚠ YEH ROW AB TAAREEKH HAI, ZINDA TESTS NAHI:** DOCX/PDF export `e2bdcc4` mein delete ho chuka aur uske saath ye assertions bhi. Aaj paper ka output browser print hai (`static/print.html`), aur sections 2026-08-20 ko ban chuke (order 1 dekhein). |
 | ~~R3~~ ✅ | ~~Adaptive papers ignore paper_type/ratio — undefined interaction~~ | **DONE (PR #8):** adaptive now honors `paper_type` (mcq/mixed/subjective) via the shared `_PAPER_TYPE_FILTERS`; `custom-ratio` deliberately rejected for adaptive (422 via `_reject_ratio_for_adaptive` validator) — weakness-distribution × ratio-split combo left out of scope. Tested: type filter + custom-ratio rejection. |
 | ~~R4~~ ✅ | ~~Provider fallback (Gemini→Anthropic) untested~~ | **DONE (PR #6):** locked actual behavior — selection-by-priority (no runtime fallback exists); mocked-HTTP error-wrapping + no-key-leak tests. |
@@ -68,8 +68,17 @@ Aage      → order 2 (Ratio Phase 2). Sections ke qareeb hai: dono ginti tay
              yeh tay kiye ke teacher ko kaunsa jeetna chahiye.   ✅ 2026-08-21
              → order 3 (seeding tool)                            ✅ 2026-08-21
 Aage      → baqi khali syllabi seed karo (R1), phir order 4 (Lesson Plan).
-             Seeding ka auzaar tayyar hai — sirf chalana hai:
-             python -m scripts.seed_bank --subject X --grade Y --write
+             "Sirf chalana hai" NAHI hai — defaults pre-school par ghalat hain
+             (fill-blank + essay + balanced). Pre Year 2/3 ke liye 2026-08-22
+             ko yeh chali, aur yehi dobara chalani hai:
+
+             python -m scripts.seed_bank --subject Mathematics \
+               --grade "Pre Year 3" \
+               --types "multiple-choice,short-answer,true-false" \
+               --bloom foundational --max-topics 87 --write
+
+             Grade 4+ par defaults theek hain. R1 row pehle parho: paanch khali
+             joron mein se chaar JAALI syllabi hain, un ko seed mat karna.
 ```
 
 > **2026-08-21 — yeh plan poora ho chuka hai, aur do bare kaam is mein hain hi nahi.**

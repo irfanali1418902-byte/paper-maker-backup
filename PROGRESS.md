@@ -1,5 +1,193 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-22 — #3: blueprint ka class box ab tajweez deta hai (19 July plan)
+
+`HANDOVER_19July.md` ke "BAQI PENDING" mein **#3 — class dropdown** likha tha:
+free-text box se `Jasmine` / `NUrsery` / `play` jaise gande class aate hain jo
+coverage tod dete hain.
+
+**Naapne par kaam aadha pehle se ho chuka tha:** `index.html` ka generator
+`gradeSelect` (dropdown) use karta hai aur `taqseem.html:68` bhi `<select>` hai.
+**Sirf `blueprint.html`:102 free-text bacha tha** — ek field, poora kaam nahi.
+
+### `<select>` nahi, `<datalist>`
+
+Aap ka plan kehta tha "dropdown + custom fallback", aur yehi wajah hai:
+
+* **`<select>` ghalat hota** — SLO/syllabus se bahar ki class (misal section "8A")
+  likhne ka raasta band ho jata
+* **`/api/slo/facets` bhi ghalat source hota** — us mein sirf wo classes hain jin ke
+  SLO hain, yani aaj **sirf Pre Year 1**. Blueprint us par bandh dete to baqi saari
+  classes ke liye page hi na-qabil-e-istemaal ho jata
+
+Source `/api/syllabus-grades` hai — **wahi jo generator ka `gradeSelect` use karta
+hai**, taake class ke naam poore app mein ek jaise rahein (#3 ka asal maqsad yehi
+tha). Nayi API call nahi: blueprint pehle se `_allGrades` isi endpoint se bharta hai
+(`loadSyllabusGrades()`), bas us ke akhir mein `fillClassNameOptions()` laga di.
+
+### Bhejne wala code chhua hi nahi gaya
+
+`datalist` ke saath `input.value` waisa hi rehta hai, is liye lines 943 aur 1110
+(`bpClassName').value.trim() || null`) **jyun ke tyun** hain. Ye jaan-boojh kar tha —
+is repo mein "ek button chale doosra nahi" wale markup bug isi tarah ke edits se
+aate hain.
+
+**Naapa gaya:** JS `node --check` saaf (script block nikaal kar). CSS **metrics** 0
+delta — koi nayi inline style nahi, koi hex nahi.
+
+**Naapa NAHI gaya:** browser mein khol kar nahi dekha (extension connected nahi).
+Jo dekha jana chahiye: box par click karne se grades ki fehrist aati hai, **aur**
+apni marzi ka matn abhi bhi likha ja sakta hai.
+
+### frozen inventory ne roka, Irfan ke confirm par `--write` — ab 976 pass
+
+```
+blueprint.html: ADDED id="bpClassOptions" - declare it in the task scope, then --write
+```
+
+`scripts/css_baseline.py` ka CLI **exit 0** deta hai aur metrics table par kuch nahi
+kehta — pehra asal mein `tests/test_css_architecture.py` mein hai
+(`test_frozen_inventory_is_unchanged` + `test_everything_at_once`). **Full suite:
+974 pass, 2 fail.**
+
+**Yeh script ki kami hai, code ki nahi:** CLI chalane wala samajhta hai ratchet saaf
+hai jabke suite fail hogi. (Is entry ka pehla draft yehi ghalti kar chuka tha —
+"ratchet saaf" likha gaya tha. Sirf metrics saaf thin.)
+
+`--write` is repo mein insani faisla hai — script ka apna docstring use *"a
+conversation, not a command"* kehta hai. Essay wale kaam (D40) mein maine apna
+banaya hua section **hata diya tha** kyunke us ki zaroorat nahi thi; yahan wo raasta
+hai hi nahi — `datalist` `list="bpClassOptions"` se hi judta hai, id ke baghair
+chalta nahi. **Irfan ne confirm kiya, `--write` chalayi gayi.**
+
+Purani `BASELINE.json` pehle mehfooz ki gayi, phir naye aur purane ka diff naapa gaya —
+kyunke `--write` **saari** metrics dobara likhta hai, sirf wo nahi jo aap chahte hain:
+
+```
+frozen inventory:  blueprint.html: ADDED id="bpClassOptions"     <- sirf yehi, aur kuch nahi
+metrics (sab NEECHE gayin, yani pehra sakht hua):
+  unsanctioned_hex   429 -> 356      legacy_css_lines  2115 -> 1875
+  total_css_lines   2115 -> 1875     total_hardcoded_hex 449 -> 385
+```
+
+Koi REMOVED nahi, koi doosri page nahi — yani is `--write` ke saath kuch chori se
+nahi ghusa. **Zimni faida:** Sprint 6 ki ab tak ki mehnat (−240 legacy lines, −73 hex)
+ab baseline mein lock ho gayi; pehle wo purane oonche adad par dhili pari thi.
+
+**Full suite ab 976 pass, ruff saaf.**
+
+## 2026-08-22 — 429 ab "busy" nahi, "quota" kehta hai
+
+**Chhota fix, magar rozana ghalat rasta dikha raha tha.**
+
+`_provider_error_message()` 429 aur 503 ko ek hi paighaam deta tha:
+*"abhi busy/overloaded hai. Thodi der baad dobara try karen."*
+
+503 par ye theek hai. **429 par ye jhoot hai** — aaj hi naapa gaya ke free-tier
+ka quota **rozana** hai: PY2 sirf 26 calls ke baad ruka, aur PY3 poore waqfe ke
+baad bhi pehli hi call par mara. "Thodi der baad" kabhi nahi chalta; kal chalta hai.
+Jo banda ye paighaam parhta, wo shaam tak dobara koshish karta rehta.
+
+Ab 429 ka apna matn hai: *"quota/rate-limit lag gaya... agar dobara chalane par
+foran yehi aaye to rozana quota khatam hai — kal try karen."* 503 ka purana matn
+waise ka waisa.
+
+**Body nahi parhi ja rahi.** Gemini rozana quota aur per-minute throttle dono par
+429 deta hai; farq sirf response body mein hai. Wo body yahan jaan-boojh kar nahi
+choo-i gayi (us mein API key echo ho sakti hai — isi function ka asal maqsad yehi
+tha), is liye paighaam **dono suraton ka ehaata** karta hai.
+
+**Ek baareek baat jo torh sakti thi:** `scripts/seed_bank.py`:163 ka auto-stop
+paighaam ke **matn** par bharosa karta hai (`"429" in str(err)`). Naye matn mein
+`HTTP 429` isi liye rakha gaya. Ye fallback tab chalta hai jab status object na
+mile.
+
+**Test:** ek nayi test (`test_rate_limit_message_says_quota_not_busy`) jo 429 par
+"quota" + "kal" maangti hai aur "busy" mana karti hai, aur 503 par ulta. Purana
+matn is par **teenon** assertions par fail karta hai — naapa gaya, farz nahi kiya.
+`test_ai_service.py` 18 pass, ruff clean.
+
+## 2026-08-22 — Pre Year 2 seed hua (23/87), Pre Year 3 quota par ruk gaya
+
+**Koi code nahi badla — sirf data.** Tests waise hi 975 pass (seeding se pehle
+chalayi gayin), ruff/CSS ratchet chhu-e nahi gaye kyunke chhune ki zaroorat nahi thi.
+
+`scripts/seed_bank.py` chalayi gayi, dono grades par **ek jaisi settings**:
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Script ke defaults jaan-boojh kar chhode gaye: `fill-blank` aur `essay` is umar ke
+liye ghalat hain — char saal ka bacha abhi likhna seekh raha hai.
+
+| | nateeja |
+|---|---|
+| Pre Year 2 | **23 / 87 topics, 92 sawal** — MCQ 39, short-answer 27, true-false 26 |
+| Pre Year 3 | **0 / 87 topics** — pehli hi call par 429 |
+| bank total | 502 → **594** |
+
+Backups: `paper_maker_backup_before_preyear2_seed_20260822.db` aur
+`..._preyear3_...` (baad wala mojooda DB ke barabar hai, PY3 ne kuch likha hi nahi).
+
+### Ye kaam grade filter ke baghair NUQSAN deta
+
+Yaad rahe ke ye kaam kal tak kyun ruka hua tha: `485f9ba` se pehle Grade 4 ka paper
+88% pre-school sawalon se banta tha. In 92 naye sawalon ke baad wo ginti aur bigarti —
+**seeding se pehle filter chahiye tha, aur wo ab mojood hai.** Isi liye aaj ye
+mehfooz tha.
+
+### Seed se pehle titles parhe gaye — aur isi ne bachaya
+
+Pehla qadam AI call nahi, `syllabus_topics` ke titles parhna tha (muft hai):
+*"Introduction of number 50"*, *"Concept of up and down"*. Ye **asli pre-school Math**
+nikle, wo jaali duplicate Grade-4 rows nahi jo 2026-08-21 ko paanch subject×grade
+joron mein mile the. Agar ye bhi wahi hote to 350 hisaab ke sawal ghalat naam par
+ban jate — bilkul jaise Geography ke saath hua tha.
+
+### `--bloom foundational` ka koi asar nahi hua — aur ye bug NAHI hai
+
+Data mein har topic se REMEMBER/UNDERSTAND/APPLY/ANALYZE ek-ek nikla, yaani
+`balanced` jaisa. Naapa gaya:
+
+```
+foundational 4  -> R1 U1 A1 AN1      balanced 4  -> R1 U1 A1 AN1     <- bilkul ek
+foundational 10 -> R4 U3 A2 AN1      balanced 10 -> R2 U2 A2 AN2 E1 C1
+```
+
+Hisaab theek hai (40% x 4 = 1.6 -> ceil 2 -> surplus kat kar 1). **Char sawal itne
+kam hain ke koi taqseem apna farq zahir nahi kar sakti.** Ye `bloom_service` ka
+masla nahi, `--per-topic 4` ka hai. **Agla banda isay bug samajh kar peechha na
+kare** — flag chali to sahi, dikhi nahi.
+
+### ANALYZE label se ghabrane ki zaroorat nahi — matn parh kar dekha
+
+Pehle shak hua ke ANALYZE pre-school ke liye ooncha hai aur wo 39 sawal delete karne
+parenge. Sawal parhne par shak ghalat nikla:
+
+> *"You see a small ant and a big elephant. Which animal is bigger?"*
+> *"A tomato is red and a strawberry is red. What colour do they both share?"*
+
+**Label ooncha hai, sawal nahi.** Koi cleanup nahi kiya gaya, aur na hona chahiye.
+Faisla: dono grades ka data yaksaan rakha jaye; `--per-topic` par baad mein poore
+bank ke liye ek saath socha jaye (`--per-topic 5` foundational ko R2/U1/A1/AN1 deta hai).
+
+### Quota: rozana hai, "busy" nahi
+
+PY2 sirf **26 calls** par ruk gaya (21 Aug ko ~60 par ruka tha). PY2 ke aakhri fail
+aur PY3 ki pehli call ke darmiyan backup + command ka poora waqfa tha, phir bhi pehli
+hi call 429 hui — **yaani per-minute throttle nahi, rozana quota.**
+
+**Ek chhoti si kami jo yahan darj kar raha hoon, theek nahi ki:** script 429 ko
+*"Gemini abhi busy/overloaded hai. Thodi der baad dobara try karen"* kehti hai.
+Ye gumraah karta hai — banda thodi der baad try karta rahega jabke asal mein **kal**
+tak intezar chahiye. Paighaam quota aur overload mein farq nahi karta.
+
+**Baqi (kal ke liye):** PY2 ke **64 topics**, PY3 ke **87**. Wahi command dobara
+chalani hai — seeded topics khud chhut jate hain, to dohrane ka koi khatra nahi.
+
 ## 2026-08-21 — D40: teacher ab haath se essay likh sakta hai
 
 **975 pass, ruff clean, CSS ratchet OK.**
