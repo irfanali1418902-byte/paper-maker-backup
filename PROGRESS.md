@@ -1,5 +1,71 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-23 — Pre Year 3 seeding: 23/87 topics, quota phir raaste mein khatam
+
+Bank **594 → 686** (+92 sawal). Sirf DB badli — koi code nahi.
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Backup pehle: `paper_maker_backup_before_preyear3_seed_20260823.db`.
+
+### Syllabus pehle parha gaya, aur wo zaroori tha
+
+`seed_bank.py` ka apna header chetawni deta hai ke topic ka title jaisa likha hai waisa
+hi maan liya jata hai. Pre Year 3 ke 87 topics parhe: numbers 1–30, blocks se ginti,
+up/down, left/right, long/longer/longest. **Poori tarah pre-school** — chunanche
+ROADMAP wale `--types` (mcq/short-answer/true-false) aur `--bloom foundational` durust
+the. Default types (`fill-blank` + `essay` + `balanced`) yahan bilkul ghalat hote.
+
+### Kya bana
+
+| | |
+|---|---|
+| topics | **23 / 87** (61 chhu-e hi nahi gaye) |
+| sawal | **92 / 348** |
+| MCQ / short-answer / true-false | 35 / 30 / 27 |
+| khali `question_en` | **0** |
+| MCQ bina `correct_answer_en` | **0** |
+
+Teenon qismein barabar bani — ye dekhna zaroori tha, kyunke `seed_bank` ke pehle run
+(2026-08-21) ne yehi bug pakda tha ke AI maangne par bhi `essay` nahi banata tha.
+
+### Script ne theek wohi kiya jo design tha
+
+Topic 24 par HTTP 429 aaya, phir 25 aur 26 par bhi. **Musalsal 3 rate-limit par khud
+ruk gayi** — baqi 61 topics ko be-faida calls par zaya nahi kiya. Seeded topics skip
+hote hain, to wahi command dobara chalane se top-up ho jata hai.
+
+### Ek adad jo naapne par khatakta hai
+
+**Pre Year 2 bhi theek 23/87 topics aur 92 sawal par khada hai** (kal ka run). Yani
+dono din quota lag-bhag **23–26 AI calls** par khatam hua.
+
+Ye ROADMAP ki R1 row ke lehje ko badalta hai. Wahan likha hai *"Rukawat: Gemini
+free-tier ka rozana quota"* — jo sach hai magar chhota lagta hai. **Naap kar:** PY3 ke
+64 + PY2 ke 64 = **128 topics baqi**, aur ~23 per din ka matlab hai **~6 aur din ke
+run**. Ye "chhota tukda" nahi, ek hafte ka rozana kaam hai.
+
+### Bank ki nayi halat (DB se naapi, kisi row ke bharose nahi)
+
+```
+OK  Mathematics  Grade 4      11/11 topics    43 sawal
+..  Mathematics  Pre Year 1   71/81 topics   329 sawal
+..  Mathematics  Pre Year 2   23/87 topics    92 sawal
+..  Mathematics  Pre Year 3   23/87 topics    92 sawal   <- aaj
+--  Mathematics  Grade 5       0/11 topics     0 sawal   \
+--  Mathematics  Grade 6       0/11 topics     0 sawal    | chaar JAALI syllabi
+--  Science      Grade 7       0/11 topics     0 sawal    | (seed karna mana)
+--  Geography    Grade 8       0/11 topics     0 sawal   /
+```
+
+**Agla:** kal wahi command dobara (PY3), aur PY2 ke liye bhi wahi. Chaar jaali syllabi
+par seeding **mana** hai jab tak asal syllabus import na ho — ye code ka masla nahi,
+data ka hai.
+
 ## 2026-08-23 — Coverage ab `plan.html` par dikhti hai (Marhala 3 ka frontend)
 
 **1075 pass**, ruff saaf, CSS ratchet ka har metric **+0**.
