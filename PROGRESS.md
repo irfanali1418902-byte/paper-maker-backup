@@ -1,5 +1,97 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-23 — R7 Marhala 4: `plan.html` — hafta-war plan ab teacher tak pahunchta hai
+
+**1055 pass**, ruff saaf, CSS ratchet ka **har metric +0**. Spec:
+`docs/TOPIC_WEEK_PLAN.md` §8.1.
+
+Marhala 1 aur 2 ne 79 tests ke saath poora backend de diya tha, magar 2026-08-22 ko
+naapa gaya tha ke **`static/` mein in endpoints ka sifar zikr hai** — API zinda, koi
+button us se juda nahi. Aaj naye sire se naapa: **82 routes mein se sirf 6 aise the
+jin ka frontend nahi tha, aur un 6 mein se 4 yehi module tha.** Ab wo 4 jude hue hain.
+
+### Tarteeb badli gayi — Marhala 4 pehle, Marhala 3 baad mein
+
+Irfan ka faisla, aur bunyaad naapi hui thi: `topic_week_plan` mein **0 rows** thin.
+Coverage report ka koi matlab nahi jab plan mein data hi na ho. Pehle bharne ka
+zariya, phir report. **Marhala 3 ab bhi baqi hai.**
+
+### Spec se ek hatna, aur wo naap kar hua
+
+§4 kehta tha UI `taqseem.html` ka aaina ho — yani kanban board. Wo shakal yahan
+tootti hai: `exam_count` **8** hai magar `week_count` **36**. taqseem ka board 9
+columns ka hai; yahan wohi cheez **37 columns × 87 topics** hoti — na screen par
+aati, na us mein "hafta 7 khali hai" nazar aata.
+
+To page ek **table** hai (Unit / Topic / Page / Hafta-dropdown) aur upar har hafte ki
+ginti ka strip. Move ka raasta wohi hai jo taqseem par hai: ek `<select>`, drag nahi.
+Khali hafte strip mein **dikhte hain** (dabe hue), gayab nahi hote — "hafta 7 khali
+hai" wohi maloomat hai jo teacher dhoondh raha hai.
+
+### Ye pehla page hai jis ka koi `99-legacy` file nahi
+
+Baqi aath entry files do `@import` karti hain (`main.css` + apni legacy file);
+`pages/plan.css` sirf ek. Naya page purana qarz paida nahi karta — is epic ka maqsad
+hi `99-legacy/` ki line count girana hai.
+
+**Naap kar tasdeeq, dawa nahi** — poora naya page aane ke bawajood:
+
+| metric | delta |
+|---|---|
+| `legacy_css_lines` | **+0** |
+| `inline_style_attrs` | **+0** (page par ek bhi `style=""` nahi) |
+| `unsanctioned_hex` | **+0** (plan.css mein ek bhi hex nahi, comment mein bhi nahi) |
+| `style_blocks`, `css_lines_in_html`, `hardcoded_hex` | **+0** |
+| `shared_css_lines` | +197 (informational — naya tree barhta hai, yehi design hai) |
+
+Sidebar poora naye tree se hai: markup sirf `.sidenav__*` pehnta hai. `.app-sidebar` /
+`.brand` / `.app-nav` / `.sidebar-foot` is page par hain hi nahi. `slo.html` dono ek
+saath pehnti hai kyunke wo **migrate** hui; ye page shuru se us jagah khara hai jahan
+wo pahunch rahi hai. Qeemat ye hai ke teen rules (`body{display:flex}`, main ka box,
+bare `.card`) khud likhni pareen — teenon component tree se values leti hain.
+
+### Teen faisle jo `taqseem.html`/`slo.html` se mukhtalif hain
+
+**1. Template `apiFetch` se, `window.location` se nahi.** `slo.html` seedha `href`
+istemal karti hai; wo `x-api-key` header nahi bhejta, to jis deployment par key set
+hai wahan wo download **401** ho jata. Yahan blob bana kar diya jata hai, filename
+server ke `Content-Disposition` se.
+
+**2. Grade ki list subject par munhasir hai.** Do azaad dropdown aise jode bana dete
+jin ka koi topic nahi (Geography ke paas sirf Grade 8 hai).
+
+**3. Koi inline handler nahi** — sab `addEventListener`, aur 87 rows ke selects par
+ek listener `tbody` par, 87 nahi.
+
+### Test jo phata, aur phatna hi chahiye tha
+
+`test_measures_the_nine_real_pages` page-count 9 par guard karta tha. **Spec ne yehi
+peshgoi ki thi** (§9.3: *"plan.html daswan page hoga"*). 10 kar diya, aur wajah test
+ke docstring mein — ginti jaan-boojh kar hard-coded hai, kyunke naya page jodna aisa
+faisla hai jis ki qeemat ek test edit honi chahiye.
+
+### Verify — browser ka hissa BAQI hai
+
+- `--check` → ratchet OK; `--write` se naye page ki 19 frozen entries declare
+- **JS jo 16 id bulata hai, markup mein wohi 16 hain** — dono taraf sifar farq. Yehi
+  wo bug-qism hai jahan button chup-chaap kaam karna chhod deta hai
+- 30/30 CSS classes tree mein resolve hoti hain; `node --check` saaf
+- **Poora flow asal HTTP par chalaya** (template → sheet bhari → import → reload →
+  PATCH → range 400 → ghalat id 404 → khali cell se clear): 10/10 theek, aur DB wapas
+  asal halat mein (87/87 unassigned)
+- ⚠ **`CLAUDE.md` §12.10 ka browser check nahi hua** — Chrome extension connect nahi
+  hui. Ye claim NAHI kiya ja raha ke page browser mein theek dikhta hai
+
+### Nayi khuli row
+
+**D42** — nav har page par ek jaisi nahi hai. `bank`, `library`, `blueprint` sirf 5
+link rakhte hain (na SLO, na Taqseem, na Plan); `print` ke paas `.sidenav__link` hai
+hi nahi. Isi liye naya link sirf un 5 pages par laga jahan planning group pehle se
+tha. Teen aur jagah paste kar dena is epic ki bunyadi bimari (aik hi nav ki 5 copies)
+ko barha deta.
+
+**Agla:** Marhala 3 (coverage), ya browser check.
+
 ## 2026-08-23 — D39: frozen inventory ke 81 handlers guard se bahar the
 
 **1055 pass**, ruff saaf, CSS ratchet green. Do file badlin: `scripts/css_baseline.py`

@@ -8,7 +8,7 @@
     "hardcoded_hex": 0,
     "hardcoded_hex_inline": 76,
     "legacy_css_lines": 1873,
-    "shared_css_lines": 3776,
+    "shared_css_lines": 3973,
     "total_css_lines": 1873,
     "stylesheet_hex": 309,
     "total_hardcoded_hex": 385,
@@ -53,6 +53,14 @@
       "css_lines_in_html": 0,
       "inline_style_attrs": 48,
       "inline_style_non_display": 40,
+      "hardcoded_hex": 0,
+      "hardcoded_hex_inline": 0
+    },
+    "plan.html": {
+      "style_blocks": 0,
+      "css_lines_in_html": 0,
+      "inline_style_attrs": 0,
+      "inline_style_non_display": 0,
       "hardcoded_hex": 0,
       "hardcoded_hex_inline": 0
     },
@@ -730,6 +738,27 @@
       "onclick=\"selectAll()\"",
       "onclick=\"uploadImage()\"",
       "oninput=\"scheduleSearch()\""
+    ],
+    "plan.html": [
+      "data-page=\"Hafta-war Plan\"",
+      "data-topic=\"' + esc(t.syllabus_topic_id) + '\"",
+      "id=\"importBtn\"",
+      "id=\"importCard\"",
+      "id=\"importResult\"",
+      "id=\"pickNote\"",
+      "id=\"planBody\"",
+      "id=\"planCard\"",
+      "id=\"planCount\"",
+      "id=\"planFile\"",
+      "id=\"selGrade\"",
+      "id=\"selSubject\"",
+      "id=\"status\"",
+      "id=\"tplBtn\"",
+      "id=\"weekBadge\"",
+      "id=\"weekBar\"",
+      "id=\"weekCard\"",
+      "id=\"weekVal\"",
+      "name=\"viewport\""
     ],
     "print.html": [
       "data-marks=\"${q.marks || 0}\"",

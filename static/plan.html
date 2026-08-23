@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hafta-war Plan — Parcha Paper Maker</title>
+<!-- app.css icon sprite ki sizing ke liye laazmi hai (pages/plan.css ka header).
+     Doosra link is page ka WAAHID stylesheet hai — koi 99-legacy file nahi. -->
+<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/css/pages/plan.css">
+</head>
+<body data-page="Hafta-war Plan">
+
+<!-- Sidebar poora naye tree se (.sidenav__*). Is page par `.app-sidebar`,
+     `.brand`, `.app-nav`, `.sidebar-foot` jaan-boojh kar NAHI hain — wo legacy
+     naam hain aur is page ka koi legacy file nahi. -->
+<aside class="sidenav__panel">
+  <div class="sidenav__brand">
+    <div class="sidenav__brand-name">Parcha Paper Maker</div>
+    <small class="sidenav__brand-sub">Hafta-war Plan</small>
+  </div>
+  <nav class="sidenav">
+    <a href="/" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
+      Generator
+    </a>
+    <a href="/library.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-library"></use></svg>
+      Image Library
+    </a>
+    <a href="/bank.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg>
+      Question Bank
+    </a>
+    <a href="/blueprint.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      Blueprint
+    </a>
+    <a href="/slo.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-outcomes"></use></svg>
+      Learning Outcomes
+    </a>
+    <a href="/taqseem.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
+      Exam Taqseem
+    </a>
+    <a href="/plan.html" class="sidenav__link sidenav__link--active">
+      <svg class="icon"><use href="/static/icons.svg#i-plan"></use></svg>
+      Hafta-war Plan
+    </a>
+    <a href="/slo-health.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
+      SLO Health
+    </a>
+  </nav>
+  <div class="sidenav__foot">Kaunsa topic kis hafte parhaya jayega. Excel se bharo, ya table mein hafta chuno. Coverage report Marhala 3 mein aayegi.</div>
+</aside>
+
+<main class="plan-main">
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side. Same pattern as slo.html:55. -->
+  <div class="pagehead">
+    <div>
+      <h1>Hafta-war Plan</h1>
+      <p>Har topic ka hafta tay karo. "Hafta" ginti hai (1..N), tareekh nahi — chhuttiyan aur session ka aaghaz is se bahar rehte hain. Hafta 0 = abhi tay nahi.</p>
+    </div>
+  </div>
+
+  <div class="card has-ch">
+    <div class="ch"><h3>Subject &amp; grade chuno</h3></div>
+    <div class="cb">
+      <div class="plan-actions">
+        <select id="selSubject"><option value="">Subject chuno…</option></select>
+        <select id="selGrade"><option value="">Grade chuno…</option></select>
+        <span class="plan-badge" id="weekBadge" hidden>N = <span id="weekVal">–</span> hafte</span>
+        <span class="status-bar" id="status" hidden></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card has-ch" id="importCard" hidden>
+    <div class="ch"><h3>Excel se bharo</h3></div>
+    <div class="cb">
+      <p class="plan-hint">
+        <strong>Qadam 1:</strong> template download karo — usme is subject+grade ke saare topics aur maujooda <code>week_no</code> pehle se bhare hain.
+        <strong>Qadam 2:</strong> sirf <code>week_no</code> column bharo (khali chhodna = us topic ka hafta <strong>clear</strong> ho jayega).
+        <strong>Qadam 3:</strong> wahi file yahan wapas upload karo.
+        <br>⚠️ <code>syllabus_topic_id</code> column MAT chhedo — matching isi se hoti hai, title se nahi. Ghalat ya gayab id par wo row saaf error deti hai, chup-chaap nazar-andaaz nahi hoti.
+      </p>
+      <div class="plan-actions">
+        <button class="btn-ghost" id="tplBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Template download
+        </button>
+        <input type="file" id="planFile" accept=".xlsx,.xls,.csv" />
+        <button class="btn--accent" id="importBtn">Upload karo</button>
+      </div>
+      <div class="plan-result" id="importResult" hidden></div>
+    </div>
+  </div>
+
+  <div class="card has-ch" id="weekCard" hidden>
+    <div class="ch"><h3>Har hafte ki ginti</h3></div>
+    <div class="cb">
+      <div class="plan-weekbar" id="weekBar"></div>
+    </div>
+  </div>
+
+  <div class="card has-ch" id="planCard" hidden>
+    <div class="ch"><h3>Topics <span id="planCount"></span></h3></div>
+    <div class="cb">
+      <div class="plan-tablewrap">
+        <table>
+          <thead><tr><th>Unit</th><th>Topic</th><th>Page</th><th>Hafta</th></tr></thead>
+          <tbody id="planBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="plan-note" id="pickNote">Upar se subject aur grade chuno — plan yahan dikhega.</div>
+</main>
+
+<script src="/apiClient.js"></script>
+<script src="/static/js/brand.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])));
+
+  // Aakhri load kiya hua plan — week bar aur move ke baad ki ginti isi se banti hai.
+  let currentPlan = null;
+  // /api/syllabus-grades ka poora jawab: grade ki list subject par munhasir hai.
+  let allPairs = [];
+
+  function setStatus(msg, kind) {
+    const el = $("status");
+    el.textContent = msg || "";
+    el.className = "status-bar" + (kind ? " " + kind : "");
+    el.hidden = !msg;
+  }
+
+  function selection() {
+    return { subj: $("selSubject").value.trim(), grade: $("selGrade").value.trim() };
+  }
+
+  function showCards(on) {
+    ["importCard", "weekCard", "planCard"].forEach((id) => { $(id).hidden = !on; });
+    $("pickNote").hidden = on;
+  }
+
+  // week_no 0 = abhi tay nahi; 1..N = Hafta k. Service 0..N se bahar ko 400 deti
+  // hai (taqseem se sakht, jaan-boojh kar), is liye options bhi wahi daira hain.
+  function weekOptions(current, n) {
+    let html = '<option value="0"' + (current === 0 ? " selected" : "") + ">— tay nahi</option>";
+    for (let k = 1; k <= n; k++) {
+      html += '<option value="' + k + '"' + (current === k ? " selected" : "") +
+              ">Hafta " + k + "</option>";
+    }
+    return html;
+  }
+
+  function rowHtml(t, n) {
+    // week_no NULL (plan-less), 0, ya >N — teenon "tay nahi" hain. Service ne
+    // inhe pehle hi unassigned bucket mein daal diya hai; yahan sirf select ki
+    // value chahiye.
+    const w = (t.week_no === null || t.week_no === undefined) ? 0 : t.week_no;
+    const unit = t.unit_no ? "U" + esc(t.unit_no) : "—";
+    const unitTitle = t.unit_title ? '<div class="plan-unit">' + esc(t.unit_title) + "</div>" : "";
+    return (
+      '<tr class="plan-row' + (w === 0 ? " is-unassigned" : "") + '">' +
+      "<td>" + unit + unitTitle + "</td>" +
+      "<td>" + esc(t.subtopic_title) + "</td>" +
+      "<td>" + (t.page_no == null ? "—" : esc(t.page_no)) + "</td>" +
+      '<td><select class="plan-week-sel" data-topic="' + esc(t.syllabus_topic_id) + '">' +
+      weekOptions(w, n) + "</select></td></tr>"
+    );
+  }
+
+  function renderWeekBar(data) {
+    const html = (data.weeks || []).map((wk) => {
+      const c = (wk.topics || []).length;
+      return '<span class="plan-week-chip' + (c ? "" : " is-empty") + '">' +
+             '<span class="plan-week-n">H' + wk.week_no + "</span>" + c + "</span>";
+    }).join("");
+    const un = (data.unassigned || []).length;
+    $("weekBar").innerHTML = html +
+      '<span class="plan-week-chip' + (un ? "" : " is-empty") + '">' +
+      '<span class="plan-week-n">tay nahi</span>' + un + "</span>";
+  }
+
+  function renderPlan(data) {
+    const n = data.week_count;
+    $("weekVal").textContent = n;
+    $("weekBadge").hidden = false;
+
+    // Tarteeb wohi jo repository deti hai: hafta -> teacher ka position ->
+    // syllabus ki apni tarteeb. Unassigned aakhir mein, kyunke wahi kaam baqi hai.
+    const rows = [];
+    (data.weeks || []).forEach((wk) => (wk.topics || []).forEach((t) => rows.push(t)));
+    (data.unassigned || []).forEach((t) => rows.push(t));
+
+    $("planBody").innerHTML = rows.map((t) => rowHtml(t, n)).join("");
+    const placed = data.total - (data.unassigned || []).length;
+    $("planCount").textContent = "(" + placed + " / " + data.total + " tay)";
+    renderWeekBar(data);
+    showCards(true);
+  }
+
+  async function loadPlan() {
+    const { subj, grade } = selection();
+    if (!subj || !grade) {
+      showCards(false);
+      $("weekBadge").hidden = true;
+      currentPlan = null;
+      setStatus("");
+      return;
+    }
+    setStatus("Plan load ho raha hai…");
+    try {
+      const params = new URLSearchParams({ subject: subj, grade: grade });
+      const res = await apiFetch("/api/topic-plan?" + params.toString());
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Plan load fail hua.", "err"); return; }
+      currentPlan = data;
+      renderPlan(data);
+      const un = (data.unassigned || []).length;
+      setStatus(data.has_plan
+        ? "Plan maujood — " + (data.total - un) + " topics ka hafta tay, " + un + " baqi."
+        : "Abhi koi plan nahi — sab " + data.total + " topics “tay nahi” hain. Excel se bharo.",
+        data.has_plan && un === 0 ? "ok" : "warn");
+    } catch (e) {
+      setStatus("Plan load mein masla: " + e.message, "err");
+    }
+  }
+
+  async function moveTopic(topicId, weekNo) {
+    setStatus("Hafta set ho raha hai…");
+    try {
+      const res = await apiFetch("/api/topic-plan/" + encodeURIComponent(topicId), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ week_no: weekNo }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Set fail hua.", "err"); await loadPlan(); return; }
+      // Poora reload: week bar ki ginti aur row ka unassigned rang dono badalte
+      // hain, aur ek hi source of truth rakhna sasta hai.
+      await loadPlan();
+      setStatus(weekNo === 0 ? "Hafta hata diya." : "Hafta " + weekNo + " set kar diya.", "ok");
+    } catch (e) {
+      setStatus("Set mein masla: " + e.message, "err");
+      await loadPlan();
+    }
+  }
+
+  // Template apiFetch se aati hai, seedhe window.location se NAHI: download
+  // x-api-key header nahi bhejta, to jis deployment par key set hai wahan
+  // location-based download 401 ho jata. Blob bana kar wahi file de dete hain.
+  // Filename server ke Content-Disposition se liya jata hai — naam wahan pehle
+  // se bana hua hai (template_filename), yahan dobara banane ki zaroorat nahi.
+  async function downloadTemplate() {
+    const { subj, grade } = selection();
+    if (!subj || !grade) { setStatus("Pehle subject aur grade chuno.", "err"); return; }
+    setStatus("Template ban rahi hai…");
+    try {
+      const params = new URLSearchParams({ subject: subj, grade: grade });
+      const res = await apiFetch("/api/topic-plan/template?" + params.toString());
+      if (!res.ok) {
+        let detail = "Template download fail hui.";
+        try { detail = (await res.json()).detail || detail; } catch (e) { /* xlsx par json nahi */ }
+        setStatus(detail, "err");
+        return;
+      }
+      const cd = res.headers.get("Content-Disposition") || "";
+      const m = /filename="([^"]+)"/.exec(cd);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = m ? m[1] : "topic_week_plan.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus("Template download ho gayi — week_no column bhar kar wapas upload karo.", "ok");
+    } catch (e) {
+      setStatus("Template mein masla: " + e.message, "err");
+    }
+  }
+
+  function listHtml(items, cls) {
+    if (!items || !items.length) return "";
+    return '<ul class="' + cls + '">' + items.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  }
+
+  function renderImportResult(data) {
+    const errs = data.errors || [], warns = data.warnings || [];
+    // `cleared` apni ginti rakhta hai kyunke khali cell = plan CLEAR hai, skip
+    // nahi (docs/TOPIC_WEEK_PLAN.md §7). Ye khamoshi se nahi hona chahiye.
+    $("importResult").innerHTML =
+      "<strong>" + data.updated + "</strong> topics ka hafta set, " +
+      "<strong>" + data.cleared + "</strong> clear" +
+      (errs.length ? ", <strong>" + errs.length + "</strong> error" : "") +
+      (warns.length ? ", " + warns.length + " warning" : "") +
+      listHtml(errs, "") + listHtml(warns, "is-warn");
+    $("importResult").hidden = false;
+  }
+
+  async function doImport() {
+    const file = $("planFile").files[0];
+    if (!file) { setStatus("Pehle bhari hui Excel file chuno.", "err"); return; }
+    $("importBtn").disabled = true;
+    $("importBtn").textContent = "Upload ho raha hai…";
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch("/api/topic-plan/assign-import", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setStatus(data.detail || "Upload fail hua.", "err"); return; }
+      renderImportResult(data);
+      await loadPlan();
+      const errs = (data.errors || []).length;
+      setStatus(errs
+        ? "Upload ho gaya magar " + errs + " row par error — neeche dekho."
+        : "Upload ho gaya — " + data.updated + " set, " + data.cleared + " clear.",
+        errs ? "warn" : "ok");
+    } catch (e) {
+      setStatus("Upload mein masla: " + e.message, "err");
+    } finally {
+      $("importBtn").disabled = false;
+      $("importBtn").textContent = "Upload karo";
+    }
+  }
+
+  // Subject/grade /api/syllabus-grades se — wahi vocabulary jo syllabus_topics
+  // mein stored hai, is liye har option ka EXACT match guaranteed hai. (slo.html
+  // ne yehi galti se seekha tha: free-text 'Pre year 1' vs stored 'PRE YEAR 1'
+  // se list khali aati thi.) Grade ki list subject par munhasir hai — kyunke
+  // Mathematics ke paas Pre Year 1..3 hain aur Geography ke paas sirf Grade 8.
+  function fillOptions(sel, values, placeholder) {
+    sel.innerHTML = '<option value="">' + placeholder + "</option>" +
+      values.map((v) => '<option value="' + esc(v) + '">' + esc(v) + "</option>").join("");
+  }
+
+  function refreshGrades() {
+    const subj = $("selSubject").value.trim();
+    const grades = allPairs
+      .filter((p) => p.subject === subj && p.grade)
+      .map((p) => p.grade);
+    fillOptions($("selGrade"), [...new Set(grades)], "Grade chuno…");
+  }
+
+  async function loadFacets() {
+    try {
+      const res = await apiFetch("/api/syllabus-grades");
+      if (!res.ok) return;
+      allPairs = await res.json();
+      const subjects = [...new Set(allPairs.map((p) => p.subject).filter(Boolean))];
+      fillOptions($("selSubject"), subjects, "Subject chuno…");
+    } catch (e) { /* selects placeholder par reh jayenge */ }
+  }
+
+  // --- Wiring: event delegation, koi inline handler nahi ---
+  $("selSubject").addEventListener("change", () => { refreshGrades(); loadPlan(); });
+  $("selGrade").addEventListener("change", loadPlan);
+  $("tplBtn").addEventListener("click", downloadTemplate);
+  $("importBtn").addEventListener("click", doImport);
+  // Select har row mein hai (87 tak) — ek listener tbody par, 87 nahi.
+  $("planBody").addEventListener("change", (e) => {
+    const sel = e.target.closest(".plan-week-sel");
+    if (!sel) return;
+    moveTopic(sel.getAttribute("data-topic"), parseInt(sel.value, 10));
+  });
+
+  loadFacets();
+</script>
+</body>
+</html>

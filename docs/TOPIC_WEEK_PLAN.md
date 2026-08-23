@@ -132,10 +132,42 @@ error — chup-chaap nazar-andaaz **nahi**.
 
 | # | kaam | tests (andaza) | haalat |
 |---|---|---|---|
-| 1 | table + repository + service + assign/list API | ~18 | **zer-e-kaam** |
-| 2 | Excel import + template | ~12 | — |
+| 1 | table + repository + service + assign/list API | ~18 | **✅ 2026-08-22** (50 tests) |
+| 2 | Excel import + template | ~12 | **✅ 2026-08-22** (29 tests) |
 | 3 | coverage service + endpoint (`_assemble_coverage` key parameterize) | ~15 | — |
-| 4 | UI page | ~5 | — |
+| 4 | UI page | ~5 | **✅ 2026-08-23** — neeche §8.1 |
+
+### 8.1 Marhala 4 — jo bana, aur jo tarteeb se hat kar bana
+
+**Marhala 4 ko Marhala 3 se PEHLE kiya gaya, aur ye Irfan ka faisla tha.** Wajah
+naapi hui thi: `topic_week_plan` mein **0 rows** thin. Coverage report ("planned vs
+covered") ka koi matlab nahi jab plan mein data hi na ho — pehle bharne ka zariya,
+phir report. Marhala 3 ab bhi baqi hai aur page us ke liye khula hai.
+
+**Kanban board NAHI banaya gaya, table banayi gayi — aur ye §4 se hatna hai.** §4
+kehta hai UI `taqseem.html` ka aaina ho. Naapne par wo shakal yahan tootti hai:
+`exam_count` **8** hai, `week_count` **36**. taqseem ka board 9 columns ka hai; yahan
+wohi shakal **37 columns × 87 topics** deti — na screen par aati, na us mein "hafta 7
+khali hai" dikhta. To page ek table hai (Unit / Topic / Page / Hafta-dropdown) plus
+upar har hafte ki ginti ka strip. Move ka raasta wohi hai jo taqseem par hai — ek
+`<select>`, drag nahi.
+
+**Teen cheezein jo `taqseem.html` se jaan-boojh kar mukhtalif hain:**
+
+1. **Template `apiFetch` se aati hai, `window.location` se nahi.** `slo.html` seedha
+   `href` istemal karti hai; wo `x-api-key` header nahi bhejta, to jis deployment par
+   key set hai wahan wo download **401** ho jata. Yahan blob bana kar diya jata hai,
+   aur filename server ke `Content-Disposition` se — naam wahan pehle se banta hai
+   (`template_filename`), dobara banane ki zaroorat nahi.
+2. **Grade ki list subject par munhasir hai.** `/api/syllabus-grades` jode deta hai;
+   Mathematics ke paas Pre Year 1..3 hain aur Geography ke paas sirf Grade 8. Do
+   azaad dropdown aise jode bana dete jin ka koi topic nahi.
+3. **Khali hafte dikhte hain, gayab nahi hote** (strip mein dabe hue). "Hafta 7 khali
+   hai" wohi maloomat hai jo teacher dhoondh raha hai.
+
+**Page ka koi 99-legacy file nahi — pehla aisa page.** Tafseel
+`static/css/pages/plan.css` ke header mein. Naapa gaya nateeja: `legacy_css_lines`
+is page ke aane se **+0**, aur har ratcheted metric bhi **+0**.
 
 **Kul ~50 nayi tests. Andaza: ~2 hafte** — ROADMAP ka "size L" naapne par zyada
 lagta hai, kyunke machinery mojood hai. Ye andaza Marhala 1 ke baad durust hoga.

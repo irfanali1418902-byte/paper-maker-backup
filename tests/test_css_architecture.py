@@ -64,10 +64,22 @@ def test_baseline_is_valid_json_with_expected_shape(baseline):
     assert baseline["per_page"], "baseline records no pages"
 
 
-def test_measures_the_nine_real_pages():
-    """mockup-modern.html is a design reference and must stay out of the metrics."""
+def test_measures_the_ten_real_pages():
+    """mockup-modern.html is a design reference and must stay out of the metrics.
+
+    TEN SINCE 2026-08-23, and the count is deliberately hard-coded rather than
+    derived: adding a page to this app is a decision that should cost a test
+    edit, because every page is a new consumer of the tree and a new set of
+    frozen ids. This test firing is the ratchet working, not an obstacle.
+
+    The tenth is plan.html (R7 Marhala 4), and docs/TOPIC_WEEK_PLAN.md §9.3
+    predicted it: *"plan.html daswan page hoga -- ITCSS tree mein naya entry
+    file aur BASELINE.json mein entry chahiye hogi."* It is also the first page
+    with NO 99-legacy file, so it is the first one whose arrival left
+    `legacy_css_lines` unchanged -- see pages/plan.css's header.
+    """
     names = [p.name for p in page_paths()]
-    assert len(names) == 9, f"expected 9 real pages, found {len(names)}: {names}"
+    assert len(names) == 10, f"expected 10 real pages, found {len(names)}: {names}"
     assert "mockup-modern.html" not in names
 
 

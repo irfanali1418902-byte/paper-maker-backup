@@ -1,0 +1,197 @@
+/* =========================================================================
+   pages/plan.css — plan.html ka waahid stylesheet (R7 Marhala 4)
+
+   YE PEHLA PAGE HAI JIS KA KOI 99-legacy FILE NAHI HAI, aur ye ittefaq nahi:
+   baqi aath entry files do @import karti hain (main.css + apni legacy file),
+   ye sirf EK karti hai. Naya page purana qarz paida nahi karta — is epic ka
+   poora maqsad hi 99-legacy/ ki line count girana hai, to ek naya file wahan
+   daalna ulti simt mein chalna hota.
+
+   NATEEJA JO NAAPA JA SAKTA HAI: `legacy_css_lines` is page ke aane se +0
+   rehta hai. Agar kal koi is file mein `@import url("../99-legacy/plan.css")`
+   daale, to us ne is faisle ko palat diya — pehle ye paragraph parhe.
+
+   IS KA KHARCHA BHI HAI, aur wo bhi darj hona chahiye: baqi aath pages apna
+   `.app-sidebar`, `body { display:flex }` aur `.card` ka box apni legacy file
+   se lete hain. Is page ke paas wo file nahi, is liye teen cheezein neeche
+   khud likhi gayi hain. Teenon component tree se values leti hain, kisi
+   legacy file se copy nahi hui.
+
+   SIDEBAR POORA NAYE TREE SE HAI. Markup sirf `.sidenav__*` (05-components/
+   nav.css) pehnta hai — `.app-sidebar` / `.brand` / `.app-nav` / `.sidebar-foot`
+   is page par hain hi nahi. slo.html un dono ko ek saath pehnti hai kyunke wo
+   MIGRATE hui hai; ye page shuru se us jagah khara hai jahan wo pahunch rahi
+   hai.
+
+   YE FILE app.css BHI LINK KARTI HAI (page ke <head> mein), aur ye majboori
+   hai na ke bhool: app.css:57 ka bare `.icon` sprite ko 17x17 rakhta hai aur
+   us rule ka naye tree mein abhi ghar nahi. Us ke baghair saat nav icons SVG
+   ke default 300x150 par chale jate hain. Wahi wajah jo pages/slo-health.css
+   ke header mein likhi hai.
+
+   IS FILE MEIN EK BHI HEX NAHI — comment mein bhi nahi (nav.css:72 wala sabaq;
+   ratchet wahan saat dafa comment par hi phata hai). Har rang Tier 2 role se
+   aata hai.
+   ========================================================================= */
+
+@import url("../main.css");
+
+/* -------------------------------------------------------------------------
+   SHELL — do rules jo baqi pages ko apni legacy file se milte hain.
+   `.o-shell` grid jaan-boojh kar istemal nahi hui: wo chaar khanon ki grid hai
+   (brand/top/nav/main) aur us ke saath topbar aata hai, jo sirf blueprint par
+   hai. Ye page us shakal par hai jo bank/library/slo/slo-health chalate hain —
+   body flex + sticky `.sidenav__panel` — taake teacher ko ek hi app do shakal
+   mein na dikhe.
+   ------------------------------------------------------------------------- */
+@layer objects {
+  body {
+    display: flex;
+  }
+
+  /* min-width:0 load-bearing hai: is ke baghair chaudi table flex item ko
+     phaila deti hai aur sidebar dab jata hai (flex item ka default
+     min-width:auto content se chhota nahi hota). Scroll main par hai, body par
+     nahi, kyunke `.sidenav__panel` sticky hai aur poori height leta hai. */
+  .plan-main {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: var(--space-inset);
+  }
+}
+
+@layer components {
+  /* Bare `.card`, page-scoped — bilkul pages/taqseem.css:97 ki tarah aur usi
+     wajah se: card.css jaan-boojh kar bare `.card` ship nahi karta kyunke wo
+     13 live elements ko dobara paint kar deta. Box (background/border/radius/
+     shadow) usi bare selector par hota hai, us ke chaar descendants par nahi. */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-container);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-gap);
+  }
+
+  .plan-hint {
+    color: var(--color-text-muted);
+    font-size: var(--text-label);
+    margin-bottom: var(--space-gap-tight);
+  }
+
+  /* N = week_count ka badge. `.plan-badge` apna naam le kar aaya hai kyunke
+     05-components/badge.css abhi mojood nahi (main.css:186 par comment shuda).
+     Jab wo file bane, ye us ka pehla consumer hai. */
+  .plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-badge);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-strong);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-strong);
+  }
+
+  .plan-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-gap-tight);
+    flex-wrap: wrap;
+  }
+
+  /* Har hafte ki ginti ek nazar mein — teacher ko yehi batata hai ke plan
+     kahan ghana hai aur kahan khali. Khali hafte dikhte HAIN (opacity se
+     dabe hue), gayab nahi hote: "hafta 7 khali hai" wohi maloomat hai jo
+     teacher dhoondh raha hai. */
+  .plan-weekbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .plan-week-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--radius-badge);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    font-size: var(--text-micro);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .plan-week-chip.is-empty {
+    color: var(--color-text-muted);
+    opacity: 0.65;
+  }
+
+  .plan-week-chip .plan-week-n {
+    font-weight: var(--font-weight-strong);
+  }
+
+  /* 87 topics ek page par — table ko apna scroll deti hai taake card ka
+     header aur toolbar upar rahen. max-height viewport-relative hai, kisi
+     tay-shuda pixel par nahi, warna chhoti screen par table card se bahar
+     nikal jati. */
+  .plan-tablewrap {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+  }
+
+  /* Header chipak jata hai — 87 rows scroll karte hue "ye column kya tha"
+     ka jawab hamesha nazar mein rahe. background laazmi hai warna rows
+     header ke peeche se guzarti dikhti hain. */
+  .plan-tablewrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface-sunken);
+  }
+
+  .plan-unit {
+    color: var(--color-text-muted);
+    font-size: var(--text-micro);
+  }
+
+  .plan-week-sel {
+    width: 150px;
+  }
+
+  /* Jo topic kisi hafte mein nahi — poori row ka halka rang, kyunke yehi wo
+     rows hain jin par kaam baqi hai. */
+  .plan-row.is-unassigned td {
+    background: var(--color-surface-sunken);
+  }
+
+  .plan-note {
+    color: var(--color-text-muted);
+    font-size: var(--text-label);
+    padding: var(--space-inset);
+    text-align: center;
+  }
+
+  /* Import ka nateeja: kitni rows lagin, kitni khali hui, kya ghalat tha.
+     `.status-bar` (05-components/status.css) message ke liye hai; ye us ke
+     neeche ki tafseel hai. */
+  .plan-result {
+    margin-top: var(--space-gap-tight);
+    font-size: var(--text-label);
+  }
+
+  .plan-result ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    color: var(--color-danger);
+  }
+
+  .plan-result ul.is-warn {
+    color: var(--color-warning);
+  }
+}
