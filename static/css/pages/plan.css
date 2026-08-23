@@ -134,6 +134,48 @@
     font-weight: var(--font-weight-strong);
   }
 
+  /* Coverage ka hissa — "3/5" chip ke andar, uske apne rang ke saath. Thresholds
+     wohi jo taqseem.html ke `.cov-badge` par hain (100 / 60), taake do reportein
+     ek hi rang-zaban bolein. Rang `--color-status-*` jodon se aate hain, jo theek
+     isi kaam (ok/warn/err ka tinted pill) ke liye bane hain.
+
+     YE `.plan-week-chip` KE ANDAR HAI, US KE SAATH NAHI — chip ka apna
+     background hafte ki ginti dikhata hai aur coverage us se alag maloomat hai.
+     Dono ko ek hi background par daalna un ko ek cheez dikhata. */
+  .plan-cov {
+    padding: 1px 6px;
+    border-radius: var(--radius-badge);
+    font-weight: var(--font-weight-strong);
+  }
+
+  .plan-cov.is-ok {
+    background: var(--color-status-ok-bg);
+    color: var(--color-status-ok-fg);
+  }
+
+  .plan-cov.is-warn {
+    background: var(--color-status-warn-bg);
+    color: var(--color-status-warn-fg);
+  }
+
+  .plan-cov.is-bad {
+    background: var(--color-status-err-bg);
+    color: var(--color-status-err-fg);
+  }
+
+  /* Jis hafte mein kuch planned hi nahi — coverage ka sawal hi nahi banta.
+     `_assemble_coverage` bhi 0/0 par percent None deta hai, 0% nahi. */
+  .plan-cov.is-none {
+    background: var(--color-surface-inset);
+    color: var(--color-text-muted);
+  }
+
+  .plan-cov-summary {
+    color: var(--color-text-muted);
+    font-size: var(--text-label);
+    margin-bottom: var(--space-gap-tight);
+  }
+
   /* 87 topics ek page par — table ko apna scroll deti hai taake card ka
      header aur toolbar upar rahen. max-height viewport-relative hai, kisi
      tay-shuda pixel par nahi, warna chhoti screen par table card se bahar

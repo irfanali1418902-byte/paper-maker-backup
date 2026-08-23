@@ -187,6 +187,14 @@ Isi se do aur farq nikalte hain jo `coverage_summary` se ulat hain:
 **Asal data par chalaya:** `Mathematics / Pre Year 1` — **49 / 81 topics covered (60%)**,
 `paper_map` mein 49 entries. §5 ka daawa ("pehle din se asal data dikhayega") poora hua.
 
+#### Frontend usi din juda — endpoint orphan nahi chhoda gaya
+
+`plan.html` ke week-strip par har chip ka `covered/planned` badge, `taqseem.html` ke
+wohi thresholds (100 / 60). **"Tay nahi" wale chip par traffic-light nahi lagti** —
+asal data par wo 46/78 = 59% aata hai aur laal ban jata, jo gumraah-kun hai: un topics
+ka koi hafta tay hi nahi, to "hafta ka coverage fail hua" wujood mein hi nahi. Ginti
+dikhti hai, faisla nahi.
+
 #### `week_count()` ab public hai
 
 PROGRESS.md (2026-08-22) ne isay Marhala 3 ka kaam likha tha aur wo ho gaya. Teen

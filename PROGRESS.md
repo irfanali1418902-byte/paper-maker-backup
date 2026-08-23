@@ -1,5 +1,46 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-23 — Coverage ab `plan.html` par dikhti hai (Marhala 3 ka frontend)
+
+**1075 pass**, ruff saaf, CSS ratchet ka har metric **+0**.
+
+Marhala 3 ne endpoint bana diya tha magar us ka koi frontend nahi tha — **bilkul wohi
+soorat jis ki is din ke shuru mein shikayat ki gayi thi** (82 routes mein se 6 orphan,
+un mein se 4 yehi module). Isi liye ye usi din jod diya gaya, "baad mein" nahi.
+
+### Kya dikhta hai
+
+* Har hafte ki chip par `covered/planned` badge, `taqseem.html` ke `.cov-badge` wale
+  **wohi thresholds** (100 / 60) — do reportein ek hi rang-zaban bolein.
+* Card ke upar ek line: *"Imtihan mein aa chuke: 49 / 81 topics (60%) — kisi bhi paper
+  mein, hafte se qat-e-nazar."* Aakhri fiqra laazmi hai: covered ka koi hafta hota hi
+  nahi, aur ye baat report parhne wale ko malum honi chahiye.
+* Call **alag aur optional** hai (taqseem ka usool) — fail ho to board pehle jaisa
+  render rehta hai. Idempotent bhi: purana badge hata kar inject hota hai.
+
+### "Tay nahi" wale chip par traffic-light NAHI lagti — ye asal data ne pakda
+
+Pehla live run: Unassigned bucket **46/78 = 59%**, jo threshold se **laal** ban gaya.
+Wo jhoot hai — un topics ka koi hafta tay hi nahi, to "hafta ka coverage fail hua"
+jaisi koi cheez wujood mein nahi. **Ginti kaam ki hai** (46 topics imtihan mein aa
+chuke magar plan mein kahin nahi) is liye dikhti hai; **faisla hata diya gaya.**
+
+Ye is baat ki misaal hai ke chhota UI faisla asal data par chala kar hi pakda jata
+hai — 59% ka theek threshold ke neeche girna kisi test mein nazar na aata.
+
+### Naapa gaya
+
+| metric | delta |
+|---|---|
+| har ratcheted metric | **+0** (`inline_style_attrs`, `unsanctioned_hex`, `legacy_css_lines` sameet) |
+| frozen inventory | +3 (`covSummary`, do `data-week`), koi MISSING nahi |
+
+JS ke 17 id ↔ markup ke 17 id, dono taraf sifar farq. 32/32 classes tree mein resolve.
+`node --check` saaf. Live server par asal data: `Pre Year 1` → H1/H2/H3 par 1/1 (100%,
+hara), Unassigned 46/78 (neutral), baqi 33 hafte khali (`—`).
+
+⚠ **Browser check phir bhi nahi hua** — Chrome extension is baar bhi connect nahi hui.
+
 ## 2026-08-23 — R7 Marhala 3: hafta-war coverage — spec ne ghalat function ka naam diya tha
 
 **1075 pass** (1055 → 1075, **20 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md` §8.2.

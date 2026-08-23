@@ -103,6 +103,7 @@
   <div class="card has-ch" id="weekCard" hidden>
     <div class="ch"><h3>Har hafte ki ginti</h3></div>
     <div class="cb">
+      <div class="plan-cov-summary" id="covSummary" hidden></div>
       <div class="plan-weekbar" id="weekBar"></div>
     </div>
   </div>
@@ -181,13 +182,64 @@
   function renderWeekBar(data) {
     const html = (data.weeks || []).map((wk) => {
       const c = (wk.topics || []).length;
-      return '<span class="plan-week-chip' + (c ? "" : " is-empty") + '">' +
+      return '<span class="plan-week-chip' + (c ? "" : " is-empty") +
+             '" data-week="' + wk.week_no + '">' +
              '<span class="plan-week-n">H' + wk.week_no + "</span>" + c + "</span>";
     }).join("");
     const un = (data.unassigned || []).length;
     $("weekBar").innerHTML = html +
-      '<span class="plan-week-chip' + (un ? "" : " is-empty") + '">' +
+      '<span class="plan-week-chip' + (un ? "" : " is-empty") + '" data-week="0">' +
       '<span class="plan-week-n">tay nahi</span>' + un + "</span>";
+  }
+
+  // Thresholds wohi jo taqseem.html ke `.cov-badge` par hain (100 / 60) — do
+  // reportein ek hi rang-zaban bolein. planned 0 par percent null aata hai (0/0 ko
+  // 0% dikhana jhoot hai), aur us soorat mein rang neutral rehta hai.
+  function covClass(row) {
+    if (!row.planned || row.coverage_percent == null) return "is-none";
+    // "tay nahi" bucket par traffic-light JAAN-BOOJH KAR nahi lagti, chahe percent
+    // kuch bhi ho. Asal data par ye 46/78 = 59% aata hai, jo threshold se LAAL ban
+    // jata — aur wo jhoot hai: un topics ka koi hafta tay hi nahi, to "hafta ka
+    // coverage fail hua" jaisi koi baat wujood mein nahi. Ginti kaam ki hai (46
+    // topics imtihan mein aa chuke magar plan mein kahin nahi) is liye dikhti hai;
+    // faisla nahi dikhta.
+    if (row.unassigned) return "is-none";
+    if (row.coverage_percent >= 100) return "is-ok";
+    return row.coverage_percent >= 60 ? "is-warn" : "is-bad";
+  }
+
+  // Coverage ALAG call hai aur jaan-boojh kar optional: fail ho to plan ka board
+  // pehle jaisa render rehta hai. taqseem.html ka wohi usool. Idempotent bhi —
+  // purana `.plan-cov` hata kar inject hota hai, warna har reload par badge dohra
+  // jaata.
+  async function loadCoverage() {
+    const { subj, grade } = selection();
+    if (!subj || !grade) return;
+    try {
+      const params = new URLSearchParams({ subject: subj, grade: grade });
+      const res = await apiFetch("/api/topic-plan/coverage?" + params.toString());
+      if (!res.ok) return;
+      const data = await res.json();
+
+      const byWeek = new Map((data.weeks || []).map((w) => [w.week_no, w]));
+      document.querySelectorAll("#weekBar .plan-week-chip").forEach((chip) => {
+        const old = chip.querySelector(".plan-cov");
+        if (old) old.remove();
+        const row = byWeek.get(parseInt(chip.getAttribute("data-week"), 10));
+        if (!row) return;
+        const label = row.planned ? row.covered + "/" + row.planned : "—";
+        chip.insertAdjacentHTML("beforeend",
+          '<span class="plan-cov ' + covClass(row) + '">' + label + "</span>");
+      });
+
+      // "covered" ka koi hafta nahi hota (papers mein week_no column hai hi nahi),
+      // is liye ye line saaf kehti hai ke ginti kis cheez ki hai.
+      $("covSummary").textContent =
+        "Imtihan mein aa chuke: " + data.covered_topics + " / " + data.total_topics +
+        " topics" + (data.coverage_percent == null ? "" : " (" + data.coverage_percent + "%)") +
+        " — kisi bhi paper mein, hafte se qat-e-nazar.";
+      $("covSummary").hidden = false;
+    } catch (e) { /* badge optional — board tod na de */ }
   }
 
   function renderPlan(data) {
@@ -206,6 +258,7 @@
     $("planCount").textContent = "(" + placed + " / " + data.total + " tay)";
     renderWeekBar(data);
     showCards(true);
+    loadCoverage();   // strip render ho gayi — ab har chip par coverage
   }
 
   async function loadPlan() {
@@ -213,6 +266,7 @@
     if (!subj || !grade) {
       showCards(false);
       $("weekBadge").hidden = true;
+      $("covSummary").hidden = true;
       currentPlan = null;
       setStatus("");
       return;
