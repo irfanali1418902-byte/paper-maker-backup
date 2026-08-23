@@ -1,5 +1,83 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-23 — D39: frozen inventory ke 81 handlers guard se bahar the
+
+**1055 pass**, ruff saaf, CSS ratchet green. Do file badlin: `scripts/css_baseline.py`
+aur `docs/ui/BASELINE.json`.
+
+Irfan ka faisla: frontend ka kaam pehle. Ye us se pehle ka qadam hai — hum jin pages
+par kaam karne wale hain (`plan.html`, `bank.html` ka form), guard theek unhi par sab
+se kamzor tha.
+
+### Masla
+
+`FROZEN_ATTR_RE` sirf `id`, `onclick`, `name`, `data-*` pakadta tha. `CLAUDE.md` §12.7
+ka poora maqsad ye hai ke handler ka naam badle to shor mache — magar `onchange` aur
+`oninput` us guard se bahar the, aur wo dropdowns/search boxes par lagte hain.
+
+Ye farzi khatra nahi tha: **UI-046 (print range) ka apna `oninput="setPrintRange()"`
+2026-08-20 ko bina guard ke chala gaya aur ratchet khamosh raha.** Feature ne khud
+apni hifazat ka soorakh dikhaya.
+
+### Adad — D39 row ke apne adad ghalat the
+
+| | row (2026-08-20) | naapa (2026-08-23) |
+|---|---|---|
+| `onclick` (guarded) | 123 | **125** |
+| `onchange` | 59 | **61** |
+| `oninput` | 17 | **20** |
+| **guard se bahar** | 76 | **81** (kul ka 39%) |
+
+Wahi bimari jo `ROADMAP.md` ki P0 rows mein thi. **Parking-lot row ka adad tareekh
+hai, haqiqat nahi** — kaam uthate waqt dobara naapo.
+
+### 81 entries `--write` se PEHLE dekhi gayin
+
+Irfan ne yehi maanga tha, aur theek maanga: do saaf qismein nikleen.
+
+**57 seedha markup mein** — `onSubjectChange()`, `loadList()` ×5, `loadGrid(true)` ×4.
+Bilkul `onclick` jaise, guard mein aane chahiye the.
+
+**24 `<script>` ke andar `innerHTML` templates mein** — `onchange="onTypeChange(${i}, this)"`.
+Ye source mein literal text hain, is liye freeze karna mustahkam hai aur `onTypeChange`
+ka rename phir bhi pakda jayega.
+
+**Ek badsoorat hai, aur ye jaan lena zaroori hai:** `blueprint.html`:410 JS concatenation
+hai — `setPinSection(\'' + escAttr(q.id) + '\', this)` — jise regex poora nigal jata hai.
+Naam ki hifazat theek karta hai, magar `BASELINE.json` mein bura lagta hai.
+
+**Koi false positive nahi tha** — na CSS attribute selector, na koi data string.
+
+### Widening izafi hai, ye naap kar tasdeeq hui
+
+`--write` se pehle per-page diff chalaya: **699 → 780 (+81), aur purani entries mein se
+gayab 0.** Ye ahem tha — `--write` poori `BASELINE.json` dobara likhta hai (`metrics` +
+`per_page` + `frozen_inventory`), sirf inventory nahi. Metrics us waqt baseline se behtar
+ya barabar the (`total_css_lines` 1873 vs 1875), to ratchet **sakht** hua, dheela nahi.
+
+### Guard chalta hai — maana nahi, aazmaya
+
+`oninput="setPrintRange()"` — theek wahi handler jo 20 Aug ko bina guard ke gaya tha —
+aarzi taur par rename kiya:
+
+```
+exit code: 1
+RATCHET FAILED:
+  - print.html: MISSING oninput="setPrintRange()" - renaming this breaks a handler silently
+  - print.html: ADDED oninput="setPrintRangeXX()" - declare it in the task scope, then --write
+```
+
+File foran wapas asal halat mein (`git status` khali).
+
+### Mustaqbil ke liye
+
+`onsubmit`, `onkeyup`, `onkeydown`, `onkeypress`, `onblur`, `onfocus` bhi list mein hain.
+In ki ginti aaj **sifar** hai — yani 0 nayi entries — magar `plan.html` jaisa naya page
+jab pehla form banayega to wo apne pehle commit se guard mein hoga, agli khamosh
+kharabi ke baad nahi.
+
+**Agla:** `plan.html` (R7 Marhala 4, sirf "plan bharo" wala hissa — coverage baad mein).
+
 ## 2026-08-22 — R7 Marhala 2: Excel template + import (backend; UI abhi nahi)
 
 **1055 pass** (1026 → 1055, **29 nayi**), ruff saaf, CSS ratchet ka har metric **+0**

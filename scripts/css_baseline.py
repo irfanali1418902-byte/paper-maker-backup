@@ -122,7 +122,29 @@ DISPLAY_DECL_RE = re.compile(r"\bdisplay\s*:", re.I)
 
 # The frozen inventory (CLAUDE.md §12.7). A renamed id breaks a handler silently —
 # nothing throws, the button just stops working.
-FROZEN_ATTR_RE = re.compile(r'\b(?:id|onclick|name)="[^"]*"|\bdata-[a-z0-9-]+="[^"]*"')
+#
+# D39: this listed `onclick` only, which left 39% of the inline handlers it exists to
+# protect outside the guard — `onchange` (61) and `oninput` (20) across static/*.html.
+# That gap is not theoretical: UI-046's own `oninput="setPrintRange()"` went in unguarded
+# on 2026-08-20 and the ratchet said nothing. `onchange`/`oninput` sit on dropdowns and
+# search boxes, so the gap was widest on exactly the filter-heavy pages.
+# `onsubmit`/`onkey*`/`onblur`/`onfocus` have zero occurrences today and add zero
+# entries; they are listed so the next page that grows one is guarded from its first
+# commit rather than after the next silent breakage.
+FROZEN_HANDLERS = (
+    "onclick",
+    "onchange",
+    "oninput",
+    "onsubmit",
+    "onkeyup",
+    "onkeydown",
+    "onkeypress",
+    "onblur",
+    "onfocus",
+)
+FROZEN_ATTR_RE = re.compile(
+    r'\b(?:id|name|' + "|".join(FROZEN_HANDLERS) + r')="[^"]*"|\bdata-[a-z0-9-]+="[^"]*"'
+)
 
 # Metrics the ratchet enforces. Everything else in the report is informational.
 RATCHETED_METRICS = (
