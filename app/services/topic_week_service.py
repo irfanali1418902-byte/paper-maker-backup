@@ -19,9 +19,23 @@ class TopicNotFoundError(Exception):
     """Move-target topic id DB mein maujood nahi (route ise 404 banata hai)."""
 
 
-def _week_count() -> int:
+def week_count() -> int:
     """N = school_settings.week_count (>=1, warna 36). Bilkul taqseem_service ke
     _exam_count() ka usool -- dono ek hi tarah galat/khali value sambhalein.
+
+    PUBLIC HAI SINCE R7 MARHALA 3. Ye `_week_count` tha aur do doosre module us
+    private naam ko bulate the -- `topic_week_import_service` ne pehle din se, aur
+    Marhala 3 mein `topic_coverage_service` ne bhi. PROGRESS.md (2026-08-22) mein
+    yehi likha tha: *"import service topic_week_service._week_count() bulata hai --
+    doosre module ka private function. Kaam karta hai, magar Marhala 3 mein public
+    karna behtar hoga."* Teen module ek hi N par chalen, ye is service ka contract
+    hai, koi implementation detail nahi.
+
+    `_week_count` ka koi alias JAAN-BOOJH KAR NAHI chhoda gaya. `_week_count =
+    week_count` likh dena aasan tha aur khatarnak: tests is naam ko monkeypatch
+    karte hain, aur alias patch karne se andar ke caller (jo `week_count()` bulate)
+    par koi asar na hota -- test green rehta hue bhi kuch guard na karta. Teenon
+    caller aur charon test us commit mein saath badle.
 
     `week_count` abhi `SchoolSettings` model mein nahi hai (sirf DB column), is liye
     settings dict mein na hone ki soorat bilkul mumkin hai -- .get() usi ke liye."""
@@ -44,7 +58,7 @@ def get_plan(subject: str, grade: str) -> dict:
     ya >N (N ghatne se nikla) -- sab Unassigned mein. Yehi taqseem_service.get_plan()
     ka bartao hai."""
     rows = topic_week_plan_repository.list_resolved(subject, grade)
-    n = _week_count()
+    n = week_count()
 
     has_plan = any(r["week_no"] is not None for r in rows)
     weeks = [{"week_no": i, "topics": []} for i in range(1, n + 1)]
@@ -80,7 +94,7 @@ def move_topic(topic_id: str, week_no: int) -> dict:
 
     position jaan-boojh kar clear (None): hafta badalne ke baad purani jagah ki
     tarteeb be-maani hai. Marhala 4 ka UI chahe to alag se set kar sakta hai."""
-    n = _week_count()
+    n = week_count()
     try:
         week_no = int(week_no)
     except (TypeError, ValueError) as e:

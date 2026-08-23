@@ -116,7 +116,7 @@ def import_assignments(file_bytes: bytes, filename: str) -> dict:
             "warnings": [],
         }
 
-    n = topic_week_service._week_count()
+    n = topic_week_service.week_count()
     errors: list = []
     warnings: list = []
     to_assign: list = []

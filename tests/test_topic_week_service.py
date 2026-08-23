@@ -26,7 +26,7 @@ def _topic(topic_id: str, title: str, unit_no: int = 1, page_no=None,
 
 
 def test_week_count_defaults_to_36_when_unset(test_db):
-    assert topic_week_service._week_count() == 36
+    assert topic_week_service.week_count() == 36
 
 
 @pytest.mark.parametrize("bad", [None, "", "teen", [], {}])
@@ -35,7 +35,7 @@ def test_week_count_falls_back_on_garbage(test_db, monkeypatch, bad):
     monkeypatch.setattr(
         topic_week_service.settings_service, "get_settings", lambda: {"week_count": bad}
     )
-    assert topic_week_service._week_count() == 36
+    assert topic_week_service.week_count() == 36
 
 
 @pytest.mark.parametrize("bad", [0, -5])
@@ -43,21 +43,21 @@ def test_week_count_rejects_less_than_one(test_db, monkeypatch, bad):
     monkeypatch.setattr(
         topic_week_service.settings_service, "get_settings", lambda: {"week_count": bad}
     )
-    assert topic_week_service._week_count() == 36
+    assert topic_week_service.week_count() == 36
 
 
 def test_week_count_uses_the_setting_when_valid(test_db, monkeypatch):
     monkeypatch.setattr(
         topic_week_service.settings_service, "get_settings", lambda: {"week_count": 12}
     )
-    assert topic_week_service._week_count() == 12
+    assert topic_week_service.week_count() == 12
 
 
 # ---- get_plan ----
 
 
 def test_get_plan_buckets_topics_by_week(test_db, monkeypatch):
-    monkeypatch.setattr(topic_week_service, "_week_count", lambda: 4)
+    monkeypatch.setattr(topic_week_service, "week_count", lambda: 4)
     _topic("t1", "Number 50")
     _topic("t2", "Small and big")
     topic_week_plan_repository.overwrite_assignments([
@@ -102,7 +102,7 @@ def test_get_plan_has_plan_is_true_once_any_row_exists(test_db):
 def test_get_plan_puts_out_of_range_weeks_in_unassigned(test_db, monkeypatch):
     """N ghat jaye (misal 36 -> 4) to purane hafte >N ho jaate hain. Wo topics
     gum nahi hone chahiye -- Unassigned mein aayen. Yehi taqseem ka bartao hai."""
-    monkeypatch.setattr(topic_week_service, "_week_count", lambda: 4)
+    monkeypatch.setattr(topic_week_service, "week_count", lambda: 4)
     _topic("t1", "Purana hafta 30")
     topic_week_plan_repository.overwrite_assignments(
         [{"syllabus_topic_id": "t1", "week_no": 30, "position": None}]
@@ -116,7 +116,7 @@ def test_get_plan_puts_out_of_range_weeks_in_unassigned(test_db, monkeypatch):
 
 def test_get_plan_on_empty_syllabus_does_not_crash(test_db, monkeypatch):
     """Khali data par crash nahi -- PRD §6 ka usool."""
-    monkeypatch.setattr(topic_week_service, "_week_count", lambda: 3)
+    monkeypatch.setattr(topic_week_service, "week_count", lambda: 3)
 
     plan = topic_week_service.get_plan("Mathematics", "Grade 9")
 

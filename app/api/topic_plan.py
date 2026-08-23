@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from app.schemas.requests import TopicWeekMoveRequest
-from app.services import topic_week_import_service, topic_week_service
+from app.services import topic_coverage_service, topic_week_import_service, topic_week_service
 
 router = APIRouter()
 
@@ -60,6 +60,27 @@ def import_topic_plan(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Sirf .xlsx / .xls / .csv file allowed hai.")
     contents = file.file.read()
     return topic_week_import_service.import_assignments(contents, file.filename or "plan.xlsx")
+
+
+@router.get("/api/topic-plan/coverage")
+def get_topic_coverage(subject: str, grade: str):
+    """Hafta-war coverage: har hafte ke planned topics mein se kitne kisi paper
+    mein aa chuke. R7 Marhala 3.
+
+    "covered" GLOBAL hai, hafta-war nahi -- `papers` mein `week_no` column hai hi
+    nahi. Tafseel `topic_coverage_service` ke docstring mein; wo faisla wahan darj
+    hai kyunke report parhne wale ko us ka pata hona zaroori hai.
+
+    `/template` ki tarah ye route bhi PATCH /{topic_id} se PEHLE hona chahiye,
+    warna "coverage" ek topic_id samjha jayega."""
+    if not subject.strip() or not grade.strip():
+        raise HTTPException(status_code=400, detail="subject aur grade dono chahiye.")
+    try:
+        return topic_coverage_service.coverage(subject, grade)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Coverage fetch fail hui (DB error): {e}"
+        ) from e
 
 
 @router.patch("/api/topic-plan/{topic_id}")

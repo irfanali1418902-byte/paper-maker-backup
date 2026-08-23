@@ -191,3 +191,71 @@ def test_import_rejects_wrong_file_type(test_db):
 
     assert res.status_code == 400
     assert "allowed" in res.json()["detail"]
+
+
+# ---- GET /api/topic-plan/coverage — R7 Marhala 3 ----
+
+
+def _q(qid: str, topic_id, subject: str = "Mathematics") -> None:
+    from app.repositories import questions_repository
+    questions_repository.insert({
+        "id": qid, "subject": subject, "topic": "Counting",
+        "bloom_level": "REMEMBER", "difficulty": "easy",
+        "question_type": "short-answer", "marks": 1,
+        "question_en": "Q", "question_ur": None,
+        "options_en": "[]", "options_ur": "[]",
+        "correct_answer_en": None, "correct_answer_ur": None,
+        "explanation_en": None, "explanation_ur": None,
+        "visual_emoji": None, "visual_count": None,
+        "syllabus_topic_id": topic_id,
+    })
+
+
+def test_coverage_route_is_not_swallowed_by_the_patch_path(test_db):
+    """`/coverage` ko PATCH /{topic_id} se PEHLE register hona chahiye, warna
+    "coverage" ek topic_id samjha jayega. Yehi baat `/template` par pehle ho chuki
+    thi — 200 ka matlab hai route apna hai, 404 ka matlab hai wo topic dhoond raha."""
+    res = client.get("/api/topic-plan/coverage",
+                     params={"subject": "Mathematics", "grade": "Pre Year 2"})
+
+    assert res.status_code == 200
+    assert "weeks" in res.json()
+
+
+def test_coverage_reports_planned_vs_covered(test_db):
+    from app.repositories import papers_repository
+    _topic("t1", "Number 50")
+    _topic("t2", "Small and big")
+    topic_week_plan_repository.overwrite_assignments([
+        {"syllabus_topic_id": "t1", "week_no": 3, "position": None},
+        {"syllabus_topic_id": "t2", "week_no": 3, "position": None},
+    ])
+    _q("q1", "t1")
+    papers_repository.insert(paper_id="p1", subject="Mathematics",
+                             class_name="Pre Year 2", total_marks=1,
+                             question_ids=["q1"])
+
+    body = client.get("/api/topic-plan/coverage",
+                      params={"subject": "Mathematics", "grade": "Pre Year 2"}).json()
+
+    week3 = next(w for w in body["weeks"] if w["week_no"] == 3)
+    assert week3["planned"] == 2
+    assert week3["covered"] == 1
+    assert week3["coverage_percent"] == 50
+    assert body["total_topics"] == 2
+    assert body["covered_topics"] == 1
+
+
+def test_coverage_needs_both_subject_and_grade(test_db):
+    res = client.get("/api/topic-plan/coverage",
+                     params={"subject": "Mathematics", "grade": "   "})
+
+    assert res.status_code == 400
+    assert "dono chahiye" in res.json()["detail"]
+
+
+def test_coverage_missing_param_is_422(test_db):
+    """subject/grade dono laazmi hain (plan per-subject-per-grade hai) — FastAPI
+    khud 422 deta hai, route ka 400 sirf khali-string par chalta hai."""
+    assert client.get("/api/topic-plan/coverage",
+                      params={"subject": "Mathematics"}).status_code == 422

@@ -134,8 +134,65 @@ error — chup-chaap nazar-andaaz **nahi**.
 |---|---|---|---|
 | 1 | table + repository + service + assign/list API | ~18 | **✅ 2026-08-22** (50 tests) |
 | 2 | Excel import + template | ~12 | **✅ 2026-08-22** (29 tests) |
-| 3 | coverage service + endpoint (`_assemble_coverage` key parameterize) | ~15 | — |
-| 4 | UI page | ~5 | **✅ 2026-08-23** — neeche §8.1 |
+| 3 | ~~coverage service + endpoint (`_assemble_coverage` key parameterize)~~ | ~15 | **✅ 2026-08-23** (20 tests) — **magar us function ko chhua nahi**, §8.2 |
+| 4 | UI page | ~5 | **✅ 2026-08-23** — §8.1 |
+
+### 8.2 Marhala 3 — spec ki likhi hui tajweez naapne par ghalat nikli
+
+Is row mein likha tha *"`_assemble_coverage` key parameterize"*. Kaam uthate waqt teen
+cheezein naapi gayin (2026-08-23) aur teenon us ke khilaf gayin:
+
+1. **`_assemble_coverage` ko aaj koi bahar se bulata hi nahi** — sirf `exam_coverage`,
+   usi file ke andar se. Us ke docstring ka waada (*"Hissa 4 draft question_ids ke
+   saath dobara istemal kar sake"*) kabhi poora nahi hua.
+2. **Us ka maal hafta-war report ko chahiye hi nahi.** Wo `covered`/`remaining`/
+   `strands` + `paper_ids` ka drill-down deta hai; report per-bucket ginti hai.
+3. **Jo waqai dono jagah ek jaisa hai wo `_summary_row` hai — aath lines**, aur wo
+   pehle se domain-neutral thi.
+
+To `_assemble_coverage` **bilkul chhua nahi gaya** — us ke SLO tests bina hile green
+hain. Sirf `_summary_row` `coverage_service.bucket_row()` bani (`exam_no` nikal kar,
+taake caller apni bucket key khud lagaye), aur `topic_coverage_service.py` naya bana —
+wahi file jo §4 ne khud naam se maangi thi.
+
+**Faisla Irfan ka tha** (`CLAUDE.md` §12.11: plan aur code takrayen to ruk kar poochho,
+chupke se milao mat).
+
+#### "covered" ki tareef — ye §5 mein saaf nahi tha aur ab hai
+
+**`papers` mein `week_no` column HAI HI NAHI** (naapa 2026-08-23; sirf `exam_no` hai).
+To "hafta 3 ke paper" jaisi koi cheez wujood mein nahi. Do raaste the:
+
+| tareef | haalat |
+|---|---|
+| **Topic kisi BHI paper mein aaya = covered** | **✅ chuna gaya** |
+| Hafta → exam mapping ke zariye | rad — ye mapping repo mein hai hi nahi (na `school_settings` mein, na koi calendar). Apna alag scope hai |
+
+Jis sawal ka jawab report deti hai: *"jo maine hafta 3 mein parhaya, us ka imtihan
+kabhi liya bhi?"* — na ke "hafta 3 ke paper mein aaya?".
+
+Isi se do aur farq nikalte hain jo `coverage_summary` se ulat hain:
+
+* **`exam_no` ki koi shart nahi.** 30 mein se 10 papers par `exam_no` hai hi nahi;
+  SLO ka `covered_pairs_all_exams` unhe ginta hi nahi (`exam_no IS NOT NULL`), ye ginta
+  hai.
+* **`class_name` ka `LOWER(TRIM(...))` match nahi hai, aur wo kami nahi.** Gate
+  `syllabus_topics.subject/grade` par hai — ek topic id pehle se theek ek (subject,
+  grade) ki hai, to paper ka ganda free-text `class_name` is hisaab mein aata hi nahi.
+* **Unassigned ka `covered` asal ginti hai, zabardasti 0 nahi.** `coverage_summary`
+  wahan 0 force karta hai (kisi exam mein nahi = us exam ke liye cover ho hi nahi
+  sakta); yahan covered ka koi hafta hai hi nahi, to "hafta tay nahi magar paper mein
+  aa chuka" asal aur kaam ki soorat hai.
+
+**Asal data par chalaya:** `Mathematics / Pre Year 1` — **49 / 81 topics covered (60%)**,
+`paper_map` mein 49 entries. §5 ka daawa ("pehle din se asal data dikhayega") poora hua.
+
+#### `week_count()` ab public hai
+
+PROGRESS.md (2026-08-22) ne isay Marhala 3 ka kaam likha tha aur wo ho gaya. Teen
+module ab ek hi N par chalte hain. **`_week_count` ka alias jaan-boojh kar nahi chhoda
+gaya** — tests us naam ko monkeypatch karte hain, aur alias patch karne se andar ke
+caller par asar na hota: test green rehta hue bhi kuch guard na karta.
 
 ### 8.1 Marhala 4 — jo bana, aur jo tarteeb se hat kar bana
 

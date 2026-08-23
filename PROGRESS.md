@@ -1,5 +1,86 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-23 — R7 Marhala 3: hafta-war coverage — spec ne ghalat function ka naam diya tha
+
+**1075 pass** (1055 → 1075, **20 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md` §8.2.
+
+### Spec aur code takra gaye, aur poochh kar hi aage barha gaya
+
+Marhala 3 ki row kehti thi *"`_assemble_coverage` key parameterize"*. Kaam uthate waqt
+naapa gaya, aur teen cheezein us ke khilaf gayin:
+
+1. **`_assemble_coverage` ko aaj koi bahar se bulata hi nahi** — sirf `exam_coverage`,
+   usi file ke andar. Us ke docstring ka waada (*"Hissa 4 dobara istemal karega"*)
+   kabhi poora nahi hua.
+2. **Us ka maal report ko chahiye hi nahi** — wo drill-down deta hai
+   (`covered`/`remaining`/`strands` + `paper_ids`), report per-bucket ginti hai.
+3. **Jo waqai share hota hai wo `_summary_row` hai — aath lines**, aur wo pehle se
+   domain-neutral thi.
+
+`CLAUDE.md` §12.11 ke mutabiq ruk kar poochha gaya. **Irfan ka faisla: naya service,
+`_summary_row` share, `_assemble_coverage` bilkul haath na lagao.** Chunanche us ke SLO
+tests bina chhue green hain — wohi gate tha.
+
+| bana | |
+|---|---|
+| `papers_repository.covered_topic_pairs()` | (topic, paper) jodi — gate topic par |
+| `coverage_service.bucket_row()` | `_summary_row` se `exam_no` nikal kar public |
+| `topic_coverage_service.py` | naya (~90 lines) — wahi file jo spec §4 ne maangi thi |
+| `GET /api/topic-plan/coverage` | `/template` ki tarah PATCH `/{topic_id}` se **pehle** |
+
+### "covered" ki tareef — ye spec mein saaf nahi tha, aur ye faisla asal mein bara hai
+
+**`papers` mein `week_no` column HAI HI NAHI** (sirf `exam_no`). To "hafta 3 ka paper"
+wujood mein hi nahi. Irfan ne chuna: **topic kisi BHI paper mein aaya = covered.**
+Sawal jis ka jawab milta hai — *"jo maine hafta 3 mein parhaya, us ka imtihan kabhi
+liya bhi?"* Doosra raasta (hafta → exam mapping) rad hua kyunke wo mapping repo mein
+hai hi nahi.
+
+Is se teen cheezein `coverage_summary` se **ulat** ho jati hain, aur teenon ki apni
+test hai:
+
+* **`exam_no` ki koi shart nahi.** 30 mein se 10 papers par `exam_no` hai hi nahi; SLO
+  ka raasta unhe ginta hi nahi (`exam_no IS NOT NULL`), ye ginta hai.
+* **`class_name` ka `LOWER(TRIM(...))` match nahi, aur ye kami nahi.** Gate
+  `syllabus_topics.subject/grade` par hai — ek topic id pehle se theek ek (subject,
+  grade) ki hai, to paper ka ganda free-text `class_name` hisaab mein aata hi nahi.
+* **Unassigned ka `covered` asal ginti hai, forced 0 nahi.** "Hafta tay nahi magar
+  paper mein aa chuka" asal soorat hai; usay 0 dikhana maloomat chupana hoga.
+
+### `week_count()` public — magar alias jaan-boojh kar nahi
+
+PROGRESS.md ne 2026-08-22 ko yehi Marhala 3 ka kaam likha tha. Teen module ab ek hi N
+par chalte hain.
+
+**`_week_count = week_count` likh dena aasan tha aur khatarnak:** tests us naam ko
+monkeypatch karte hain, aur alias patch karne se andar ke caller (jo `week_count()`
+bulate) par koi asar na hota — **test green rehta hue bhi kuch guard na karta.** Teenon
+caller aur saaton test-line saath badle.
+
+### Asal data par chalaya
+
+`Mathematics / Pre Year 1` — **49 / 81 topics covered (60%)**, `paper_map` mein 49
+entries. Spec §5 ka daawa ("pehle din se asal data dikhayega") poora hua.
+`Pre Year 2` aur `Grade 4` par 0% — durust, un ke topics kisi paper mein aaye hi nahi.
+
+### `plan.html` ka browser check ho chuka hai — aur wo DB mein likha mila
+
+`topic_week_plan` mein **3 rows** milin (Pre Year 1, hafte 1/2/3), `plan.html` wale
+commit ke **56 second baad** — teen alag PATCH, 2–4 second ke faasle par. **Irfan ne
+tasdeeq ki: ye us ka browser test tha, aur rows rakhni hain.**
+
+Yani pichhle commit mein jo gap saaf likh kar chhoda gaya tha (*"browser check nahi
+hua, ye claim nahi kiya ja raha ke page dikhne mein theek hai"*) **ab band hai**:
+page load hua, subject/grade dropdown bhare, table render hui, aur hafta chunne se
+PATCH DB tak pahuncha — asal browser mein, asal data par.
+
+Qabil-e-zikr baat ye hai ke **ye khud kaam se pata chala, kisi report se nahi.**
+Coverage ka pehla run Pre Year 1 par `total=81` magar Unassigned `planned=78` dikha
+raha tha — teen ka farq. Agar wo farq na khatakta to ye rows kisi ko nazar hi na aatin.
+
+**Agla:** coverage ko `plan.html` par dikhana (abhi endpoint ka koi frontend nahi — wohi
+soorat jis ki shikayat aaj subah ki gayi thi).
+
 ## 2026-08-23 — R7 Marhala 4: `plan.html` — hafta-war plan ab teacher tak pahunchta hai
 
 **1055 pass**, ruff saaf, CSS ratchet ka **har metric +0**. Spec:
