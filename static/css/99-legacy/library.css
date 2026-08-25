@@ -40,7 +40,8 @@
   }
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
-  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
+  label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
   input[type="text"], input[type="file"], select {
     width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
@@ -48,7 +49,7 @@
     font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
   }
   input[type="file"] { padding: 10px 11px; }
-  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+  /* input/select :focus — 03-elements/forms.css:79. Deleted UI-061, dead by layer order. */
 
   /* .field-row: 05-components/field.css (UI-042) */
 

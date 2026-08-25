@@ -339,13 +339,8 @@
   /* ---- Topic image strip (inside edit modal) ---- */
   .topic-strip { margin-bottom: 14px; }
   .topic-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-  .strip-filter input, .strip-filter select {
-    min-height: 30px; padding: 4px 9px; font-size: 12px;
-    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit; background: #fff;
-  }
+  /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
   .strip-empty { font-size: 11.5px; color: #999; padding: 4px 0; }
   .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 160px; overflow-y: auto; }
   /* ---- Library picker search bar ---- */

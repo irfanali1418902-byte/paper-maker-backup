@@ -55,14 +55,15 @@
   .add-q-body { padding: 20px 22px 22px; }
 
   /* ---- Form elements ---- */
-  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
+  label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
   input[type="text"], input[type="number"], select, textarea {
     width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
     border: 1px solid #D6DEEA; border-radius: 10px;
     font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+  /* input/select/textarea :focus — 03-elements/forms.css:79 (UI-061, was dead here). */
 
   /* .field-row: 05-components/field.css (UI-042) */
 
@@ -117,14 +118,8 @@
   /* ---- Topic image strip ---- */
   .topic-img-strip { margin: 10px 0 4px; }
   .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-  .strip-filter input, .strip-filter select {
-    min-height: 30px; padding: 4px 9px; font-size: 12px;
-    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit;
-    background: #fff; color: var(--ink);
-  }
+  /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
   .strip-empty { font-size: 11.5px; color: var(--muted2); padding: 4px 0; }
   .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 180px; overflow-y: auto; }
   .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }

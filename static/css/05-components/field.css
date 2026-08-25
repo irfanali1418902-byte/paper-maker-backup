@@ -89,3 +89,32 @@
   cursor: pointer;
   margin: 0;
 }
+
+/* -------------------------------------------------------------------------
+   .strip-filter — the topic-image strip's filter row (UI-061).
+   bank (topic image strip) and print (the same strip inside the edit modal).
+   Both files declared it byte-identically and both compute identically:
+   display flex, column-gap 6px, align-items center, margin-bottom 8px.
+
+   ⚠ ONLY min-height COMES WITH IT. Both legacy files also gave the controls
+   font-size 12px, padding 4px 9px, border 1px #D6DEEA and radius 7px — a
+   deliberately compact filter row. Every one of those is DEAD and was dead
+   before this task: 03-elements/forms.css:53 styles the same controls in
+   layer(elements), which beats layer(legacy) whatever the specificity, so
+   they measure 13.5px / 11px / radius 11px on both pages today. Copying
+   them here would RESURRECT them and change two live pages — the same trap
+   that moved 75 deltas in UI-042. Whether the compact row should come back
+   is a design decision, not a drain: DEFERRED.md D43.
+   ------------------------------------------------------------------------- */
+.strip-filter {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.strip-filter input,
+.strip-filter select {
+  min-height: 30px;
+}

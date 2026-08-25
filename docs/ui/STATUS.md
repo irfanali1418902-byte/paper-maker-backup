@@ -33,6 +33,91 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 
 ---
 
+## UI-061 — `field/filter` agree drain. **2026-08-24. 9 pages par 0 deltas.**
+
+**1075 pass** · ruff saaf · `legacy_css_lines` **1873 → 1864 (−9)** · `unsanctioned_hex`
+**356 → 353 (−3)** · `css_type_diff` nau ke nau pages par **0 element × property deltas**.
+
+Sprint 6 ka pehla **per-family** task. Chhui gayi files: `99-legacy/` mein
+`bank`, `blueprint`, `index`, `library`, `print`; aur `05-components/field.css`.
+
+### Bara nateeja: ye bucket "shared CSS" nahi tha, **murda CSS** tha
+
+`css_duplication_audit.py` in rules ko `agree` kehta hai — aur wo durust hai, dono/chaaron
+legacy files bilkul ek jaisa likhti hain. Magar script ka apna header chetawni deta hai ke
+wo **matn** milata hai, **paint** nahi. Naapne par teenon khandan murda nikle:
+
+| rule | file kya kehti hai | asal mein kya computes hota hai |
+|---|---|---|
+| `label` (4 pages) | `font-size: 12.5px` | **12px** — `forms.css`:47 jeet raha hai |
+| `input:focus, select:focus` (4 pages) | `--primary` + `--tint` ring | poori rule bekaar — `forms.css`:79 wohi teen properties deta hai |
+| `.strip-filter input/select` (2 pages) | `12px` / `4px 9px` / radius `7px` | **13.5px / 11px / radius 11px** — dekho D43 |
+
+Wajah har jagah aik hai: `main.css`:42 ka layer order `legacy` ko sab se neeche rakhta hai,
+aur **layer specificity se pehle tay hota hai**. `.strip-filter input:focus` ki specificity
+`(0,2,1)` hai aur `forms.css` ke `input:focus` ki `(0,1,1)` — phir bhi legacy haarti hai.
+
+**Is liye is task ka bara hissa "component banao" nahi, "murda rule mitao" tha** — aur wohi
+sab se mehfooz simt hai: jo declaration aaj apply hi nahi ho rahi, us ke hatne se kuch hil
+nahi sakta. 0 deltas isi ki tasdeeq hain.
+
+### Jo waqai component bana
+
+Sirf **`.strip-filter` ka container** — `bank` aur `print` par byte-identical bhi hai aur
+computed bhi (`display:flex`, `column-gap:6px`, `align-items:center`, `margin-bottom:8px`,
+`flex-wrap:wrap`). `field.css` mein gaya, saath `min-height: 30px` — **sirf yehi ek
+declaration zinda thi.**
+
+⚠ **Baqi saat declarations jaan-boojh kar sath nahi layi gayin.** Unhein `layer(components)`
+mein copy karna unhein **zinda kar deta** aur do live pages badal deta — bilkul wohi jaal jo
+UI-042 mein 75 deltas hila chuka hai. Wo faisla `DEFERRED.md` **D43** par hai.
+
+### Jo pehle se tay tha aur chhua nahi gaya
+
+* **`label:first-of-type`** — `field.css`:66 pehle se likhta hai ke ye legacy mein rahegi,
+  warna print ke 11 labels tak pahunch jayegi. Agree list mein thi, magar faisla purana hai.
+* **`.type-checks input[type="checkbox"]`** — `field.css`:18–24 saaf mana karti hai
+  (blueprint par `.topic-check-row` se takrati hai, ek page par do checkbox shakal ban
+  jatein). Chhui nahi gayi.
+
+### `PLAN.md` se takraav — Irfan ka faisla
+
+`PLAN.md`:381 Sprint 6 ko **per-page** likhta hai (*"drain to zero, delete it"*). 2026-08-19
+ke faisle ke baad ye mumkin nahi raha — 66% page-only lines jaan-boojh kar skip hain, to koi
+file zero par nahi jayegi. **Irfan ne 2026-08-24 ko per-family chuna.** `PLAN.md`:381 abhi
+bhi purana lehja rakhta hai.
+
+### NEXT TASK ke liye
+
+Agree bucket ab **92 lines** hai. Us ki poori taqseem — teen adad jama karke 92 banta hai,
+aur ye is liye likha hai ke agla session "field/filter mukammal ho gaya" na samajh le:
+
+| | lines | halat |
+|---|--:|---|
+| `modal` (bank+print) | 26 | **khula — agla tajweez-shuda task** |
+| `shortfall` (blueprint+print) | 12 | khula |
+| `page-head` | 6 | khula |
+| `brand` / `btn-*` / `card` / `chip` | 9 | khula |
+| `shell/nav` | 23 | **aakhir mein** — 7 mein se 6 rules `@media (max-width: 720/760px)` ke andar hain aur probe 1280px par chalta hai, yani **naapi nahi ja saktin** |
+| `field/filter` ka bacha hua hissa | **16** | zail mein |
+
+**`field/filter` mukammal NAHI hua** — us ki 16 lines ab bhi legacy mein hain:
+
+* `.type-checks input[type="checkbox"]` (6, bank+blueprint) — `field.css`:18–24 ka purana faisla
+* `label:first-of-type` (4, chaar files) — `field.css`:66 ka purana faisla
+* `label { display: block; margin-top: 14px }` (4, chaar files) — **koi darj wajah nahi.** Ye
+  zinda hain (forms.css inhein declare nahi karti), magar inhein `layer(elements)` par le
+  jana print ke 11 labels tak pahunch jayega — wohi khatra jo `field.css`:66 likhta hai
+* `.strip-filter input { flex: 1; min-width: 90px }` (2, bank+print) — **koi darj wajah nahi**
+
+Aakhri do nuqte (6 lines) ek chhote faisle ke muntazir hain, mafqood nahi.
+
+⚠ **Browser check nahi hua** — Chrome extension is baar bhi connect nahi hui. Jo daawa kiya
+ja raha hai wo sirf ye hai: headless Edge par nau pages ke 367,048 element × property jode
+mein se **ek bhi nahi hila**. Ye "page dekhne mein theek hai" ka daawa **nahi** hai.
+
+---
+
 ## UI-060 — `slo.css` ka drain map. **2026-08-22. NAQSHA HAI, KOI CODE NAHI BADLA.**
 
 Sprint 6 ka pehla page. Ye section **sirf naap aur naqsha** hai — `slo.css`, `slo.html`

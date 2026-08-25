@@ -1,5 +1,77 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-24 — UI-061: `field/filter` drain — aur wo "duplication" nahi, murda code nikla
+
+**1075 pass**, ruff saaf, `legacy_css_lines` **1873 → 1864 (−9)**, `unsanctioned_hex`
+**356 → 353 (−3)**, aur `css_type_diff` par nau pages ke **367,048 element × property jode
+mein se sifar hile**.
+
+### Task kyun apni tareef se mukhtalif nikla
+
+Plan ye tha: `css_duplication_audit.py` ka `agree` bucket (119 lines, 34 rules) utha kar
+`field/filter` khandan ko component par le jao — "koi faisla darkar nahi". Script ke apne
+header ne pehle hi chetawni de rakhi thi:
+
+> ⚠ IT COMPARES DECLARATION TEXT, NOT PAINTED OUTPUT … `agree` here means "worth measuring
+> next", never "safe to extract".
+
+Naapa gaya, aur chetawni durust nikli — magar ulti simt mein. Rules "shared" isliye nahi
+thin ke unhein component chahiye tha; wo **teenon jagah barabar murda** thin:
+
+| rule | file kya likhti hai | probe kya kehta hai |
+|---|---|---|
+| `label` × 4 pages | `font-size: 12.5px` | **12px** |
+| `input:focus, select:focus` × 4 | apna ring | rule ka koi asar nahi |
+| `.strip-filter input/select` × 2 | `12px` / `4px 9px` / radius `7px` | **13.5px / 11px / 11px** |
+
+Wajah aik hi hai aur `main.css`:42 par likhi hai: layer order `legacy` ko sab se neeche
+rakhta hai, aur **layer specificity se pehle tay hota hai**. `.strip-filter input:focus` ki
+specificity `(0,2,1)` hai, `forms.css` ke `input:focus` ki `(0,1,1)` — phir bhi legacy
+haarti hai.
+
+### Ek asal cheez jo is se benaqab hui
+
+`bank` aur `print` par topic-image strip ka filter row **jaan-boojh kar chhota** design kiya
+gaya tha — 12px text, 4px 9px padding, radius 7px, thumbnail grid ke pehlu mein. **Wo look
+aaj mojood nahi hai** aur is task se pehle hi ja chuka tha: jis din page `main.css` par aaya,
+`forms.css` ne wo controls 13.5px par draw karna shuru kar diya. Kisi test ne ye nahi pakda
+kyunke koi test computed size nahi naapta.
+
+Ise **theek nahi kiya gaya** — wapas laana design ka faisla hai (kya dense picker ka filter
+form control se chhota hona chahiye?), aur drain ke parde mein do live pages badalna wohi
+ghalti hoti. `DEFERRED.md` **D43**.
+
+### Kya bana, kya jaan-boojh kar nahi bana
+
+`05-components/field.css` mein `.strip-filter` ka **container** gaya (dono pages par matn
+aur paint dono barabar), saath `min-height: 30px` — **sirf yehi ek declaration zinda thi.**
+Baqi (bank par saat, print par chhe) sath nahi layin: `layer(components)` mein copy karna
+unhein zinda kar deta, wohi jaal jo UI-042 mein 75 deltas hila chuka hai.
+
+Ek cheez darj karni chahiye: **`.strip-filter select` asal mein `agree` bucket mein thi hi
+nahi** — audit use `disagree` ginti hai, kyunke bank `color: var(--ink)` likhta hai aur print
+nahi. Ye scope se bahar thi aur review ne pakdi. Utha isliye li gayi ke saath wali container
+rule (jo waqai agree thi) ke jane ke baad ise chhorna be-maani tha, aur ikhtilaf ka hal
+mehfooz tareeqe se nikla: `color` sameet koi bhi cheez component mein nahi gayi, sirf wo ek
+declaration gayi jo zinda thi. **Faisla Irfan ka hai ke ye scope-breach qabool hai ya nahi.**
+
+Do rules pehle se tay-shuda hone ki wajah se chhui hi nahi gayin — `label:first-of-type`
+(`field.css`:66, warna print ke 11 labels tak pahunchti) aur
+`.type-checks input[type="checkbox"]` (`field.css`:18–24, blueprint par do checkbox shakal
+ban jatein).
+
+### Do baatein record ke liye
+
+**`PLAN.md`:381 aur asal kaam takra rahe hain.** Wo Sprint 6 ko per-page likhta hai
+(*"drain `99-legacy/<page>.css` to zero, delete it"*), jo 2026-08-19 ke faisle ke baad
+mumkin nahi — 66% lines page-only hain aur skip hain, to koi file zero par nahi jayegi.
+CLAUDE.md §12.11 ke tehat poochha gaya; **Irfan ka faisla: per-family.**
+
+**Probe ka raasta Chrome extension se azad hai.** `css_selector_probe.mjs` aur
+`css_type_probe.mjs` apna headless Edge khud chalate hain. Extension mahinon se connect nahi
+ho rahi, magar ye naap phir bhi mumkin hai — jo is task ka poora sabot hai. **Browser check
+phir bhi nahi hua**, aur 0 deltas "page dekhne mein theek hai" ka daawa nahi hai.
+
 ## 2026-08-23 — Pre Year 3 seeding: 23/87 topics, quota phir raaste mein khatam
 
 Bank **594 → 686** (+92 sawal). Sirf DB badli — koi code nahi.
