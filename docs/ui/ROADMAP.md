@@ -206,17 +206,73 @@ Both stay in `PLAN.md`. Neither is cancelled. They are simply not in front of an
 
 ---
 
-## Total
+## ⛳ THE FINISHING PLAN — 2026-08-25, measured, in order
+
+**Read this before anything else in this file.** Everything above it is the plan as it was
+understood on 2026-08-13; this is what is actually left, re-measured today with
+`scripts/css_duplication_audit.py` and `scripts/css_baseline.py`.
+
+**Where we stand:** `legacy_css_lines` **1,842**. Target **~1,350**. Available work is
+**490 lines** — 68 `agree` + 422 `disagree` — and 1,055 page-only lines are skipped on
+purpose (2026-08-19). 1,842 − 490 = **1,352**, so the target and the work agree.
+
+### The rule that makes this finishable
+
+**One family per session. Every session is: measure → one decision if needed → edit → both
+probes → review → Irfan's browser → commit.** Two families in one session is what makes a
+diff unreviewable; that is not caution, it is the reason UI-061 and UI-062 both landed clean.
+
+### The order, and why it is this order
+
+| # | task | lines | decision needed | why here |
+|--:|---|--:|---|---|
+| **1** | **The button task** — D44 + D46 + D47(b) | 22 + 2 | **Three, all Irfan's:** one radius for every filled legacy button (`.btn-primary` is 10px, `.btn-save` now 11px); hover direction (some darken, some lighten); disabled opacity (.4/.5/.55/.6 across nine files) | **FIRST, and nothing else may go before it.** Every remaining family contains buttons, so each one taken first would add another radius to reconcile later. UI-062 already created that debt once |
+| **2** | **The viewport pass** — a tooling task, not a drain | 0 | none | **`shell/nav`'s 23 agree lines are 6 `@media (max-width: 720/760px)` rules and NO PROBE CAN SEE THEM** — every probe runs at 1280×900. This is D45's shape exactly: a gate that cannot measure the thing will pass regardless. Add a second viewport to `css_type_probe`/`css_state_probe` before touching any `@media` rule |
+| **3** | `shell/nav` — agree **and** disagree together | 23 + 76 | **One:** the shell has drifted into 3–6 versions per selector, and **there are three navies** (see line 375). Pick one shell, one navy | Biggest single family (99 lines, 8 files) and the most visible. Needs #2 done first |
+| **4** | `field/filter` disagree | 59 | One: which control sizing wins | Its `agree` half shipped as UI-061, so the ground is known |
+| **5** | `modal` disagree | 58 | One: the app has **three modal systems** (`modal.css`:  header). Decide whether they unify or stay three | Its `agree` half shipped as UI-062 |
+| **6** | `card` + `brand` | 28 + 24 + 3 | One each | Small, independent, no ordering constraint |
+| **7** | `chip/pill/row` + `page-head` + `shortfall` | 9 + 2 + 12 + 6 | One each, all small | The tail. Can be one session if the decisions are quick |
+| **8** | `other` — 15 rules, 9 files | 138 | **Unknown — this is the honest gap.** Nobody has read these 15 rules; "other" is what the family regexes did not match | **Survey it before scheduling it.** It is the single biggest number on this table and the least understood. One session to read and split it into real families, THEN plan |
+| **9** | `UI-064` — delete `app.css`, move mockups, final sweep | — | none | Last. 57 lines still linked by all nine pages for `@font-face` + the `.icon` sprite |
+
+### The estimate, and it is not the old one
+
+**The old figure on this page said the drain was 5–8 sessions. Two sessions have now actually
+run and they are the only real data:** UI-061 took `legacy` 1,873 → 1,864 and UI-062 1,864 →
+1,842. **Nine and twenty-two lines.** At that rate 490 lines is far more than 8 sessions.
+
+But rate-per-line is the wrong model and it is worth saying why: **the cost of a session is
+the DECISION, not the lines.** UI-062 removed 22 lines and spent its time on one radius
+question; item 3 removes 99 and asks one shell question. So:
 
 ```
-A + D  (the plan)          10–19 sessions   ≈ 2–4 weeks
-+ C                         3–5
-+ B                         3–4
-────────────────────────────────────────────
-everything                 16–28 sessions   ≈ 3–6 weeks
+items 1–7, 9   one family per session, one decision each     8–12 sessions
+item 8         survey (1) + whatever it turns out to be      2–5 sessions
+──────────────────────────────────────────────────────────────────────────
+the drain, honestly                                         10–17 sessions
 ```
 
-At 1 session/day, 5 days/week.
+At 1 session/day, 5 days/week: **~2–3.5 weeks of working days.** The 2026-08-13 estimate of
+5–8 was written before any Sprint 6 task had ever run.
+
+### What is NOT on this list, deliberately
+
+* **Sprint 5 (466 inline `style=""`)** and **Marhala B** (`UI-042`, `UI-043`) — nothing waits
+  on them and much of Sprint 5 is expected to fall out of the drain. Unchanged decision.
+* **`docs/ui/DEFERRED.md` has 44 open rows.** Most are notes, not tasks. Only D44/D46/D47 are
+  scheduled above; the rest stay parked until something needs them.
+* **The non-CSS work**, which is Irfan's and not a session: **R1 bank seeding** (~128 topics,
+  ~6 days of a 10-minute daily command) and **R7 adoption** (`topic_week_plan` has 4 rows;
+  one Excel plan needs filling). Neither blocks the epic and the epic does not block them.
+
+### Two rules that came out of this week and should survive it
+
+1. **A gate that cannot measure the thing will pass regardless.** D45 proved it for states,
+   item 2 is the same problem for viewports. Before a task, ask what its change would look
+   like to the probes — if the answer is "nothing", build the probe first.
+2. **Close the row the day the work lands.** This file, `PLAN.md` and `docs/ROADMAP.md` all
+   carried false rows for weeks or months. Every one cost a later session real time.
 
 ## What the estimate rests on, and where it is weak
 

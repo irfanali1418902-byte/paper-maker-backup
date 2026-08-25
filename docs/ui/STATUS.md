@@ -3,6 +3,46 @@
 > **Fresh session: read THIS file first. Do not read PROGRESS.md (2000+ lines).**
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
+---
+
+## ▶ NEXT SESSION — START HERE (2026-08-25)
+
+**The ordered finishing plan is `docs/ui/ROADMAP.md` → "⛳ THE FINISHING PLAN".** Nine items,
+one family per session. Read that table, take **item 1**, and do not take item 2 because it
+looks smaller.
+
+**Item 1 is the button task (D44 + D46 + D47b), and it is first for a reason:** every
+remaining family contains buttons, so any family taken before it adds another radius to
+reconcile later. UI-062 already created that debt once — `bank` currently paints a 10px
+`.btn-primary` beside an 11px `.btn-save`.
+
+It needs **three decisions from Irfan, and they are the whole task** — the code is small:
+
+| decision | today |
+|---|---|
+| one radius for every filled legacy button | `.btn-primary` 10px (a deliberate literal, `btn.css`:277) vs `.btn-save` 11px (`--radius-control`) |
+| hover direction | legacy buttons **darken**, the Tier 2 pair **lightens** (`--color-action-hover` is indigo-500 against indigo-600). The app now does both |
+| disabled opacity | `.4` / `.5` / `.55` / `.6` across the nine legacy files; `.btn-save` is `.6`, `.btn--primary` is `.5`, in the same file |
+
+**Copy-pasteable prompt for that session** (`CLAUDE.md` §12.8):
+
+> Take **item 1** of `docs/ui/ROADMAP.md`'s "⛳ THE FINISHING PLAN" — the button task, closing
+> `DEFERRED.md` D44, D46 and D47(b). Read `CLAUDE.md` §11–12, this file's UI-062 and UI-065
+> sections, and `static/css/05-components/btn.css` in full. **Measure first and put the three
+> decisions to Irfan with measured options before writing anything.** This task is almost
+> entirely `:hover` and `:disabled` surfaces, so **`scripts/css_state_probe.mjs` before and
+> after is mandatory** — `css_type_probe` alone cannot see any of it, which is exactly how
+> UI-062's hover change passed every gate. Expect non-zero deltas and confirm they are only
+> the approved ones.
+
+**Gates for every session from here:** `pytest` (1075) · `ruff` · `css_baseline.py` (ratchet
+never rises) · `css_type_probe` + **`css_state_probe`** before/after · review agent, one round
+· Irfan's browser · then commit. Never push.
+
+**Current numbers, measured 2026-08-25** — re-measure, do not quote these:
+`legacy_css_lines` **1,842** · `unsanctioned_hex` **349** · agree **68** / disagree **422**
+lines remaining · target **~1,350**.
+
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
 **Last updated:** 2026-08-13 (**UI-047c — 9 OF 9 PAGES, and `static/theme.css` is DELETED.**)
 — **every page is on the new tree and none is HELD.** Sprint 3 closed incomplete at 3 of 9;
