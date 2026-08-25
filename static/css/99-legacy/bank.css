@@ -192,28 +192,17 @@
     width: min(640px, 96vw); max-height: 92vh; overflow-y: auto;
     box-shadow: 0 16px 48px rgba(0,0,0,.22);
   }
-  /* .modal-header: 05-components/modal.css (UI-042). The h3 stays: its only
-     live declaration is the colour — margin is reset.css's and the 16px loses
-     to typography.css, measured at 14px. */
-  .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
+  /* .modal-header: 05-components/modal.css (UI-042). UI-062 dropped the two
+     dead declarations UI-042 had already named — margin is reset.css's, the
+     16px loses to typography.css (measured 14px). Only the colour was live. */
+  .modal-header h3 { color: var(--navy); }
   .modal-close {
     background: none; border: none; font-size: 22px; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;
   }
   .modal-close:hover { color: var(--ink); }
-  /* .modal-footer: 05-components/modal.css (UI-042) */
-  .btn-cancel {
-    padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
-    background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;
-  }
-  .btn-cancel:hover { background: var(--bg); }
-  .btn-save {
-    padding: 8px 20px; border: none; border-radius: var(--radius-btn);
-    background: var(--primary); color: #fff; cursor: pointer;
-    font-size: 14px; font-weight: 600; font-family: inherit;
-  }
-  .btn-save:hover { background: var(--primary-hover); }
-  .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+  /* .modal-footer: 05-components/modal.css (UI-042).
+     .btn-cancel / .btn-save + states: 05-components/btn.css (UI-062). */
   .modal-err {
     background: var(--err-bg); border: 1px solid #ffb3b3; border-radius: 7px;
     padding: 8px 12px; font-size: 13px; color: var(--err-tx); margin-bottom: 12px; display: none;

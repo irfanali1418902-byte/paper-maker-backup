@@ -291,3 +291,101 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* -------------------------------------------------------------------------
+   .btn-save / .btn-cancel — the modal footer pair, bank and print (UI-062).
+
+   05-components/modal.css's header parked these on 2026-08-16 with the right
+   reason: they LOOK identical in both files and are not, because each page
+   declares its own --radius-btn (bank 10px, print 8px). Irfan settled it on
+   2026-08-25: one radius, --radius-control.
+
+   FOUR THINGS CHANGE ON LIVE PAGES, so a later session does not read them as
+   a regression. AN EARLIER VERSION OF THIS COMMENT SAID THREE AND NAMED THE
+   FIRST THREE — the hover was missing, and it is the one no probe can catch,
+   because css_type_probe measures at rest. Review caught it:
+     .btn-save background   --primary (a navy) -> --color-action (the indigo)
+     radius, both buttons   bank 10px / print 8px -> --radius-control (11px)
+     .btn-cancel border     --border -> --color-border, a lighter grey
+     HOVER, BOTH BUTTONS    each page's own grey -> one Tier 2 role
+
+   THE HOVER IN FULL, since it contributes 0 of the 34 measured deltas and so
+   exists only here. `.btn-cancel:hover` was `var(--bg)`, which resolves to a
+   DIFFERENT grey on each page — bank's is the darker of the two, and both are
+   named in STATUS.md rather than here, because a copy-pasteable hex counts
+   toward unsanctioned_hex even inside a comment. That check fired on this very
+   comment, which is the seventh time on this epic. Both pages now take
+   --color-surface-sunken, a third value neither of them used. That the two disagreed is precisely what modal.css's parked note
+   flagged alongside the radius, and unifying it was in the decision Irfan was
+   shown.
+
+   ⚠ AND ONE CONSEQUENCE THAT WAS NOT: `.btn-save:hover` went --primary-hover
+   to --color-action-hover, which INVERTS THE DIRECTION. The legacy pair
+   darkened on hover; the Tier 2 pair lightens, because --color-action-hover
+   is indigo-500 against indigo-600. It follows necessarily from adopting the
+   action role and it matches `.btn--primary:hover` above, so the app is more
+   consistent after it than before — but the app now has filled buttons that
+   darken and filled buttons that lighten, and that mix belongs with D44's
+   button task rather than here.
+
+   THE COLOUR IS THE POINT, NOT A SIDE EFFECT. `.btn-primary` above already
+   took --color-action in UI-041, and `.btn-save` did not — so bank has been
+   painting TWO different filled action buttons, an indigo one and a navy one,
+   on the same screen. That is D27's defect again and it is what this rule
+   closes.
+
+   GEOMETRY IS KEPT AS MEASURED, deliberately. Joining these to `.btn--primary`
+   / `.btn--ghost` outright would also move font-size (14px -> 15px / 13.5px),
+   weight (600 -> 700) and padding, none of which was in the decision. Same
+   practice as the header's divergence list: where the token scale has no
+   member, the measured pixel value stays. 14px is not a step in the type
+   scale and no token is invented for it here.
+
+   `.btn-cancel` still declares no `color`, exactly as both legacy files left
+   it, so it keeps inheriting rather than gaining `--color-text` by accident.
+   `opacity: .6` on the disabled save is the measured legacy value, NOT this
+   file's .5 for the `.btn--*` variants — unifying disabled opacity across the
+   nine files is its own task and is not smuggled in here.
+
+   ⚠ ONE CONSEQUENCE, RECORDED NOT HIDDEN: `.btn-primary` above deliberately
+   keeps a 10px literal, so after this rule bank paints a 10px primary and an
+   11px save on one page. That is a real, new, small inconsistency and it is
+   the residue of the 10px hold, not of this decision. DEFERRED.md D44.
+
+   ⚠ display:none AT REST — css_type_probe cannot see any of this without
+   .open on the backdrop. Measured with css_selector_probe.mjs --add.
+   ------------------------------------------------------------------------- */
+.btn-save,
+.btn-cancel {
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-save {
+  padding: 8px 20px;
+  border: none;
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: var(--font-weight-strong);
+}
+
+.btn-save:hover {
+  background: var(--color-action-hover);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.btn-cancel:hover {
+  background: var(--color-surface-sunken);
+}

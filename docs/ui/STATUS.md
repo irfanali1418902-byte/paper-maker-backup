@@ -33,6 +33,78 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 
 ---
 
+## UI-062 — `modal` family. **2026-08-25. 34 deltas, aur teenon manzoor-shuda.**
+
+**1075 pass** · ruff saaf · `legacy_css_lines` **1864 → 1842 (−22)** · `unsanctioned_hex`
+**353 → 349 (−4)** · `css_type_diff`: **bank 13, print 21, baqi saat pages 0**.
+
+**Ye epic ka pehla drain hai jis mein deltas jaan-boojh kar sifar nahi hain.** Har ek naapa
+gaya delta `.btn-cancel` ya `.btn-save` par hai. **Chaar cheezein badlin, teen nahi:**
+
+| kya badla | pehle | ab | deltas mein? |
+|---|---|---|---|
+| `.btn-save` background | `--primary` (navy) | **`--color-action` (indigo)** | haan |
+| radius, dono buttons | bank 10px / print 8px | **`--radius-control` (11px)** | haan |
+| `.btn-cancel` border | `--border` | **`--color-border`** (halka) | haan |
+| **hover, dono buttons** | har page ka apna grey | **ek Tier 2 role** | **nahi — 0 deltas** |
+
+⚠ **Chauthi row pehle likhi hi nahi gayi thi, aur review ne pakdi.** Wajah wohi hai jo use
+khatarnak banati hai: `css_type_probe` **rest par** naapta hai, to hover ka koi delta banta hi
+nahi. `.btn-cancel:hover` legacy mein `var(--bg)` tha — **bank `#EEF1F6`, print `#F5F7FB`,
+yani dono alag** — aur ab dono `--color-surface-sunken` par hain, ek teesri qeemat jo kisi
+page par nahi thi. Dono ka mukhtalif hona wohi baat hai jo `modal.css` ke parked note ne
+radius ke saath likhi thi, aur ye Irfan ke saamne rakhe gaye faisle ke preview mein shamil
+tha. **Magar "teen cheezein badlin" likhna ghalat tha.**
+
+⚠ **Ek nateeja jo faisle mein shamil NAHI tha:** `.btn-save:hover` `--primary-hover` se
+`--color-action-hover` par gaya, jo **simt ulat deta hai** — legacy hover par gehra hota tha,
+naya halka hota hai (indigo-500 vs indigo-600). Ye action role apnane ka lazmi nateeja hai
+aur `.btn--primary:hover` se milta hai, magar ab app mein kuch filled buttons gehre hote hain
+aur kuch halke. Ye D44 ke button task ka hissa hai.
+
+`font-size` aur `padding` **bilkul nahi hile** — naap kar tasdeeq hua, aur jaan-boojh kar
+aisa rakha gaya (neeche dekhein).
+
+### Ye family `modal.css` 2026-08-16 se park kar rakhi thi, aur wajah durust thi
+
+Us file ka header kehta hai: *"they LOOK identical in both files and are not — bank's
+`--radius-btn` is 10px, print's is 8px."* Naapa gaya aur aaj bhi bilkul aisa hi tha. Rule ka
+matn dono files mein byte-identical hai; farq sirf is se aata hai ke har page apna token
+alag declare karta hai. **Is liye component tab hi ban sakta tha jab ek radius jeete**, aur
+wo faisla Irfan ka tha — 2026-08-25, `--radius-control`.
+
+### Asal daryaft: bank par do primary rang saath saath chal rahe the
+
+`.btn-primary` UI-041 mein `--color-action` (indigo `rgb(79,70,229)`) le chuka tha.
+`.btn-save` nahi — wo legacy `--primary` (navy `rgb(46,90,172)`) par khada raha. **Yani bank
+ek hi screen par do mukhtalif filled action buttons paint kar raha tha**, aur ye kahin darj
+nahi tha. Ye D27 ka wohi defect hai. Isi liye rang badalna is task ka **maqsad** hai, koi
+side-effect nahi — aur Irfan ne poori tasveer dekh kar chuna.
+
+### Geometry jaan-boojh kar nahi hilayi
+
+`.btn-save` ko seedha `.btn--primary` ke selector list mein jorna aasan tha aur **ghalat**:
+us se `font-size` 14→15px, `font-weight` 600→700, aur `min-height` 44px bhi aa jata — teenon
+mein se koi faisle mein shamil nahi tha. Us ki jagah `btn.css` ke aakhir wale `.btn-primary`
+block ka wohi tareeqa apnaya gaya: **legacy naam, component ke rang/token, apni measured
+geometry.** 14px type scale ka member nahi hai aur us ke liye koi token ijaad nahi kiya gaya.
+
+`opacity: .6` bhi measured legacy qeemat par hai, is file ke `.btn--*` wale `.5` par nahi —
+disabled opacity ko nau files mein yaksan karna apna task hai, is mein chhupaya nahi gaya.
+
+### Ek naya nuqsan jo darj kiya gaya, chhupaya nahi — D44
+
+`btn.css`:275 `.btn-primary` ko jaan-boojh kar 10px literal par rakhta hai. Ab bank ek hi
+flow mein **10px primary aur 11px save** paint karega. UI-062 se pehle dono 10px par mutafiq
+the (dono wohi legacy `--radius-btn` parhte the). Ye radius ke faisle ka nateeja nahi, us
+10px hold ka baqaya hai — **D44**, aur agla button task usay band karega.
+
+⚠ **Browser check nahi hua** — extension phir bhi connect nahi hui. Aur is baar ye pehle se
+zyada ahem hai: **ye pehla drain hai jis ne live pages par nazar aane wali cheez badli hai.**
+34 deltas headless Edge ka naap hain; Save button ka naya rang aankh se dekhna baqi hai.
+
+---
+
 ## UI-061 — `field/filter` agree drain. **2026-08-24. 9 pages par 0 deltas.**
 
 **1075 pass** · ruff saaf · `legacy_css_lines` **1873 → 1864 (−9)** · `unsanctioned_hex`

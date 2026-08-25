@@ -1,5 +1,78 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-25 — UI-062: modal family — aur bank par do primary rang mile
+
+**1075 pass**, ruff saaf, `legacy_css_lines` **1864 → 1842 (−22)**, `unsanctioned_hex`
+**353 → 349 (−4)**. `css_type_diff`: **bank 13, print 21, baqi saat pages 0.**
+
+**Ye pehla drain hai jis mein deltas jaan-boojh kar sifar nahi rakhe gaye.**
+
+### Kyun ye family do din pehle nahi ho sakti thi
+
+`modal.css` ne ise 2026-08-16 ko park kiya tha, aur wajah naapne par aaj bhi zinda thi:
+`.btn-cancel`/`.btn-save` ka matn dono files mein byte-identical hai, magar bank apna
+`--radius-btn` 10px declare karta hai aur print 8px. Component tab hi ban sakta tha jab **ek
+radius jeete** — aur us se ek page nazar aane ki had tak badalta. Wo faisla mera nahi tha;
+Irfan ne `--radius-control` (11px) chuna.
+
+### Asal daryaft — aur ye poochhne se pehle naapi gayi
+
+Component banane se pehle ye dekha ke component ke rang legacy se milte bhi hain ya nahi.
+Nahi milte the, aur us se ek cheez benaqab hui jo kahin darj nahi thi:
+
+| bank par, us waqt | background |
+|---|---|
+| `.btn-primary` | `rgb(79,70,229)` — **indigo**, UI-041 mein `--color-action` le chuka |
+| `.btn-save` | `rgb(46,90,172)` — **navy**, legacy `--primary` par khada |
+
+**Bank ek hi screen par do mukhtalif filled action buttons paint kar raha tha.** Ye D27 ka
+wohi defect hai jis ke liye epic bana. Isi liye rang badalna is task ka maqsad bana, koi
+side-effect nahi — magar ye poori tasveer Irfan ke saamne rakh kar hi aage barha gaya,
+kyunke pehle sirf radius ki baat hui thi aur wo adhoori thi.
+
+### Jo jaan-boojh kar NAHI kiya gaya
+
+`.btn-save` ko seedha `.btn--primary` ke selector list mein jorna ek line ka kaam tha aur
+**ghalat hota**: us se `font-size` 14→15px, `font-weight` 600→700 aur `min-height` 44px bhi
+saath aate — teenon faisle se bahar. Us ki jagah `btn.css` ke apne `.btn-primary` block wala
+tareeqa apnaya: **legacy naam, component ke token, apni measured geometry.** Naap kar tasdeeq
+hui ke `font-size` aur `padding` ek bhi delta par nahi hile.
+
+### Deltas ginne ke qabil hain, is liye ginwaye ja rahe hain
+
+34 ke 34 `.btn-cancel` ya `.btn-save` par hain, aur har property teen mein se ek: border
+colour, radius, ya `.btn-save` ka background. Baqi saat pages par sifar.
+
+### Aur ek chauthi tabdeeli jo maine "teen" likh kar chhupa di — review ne pakdi
+
+Maine `btn.css`, `STATUS.md` aur yahan teenon jagah likha tha ke **teen** cheezein badlin aur
+teenon manzoor-shuda hain. **Wo ek closed-set daawa tha aur ghalat tha — chaar hain.**
+
+Chauthi hai `.btn-cancel:hover`. Legacy mein wo `var(--bg)` tha, jo **har page par alag** hai
+(bank `#EEF1F6`, print `#F5F7FB`); ab dono `--color-surface-sunken` par hain — ek teesri
+qeemat jo kisi page par nahi thi. Ye Irfan ke saamne rakhe gaye faisle ke preview mein darj
+tha, to manzoori maujood hai; **likhna ghalat tha, karna nahi.**
+
+**Aur wajah jo isay ahem banati hai:** `css_type_probe` **rest par** naapta hai, is liye hover
+ka **ek bhi delta nahi banta**. Yani ye 34 mein shamil nahi, aur har us gate se guzar gaya jo
+is task par chalaya gaya. Jo cheez sirf state par zahir hoti hai, us ka koi auzaar is repo
+mein nahi — UI-061 mein `:focus` par yehi kami darj hui thi, aur do din mein dobara kaat gayi.
+
+Ek aur nateeja jo faisle mein shamil nahi tha: `.btn-save:hover` `--primary-hover` se
+`--color-action-hover` par gaya, jo **simt ulat deta hai** — legacy hover par gehra karta tha,
+naya halka karta hai. Action role apnane ka lazmi nateeja hai, magar ab app mein kuch filled
+buttons gehre hote hain aur kuch halke. D44 ke saath.
+
+### Naya qarz jo isi waqt darj kiya — D44
+
+`btn.css`:275 `.btn-primary` ko jaan-boojh kar 10px par rakhta hai. Ab bank **10px primary
+aur 11px save** ek saath dikhayega; is se pehle dono 10px par mutafiq the. Ye radius ke
+faisle ka nateeja nahi, us purane 10px hold ka baqaya hai. **Agla button task pehle** —
+saare filled legacy buttons ek radius par, warna har agla drain yehi qarz barhata rahega.
+
+⚠ **Browser check nahi hua** (extension phir bhi connect nahi hoti) — aur is dafa ye pehle se
+ahem hai, kyunke pehli baar live page par nazar aane wali cheez badli hai.
+
 ## 2026-08-24 — UI-061: `field/filter` drain — aur wo "duplication" nahi, murda code nikla
 
 **1075 pass**, ruff saaf, `legacy_css_lines` **1873 → 1864 (−9)**, `unsanctioned_hex`
