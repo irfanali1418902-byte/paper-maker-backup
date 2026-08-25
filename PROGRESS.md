@@ -70,8 +70,25 @@ aur 11px save** ek saath dikhayega; is se pehle dono 10px par mutafiq the. Ye ra
 faisle ka nateeja nahi, us purane 10px hold ka baqaya hai. **Agla button task pehle** —
 saare filled legacy buttons ek radius par, warna har agla drain yehi qarz barhata rahega.
 
-⚠ **Browser check nahi hua** (extension phir bhi connect nahi hoti) — aur is dafa ye pehle se
-ahem hai, kyunke pehli baar live page par nazar aane wali cheez badli hai.
+### Browser check hua — usi din, aur adhoora hone ke baad bhi kaam ka
+
+Extension is baar bhi connect nahi hui; Irfan ne khud incognito + hard refresh par dekha.
+
+**Confirmed:** `bank` ka Save button **indigo** hai (is task ki sab se bari nazar aane wali
+tabdeeli), `bank` par **focus ring aata hai**, aur `print` ka edit modal theek hai — wohi
+page jahan radius ka farq sab se bara tha (8px → 11px).
+
+**Nahi dekha, aur waise hi darj:** `index`/`library`/`blueprint` ke labels aur focus, strip
+filter ka box, aur `.btn-cancel:hover` ka naya grey. D44 par Irfan ki raay bhi baqi hai.
+
+**Focus ring ki tasdeeq asal mein UI-062 se zyada UI-061 ke kaam ki hai.** Us task ne chaar
+pages se `input:focus` ki rules delete ki thin aur us ka poora sabot layer-order ka istidlal
+plus rest par 0 deltas tha. Ab wo aankh se poora ho gaya.
+
+**Magar D45 isse band nahi hoti, aur ye nuqta chhoot jane wala hai:** gap is dafa **haath se**
+bhara gaya, auzaar se nahi. `.btn-cancel:hover` ka naya grey ab bhi kisi tarah tasdeeq-shuda
+nahi hai — na probe use naap sakta, na wo dekha gaya. Agli dafa jab hover ki koi rule chupke
+se badlegi, koi haath maujood na hoga.
 
 ## 2026-08-24 — UI-061: `field/filter` drain — aur wo "duplication" nahi, murda code nikla
 

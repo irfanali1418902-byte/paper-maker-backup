@@ -99,9 +99,27 @@ flow mein **10px primary aur 11px save** paint karega. UI-062 se pehle dono 10px
 the (dono wohi legacy `--radius-btn` parhte the). Ye radius ke faisle ka nateeja nahi, us
 10px hold ka baqaya hai — **D44**, aur agla button task usay band karega.
 
-⚠ **Browser check nahi hua** — extension phir bhi connect nahi hui. Aur is baar ye pehle se
-zyada ahem hai: **ye pehla drain hai jis ne live pages par nazar aane wali cheez badli hai.**
-34 deltas headless Edge ka naap hain; Save button ka naya rang aankh se dekhna baqi hai.
+### Browser check — **hua, aur jo hissa ahem tha wohi confirm hua** (2026-08-25)
+
+Chrome extension is baar bhi connect nahi hui; Irfan ne khud incognito + hard refresh par
+dekha. Jo darj karne laayaq hai wo ye hai ke **kya dekha gaya aur kya nahi:**
+
+| | |
+|---|---|
+| ✅ **CONFIRMED** | `bank` ka Save button **indigo** hai — is task ki sab se bari nazar aane wali tabdeeli |
+| ✅ **CONFIRMED** | `bank` par input/select par **focus ring aata hai** |
+| ✅ **CONFIRMED** | `print` ka edit modal theek hai — wahi page jahan radius ka farq sab se bara tha (8px → 11px) |
+| ⬜ **NAHI DEKHA** | `index` / `library` / `blueprint` ke labels aur focus; strip filter ka box; `.btn-cancel:hover` ka naya grey |
+| ⬜ **RAAY BAQI** | D44 — bank par 10px primary aur 11px save ka farq kitna khatakta hai |
+
+**Focus ring ki tasdeeq UI-062 se zyada UI-061 ke liye ahem hai.** Us task ne chaar pages se
+`input:focus` ki rules **delete** ki thin aur us ka poora sabot layer-order ka istidlal plus
+rest par 0 deltas tha — kyunke is repo mein focus naapne ka koi auzaar hai hi nahi (**D45**).
+Ab wo daawa aankh se poora ho gaya. **Magar D45 band nahi hui:** ye gap is dafa **haath se**
+bhara gaya, auzaar se nahi, aur agli dafa koi haath maujood na hoga.
+
+⚠ `.btn-cancel:hover` ka naya grey **ab bhi kisi tarah tasdeeq-shuda nahi** — na probe use
+naap sakta (rest par 0 deltas), na wo dekha gaya. Yehi D45 ka asal nuqta hai.
 
 ---
 
@@ -184,9 +202,21 @@ aur ye is liye likha hai ke agla session "field/filter mukammal ho gaya" na sama
 
 Aakhri do nuqte (6 lines) ek chhote faisle ke muntazir hain, mafqood nahi.
 
-⚠ **Browser check nahi hua** — Chrome extension is baar bhi connect nahi hui. Jo daawa kiya
-ja raha hai wo sirf ye hai: headless Edge par nau pages ke 367,048 element × property jode
-mein se **ek bhi nahi hila**. Ye "page dekhne mein theek hai" ka daawa **nahi** hai.
+### Browser check — **baad mein hua, 2026-08-25** (UI-062 ke saath)
+
+Jab ye task likha gaya tab check nahi hua tha aur wo yahan darj kiya gaya tha. **Ab hissa
+ban chuka hai:** Irfan ne `bank` par input/select par click kar ke dekha — **focus ring aata
+hai.**
+
+**Yehi is task ka sab se kamzor daawa tha.** Yahan chaar pages se `input:focus` ki poori
+rules delete ki gayin, aur un ke murda hone ka sabot **sirf** layer-order ka istidlal plus
+rest par 0 deltas tha — kyunke focus naapne ka koi auzaar is repo mein nahi hai (**D45**).
+Agar wo istidlal ghalat hota, ring gayab hota aur **koi bhi gate na pakadta.** Ab wo aankh se
+poora ho gaya.
+
+⬜ **Ab bhi nahi dekha:** `index` / `library` / `blueprint` ke labels, aur strip filter ka
+box. Baqi daawa wohi hai jo tha: headless Edge par nau pages ke 367,048 element × property
+jode mein se **ek bhi nahi hila**.
 
 ---
 
