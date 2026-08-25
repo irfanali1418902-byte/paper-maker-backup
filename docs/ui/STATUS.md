@@ -33,6 +33,90 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 
 ---
 
+## UI-065 — state probe (D45 band). **2026-08-25. Auzaar hai, kisi page ka CSS nahi badla.**
+
+`scripts/css_state_probe.mjs` — naya file. **Ye drain nahi, auzaar hai**, aur jaan-boojh kar
+drain se pehle banaya gaya. Kisi page ka koi byte nahi badla; ratchet chhua tak nahi.
+
+### Kyun — aur ye control se sabit hua, daawe se nahi
+
+Is repo ka har probe page ko **rest par** parhta tha. Yani `:hover` / `:focus-visible` /
+`:disabled` ki koi bhi declaration **0 deltas** deti thi, chahe wo durust ho ya ghalat. Do
+task do din mein isi se kate: UI-061 ne chaar pages se `input:focus` delete ki (sabot sirf
+layer-order ka istidlal tha), aur UI-062 ne `.btn-cancel:hover` ka grey badal diya aur
+**pytest, ruff, ratchet aur 34 measured deltas — sab paas ho gaye.**
+
+**Control, 2026-08-25, `bank` par wohi hover declaration mutate kar ke:**
+
+| probe | deltas |
+|---|---|
+| `css_type_probe.mjs` (rest), nau ke nau pages | **0** |
+| `css_state_probe.mjs`, akela `bank` | **1** — `button.btn-cancel::hover  background-color` |
+
+Dono adad ek hi mutation aur ek hi browser se. Mutation ke baad `btn.css` HEAD ke barabar
+restore ho gayi (`git diff --quiet` saaf).
+
+### Do faisle jo is ki qeemat tay karte hain
+
+**1. Ye `css_type_probe` ki bilkul wohi JSON shape likhta hai**, is liye `css_type_diff.mjs`
+**bina kisi tabdeeli ke** dono parhta hai — `--names` sameet. Koi naya diff tool seekhna nahi
+parta. Keys `<path>::<state>` hain aur `<path>` wala hissa byte-identical hai, to state diff
+ka path rest diff mein paste kiya ja sakta hai.
+
+**2. `outline-*` shamil hai — `css_type_probe` mein wo bilkul nahi hai.** Bina us ke probe ring
+ka aana, rang badalna ya gayab hona dekh hi nahi sakta.
+
+`:disabled` alag hai: wo forceable flag nahi, **attribute** hai. Set kar ke snapshot liya jata
+hai phir bahaal — aur bahaali ka count output mein darj hota hai (`disabledRestored`).
+
+### Review ne pehla version FAIL kiya, aur wo durust tha
+
+Pehle version ne akela `focus-visible` force kiya tha. **`:focus-visible` kisi `:focus` rule
+ko match nahi karta**, is liye repo ki har `input:focus` rule — `forms.css`:79 sameet, aur
+wohi chaar jo **UI-061 ne delete ki thin** — rest ke barabar naapi gayi. Yani jo auzaar theek
+usi sooraakh ke liye bana tha, wo us sooraakh par andha tha. **Koi error nahi aaya, records
+poore the — bas sab resting values the.**
+
+Ab focus **do pass** hai: `focus` (akela `:focus` — pointer focus, yehi `forms.css`:79 ko
+dekhta hai) aur `focus-visible` (**dono** force — asal tab-stop dono ko match karta hai).
+
+### Jo isi waqt naap kar mila
+
+* **Fields par focus ring `outline` NAHI hai — glow hai.** `select#fSubject` par dono
+  pseudo-class force karne se: `border-top-color rgb(14,165,164)`, `box-shadow rgb(220,245,244)
+  0 0 0 3px`, aur `outline-style: none`. Wajah: `input:focus` (0,1,1) usi layer mein
+  `:focus-visible` (0,1,0) ko harata hai. **`forms.css`:76 ka comment is ka ulta kehta hai** —
+  **D47**. Is section ke pehle draft ne "focus ring = `outline: 2px solid`" likha tha; wo
+  **buttons ke liye sahi, fields ke liye ghalat** tha.
+* **`.btn-save:hover` = indigo-500 jabke rest par indigo-600** — UI-062 mein jo "hover ab
+  halka karta hai, gehra nahi" likha gaya tha, wo ab **naapa hua** adad hai.
+* **`.btn-cancel:hover` = `rgb(250,251,254)`** — pehli dafa naapa gaya. Wo daawa jo UI-062
+  mein "kisi tarah tasdeeq-shuda nahi" darj hua tha, ab band hai.
+* **`.btn-save:disabled` opacity `0.6`, `.btn-cancel` ka koi disabled rule hi nahi** (opacity
+  1 rehti hai). Ye **D46** ka maal hai aur ab naapne ke qabil.
+
+### Daira — chhota, magar review ke baad teen selector chaura
+
+Interactive elements, **aur `tbody tr`, `.q-row`, `.bp-row`**. Review ne `static/css/` ke
+**66** state selectors ginn kar teen **zinda `:hover` rules** dhoondein jo tag list kabhi
+pakad hi nahi sakti thi — `tbody tr:hover` (**slo**, ek LIVE gate page), `.q-row:hover`
+(bank), `.bp-row:hover` (blueprint). Daira jo zinda rule chhor de wo daira nahi, sooraakh hai.
+Asar: `slo` 20 → **135**, `bank` 1,533 → **1,992**, `blueprint` 63 → **65**.
+
+Nau pages, paanch states, **~30 second, 13,100 records, 0 errors**.
+
+⚠ **Pehle yahan "~41 second, 8,112 records" likha tha aur review ne akele `bank` ko 445 second
+par naapa.** Dono adad asli the: pehla version har `forcePseudoState` ka alag round-trip
+awaited karta tha, aur wo latency par hai — machine ke bojh se das guna oopar neeche. Ab calls
+saath bheji jati hain aur ek dafa await hoti hain. Naya adad **zyada states aur zyada elements
+ke saath** hai.
+
+⬜ **Ab tak koi baseline commit nahi hui.** Probe maujood hai; agla task (D44) us ka pehla
+asal istemaal hoga — us se pehle aur baad mein chalana **laazmi** hai, kyunke wo task poora ka
+poora hover aur disabled surfaces par hai.
+
+---
+
 ## UI-062 — `modal` family. **2026-08-25. 34 deltas, aur teenon manzoor-shuda.**
 
 **1075 pass** · ruff saaf · `legacy_css_lines` **1864 → 1842 (−22)** · `unsanctioned_hex`

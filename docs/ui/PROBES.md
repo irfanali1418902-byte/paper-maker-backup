@@ -1,6 +1,6 @@
 # UI-ARCH — the measurement probes
 
-Seven CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
+Eight CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
 re-checked instead of trusted, and they exist as repo files because **this epic has already
 lost a set of measurement scripts once** — the first `print` session wrote them into a
 session scratchpad and they were gone by the next one, with only the method surviving in
@@ -22,8 +22,45 @@ in a scratchpad.
 
 | `css_selector_probe.mjs` | screen | **What does this selector actually compute to, page by page?** Takes a selector, a property list and a page list. **`--add=<selector>:<class>` adds a class before reading and removes it after**, which is the only way to reach state that is `display: none` at rest — `.status-bar`'s `.ok`/`.err`/`.warn` are written by inline JS and `.modal-backdrop` needs `.open`, so `css_type_probe` returns 0 for both whether the CSS is right or wrong. Written 2026-08-15/16, when it found **six** families whose rule text was byte-identical across files and whose resolved values were not. Its header lists them. |
 
+| `css_state_probe.mjs` | screen | **What does a HOVERED, FOCUSED, ACTIVE or DISABLED element paint?** Every other probe here reads the page **at rest**, so a state declaration contributes **zero deltas whether it is right or wrong**. Forces the state through CDP `CSS.forcePseudoState` — the flag the style engine itself reads, so the cascade resolves as it would under a real pointer, with no synthetic mouse events to race the pages' JS. `:disabled` is the exception and is applied as the **attribute**, then restored. Writes `css_type_probe`'s exact JSON shape, so **`css_type_diff.mjs` compares two runs unchanged**, `--names` included. Carries **`outline-*`, which `css_type_probe` does not have at all**. **Five states, and FOCUS IS TWO OF THEM:** `focus` forces `:focus` alone (pointer focus — this is the pass that sees `forms.css`:79 and every `input:focus` rule), `focus-visible` forces **both** `:focus` and `:focus-visible`, because a real tab-stop matches both and anything else models a state no user can reach. |
+
 `css_rules_probe.mjs` (older, UI-032) is the DOM half of `css_orphans.py --rules` and is
 unrelated to these.
+
+**Rule 10, added 2026-08-25, and it is the only rule here that was proved by a control rather
+than by a bug: A GATE THAT READS THE PAGE AT REST CANNOT SEE A STATE.** `css_state_probe.mjs`
+exists because two tasks in two days were bitten. UI-061 deleted four `input:focus` rules and
+could only argue they were dead from layer order plus 0 deltas at rest — had the argument been
+wrong, the focus ring would have vanished and **no gate would have fired**; it was confirmed by
+Irfan's eye. UI-062 then re-pointed `.btn-cancel:hover` onto a grey neither page used, and
+pytest, ruff, the ratchet and all 34 measured deltas passed without noticing.
+
+**The control, run 2026-08-25 on `bank`, mutating exactly that hover declaration:**
+
+| probe | deltas |
+|---|---|
+| `css_type_probe.mjs` (at rest), all nine pages | **0** |
+| `css_state_probe.mjs`, `bank` alone | **1** — `button.btn-cancel::hover  background-color` |
+
+Both numbers came from the same mutation and the same browser, and review reproduced them
+independently. **Run the state probe before and after any task that touches a `:hover`,
+`:focus`, `:active` or `:disabled` rule** — the rest gate will pass regardless.
+
+**Rule 11, and it is the same lesson one level down: FORCING THE WRONG PSEUDO-CLASS LOOKS
+EXACTLY LIKE A CLEAN RESULT.** The first version of `css_state_probe.mjs` forced
+`focus-visible` alone. `:focus-visible` does not match a `:focus` rule, so every
+`input:focus` in the repo — including `forms.css`:79, and the four UI-061 deleted — measured
+**byte-identical to rest**, in the probe built to close exactly that hole. Nothing errored;
+the records were all there; they were simply all the resting values. Review caught it by
+running a direct CDP experiment, not by reading the output.
+
+**What that experiment also settled, and it corrects a comment in the tree:** on a form field
+both pseudo-classes match at once during real keyboard focus, and `input:focus` (0,1,1) beats
+`:focus-visible` (0,1,0) in the same layer. So a focused input paints **no outline** — it
+gets the teal border and the 3px glow from `forms.css`:79. `forms.css`:76's comment says the
+`:focus-visible` rule wins "being later in the file"; it does not. The visible ring on an
+input is the glow, and the `outline` treatment reaches buttons, links and anything with no
+`:focus` rule of its own. See DEFERRED D47.
 
 **Rule 9, added 2026-08-16 and it earned its place twice in one sitting: identical rule text is
 not identical output, and a dead declaration is not a safe one.** The migrated entry files
@@ -43,7 +80,7 @@ does not exist.
 
 ## Running them
 
-All six need the app running first:
+All of them need the app running first:
 
 ```
 .venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
@@ -58,7 +95,28 @@ node scripts/css_margin_probe.mjs     <label> <outdir> <paperId...>
 node scripts/css_margin_diff.mjs      <before.json> <after.json>
 node scripts/css_page_rule_probe.mjs  <url> [selector-substring]
 node scripts/css_drain_probe.mjs      <page> [--json <path>]
+node scripts/css_state_probe.mjs      <label> <outdir> [--page <p>]
+node scripts/css_selector_probe.mjs   "<selector>" "<prop,prop>" [--add=<sel>:<class>] <page...>
 ```
+
+`css_state_probe.mjs` writes the same JSON shape as `css_type_probe.mjs`, so the SAME diff
+tool reads both — there is no state-specific diff to learn:
+
+```
+node scripts/css_type_diff.mjs <before>.json <after>.json --names
+```
+
+Its keys are `<path>::<state>`, and the `<path>` half is byte-identical to `css_type_probe`'s,
+so a path from a state diff can be pasted into a rest diff and lands on the same element.
+Full run: **nine pages, five states, ~30 s, 13,100 records** (measured 2026-08-25).
+`--page bank` for one.
+
+> **⚠ An earlier draft of this line said "~41 s, 8,112 records" and review measured `bank`
+> ALONE at 445 s.** Both numbers were real: the first version awaited every
+> `forcePseudoState` in turn — 1,533 elements × states × 2 serialised round-trips — and the
+> cost is latency-bound, so it varies with machine load by an order of magnitude. The calls
+> are independent, so they are now issued together and awaited once. The current figure is
+> the pipelined one, with MORE states and MORE elements than the number it replaces.
 
 Each writes `<outdir>/<label>.json` and prints a summary. **Use a scratchpad for `<outdir>`** —
 the JSON and PDFs are large and are not repo artefacts; only the scripts belong here.
@@ -69,8 +127,12 @@ The usual shape of a task is: measure at HEAD → make the change → measure �
 
 ## What is hardcoded, and when it will bite
 
-- **Edge's path** — `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` in five of
-  the six. Change it if the dev PC moves.
+- **Edge's path** — `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`, now in
+  seven of the eight. Change it if the dev PC moves.
+- **`css_state_probe.mjs`'s interactive selector list and its four states** are hardcoded at
+  the top of the file. Widen the selector list when a real rule falls outside it, not on
+  principle — forcing `:hover` on all 5,379 of bank's elements produces a diff dominated by
+  inherited colour, which is why it is scoped to what can actually take a state.
 - **`http://127.0.0.1:8000/static`** as the base URL.
 - **Three paper UUIDs** in `css_print_probe.mjs`, and they are **database-specific**:
 
