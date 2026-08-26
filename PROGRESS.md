@@ -1,5 +1,41 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-26 — R7 adoption: hafta-war plan pehli dafa asal data se bhara — 4 rows se 91
+
+Backup: `paper_maker_backup_before_r7_import_20260826.db`.
+
+**Rukawat code nahi thi, aur file pehle se mojood thi.** `ROADMAP.md` ka order-4 row
+mahine bhar se keh raha tha: *"The remaining work is not code — it is one teacher filling
+in one Excel plan."* Aaj ka audit dekhta hai ke `namoona_plan_pre_year_3.xlsx` **root mein
+para hai, 2026-08-23 se, untracked, aur bhara hua hai** — 87 rows, weeks **1–36**, koi
+khali `week_no` nahi, aur saare `syllabus_topic_id` PY3 se milte hain. Yani jo kaam
+"baqi" darj tha, wo teen din pehle ho chuka tha aur **import nahi hua tha.**
+
+Import `POST /api/topic-plan/assign-import` se: `{"updated": 87, "cleared": 0,
+"errors": [], "warnings": []}`. `topic_week_plan` **4 → 91 rows** (PY3 ke 87 + PY1 ki
+wohi 4 purani browser-test rows).
+
+### `covered: 0` bug NAHI hai — aur ye galat-fehmi likhne layak hai
+
+Import ke baad PY3 ka coverage `covered_topics: 0` deta hai, jabke usi din seeding ne
+PY3 ke **43 topics par 172 sawal** bana diye. Ye ulta nahi lagna chahiye:
+`topic_coverage_service.py`:54 `covered` ko **`papers` se** nikalta hai, bank se nahi —
+topic tab covered hai jab wo kisi **asal paper** mein aa jaye. PY3 ka abhi koi paper bana
+hi nahi, is liye **0 durust hai.** Bank bharna aur topic cover hona do alag cheezein hain.
+
+Tasdeeq ke liye PY1 (jis ke papers bane hue hain) wohi purana adad deta hai:
+`81 topics, 49 covered, 60%` — yani import ne kuch toda nahi.
+
+| | pehle | ab |
+|---|---:|---:|
+| `topic_week_plan` rows | 4 | **91** |
+| PY3 planned topics | 0 | **87** (36 hafte) |
+| PY3 covered | — | **0** (koi paper nahi bana) |
+| PY1 coverage | 49/81, 60% | **49/81, 60%** (na hila) |
+
+**Ab `plan.html` par PY3 ka board pehli dafa asal hai.** Order-4 ki "Built ≠ adopted"
+warning ab PY3 ke liye khatam; PY2 aur PY1 ke liye ab bhi qaim hai.
+
 ## 2026-08-26 — R1 seeding: Pre Year 3 ka doosra run — 23/87 se 43/87
 
 Backup: `paper_maker_backup_before_preyear3_seed_20260826.db` (run se pehle).
