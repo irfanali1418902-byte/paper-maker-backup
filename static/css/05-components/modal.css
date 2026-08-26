@@ -8,11 +8,13 @@
    here, and nothing below assumes the three will ever be unified.
 
    ⚠ WHAT WAS LEFT BEHIND, so it is not mistaken for an oversight:
-   · `.btn-cancel` / `.btn-save` and their states LOOK identical in both files
-     and are not — bank's --radius-btn is 10px, print's is 8px, and their --bg
-     greys differ. They are also buttons, and .btn-primary / .btn-ghost /
-     .btn-danger are duplicated across three to five files. One button task
-     next to btn.css decides the radius once instead of three times.
+   · ~~`.btn-cancel` / `.btn-save` and their states LOOK identical in both
+     files and are not — bank's --radius-btn is 10px, print's is 8px, and
+     their --bg greys differ. One button task next to btn.css decides the
+     radius once instead of three times.~~ BOTH DONE: UI-062 moved the pair
+     into btn.css, and UI-063 was that button task — one radius
+     (--radius-control) for every filled light-surface action button, D44 and
+     D46 closed. The on-dark family is the carve-out, DEFERRED.md D48.
    · `.modal-header h3` — two of its three declarations are already dead
      (reset.css zeroes the margin; typography.css beats the 16px). Only a
      colour survives, and that navy has no Tier 2 role yet.

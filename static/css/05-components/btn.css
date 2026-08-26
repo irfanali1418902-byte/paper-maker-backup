@@ -206,13 +206,17 @@
    `.btn-ghost:disabled` rule anywhere in this repo. What is actually there:
    bank.css:147 gives the filled button `opacity: .5; cursor: not-allowed`.
    Bank is HELD, so that rule is not live; the LIVE evidence is library.css
-   :84, which is the same `.5` / `not-allowed`, and slo.css:56, which is `.5`
-   but `cursor: default`. (library.css:237's `.pg-btn:disabled` is a third
-   live rule, at `.4` / `default` — pagination, not a button variant this
-   file covers.) Disabled opacity across the nine files ranges .4/.5/.55/.6.
-   So .5 is the common value, `not-allowed` is the spelling two of the three
-   live rules use, and the ghost inherits both by decision rather than by
-   measurement — nothing in this repo declares a disabled ghost. */
+   :84, which is the same `.5` / `not-allowed`. So .5 was the common value,
+   `not-allowed` the spelling the live rules used, and the ghost inherited
+   both by decision rather than by measurement — nothing in this repo
+   declares a disabled ghost.
+
+   ⚠ THE RANGE THIS COMMENT USED TO DESCRIBE IS GONE. It said "disabled
+   opacity across the nine files ranges .4/.5/.55/.6" and cited
+   `library.css:237` as a live `.4`/`default` outlier. UI-063 closed D46:
+   every `:disabled` rule in static/css/ is now `.5` + `not-allowed`, and
+   that pagination rule is `library.css:192`. The old line number was
+   already wrong before it went stale. */
 .btn--primary:disabled,
 .btn--ghost:disabled,
 .btn-ghost:disabled,
@@ -272,9 +276,12 @@
   border: none;
   min-height: 44px;
   padding: 0 20px;
-  /* 10px literal, NOT --radius-control: that token is 11px and all three
-     pages measure 10px here. The token would move every one of them. */
-  border-radius: 10px;
+  /* WAS a 10px literal, deliberately, "because the token would move every one
+     of them". UI-063 moved every one of them on purpose — Irfan's decision,
+     2026-08-25: one radius for the app's action buttons. That hold is what
+     left bank painting a 10px primary beside an 11px save (D44), and this is
+     the line that closes it. */
+  border-radius: var(--radius-control);
   font-size: 14.5px;
   font-weight: var(--font-weight-heading);
   font-family: inherit;
@@ -296,9 +303,11 @@
    .btn-save / .btn-cancel — the modal footer pair, bank and print (UI-062).
 
    05-components/modal.css's header parked these on 2026-08-16 with the right
-   reason: they LOOK identical in both files and are not, because each page
-   declares its own --radius-btn (bank 10px, print 8px). Irfan settled it on
-   2026-08-25: one radius, --radius-control.
+   reason: they LOOKED identical in both files and were not, because each page
+   declared its own --radius-btn (bank 10px, print 8px). Irfan settled it on
+   2026-08-25: one radius, --radius-control. Past tense since UI-063 — bank
+   no longer declares --radius-btn at all (its declaration was already dead)
+   and print's now reads --radius-control.
 
    FOUR THINGS CHANGE ON LIVE PAGES, so a later session does not read them as
    a regression. AN EARLIER VERSION OF THIS COMMENT SAID THREE AND NAMED THE
@@ -328,6 +337,13 @@
    darken and filled buttons that lighten, and that mix belongs with D44's
    button task rather than here.
 
+   UI-063 IS THAT TASK, AND IT RESOLVED THE MIX ONLY ON LIGHT SURFACES.
+   `.gen-btn`, `.btn` (slo) and `.suggest-btn` joined the lightening side by
+   taking --color-action / --color-action-hover. `bank.css`'s `.btn-fb-save`
+   and `print.css`'s `.ps-stepper` buttons still darken, because they sit on
+   the dark bar and have no Tier 2 on-dark role to move to. That carve-out is
+   DEFERRED.md D48 — the mix is narrowed, not gone.
+
    THE COLOUR IS THE POINT, NOT A SIDE EFFECT. `.btn-primary` above already
    took --color-action in UI-041, and `.btn-save` did not — so bank has been
    painting TWO different filled action buttons, an indigo one and a navy one,
@@ -343,14 +359,15 @@
 
    `.btn-cancel` still declares no `color`, exactly as both legacy files left
    it, so it keeps inheriting rather than gaining `--color-text` by accident.
-   `opacity: .6` on the disabled save is the measured legacy value, NOT this
-   file's .5 for the `.btn--*` variants — unifying disabled opacity across the
-   nine files is its own task and is not smuggled in here.
 
-   ⚠ ONE CONSEQUENCE, RECORDED NOT HIDDEN: `.btn-primary` above deliberately
-   keeps a 10px literal, so after this rule bank paints a 10px primary and an
-   11px save on one page. That is a real, new, small inconsistency and it is
-   the residue of the 10px hold, not of this decision. DEFERRED.md D44.
+   ~~`opacity: .6` on the disabled save is the measured legacy value, NOT this
+   file's .5 — unifying disabled opacity is its own task and is not smuggled
+   in here.~~ UI-063 IS that task and did it: the rule below is `.5`, D46 is
+   closed, and every `:disabled` in static/css/ now agrees.
+
+   ~~⚠ `.btn-primary` above deliberately keeps a 10px literal, so after this
+   rule bank paints a 10px primary and an 11px save on one page.~~ CLOSED by
+   UI-063 — `.btn-primary` is on --radius-control too, and D44 with it.
 
    ⚠ display:none AT REST — css_type_probe cannot see any of this without
    .open on the backdrop. Measured with css_selector_probe.mjs --add.
@@ -375,8 +392,11 @@
   background: var(--color-action-hover);
 }
 
+/* UI-062 kept the measured .6 rather than unify, and recorded that unifying
+   was its own task. UI-063 is that task — Irfan chose .5 + not-allowed for
+   every disabled button in the app, 2026-08-25. D46 closes here. */
 .btn-save:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

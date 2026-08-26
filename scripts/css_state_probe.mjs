@@ -209,6 +209,53 @@ const HELPERS = String.raw`
     return el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + cls;
   };`;
 
+/* ⚠ TRANSITIONS MAKE A STATE PROBE NON-DETERMINISTIC, AND THIS WAS FOUND BY
+ * RUNNING THE PROBE TWICE AGAINST IDENTICAL CODE. `landing` returned 197
+ * deltas against itself; the other eight pages returned 0. Cause: `.qa-card`
+ * animates `transform` and `box-shadow` on state, so forcing :hover starts a
+ * transition and getComputedStyle reads whatever value it is passing through.
+ * A gate that disagrees with itself is not a gate.
+ *
+ * So transitions and animations are switched off for the length of the probe.
+ * What gets measured is the SETTLED end state, which is what a regression gate
+ * wants: the question is "what does a hovered button look like", not "what does
+ * frame 6 look like".
+ *
+ * WHY IT WINS, stated correctly — an earlier version of this comment said the
+ * sheet is unlayered "and therefore outranks every @layer in the tree", and
+ * review showed that reason is wrong. It holds for NORMAL declarations only.
+ * These are `!important`, and for important declarations the cascade REVERSES
+ * layer order: an unlayered !important is the WEAKEST author-important, so a
+ * `transition: ... !important` inside @layer legacy would BEAT this injection.
+ * It works today because !important beats normal, and because static/css/ today
+ * contains ZERO !important transition or animation declarations (grepped
+ * 2026-08-26). If one is ever added inside a layer, this probe goes
+ * nondeterministic again — and the fix is not to trust unlayeredness.
+ *
+ * THE `animation: none` HALF IS PROPHYLACTIC, NOT MEASURED. static/css/ has no
+ * @keyframes and no `animation:` declaration; the only @keyframes in the repo
+ * is in mockup-modern.html, which is not a probed page. It kills nothing today.
+ * Said plainly rather than left to look like a measured need.
+ *
+ * WHAT THIS COSTS: the probe cannot see a motion regression AT ALL. That was
+ * already true — STATE_PROPS carries no transition-* or animation-* property —
+ * but before this change a changed duration could surface by accident as a
+ * differing mid-flight value. That accident is exactly the nondeterminism being
+ * removed, so a flaky signal is traded for no signal, deliberately.
+ *
+ * It is injected once per page, before any state is forced, and never removed —
+ * the page is closed straight after. It adds a <style> to <head>, which is not
+ * an interactive element, so no path or key changes. css_type_probe.mjs does
+ * NOT get this injection, so for a transitioning element the two probes can
+ * report different values for transform/opacity even though their paths match. */
+const KILL_MOTION = String.raw`(() => {
+  const s = document.createElement('style');
+  s.id = '__probe_kill_motion';
+  s.textContent = '*,*::before,*::after{transition:none !important;animation:none !important}';
+  document.head.appendChild(s);
+  return true;
+})()`;
+
 const snapExpr = (state) => String.raw`(() => {
   ${HELPERS}
   const PROPS = ${JSON.stringify(STATE_PROPS)};
@@ -275,6 +322,8 @@ async function main() {
         if (n === prev) stable++; else { stable = 0; prev = n; }
         await sleep(100);
       }
+
+      await evaluate(sessionId, KILL_MOTION);
 
       const { root } = await send('DOM.getDocument', { depth: -1, pierce: false }, sessionId);
       const { nodeIds } = await send('DOM.querySelectorAll',

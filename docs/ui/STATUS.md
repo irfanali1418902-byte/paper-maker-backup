@@ -5,42 +5,51 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (2026-08-25)
+## ▶ NEXT SESSION — START HERE (2026-08-26)
 
 **The ordered finishing plan is `docs/ui/ROADMAP.md` → "⛳ THE FINISHING PLAN".** Nine items,
-one family per session. Read that table, take **item 1**, and do not take item 2 because it
-looks smaller.
+one family per session.
 
-**Item 1 is the button task (D44 + D46 + D47b), and it is first for a reason:** every
-remaining family contains buttons, so any family taken before it adds another radius to
-reconcile later. UI-062 already created that debt once — `bank` currently paints a 10px
-`.btn-primary` beside an 11px `.btn-save`.
+**Item 1 (the button task) is DONE — it shipped as UI-063 on 2026-08-26. Take item 2.**
 
-It needs **three decisions from Irfan, and they are the whole task** — the code is small:
+⚠ **But read this before crossing item 1 off in your head, because it did not land whole:**
 
-| decision | today |
-|---|---|
-| one radius for every filled legacy button | `.btn-primary` 10px (a deliberate literal, `btn.css`:277) vs `.btn-save` 11px (`--radius-control`) |
-| hover direction | legacy buttons **darken**, the Tier 2 pair **lightens** (`--color-action-hover` is indigo-500 against indigo-600). The app now does both |
-| disabled opacity | `.4` / `.5` / `.55` / `.6` across the nine legacy files; `.btn-save` is `.6`, `.btn--primary` is `.5`, in the same file |
+* **D44 and D46 are closed. D47 is NOT**, and `ROADMAP.md`:229 scopes item 1 as
+  "D44 + D46 + **D47(b)**". `forms.css` was never touched. **Item 1 is two thirds done**, and
+  review found that, not a gate. Either finish D47 first or re-scope the row honestly — do not
+  let it sit closed-looking and open.
+* **A third of the decision is unverified.** `cursor: not-allowed` produced **zero deltas**,
+  and a control proved the gate cannot see `cursor` under `:disabled` at all. **D49.**
+* **The claim was too strong.** "Every filled legacy button" is really every filled
+  *light-surface action* button. Carve-outs: the on-dark family (**D48**, and it still hovers
+  in the opposite direction) and two navy-filled segmented controls (**D50**).
+
+**Item 2 is the viewport pass, and it is a tooling task, not a drain.** `shell/nav`'s 23
+`agree` lines are six `@media (max-width: 720/760px)` rules and **every probe in this repo runs
+at 1280×900**, so no gate can see them. That is D45's shape exactly. Item 3 (`shell/nav`, 99
+lines, the biggest family) is blind without it.
 
 **Copy-pasteable prompt for that session** (`CLAUDE.md` §12.8):
 
-> Take **item 1** of `docs/ui/ROADMAP.md`'s "⛳ THE FINISHING PLAN" — the button task, closing
-> `DEFERRED.md` D44, D46 and D47(b). Read `CLAUDE.md` §11–12, this file's UI-062 and UI-065
-> sections, and `static/css/05-components/btn.css` in full. **Measure first and put the three
-> decisions to Irfan with measured options before writing anything.** This task is almost
-> entirely `:hover` and `:disabled` surfaces, so **`scripts/css_state_probe.mjs` before and
-> after is mandatory** — `css_type_probe` alone cannot see any of it, which is exactly how
-> UI-062's hover change passed every gate. Expect non-zero deltas and confirm they are only
-> the approved ones.
+> Take **item 2** of `docs/ui/ROADMAP.md`'s "⛳ THE FINISHING PLAN" — the viewport pass. Add a
+> second viewport to `css_type_probe.mjs` and `css_state_probe.mjs` so the six `@media`
+> rules in `shell/nav` are measurable before item 3 touches them. Read `CLAUDE.md` §11–12 and
+> this file's UI-065 and UI-063 sections first. **Prove it by control the way UI-065 did** —
+> mutate one rule that only applies below the breakpoint and show the old probe returns 0 and
+> the new one returns 1. **Change no page CSS**; this is an instrument, and the ratchet should
+> not move.
 
 **Gates for every session from here:** `pytest` (1075) · `ruff` · `css_baseline.py` (ratchet
 never rises) · `css_type_probe` + **`css_state_probe`** before/after · review agent, one round
 · Irfan's browser · then commit. Never push.
 
-**Current numbers, measured 2026-08-25** — re-measure, do not quote these:
-`legacy_css_lines` **1,842** · `unsanctioned_hex` **349** · agree **68** / disagree **422**
+⚠ **MEASURE THE RATCHET AGAINST `HEAD`, NOT AGAINST `BASELINE.json`.** UI-063 was first
+reported as `−32` legacy lines and `−7` hex. Its real effect is **`−1` line and zero net hex**;
+the rest was pre-existing drift against a baseline file that is **31 lines stale**. Diffing
+against a stale number and booking the difference as your result looks exactly like success.
+
+**Current numbers, measured 2026-08-26** — re-measure, do not quote these:
+`legacy_css_lines` **1,841** · `unsanctioned_hex` **349** · agree **68** / disagree **422**
 lines remaining · target **~1,350**.
 
 **Branch:** `feat/ui-architecture` · **Baseline tag:** `ui-baseline`
@@ -72,6 +81,32 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 > `feat/ui-architecture` hai magar us ka mazmoon ab sirf UI nahi raha.
 
 ---
+
+## UI-063 — the button task. **2026-08-26. D44 + D46 band, D47 nahi. Ek radius, ek disabled.**
+
+`legacy_css_lines` **1842 → 1841** · `unsanctioned_hex` **349 → 349** · **1075 pass**, ruff saaf.
+Tafseel `PROGRESS.md` 2026-08-26 par.
+
+**Faisla (Irfan, 2026-08-25):** radius `--radius-control` (11px) · hover ek simt (light-surface
+ab **halka**) · disabled `.5` + `not-allowed`.
+
+**Naapa gaya — state probe 1,054 deltas, rest 206, aur sirf teen property hili:**
+`border-*-radius` (940/188) · `background-color` (75/15) · `opacity` (39/3). `font-size`,
+`padding`, `min-height`, `box-shadow`, `outline-*`, `border-color` — **sifar**. Har chhua hua
+selector aik button. `slo-health` / `taqseem` / `landing` par **0** (un ki `--radius-btn` pehle
+se mari hui thi).
+
+**Chaar cheezein jo is task se seekhi gayin aur agle session ka rukh badalti hain:**
+
+1. **Ye kaam bina kisi gate ke working tree mein para tha** — na commit, na PROGRESS, na probe.
+   Item 1 code ki tarah mukammal tha, darj ki tarah mojood hi nahi. Session ka aakhri qadam
+   code nahi, **darj** hai.
+2. **Ratchet stale baseline ke khilaf naapa gaya tha** aur `−32`/`−7` is kaam ke naam likh
+   diye gaye. Asal `−1` aur **sifar**. `HEAD` ke khilaf naapo.
+3. **`cursor` ko koi gate nahi dekhta** — control se sabit, **D49**. Faisle ka teesra hissa
+   aaj tak ghair-tasdeeq-shuda hai.
+4. **Daira daawe se chhota nikla** — light-surface tak mehdood. **D48** (on-dark, aur wo abhi
+   bhi ulti simt mein hover karta hai), **D50** (do navy segmented control).
 
 ## UI-065 — state probe (D45 band). **2026-08-25. Auzaar hai, kisi page ka CSS nahi badla.**
 

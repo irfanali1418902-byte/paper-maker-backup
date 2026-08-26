@@ -11,7 +11,7 @@
     --muted: #5B6678;
     --border: #E3E8F1;
     --bg: #F5F7FB;
-    --radius-btn: 8px;
+    --radius-btn: var(--radius-control);
     /* Print knobs (Marhala 4A). Defaults = purani hardcoded values, isliye
        koi class-override na ho to output bilkul waisa. JS in par per-class
        settings apply karta hai (loadPaper mein). */
@@ -90,7 +90,7 @@
     font-family: inherit; display: flex; align-items: center; justify-content: center;
   }
   .ps-stepper button:hover { background: #38507f; }
-  .ps-stepper button:disabled { opacity: .4; cursor: not-allowed; }
+  .ps-stepper button:disabled { opacity: .5; cursor: not-allowed; }
   .ps-value { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #fff; }
   .ps-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
   .ps-save {
@@ -373,11 +373,12 @@
   }
   .suggest-badge b { color: #1a4d8a; }
   .suggest-btn {
-    background: var(--primary); color: #fff; border: none;
+    /* radius stays 6px — a chip, not a CTA (UI-063 covers action buttons) */
+    background: var(--color-action); color: #fff; border: none;
     border-radius: 6px; padding: 4px 11px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer;
   }
-  .suggest-btn:hover { background: var(--primary-hover); }
+  .suggest-btn:hover { background: var(--color-action-hover); }
   .suggest-dismiss {
     background: none; border: 1px solid #ccc; color: var(--muted);
     border-radius: 6px; padding: 4px 10px; font-size: 12px;

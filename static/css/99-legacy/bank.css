@@ -13,7 +13,6 @@
     --err-bg: #FBE9E7; --err-tx: #C0392B;
     --ok-bg: #E6F4EC;  --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
-    --radius-btn: 10px;
     --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
   html, body { margin: 0; height: 100%; }
@@ -280,9 +279,10 @@
   .float-bar input[type="text"]::placeholder { color: rgba(255,255,255,.45); }
   .float-bar input[type="text"]:focus, .float-bar select:focus { outline: none; border-color: #5B8DEF; }
   .fb-count { font-size: 13px; font-weight: 700; white-space: nowrap; }
-  .btn-fb-save { padding: 6px 16px; border: none; border-radius: 8px; background: #5B8DEF; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  /* UI-063 took the radius only — these are the on-dark variant; D48 */
+  .btn-fb-save { padding: 6px 16px; border: none; border-radius: var(--radius-control); background: #5B8DEF; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .btn-fb-save:hover { background: #3a6cdf; }
-  .btn-fb-cancel { padding: 6px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; background: transparent; color: rgba(255,255,255,.8); font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .btn-fb-cancel { padding: 6px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-control); background: transparent; color: rgba(255,255,255,.8); font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .btn-fb-cancel:hover { background: rgba(255,255,255,.1); }
 
   /* ---- Bulk checkbox ---- */

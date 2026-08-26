@@ -5,7 +5,7 @@
     --err-bg: #FBE9E7; --err-tx: #C0392B;
     --ok-bg: #E6F4EC; --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
-    --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
+    --radius-btn: var(--radius-control); --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
   html, body { margin: 0; height: 100%; }
   body {
@@ -28,10 +28,10 @@
   .btn {
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
     border: 0; border-radius: var(--radius-btn); font-size: 14px; font-weight: 600;
-    padding: 10px 16px; background: var(--primary); color: #fff;
+    padding: 10px 16px; background: var(--color-action); color: #fff;
   }
-  .btn:hover { background: var(--primary-hover); }
-  .btn:disabled { opacity: .5; cursor: default; }
+  .btn:hover { background: var(--color-action-hover); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
   input[type=file], select, input[type=text] {
     padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
     font-size: 13.5px; font-family: inherit; background: #fff; color: var(--ink);

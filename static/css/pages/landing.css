@@ -41,6 +41,8 @@
       EMPTY — so unlinking theme.css orphans nothing, which on this page was
       never in question anyway since it had no such link. Two are declared and
       never read (--primary-hover, --radius-btn); pre-existing, left alone.
+      ⚠ --radius-btn is no longer among them: UI-063 deleted the dead
+      declaration from 99-legacy/landing.css. --primary-hover still stands.
       Zero of its names collide with 01-settings/tokens.css or
       01-settings/theme.css.
 

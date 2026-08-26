@@ -18,7 +18,6 @@
     --err-bg: #FBE9E7;  --err-tx: #C0392B;
     --easy: #7FC8A0; --medium: #5B8DEF; --hard: #E89B5B;
     --radius-card: 16px;
-    --radius-btn: 12px;
     --shadow: 0 2px 12px rgba(22,33,58,.05);
   }
   .urdu, .ur {
@@ -96,16 +95,17 @@
   /* ---- Hero "Generate" button (Direction B) ---- */
   .gen-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-    background: var(--primary); color: #fff; min-height: 52px; padding: 0 20px;
-    border: none; border-radius: 13px; font-size: 15.5px; font-weight: 700;
+    background: var(--color-action); color: #fff; min-height: 52px; padding: 0 20px;
+    border: none; border-radius: var(--radius-control); font-size: 15.5px; font-weight: 700;
+    /* shadow tint left as measured — no Tier 2 token exists; D48 */
     font-family: inherit; box-shadow: 0 6px 16px rgba(46,90,172,.3); cursor: pointer;
   }
-  .gen-btn:hover { background: var(--primary-hover); }
-  .gen-btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+  .gen-btn:hover { background: var(--color-action-hover); }
+  .gen-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .ghost-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 9px;
     background: #fff; border: 1px solid #D6DEEA; color: var(--ink);
-    min-height: 48px; padding: 0 16px; border-radius: 12px;
+    min-height: 48px; padding: 0 16px; border-radius: var(--radius-control);
     font-size: 14.5px; font-weight: 600; font-family: inherit; cursor: pointer;
   }
   .ghost-btn:hover { border-color: var(--primary); color: var(--primary); }

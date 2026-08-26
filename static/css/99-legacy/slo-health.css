@@ -5,7 +5,7 @@
     --err-bg: #FBE9E7; --err-tx: #C0392B;
     --ok-bg: #E6F4EC; --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
-    --radius-btn: 10px; --shadow: 0 2px 12px rgba(22,33,58,.06);
+    --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
   html, body { margin: 0; height: 100%; }
   body {

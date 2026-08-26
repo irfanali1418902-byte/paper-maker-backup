@@ -15,7 +15,7 @@
     --err-bg: var(--red-bg);     --err-tx: var(--red);
     --ok-bg: var(--green-bg);    --ok-tx: var(--green);
     --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
-    --radius-btn: 10px;
+    --radius-btn: var(--radius-control);
     --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
 

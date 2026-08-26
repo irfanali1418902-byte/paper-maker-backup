@@ -1,5 +1,141 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-26 — UI-063: button task — ek radius, ek disabled, aur do adad jo maine ghalat likhe the
+
+**1075 pass**, ruff saaf, ratchet chhua nahi. **D44 aur D46 band. D47 NAHI —
+aur ye ahem hai** (neeche).
+
+⚠ **Browser check DARJ NAHI HUA.** Server chala kar paanchon page ke URL Irfan ke
+saamne rakhe gaye (bank, index, slo, library, print) aur commit ka "go" mila — magar
+**"maine dekh liya, theek hai" alag se nahi kaha gaya**, is liye ise tasdeeq-shuda nahi
+likha ja raha. Gate list ise laazmi kehti hai. Agar kabhi in buttons par shak ho, ye row
+yaad rakhna: **rang aur radius naapi hui hain, nazar se dekhi hui nahi.**
+
+### Pehli baat: ye kaam pehle se working tree mein para tha, bina kisi gate ke
+
+Aaj ka audit is se shuru hua ke `git status` par das files modified thin aur **koi
+commit nahi tha, koi PROGRESS entry nahi thi, koi probe run nahi hua tha.** Yani
+finishing plan ka item 1 code ki tarah mukammal tha aur **darj ki tarah wujood hi nahi
+rakhta tha.** Ye is repo ki wohi purani bimari hai jo `ROADMAP.md` ki P0 rows mein
+mahinon chali — kaam ho gaya, row khuli rahi. Is entry ka aadha maqsad usay band karna hai.
+
+### Faisla (Irfan, 2026-08-25) — teen, aur teenon amal mein aaye
+
+| # | faisla | natija |
+|---|---|---|
+| radius | har filled action button ek radius par | `--radius-control` = **11px**. 8/10/12/13px sab gaye |
+| hover | ek simt | light-surface buttons ab **halka** karte hain (`--color-action-hover`) |
+| disabled | ek opacity | **`.5` + `not-allowed`**, har `:disabled` rule par |
+
+### Naapa gaya — dono probe, aur sirf TEEN property hili
+
+`css_state_probe` (paanch state) **1,054 deltas**, `css_type_probe` (rest) **206**.
+Poore data par property-wise ginti:
+
+| property | state | rest |
+|---|---:|---:|
+| `border-*-radius` (chaar kone) | 940 | 188 |
+| `background-color` | 75 | 15 |
+| `opacity` | 39 | 3 |
+
+**Aur kuch nahi.** `font-size`, `padding`, `min-height`, `box-shadow`, `outline-*`,
+`border-color` — sab sifar. Har chhua hua selector aik button hai. `slo-health`,
+`taqseem`, `landing` par **0 deltas** — kyunke un ki `--radius-btn` declaration pehle
+se **mari hui** thi (review ne `git show HEAD:` se paanchon ki tasdeeq ki).
+
+Transitions: `1054` adad qabil-e-aitbaar isi liye hai ke probe ab motion band karta hai.
+Us se pehle `landing` **apne aap se 197 deltas** deta tha.
+
+### ⚠ Do adad jo maine audit mein GHALAT diye
+
+Maine likha tha ke ye kaam `legacy_css_lines` **1873 → 1841 (−32)** aur
+`unsanctioned_hex` **356 → 349 (−7)** karta hai. **Dono ghalat attribution thi**, aur
+review ne pakda. Naapa gaya:
+
+* **`legacy_css_lines`: HEAD 1842 → 1841. Ye kaam kul `−1` line hai.** 1873 wala adad
+  `docs/ui/BASELINE.json` ka hai jo **31 lines purana** ho chuka hai.
+* **`unsanctioned_hex`: is diff mein net hex tabdeeli SIFAR hai** (`git diff -U0` par
+  sirf `#5B8DEF` ×2 aur `#fff` ×8, `+`/`−` par barabar). 349 sach hai, magar `−7` is
+  kaam ka nahi, purani drift hai.
+
+**Sabaq, aur wo bilkul D45 wala hai:** stale baseline ke khilaf naapna aur farq ko apne
+kaam ke naam likh dena — ye "kaamyabi jaisa dikhta hai". Aage se ratchet ka farq
+**HEAD ke khilaf** naapo, `BASELINE.json` ke khilaf nahi.
+
+### ⚠ D47 band nahi hua, aur item 1 ka daira teen-tihai adhoora raha
+
+`ROADMAP.md` item 1 ko "D44 + D46 + **D47(b)**" likhta hai. `forms.css` ko **haath tak
+nahi laga** — na jhoota comment theek hua, na ring-vs-glow ka faisla hua. Review ne
+pakda, kisi gate ne nahi. Aur `css_state_probe.mjs`:186-187 mein `outline-*` **isi liye**
+daala gaya tha ke (b) naapa ja sake — auzaar tayyar tha, istemaal nahi hua.
+
+### Naya masla, control se sabit: gate `cursor` dekh hi nahi sakta (D49)
+
+Faisle ka teesra hissa `cursor: not-allowed` tha. Us ka **aik bhi delta nahi bana**.
+Shak par control chalaya — `slo` ki `.btn:disabled` ka cursor `crosshair` kar ke probe
+dobara:
+
+| naap | natija |
+|---|---|
+| deltas | **0** |
+| record | `cursor: pointer` — yani **rest ki qeemat** |
+
+Jabke usi element par `opacity` `0.5` parhta hai (rest par `1`), yani `:disabled` **lag
+raha hai**, aur `cursor` `STATE_PROPS` mein **mojood hai**. Wohi khamoshi
+`library.css` ki `.pg-btn:disabled` par bhi — `opacity` `.4→.5` ka delta aaya, saath
+wala `default→not-allowed` gayab. **Sabab tay nahi hua aur andaza lagana mana hai:** ya
+to probe ki kami hai, ya Chromium disabled control par `:disabled` ka `cursor` lagata hi
+nahi — doosri soorat mein poore repo ki har `cursor: not-allowed` **mari hui CSS** hai
+aur faisla dobara dekhna parega, auzaar nahi. **D49.**
+
+### Jo jaan-boojh kar NAHI kiya, aur review ne mera daawa chhota karwaya
+
+Maine "har filled legacy button" likha tha. **Ye daawa bara tha.** Sach ye hai: **har
+filled _light-surface action_ button.** Bahar rahe:
+
+* **on-dark family** — `bank` ka `.btn-fb-save`/`.btn-fb-cancel`, `print` ka
+  `.ps-stepper`/`.ps-save`/`.ps-reset`. In ke paas jaane ke liye koi Tier 2 on-dark role
+  hai hi nahi. Isi liye `.btn-fb-save` **aaj bhi hover par gehra karta hai** — yani
+  darken/lighten ka mix **khatam nahi hua, sirf chhota hua**. **D48**
+* **do navy filled control** — `library` ka `.pg-btn.active`, `index` ka `.lang-toggle`
+  ka selected button. Ye segmented/pagination hain, CTA nahi, is liye un ka 6px/8px
+  radius durust hai aur chhua nahi gaya — magar un ka **fill** ab usi screen ke har
+  action button se nahi milta. Ye D27 ka bacha hua hissa hai. Recolour karna Irfan ke
+  teen faislon mein shamil **nahi** tha, is liye row bani, edit nahi. **D50**
+
+### Comments jo code se jhooth bolne lage the — wohi bimari, isi commit mein theek
+
+D47(a) ka sabaq ye hai ke is tree mein comment documentation ki tarah parha jata hai. Ye
+kaam khud paanch aise comment bana raha tha, review ne ginwaye, sab theek kiye:
+`btn.css`:210 (aik "range" jo ab mojood nahi + pehle se ghalat line number), `btn.css`:303
+(bank ab `--radius-btn` declare hi nahi karta), `btn.css`:349 aur :352 (apni hi rule ka
+ulta kehte the), `modal.css`:12, `pages/landing.css`:43.
+
+### Aur unhi comment edits ne aik rule maar di — probe ne pakda, warna ship ho jati
+
+Comments theek karte waqt is entry ke mussanif (main) ne aik **ziyada `*/`** chhor diya.
+Us ne `btn.css` ka bara comment block waqt se pehle band kar diya, baqi prose CSS ban gayi,
+aur us ne **`.btn-save, .btn-cancel` ki poori rule nigal li.** Nateeja: bank aur print ke
+modal ke dono buttons `border-radius: 0`, `font-size: 13.33px` — yani default `<button>`.
+
+**Kisi doosre gate ne aawaz nahi ki:** `pytest` 1075 pass tha, `ruff` saaf tha, aur
+**ratchet ne bhi kuch nahi kaha** kyunke line count aur hex ginti dono theek thin — CSS
+"maujood" thi, bas comment ke andar. Sirf `css_type_probe` ne **25 deltas** dikhaye.
+Theek karne ke baad dono probe **0/0**.
+
+**Sabaq:** "sirf comment badla hai" is repo mein probe skip karne ki wajah **nahi** hai.
+C-style comment ka aik ghalat token rule delete karne ke barabar hai, aur ratchet us
+qism ke nuqsan par khamosh hai kyunke wo lines ginta hai, matlab nahi.
+
+`css_state_probe.mjs` ka `KILL_MOTION` comment bhi ghalat wajah deta tha — kehta tha
+unlayered `<style>` "har @layer ko harata hai". **Ye `!important` par ulta hai:**
+important declarations par layer order **ulti** chalti hai, to layer ke andar ka
+`transition: … !important` is injection ko **harata**. Aaj kaam karta hai kyunke
+`static/css/` mein aisa koi declaration hai hi nahi (grep, 2026-08-26). Wajah durust
+likh di gayi, aur ye bhi ke `animation: none` wala hissa **aaj kuch nahi maarta**
+(repo mein `@keyframes` hai hi nahi) aur ye probe **motion regression bilkul nahi dekh
+sakta**.
+
 ## 2026-08-25 — UI-065: state probe — jo gate rest par parhta hai wo state dekh hi nahi sakta
 
 `scripts/css_state_probe.mjs` — naya file, **D45 band.** Ye drain nahi, **auzaar** hai, aur
