@@ -1,5 +1,36 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-26 — R1 seeding: Pre Year 3 ka doosra run — 23/87 se 43/87
+
+Backup: `paper_maker_backup_before_preyear3_seed_20260826.db` (run se pehle).
+
+| | pehle | ab |
+|---|---:|---:|
+| bank kul | 686 | **766** |
+| PY3 topics | 23/87 | **43/87** |
+| PY3 sawal | 92 | **172** |
+
+PY1 (71/81, 329) aur PY2 (23/87, 92) chhue nahi gaye — script seeded topics khud
+chhod deti hai, is liye sirf PY3 aage barha.
+
+**Quota wahi nikla jo naapa gaya tha:** 20 topics ke baad `[21/64]` par HTTP 429.
+`ROADMAP.md` ka andaza "~23–26 calls/din" tha; aaj **20** mile. Yani row ka paimana
+durust hai, aur **PY3 ke 44 + PY2 ke 64 = 108 topics** abhi baqi hain — mojooda raftaar
+par lag-bhag **paanch se chhe aur din ka rozana kaam**.
+
+Command wohi thi jo `ROADMAP.md` mein darj hai (defaults NAHI — pre-school par
+`fill-blank`/`essay`/`balanced` ghalat hain):
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Chaar jaali syllabi (Math G5, Math G6, Science G7, Geography G8) aaj bhi 0/11 par hain
+aur **jaan-boojh kar chhue nahi gaye** — un ka asal syllabus import hone tak seed karna
+mana hai.
+
 ## 2026-08-26 — UI-063: button task — ek radius, ek disabled, aur do adad jo maine ghalat likhe the
 
 **1075 pass**, ruff saaf, ratchet chhua nahi. **D44 aur D46 band. D47 NAHI —
