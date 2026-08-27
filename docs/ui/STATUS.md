@@ -5,18 +5,54 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (2026-08-27)
+## ▶ NEXT SESSION — START HERE (2026-08-28)
 
-**Items 1, 2, 3 and 4 are done. Take item 5 — `modal` disagree, 58 lines, 5 files.**
-Its `agree` half shipped as UI-062. **One decision: the app has three modal systems
-(`modal.css`'s header) — unify or keep three.**
+**Items 1–5 are done. Take item 6 — `card` + `brand`, 52 lines. Two small decisions,
+independent, no ordering constraint.**
+
+⚠ **Before item 6, read UI-067's census lesson below.** Twice now the audit's file/line
+figures have been an undercount of the real work: item 5's "58 lines, 5 files" missed an
+eighth modal entirely because it was page-only. **Count the thing in the MARKUP before
+trusting the bucket.** `.brand` in particular is already known to have drifted six ways
+(ROADMAP:155) and is live on all nine pages.
 
 **The whole remaining plan — both tracks, all six sessions, and when each deferred row is
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
 before planning anything; it is newer than everything above it in that file.
 
-**Current numbers, measured 2026-08-27 after UI-066** — re-measure, do not quote:
-`legacy_css_lines` **1,799** · `unsanctioned_hex` **338** · target **~1,350**.
+**Current numbers, measured 2026-08-28 after UI-067** — re-measure, do not quote:
+`legacy_css_lines` **1,798** · `unsanctioned_hex` **338** · target **~1,350**.
+
+## UI-067 — `modal`. **2026-08-28. Item 5. Teen system rehne diye, shakal ek kar di.**
+
+`legacy_css_lines` **1799 → 1798**, hex **338** (nahi hila — is family mein sab `rgba()` tha).
+1075 pass, ruff saaf. Type 220 deltas, state 30 — har ek maqsood. `PROGRESS.md` 2026-08-28.
+
+**Irfan, 2026-08-28: class names mat chhero, qeematein ek karo.** Naam badalne se paanch
+pages ka markup aur JS chhoona parta aur **ek line CSS kam na hoti**; jo nazar aata hai wo
+shakal aur rang hai.
+
+⚠ **Audit ka adad ghalat tha: sat nahi, AATH modals hain.** Row kehti thi "58 lines, 5
+files". Markup se ginne par **chaar wrapper naam** nikle, aur aathwan modal — `print` ka
+`.lib-picker-overlay` library picker — **kisi bucket mein tha hi nahi**, kyunke wo page-only
+hai. Use chhorna faisle ko adhoora chhorta. **Bucket par nahi, markup par gino.**
+
+**Ek sawal ka jawab pehle se maujood tha:** `theme.css`:183 `--radius-container` khud kehta
+hai *"cards, panels, modals"* — 16px. Radius naya faisla nahi, ek **be-istemal role** tha.
+Chhe radii (10/12/12/14/16/`var(--radius)`) ab ek.
+
+Do naye token: `--color-scrim` (Irfan: navy .45; channels `--slate-900` ke, library ke
+`rgba(22,33,58,.45)` ke nahi — teesri navy banana wohi drift hai) aur `--shadow-modal`
+(paanch shadow ki jagah ek).
+
+**Naapa gaya:** `library` 90, `print` 60, `bank` 40, `index` 20, `taqseem` 10; `slo`,
+`slo-health`, `blueprint`, `landing` par **0** — un par modal hai hi nahi. `index` aur
+`taqseem` par radius delta nahi aaya kyunke wo dono pehle se 16px thay.
+
+⚠ **Ratchet phir upar gaya (1799 → 1800), phir legacy comments se. TEESRI DAFA.**
+
+⬜ **Browser check nahi hua.** Koi modal khol kar: peechay ka andhera, kone (16px — `bank`
+12 se aur `print` 10 se aaye hain), aur `print` ka library picker.
 
 ⚠ **Four things this week established that the next session should not re-learn:**
 
@@ -61,9 +97,11 @@ override khud legacy mein hai. Teenon wapas per-page legacy mein gayin — **D51
 **Naapa gaya:** sirf `index` (1350), `slo` (162), `library` (150) hile; `bank`, `blueprint`,
 `print`, `taqseem`, `slo-health`, `landing` par **0 / 0**, dono probe.
 
-⚠ **Review ne chaar defect nikale aur pehla gate ke andhe nuqte par tha:** `index` ka
-`#accentColor` (`input[type="color"]`, `forms.css` se bahar) be-libaas ho gaya tha aur
-**probe ne 0 delta diya** kyunke wo bandh panel mein hai. Doosra: `slo` par `margin-top: 6px`
+⚠ **Review ne chaar defect nikale.** Pehla: `index` ka `#accentColor` (`input[type="color"]`,
+`forms.css` se bahar) be-libaas ho gaya tha. **[2026-08-28 durusti: yahan likha tha ke probe
+ne is par 0 delta diya aur koi gate pakad nahi sakta tha — ghalat. Probe ne 30 deltas diye
+the; `css_type_diff.mjs`:42 ka `LIST_CAP = 60` sirf chhapi hui list kaatta hai, count nahi.
+Dekho D53.]** Doosra: `slo` par `margin-top: 6px`
 ki koi buniyad nahi thi — us page par **ek bhi `<label>` nahi** aur us ka `.row` centred flex
 hai. Teesra: untyped inputs gyarah nahi **baara** hain (baarhwan JS template literal mein,
 yani probe se bhi bahar). Chautha: is commit ne `forms.css` mein 45 lines joreen aur **chhe

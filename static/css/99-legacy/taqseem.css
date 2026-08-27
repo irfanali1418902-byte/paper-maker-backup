@@ -79,14 +79,14 @@
   .pick-note { font-size: 13.5px; color: var(--muted); padding: 8px 0; }
 
   /* ---- Confirm modal ---- */
+  /* scrim, radius, shadow: modal.css (UI-067). `.overlay` = a 4th wrapper name, only here. */
   .overlay {
-    position: fixed; inset: 0; background: rgba(19,34,68,.55); z-index: 9998;
+    position: fixed; inset: 0; z-index: 9998;
     display: none; align-items: center; justify-content: center;
   }
   .overlay.show { display: flex; }
   .modal {
-    background: var(--panel); border-radius: var(--radius); padding: 22px; width: 92%; max-width: 420px;
-    box-shadow: 0 14px 44px rgba(19,34,68,.28);
+    background: var(--panel); padding: 22px; width: 92%; max-width: 420px;
   }
   .modal p { margin: 0 0 8px; font-size: 13.5px; color: var(--fg); line-height: 1.5; }
   .modal .warn { color: var(--warn-tx); font-weight: 600; }

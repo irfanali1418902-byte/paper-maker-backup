@@ -1,5 +1,105 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-28 — UI-067: modal — teen system rehne diye, shakal ek kar di
+
+Finishing plan ka **item 5**. `legacy_css_lines` **1799 → 1798**, `unsanctioned_hex` **338**
+(nahi hila — is family mein hex tha hi nahi, sab `rgba()` tha). **1075 pass**, ruff saaf.
+Type probe **220 deltas**, state probe **30** — har ek maqsood.
+
+### Irfan ka faisla: naam mat chhero, qeematein ek karo
+
+Row ka sawal tha "teen modal system — ek karein ya teen rehne dein". Faisla (2026-08-28):
+**class names bilkul na chhuein, sirf qeematein ek karein.** Wajah wazeh hai — naam badalne
+ka matlab paanch pages ka markup aur JS chhoona hai aur us se **ek line CSS kam nahi hoti**;
+jo be-yaksani nazar aati hai wo shakal aur rang hai, aur wo poori tarah CSS ka kaam hai.
+
+### Pehle audit ka adad ghalat tha — sat nahi, AATH modals hain
+
+`css_duplication_audit.py` ne is family ko 58 lines / 5 files kaha, aur `modal.css` ka header
+"teen system" likhta tha. **Markup se ginne par tasveer bari nikli — aath modals, chaar
+wrapper naam:**
+
+| wrapper | pages | modals |
+|---|---|--:|
+| `.modal-backdrop` | bank, print | 2 |
+| `.modal-overlay` | index (1), library (3) | 4 |
+| `.overlay` | taqseem | 1 |
+| `.lib-picker-overlay` | print ka library picker | **1 — kisi bucket mein nahi tha** |
+
+**Aathwan modal `print` ka library picker hai.** Wo page-only hai, is liye audit ne use
+"skipped 1056" mein daala tha aur item 5 ki 58 lines mein wo shamil hi nahi thi. Use chhorne
+ka matlab tha ke saat modals ek jaise ho jate aur aathwan alag khada rehta — yani faisla
+adhoora lagta. Shamil kar liya gaya.
+
+Box ke naam do nahi teen: `.modal` (bank, print, index, taqseem), `.modal-box` (library),
+`.lib-picker-modal` (print). **Radius ki chhe declaration** — 10, 12, 12, 14, 16, aur
+taqseem ka `var(--radius)` — **magar asal mein chaar hi mukhtalif qeematein**, kyunke index
+ka 16 aur taqseem ka `var(--radius)` dono pehle se 16px resolve karte the. Yehi wajah hai ke
+un do pages par radius ka koi delta nahi aaya.
+
+### Aik sawal ka jawab design system ke paas pehle se tha
+
+`theme.css`:183 par `--radius-container` likha hai: *"cards, panels, **modals**"* — 16px.
+Yani radius naya faisla nahi tha, **ek role tha jo kisi modal ne kabhi apnaya hi nahi**
+(siwaye index ke, aur wo bhi ittefaqan). Ab aathon us par hain.
+
+Do naye token bane, kyunke in ka koi role maujood nahi tha:
+* `--overlay-navy-45` → `--color-scrim`. Irfan ne navy .45 chuna. **Channels `--slate-900` ke
+  hain, library ke `rgba(22,33,58,.45)` ke nahi** jahan se chunao naqal hua tha: 45% alpha par
+  saat-per-channel ka farq nazar nahi aata, aur teesri navy banana wohi drift hai jo ye epic
+  mitane aaya hai.
+* `--shadow-2` → `--shadow-modal`. Paanch shadow ki jagah ek: `0 16px 48px` (do sab se aam
+  adad) `--slate-900` par, taake wo usi navy par tint ho jis par `--shadow-1` hai.
+
+### Naapa gaya — har delta maqsood
+
+| page | type | state | kya hila |
+|---|--:|--:|---|
+| `library` | 90 | 15 | scrim, radius 14→16, shadow (3 modals) |
+| `print` | 60 | 5 | scrim ×2, radius 10→16 aur 12→16, shadow ×2 |
+| `bank` | 40 | 5 | scrim, radius 12→16, shadow, close 22→20 |
+| `index` | 20 | 5 | scrim, shadow, close 24→20 |
+| `taqseem` | 10 | 0 | scrim, shadow |
+| `slo`, `slo-health`, `blueprint`, `landing` | **0** | **0** | in par modal hai hi nahi |
+
+**Do jagah radius delta NAHI aaya aur dono tasdeeq hain:** `index` pehle se 16px tha, aur
+`taqseem` ka `var(--radius)` bhi 16px resolve karta tha — yani wo do pehle se durust the.
+State probe ke saare 30 deltas sirf scrim ka `background-color` hain, paanch states par.
+
+`.modal-close` ki padding jaan-boojh kar ek nahi ki gayi (chaar files mein 2px ka farq,
+20px glyph par nazar nahi aata). `line-height` khud 22/24 → 20 hua kyunke wo `1` hai.
+
+⚠ **Ratchet phir upar gaya — 1799 → 1800 — aur phir wahi wajah:** legacy files mein comment.
+**Teesri dafa.** Comments ek-ek line par aaye aur number 1798 par gira. Is dafa lines kam
+honi thi hi nahi: kaam declarations hatane ka tha, aur wo dense lines ke andar baithi thin.
+**Is family ka faida lines mein nahi, shakal mein hai** — ROADMAP ne yehi likha tha.
+
+### Review ne saat durustiyan nikaleen — ek code par, chhe matn par
+
+**Cascade par kuch nahi mila:** blast radius sifar (app mein `modal`/`overlay` naam ka koi
+aisa element nahi jo modal na ho — JS template literals sameet dekha gaya), koi declaration
+kho nahi gayi, koi `pages/*.css` `@layer components` block in selectors ko chhoota nahi, aur
+`@media print` bhi mehfooz hai.
+
+**Code wali:** `pages/taqseem.css` ka `--radius` is commit ke baad **orphan** ho gaya tha —
+us ka ek hi consumer taqseem ka `.modal` border-radius tha, jo ab component ke paas hai.
+Delete kar diya. Us ke bhai `--radius-sm` (2 consumer) aur `--shadow` (1) zinda hain, gin kar
+tasdeeq kiya — **review ne `--shadow` ko murda kaha tha, wo durust nahi tha.**
+
+**Matn wali chhe, sab durust kar di gayin:** wrapper "paanch" likhe the, **chaar** hain (mera
+apna table chaar hi ginta tha); `.modal-close` ki padding ka farq "2px" likha tha, **amudi
+2px magar ufqi 4px** hai; `--overlay-navy-45` dark-sidebar wale section mein rakh diya tha
+jis ka apna header kehta hai "hover aur active **on this sidebar**" — ab us ka apna section
+hai; shadow ka comment "one per modal system" kehta tha, jabke **index aur library ek hi
+system hain aur phir bhi do alag shadow rakhte the**; `modal.css` ke header ki do purani
+satrein ("shared by bank and print only", "nothing below assumes the three will ever be
+unified") ab is file ke apne neeche wale block se takrati thin; aur "chhe radii" ki jagah
+chhe **declaration**, chaar qeematein.
+
+⬜ **Browser check — HUA NAHI.** Dekhne wali cheezein: koi bhi modal khol kar **peechay ka
+andhera** (ab har jagah ek navy), **kone** (ab har jagah 16px — `bank` aur `print` par sab se
+zyada farq, 12px aur 10px se), aur `print` ka **library picker** (wo aathwan modal).
+
 ## 2026-08-27 — UI-066: field/filter disagree — 59 lines mein se 12 zinda thin, aur teen wahin rehni parin
 
 Finishing plan ka **item 4**. `legacy_css_lines` **1806 → 1799 (−7)**, `unsanctioned_hex`
@@ -90,13 +190,21 @@ number 1795 par gira. **Ye qaida do session mein do dafa toota hai.**
 
 ### Review ne chaar defect nikale, chaaron band — aur pehla gate ke andhe nuqte par tha
 
-**1. `index` ka colour input be-libaas ho gaya tha, aur kisi probe ne nahi dekha.**
-`index.html`:480 `#accentColor` bhi usi bare `input, select` rule par tha, aur `forms.css`
-`input[type="color"]` ko jaan-boojh kar bahar rakhta hai (file ki tarah, UA-drawn). Us ka
-border, radius aur background gayab ho chuke the — inline style sirf `min-height`, `cursor`,
-`padding` deti hai. **Type probe ne is par sifar delta diya** kyunke element school-settings
-ke bandh panel mein hai. Ab colour file ke saath ek hi box rule par hai (`index.css`:87).
-**Ye D45/D49 wali hi shakal hai: jo gate cheez ko dekh nahi sakta, wo paas kar dega.**
+**1. `index` ka colour input be-libaas ho gaya tha.** `index.html`:480 `#accentColor` bhi usi
+bare `input, select` rule par tha, aur `forms.css` `input[type="color"]` ko jaan-boojh kar
+bahar rakhta hai (file ki tarah, UA-drawn). Us ka border, radius aur background gayab ho
+chuke the — inline style sirf `min-height`, `cursor`, `padding` deti hai. Ab colour file ke
+saath ek hi box rule par hai (`index.css`:87).
+
+> ⚠ **YAHAN PEHLE LIKHA THA "type probe ne is par sifar delta diya … koi gate pakad nahi
+> sakta tha". WO GHALAT HAI, aur agle din naapne par pakda gaya.** Probe ne is par **30
+> deltas** diye the. `css_type_probe.mjs`:282 `querySelectorAll('*')` chalata hai, koi
+> visibility filter nahi, aur `getComputedStyle` chhupe element par bhi rang/radius/padding/
+> font theek deta hai — `#accentColor` snapshot mein apne border aur font-size ke saath
+> maujood hai, aur fix lagte hi `index` ke deltas **1380 → 1350** gaye: theek 6 properties ×
+> 5 bands. **Asal wajah `css_type_diff.mjs`:42 ka `LIST_CAP = 60` hai** — count poora hai,
+> chhapi hui list kati hui, aur raay kati hui list par bani. Nuqsan asli tha aur review ne
+> theek pakda; **gate ke andhepan wali wajah ghalat thi.** D53 durust kar di gayi.
 
 **2. `slo` par `margin-top: 6px` ki koi buniyad nahi thi.** `slo.html` mein **ek bhi `<label>`
 nahi** — baqi chaar pages `label { margin-top: 14px }` ke saath control ka 6px jora karte

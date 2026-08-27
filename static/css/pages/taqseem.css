@@ -87,8 +87,13 @@
     --red:             var(--color-danger);
     --red-bg:          var(--color-danger-soft);
 
-    /* shape + elevation */
-    --radius:          var(--radius-container);
+    /* shape + elevation.
+       `--radius` was here too and is DELETED — UI-067 took its one consumer,
+       99-legacy/taqseem.css's `.modal` border-radius, onto modal.css. It
+       resolved to --radius-container (16px), which is what the component now
+       gives that modal, so this removes a name and changes no pixel.
+       --radius-sm (2 consumers) and --shadow (1) are still live; counted, not
+       assumed. blueprint declares its own --radius and keeps it. */
     --radius-sm:       var(--radius-control);
     --shadow:          var(--shadow-card);
   }

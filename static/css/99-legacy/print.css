@@ -221,23 +221,22 @@
   .edit-btn:hover { background: var(--tint); color: var(--primary); border-color: var(--primary); }
 
   /* ---- Edit modal ---- */
+  /* scrim, radius, shadow, close size: modal.css (UI-067). */
   .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.45); z-index: 999;
+    display: none; position: fixed; inset: 0; z-index: 999;
     align-items: center; justify-content: center;
   }
   /* .modal-backdrop.open: 05-components/modal.css (UI-042) */
 
   .modal {
-    background: #fff; border-radius: 10px; padding: 24px 28px;
+    background: #fff; padding: 24px 28px;
     width: min(600px, 94vw); max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 16px 48px rgba(0,0,0,.22);
   }
   /* .modal-header: 05-components/modal.css (UI-042). UI-062 dropped the two
      dead declarations; only the colour was ever live. */
   .modal-header h3 { color: var(--navy); }
   .modal-close {
-    background: none; border: none; font-size: 20px; cursor: pointer;
+    background: none; border: none; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;
   }
   .modal-close:hover { color: var(--ink); }
@@ -383,15 +382,15 @@
   .shortfall-panel .sf-gain { font-weight: 600; }
 
   /* ---- Library picker modal ---- */
+  /* The app's 8th modal, page-only so no audit bucket listed it. modal.css, UI-067. */
   .lib-picker-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+    position: fixed; inset: 0; z-index: 1000;
     display: none; align-items: center; justify-content: center; padding: 16px;
   }
   .lib-picker-overlay.open { display: flex; }
   .lib-picker-modal {
-    background: #fff; border-radius: 12px; width: min(700px, 96vw);
+    background: #fff; width: min(700px, 96vw);
     max-height: 88vh; display: flex; flex-direction: column;
-    box-shadow: 0 16px 56px rgba(0,0,0,.3);
   }
   .lib-picker-head {
     padding: 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;

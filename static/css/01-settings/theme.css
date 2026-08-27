@@ -185,4 +185,8 @@
 
   /* ── elevation roles ──────────────────────────────────────────────────── */
   --shadow-card: var(--shadow-1);
+  --shadow-modal: var(--shadow-2);   /* UI-067 — the one modal lift, all 8 modals */
+
+  /* ── scrim ────────────────────────────────────────────────────────────── */
+  --color-scrim: var(--overlay-navy-45);   /* UI-067 — behind every modal */
 }
