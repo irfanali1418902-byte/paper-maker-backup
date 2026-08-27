@@ -29,7 +29,7 @@
 
    WHAT THE PAGE ACTUALLY LOSES, and the five rules are the answer to it.
    Two of its seven orphan rules are already covered — `input[type=number]`
-   by 03-elements/forms.css:53 and `:focus-visible` by :106 — and three of
+   by 03-elements/forms.css:80 and `:focus-visible` by :159 — and three of
    its four partials are dropped deliberately rather than ported:
 
      · `.brand` (background, color, border-bottom, grid-area) — DROPPED.
@@ -62,7 +62,7 @@
 
 @layer components {
   /* THE اردو TOGGLE — Irfan's decision, answered A on 2026-08-13.
-     03-elements/forms.css:101's `button { font-family: inherit }` sits in
+     03-elements/forms.css:154's `button { font-family: inherit }` sits in
      layer(elements) and outranks 99-legacy/index.css:34's `.urdu, .ur` in
      layer(legacy), so both toggle buttons would render the Urdu label in the
      Latin body sans. layer(components) outranks layer(elements) and wins it

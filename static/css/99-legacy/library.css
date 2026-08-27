@@ -42,13 +42,12 @@
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
   label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  input[type="text"], input[type="file"], select {
-    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid #D6DEEA; border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
-  }
-  input[type="file"] { padding: 10px 11px; }
-  /* input/select :focus — 03-elements/forms.css:79. Deleted UI-061, dead by layer order. */
+  /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; file inputs
+     are out of its set by contract, so theirs keeps a box, on tokens. UI-066. */
+  input[type="text"], input[type="number"], input[type="file"], select { width: 100%; min-height: 44px; margin-top: 6px; }
+  input[type="file"] { padding: 10px 11px; border: 1px solid var(--color-border);
+    border-radius: var(--radius-control); font-size: var(--text-control); font-family: inherit;
+    background: var(--color-surface); color: var(--color-text); }
 
   /* .field-row: 05-components/field.css (UI-042) */
 
@@ -176,10 +175,7 @@
     font-size: 11.5px; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: .05em; margin: 18px 0 2px;
   }
-  input[type="number"] { width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid #D6DEEA; border-radius: 10px; font-size: 14.5px; font-family: inherit;
-    background: #fff; color: var(--ink); }
-  input[type="number"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+  /* input[type=number] box + :focus — 03-elements/forms.css:80,132 (UI-066). */
 
   /* ---- Responsive ---- */
   /* ---- Pagination ---- */

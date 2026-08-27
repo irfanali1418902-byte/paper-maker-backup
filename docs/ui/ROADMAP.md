@@ -250,8 +250,8 @@ so the target and the work still agree.
 
 | # | session | lines | decisions needed from Irfan |
 |--:|---|--:|---|
-| 4 | `field/filter` disagree | 59 | **1** — which control sizing wins. Its `agree` half shipped as UI-061, so the ground is known. **Take this next** |
-| 5 | `modal` disagree | 58 | **1** — the app has three modal systems; unify or keep three |
+| ~~4~~ ✅ | ~~`field/filter` disagree~~ **DONE 2026-08-27 as UI-066.** Sizing: **44px / 6px**, the majority's (Irfan). **The row's question was a third of it:** of the 59 lines, seven properties per rule were already DEAD against `forms.css` by layer order; only `width`/`min-height`/`margin-top` were live. Two holes the probe found — `index` has **11 inputs with no `type` attribute**, which `forms.css`'s attribute-based selector never matched, and file inputs are outside that set by contract; deleting the legacy rules without covering both drops them to UA defaults. **And the three live properties could NOT move up a layer** — that broke six pages, four outside this family, because every compact override in the app is itself in `layer(legacy)` (**D51**). **Review then found a fifth thing no gate could:** `index`'s `input[type="color"]` was left unstyled and the probe read **0 deltas on it**, because it sits inside a closed panel. `legacy_css_lines` 1806 → **1799**, hex 347 → **338**. Detail: `PROGRESS.md` 2026-08-27 | ~~59~~ **−7** | done |
+| 5 | `modal` disagree | 58 | **1** — the app has three modal systems; unify or keep three. **Take this next** |
 | 6 | `card` + `brand` | 52 | **2 small**, independent, no ordering constraint |
 | 7 | `btn` + `chip/pill/row` + `shortfall` + `page-head` | 39 | **3–4 small** — the tail, possibly one session |
 | 8 | `other` — **SURVEY ONLY, no code** | 134 | **unknown, and that is the point** |

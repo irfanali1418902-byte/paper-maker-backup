@@ -16,8 +16,9 @@
    THE SET OF INPUT TYPES IS theme.css's SET, DELIBERATELY. text, number, search,
    select, textarea — and NOT input[type="file"]. A file input's box is UA-drawn
    and does not take these values predictably, so the pages handle theirs
-   individually: index.css:104 and library.css:70 each give one its own padding,
-   slo.css:63 pads it through a shared group, and bank.css:287 deliberately gives
+   individually: index.css:90 and library.css:48 each give one its own padding,
+   slo.css:40 gives it a dedicated rule (it padded through a shared group until
+   UI-066 deleted that group), and bank.css:217 deliberately gives
    it none at all — there it is a transparent full-bleed overlay
    (position:absolute; inset:0; opacity:0), which a font-size or padding from
    this layer would disturb for no benefit. Checkboxes and radios are out for the
@@ -50,9 +51,37 @@ label {
   color: var(--color-text-muted-strong);
 }
 
+/* UI-066 — TWO SELECTORS WERE ADDED HERE AND THEY ARE NOT A WIDENING OF THE SET.
+   The set above is still theme.css's set: text-like controls in, UA-drawn ones out.
+
+     input:not([type])   An input with no type attribute IS a text input — the HTML
+                         default. It was missing only because this list is written in
+                         attribute selectors and an absent attribute matches none of
+                         them. It is not hypothetical: index.html has TWELVE — eleven in
+                         the static markup (#subject, #topic, #paperTitle,
+                         #schoolNameEn/Ur, #schoolAddress, #schoolPhone,
+                         #schoolPrincipal, #pdfSubject, #pdfGrade, #mpSearch) and one
+                         rendered from a JS template literal, `.sec-row__heading`
+                         (index.html:1392), which an id sweep misses. All twelve were
+                         painted entirely by 99-legacy/index.css's bare `input, select`
+                         rule; deleting that rule without this selector drops them to the
+                         UA default box — not a sizing change, a visible break.
+                         ⚠ The twelfth is JS-rendered, so NO PROBE IN THIS REPO SEES IT —
+                         same blind spot the `.pill*` rules hit in UI-060. Its own
+                         `.sec-row__heading` rule (pages/index.css:299) is in
+                         layer(components) and so outranks this file, but it sets only
+                         `flex`/`min-width`; nothing collides. Measured 2026-08-27; the
+                         other eight pages have zero untyped inputs.
+     input[type="email"] Text-like by the same argument. index.html:474 (#schoolEmail)
+                         is the only one in the repo and it rode on the same bare rule.
+
+   input[type="color"] is deliberately NOT here — like file, its box is UA-drawn.
+   index.html:480 carries its own inline padding/min-height and keeps them. */
+input:not([type]),
 input[type="text"],
 input[type="number"],
 input[type="search"],
+input[type="email"],
 select,
 textarea {
   font-family: inherit;
@@ -67,6 +96,30 @@ textarea {
      warns against. The scale stays the design system's vocabulary. */
   padding: 9px 11px;
 }
+
+/* ⚠ UI-066 — width / min-height / margin-top ARE DELIBERATELY NOT HERE, AND THE
+   REASON IS MEASURED, NOT ARGUED. Those three are the only declarations the
+   legacy files were still alive for on these controls (the other seven this rule
+   supplies are dead by layer order), so lifting them here looked like the whole
+   task. It is not, and the probe said so:
+
+     bank        .opt-input-wrap input  min-height 38px -> 44px   (16 elements)
+                 .float-bar select/input           34px -> 44px
+     blueprint   filter controls              38/36px -> 44px
+     print       modal controls          min-height 0 -> 44px, width auto -> 100%
+     slo-health  selects                      width 157px -> 903px, rows reflowed
+
+   EVERY compact override in this app lives in layer(legacy) — .opt-input-wrap,
+   .float-bar, print's modal rules — so a base rule one layer up beats all of them
+   whatever their specificity. Six pages moved, four of which are not even in the
+   field/filter family. This is UI-065's lesson again from the other side: there,
+   legacy beat a component that forgot a breakpoint; here, an element rule beats
+   legacy overrides that were doing real work.
+
+   So the three stay in each 99-legacy file, where specificity still decides. They
+   can only come up when the stacked-field containers share a class the compact
+   ones do not (.row / .field-row / .filter-row / .ps-row are four different names
+   today) — that is a markup task, not this one. DEFERRED.md D51. */
 
 textarea {
   min-height: 80px;

@@ -1,5 +1,145 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-27 — UI-066: field/filter disagree — 59 lines mein se 12 zinda thin, aur teen wahin rehni parin
+
+Finishing plan ka **item 4**. `legacy_css_lines` **1806 → 1799 (−7)**, `unsanctioned_hex`
+347 → **338 (−9)**. **1075 pass**, ruff saaf. Chhui gayi files: `03-elements/forms.css`, aur
+`99-legacy/` mein `bank`, `blueprint`, `index`, `library`, `slo`; plus review ke baad chhe
+files ke line refs.
+
+**Adad HEAD ke khilaf naape gaye, `BASELINE.json` ke khilaf nahi** — wo file ab bhi stale hai.
+
+### Row ki "one decision: which control sizing wins" adhoori tasveer thi
+
+Teen sizing waqai chal rahi thin — `bank`/`blueprint`/`library` 14.5px/44px/10px 13px/radius
+10px, `index` 15px/48px/11px 14px/radius 11px, `slo` 13.5px/9px 11px/radius 9px. **Magar in
+mein se saat properties har jagah pehle se murda thin.** `main.css`:42 `legacy` ko sab se
+neechi layer rakhta hai aur `forms.css` (layer `elements`) unhi controls par `font-family`,
+`font-size`, `color`, `background`, `border`, `border-radius`, `padding` khud declare karta
+hai — layer specificity se pehle tay hota hai, to legacy ka koi bhi hijja jeet nahi sakta.
+
+Zinda sirf teen thin, kyunke inhein `forms.css` declare nahi karta: **`width`, `min-height`,
+`margin-top`**. Yani 59 lines ka faisla teen declarations ka faisla tha.
+
+**`slo`:35 to poori tarah murda thi** — us ke paas ye teen thin hi nahi.
+
+### Do sooraakh jo naapne par nikle, aur dono live pages par thay
+
+**1. `forms.css` ka selector list attribute par hai, aur `index` ke 11 inputs par `type` hai
+hi nahi.** `#subject`, `#topic`, `#paperTitle`, `#schoolNameEn/Ur`, `#schoolAddress`,
+`#schoolPhone`, `#schoolPrincipal`, `#pdfSubject`, `#pdfGrade`, `#mpSearch` — sab asal mein
+text fields, aur `input[type="text"]` in mein se kisi ko match nahi karta. Unhein `index` ki
+bare `input, select` rule paint kar rahi thi. Us rule ko bina soche delete karna in 11 ko
+**UA ke default box par gira deta** — sizing ki tabdeeli nahi, saaf toot-phoot. Baqi aath
+pages par ye adad **sifar** hai (naapa gaya). `forms.css`:53 ab `input:not([type])` aur
+`input[type="email"]` (`#schoolEmail`) dono ko naam se bulata hai.
+
+**2. File inputs us set se jaan-boojh kar bahar hain** (`forms.css` ka apna header, :16–21) —
+to `library`, `index` aur `slo` par wo shared rule se poori tarah paint ho rahe the. Teenon
+ko apni box rule mili, ab tokens par, is liye dobara drift nahi kar saktin.
+
+### Aur ek ghalti jo probe ne pakdi — ye is session ka asal nateeja hai
+
+Pehle draft ne wo teen zinda properties `forms.css` mein rakhi thin. Ye theek lagta tha aur
+**chhe pages tor raha tha:**
+
+| page | kya hila |
+|---|---|
+| `bank` | `.opt-input-wrap input` `min-height` 38px → 44px (**16 elements**), `.float-bar` 34px → 44px |
+| `blueprint` | filter controls 38/36px → 44px |
+| `print` | modal controls `min-height` 0 → 44px, `width` auto → **100%** |
+| `slo-health` | selects `width` 157px → **903px**, rows reflow |
+| `slo` | file input `width` 300px → **903px**, us ki row 41px → 98px |
+
+**Wajah wohi hai jo UI-065 ne doosri simt se seekhi thi:** is app ka **har** compact override
+khud `layer(legacy)` mein hai — `.opt-input-wrap`, `.float-bar`, `print` ki modal rules — to
+ek base rule ek layer upar un sab ko **har specificity ke bawajood** haraati hai. UI-065 mein
+legacy ne us component ko haraya tha jo breakpoint bhool gaya tha; yahan element rule ne un
+legacy overrides ko haraya jo asal kaam kar rahe the.
+
+To teenon wapas har `99-legacy` file mein gayin, jahan specificity ab bhi faisla karti hai.
+Wo tab hi upar aa sakti hain jab stacked-field containers ka aik naam ho — aaj `.row`,
+`.field-row`, `.filter-row`, `.ps-row` chaar naam hain. Wo markup ka kaam hai, is ka nahi:
+**D51**.
+
+⚠ **Aur ratchet pehle UPAR gaya** — 1806 → **1821** — jabke rules delete ho rahi thin. Wajah
+bilkul wohi thi jo ROADMAP ne is hafte likhi thi: `99-legacy/*.css` mein lambe comments, aur
+`legacy_css_lines` har line ginta hai. Comments ek-ek line par aaye, dalail yahan aayin, aur
+number 1795 par gira. **Ye qaida do session mein do dafa toota hai.**
+
+### Jo naapa gaya — sirf teen pages hile, aur wohi teen jinhein hilna tha
+
+`css_type_probe` (paanch width bands) aur `css_state_probe`, dono before/after:
+
+| page | type deltas | state deltas |
+|---|--:|--:|
+| `index` | 1350 | 523 |
+| `slo` | 162 | 84 |
+| `library` | 150 | 126 |
+| `bank`, `blueprint`, `print`, `taqseem`, `slo-health`, `landing` | **0** | **0** |
+
+* **`index`** — 48px/7px → **44px/6px** (Irfan ka faisla), aur us ke controls ab `forms.css`
+  ka 13.5px/9px 11px parhte hain, 15px/11px 14px nahi.
+* **`slo`** — selects/text ko pehli dafa control height mili (40px → 44px). **`margin-top`
+  aur `width` nahi** — dono ki wajah review wale hissay mein.
+* **`library`** — sirf teen file inputs, aur sirf box tokens (14.5px → 13.5px, border/radius
+  ab `--color-border`/`--radius-control` par).
+* **`outline-color` ke 26 state deltas `currentColor` ka peechha hain**, focus ring ka nahi —
+  file inputs ka `color` `var(--ink)` se `--color-text` par gaya aur `outline-style` wahan
+  `none` hai (`forms.css`:79). Koi basri asar nahi.
+
+### Review ne chaar defect nikale, chaaron band — aur pehla gate ke andhe nuqte par tha
+
+**1. `index` ka colour input be-libaas ho gaya tha, aur kisi probe ne nahi dekha.**
+`index.html`:480 `#accentColor` bhi usi bare `input, select` rule par tha, aur `forms.css`
+`input[type="color"]` ko jaan-boojh kar bahar rakhta hai (file ki tarah, UA-drawn). Us ka
+border, radius aur background gayab ho chuke the — inline style sirf `min-height`, `cursor`,
+`padding` deti hai. **Type probe ne is par sifar delta diya** kyunke element school-settings
+ke bandh panel mein hai. Ab colour file ke saath ek hi box rule par hai (`index.css`:87).
+**Ye D45/D49 wali hi shakal hai: jo gate cheez ko dekh nahi sakta, wo paas kar dega.**
+
+**2. `slo` par `margin-top: 6px` ki koi buniyad nahi thi.** `slo.html` mein **ek bhi `<label>`
+nahi** — baqi chaar pages `label { margin-top: 14px }` ke saath control ka 6px jora karte
+hain, `slo` ke paas dono mein se koi nahi. Aur us ke controls `.row { display: flex;
+align-items: center }` mein buttons ke saath baithe hain, to 6px unhein row-mates se neeche
+gira raha tha. Hata diya; `slo` ke deltas 187 → **162**.
+
+**Aur us rule ke saath likhi wajah bhi ghalat thi.** "width isliye nahi di ke file input
+903px ho gaya tha" — magar aakhri selector `select, input[type=text]` hai, jis mein file
+hai hi nahi; aur paanchon matched elements inline `width` carry karte hain, jo har layer se
+jeetti hai. Yani width ka faisla wahan sifar-delta tha. **Nateeja theek tha, dalil ghalat —
+aur agla session dalil hi wirse mein leta hai.**
+
+**3. Gyarah nahi, BAARA untyped inputs hain.** Baarhwan `.sec-row__heading`
+(`index.html`:1392) JS template literal ke andar hai, is liye id-sweep se chhoot gaya —
+**aur isi wajah se koi probe use naapta bhi nahi**, wohi blind spot jo UI-060 mein `.pill*`
+par tha. Wo naye selector se cover ho jata hai, aur us ki apni rule `layer(components)` mein
+hai (sirf `flex`/`min-width`), to koi takraav nahi.
+
+**4. Is commit ne `forms.css` mein 45 lines joreen aur us ke saare line refs khisak gaye.**
+Chhe naye comments ke ilawa `btn.css`:104/232, `field.css`:102, `pages/index.css`:32/65,
+`pages/print.css`:113, `pages/slo.css`:114/122/123 — sab purane number par ishara kar rahe
+the. Sab naap kar theek kiye gaye. `forms.css` ka apna header bhi ab `slo` ke bare mein sach
+bolta hai: wo "shared group" ab mojood nahi, isi task ne delete ki.
+
+⚠ **Aur ek framing durusti:** "saat properties pehle se murda thin" `index` ke 12 untyped +
+1 email inputs par **sach nahi tha** — un par wo zinda thin, aur `forms.css` ne selector isi
+commit mein liye. Un terah controls ki qeemat waqai badli (padding 11px 14px → 9px 11px,
+font 15px → 13.5px, border `#D6DEEA` → `--color-border`). `index` ke 1350 deltas ki asal
+wajah yehi hai. "Murda tha" sirf `bank`, `blueprint`, `library` aur `slo` par sach hai.
+
+### Do cheezein jo darj hui hain, chhupayi nahi gayin
+
+* **D52** — `index` ke teen `.qtype` checkbox `width: 100%` compute karte hain aur **pehle se
+  karte the**. Selector isi liye bare rakha gaya ke wo na badlein. Unhein theek karna alag
+  faisla hai.
+* **D51** — oopar wala, aur ye item 4 ka sab se qeemti nateeja hai.
+
+⬜ **Browser check — HUA NAHI.** Chrome extension is baar bhi connect nahi hui. Server chalta
+raha `http://127.0.0.1:8000/static/`. Dekhne wali cheezein: **`index`** ke fields (ab thore
+chhote — 44px, 13.5px), **`slo`** ke selects (ab 44px, pehle 40px) aur us ka file input,
+**`library`** ke teen file inputs. Aur D52 ke checkbox.
+
 ## 2026-08-27 — UI-065: shell/nav — ek shell, aur mobile collapse jo do hafte se toota para tha
 
 Finishing plan ka **item 3**. `legacy_css_lines` **1841 → 1806 (−35)**, `unsanctioned_hex`

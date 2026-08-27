@@ -101,7 +101,7 @@
 
 /* The skeleton. On the modifier list, never on a bare `.btn` — see header.
    `font-family: inherit` is here so the component works identically on an
-   <a> and a <button>; 03-elements/forms.css:101 only reaches the latter.
+   <a> and a <button>; 03-elements/forms.css:154 only reaches the latter.
    The explicit `color` on each variant below is also what settles D27: an
    <a class="btn--ghost"> and a <button class="btn--ghost"> paint the same,
    which the legacy classes do not manage today. */
@@ -229,7 +229,7 @@
    OMISSION. One was added and removed on 2026-08-06. It set a 2px
    --color-action ring on :focus-visible, and the comment justifying it said
    no legacy button declares a focus style so there was nothing to read.
-   That premise was wrong: 03-elements/forms.css:106 already carries a bare
+   That premise was wrong: 03-elements/forms.css:159 already carries a bare
    `:focus-visible { outline: 2px solid var(--color-accent); outline-offset:
    2px }` in layer(elements) — live on all three live pages since UI-021, and
    ported from static/theme.css:212, which still carries it on the four pages

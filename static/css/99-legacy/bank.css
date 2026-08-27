@@ -57,12 +57,8 @@
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
   label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  input[type="text"], input[type="number"], select, textarea {
-    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid #D6DEEA; border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
-  }
-  /* input/select/textarea :focus — 03-elements/forms.css:79 (UI-061, was dead here). */
+  /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; UI-066 note there. */
+  input[type="text"], input[type="number"], select, textarea { width: 100%; min-height: 44px; margin-top: 6px; }
 
   /* .field-row: 05-components/field.css (UI-042) */
 

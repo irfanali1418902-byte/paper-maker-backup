@@ -7,29 +7,71 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-27)
 
-**Items 1, 2 and 3 are done. Take item 4 — `field/filter` disagree, 59 lines, 5 files.**
-Its `agree` half already shipped as UI-061, so the ground is known. **One decision: which
-control sizing wins.**
+**Items 1, 2, 3 and 4 are done. Take item 5 — `modal` disagree, 58 lines, 5 files.**
+Its `agree` half shipped as UI-062. **One decision: the app has three modal systems
+(`modal.css`'s header) — unify or keep three.**
 
 **The whole remaining plan — both tracks, all six sessions, and when each deferred row is
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
 before planning anything; it is newer than everything above it in that file.
 
-**Current numbers, measured 2026-08-27** — re-measure, do not quote:
-`legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target **~1,350** ·
-remaining available work **461** lines (71 agree + 390 disagree).
+**Current numbers, measured 2026-08-27 after UI-066** — re-measure, do not quote:
+`legacy_css_lines` **1,799** · `unsanctioned_hex` **338** · target **~1,350**.
 
-⚠ **Three things this week established that the next session should not re-learn:**
+⚠ **Four things this week established that the next session should not re-learn:**
 
 1. **Measure the ratchet against `HEAD`, not `BASELINE.json`** — that file is 30+ lines stale.
 2. **`css_type_probe` now reads five width bands** and prints any unobserved band every run.
    A delta keyed `@700`/`@520` is a narrow-width one.
 3. **Do not write long comments into `99-legacy/*.css`.** `legacy_css_lines` counts every
    line, comments included — UI-065's first draft made the number go **up** while deleting
-   rules. Reasoning belongs in `PROGRESS.md`; the CSS gets a pointer.
+   rules, **and UI-066 did it again** (1,806 → 1,821 while deleting rules). Twice in two
+   sessions. Reasoning belongs in `PROGRESS.md`; the CSS gets a one-line pointer.
+4. **A rule cannot simply move UP a layer.** UI-066 lifted three live declarations into
+   `layer(elements)` and broke six pages, because every compact override in this app sits in
+   `layer(legacy)` and loses to anything above it whatever its specificity. **Before moving a
+   rule up, ask what in legacy was overriding it.** D51.
 
 **Still open:** **D47** (`forms.css` — lying comment + ring-vs-glow decision), **D49** (no
-gate can see `cursor`), **D48**, **D50**. None blocks item 4.
+gate can see `cursor`), **D48**, **D50**, **D51**, **D52**. None blocks item 5.
+
+## UI-066 — `field/filter` disagree. **2026-08-27. Item 4. 59 lines mein se 12 zinda thin.**
+
+`legacy_css_lines` **1806 → 1799 (−7)**, hex 347 → **338 (−9)**. 1075 pass, ruff saaf.
+Tafseel `PROGRESS.md` 2026-08-27.
+
+**Row ka sawal — "which control sizing wins" — adhoora tha.** Teen sizing chal rahi thin,
+magar un ki **saat properties har jagah pehle se murda** thin: `forms.css` (layer `elements`)
+unhi controls par wo saat khud declare karta hai aur legacy sab se kamzor layer hai. Zinda
+sirf **`width`, `min-height`, `margin-top`** thin. `slo`:35 to poori tarah murda thi.
+Irfan: **44px / 6px, aksariyat wali.**
+
+**Do sooraakh naap kar nikle.** `index` ke **11 inputs par `type` attribute hai hi nahi** aur
+`forms.css` ka selector list attribute par hai — un ko bare `input, select` paint kar rahi
+thi, aur us rule ko delete karna unhein UA default par gira deta. `forms.css`:53 ab
+`input:not([type])` + `input[type="email"]` bhi bulata hai. Doosra: **file inputs us set se
+bahar hain**, to `library`/`index`/`slo` par unhein apni box rule mili.
+
+⚠ **Aur pehla draft chhe pages tor raha tha.** Teen zinda properties `forms.css` mein rakhne
+se `bank` `.opt-input-wrap` 38→44px (16 elements) aur `.float-bar` 34→44px, `blueprint` ke
+filter controls 38/36→44px, `print` ke modal controls 0→44px aur width auto→100%,
+`slo-health` ke selects 157→903px. **Chaar us family mein the hi nahi.** Wajah: har compact
+override khud legacy mein hai. Teenon wapas per-page legacy mein gayin — **D51**.
+
+**Naapa gaya:** sirf `index` (1350), `slo` (162), `library` (150) hile; `bank`, `blueprint`,
+`print`, `taqseem`, `slo-health`, `landing` par **0 / 0**, dono probe.
+
+⚠ **Review ne chaar defect nikale aur pehla gate ke andhe nuqte par tha:** `index` ka
+`#accentColor` (`input[type="color"]`, `forms.css` se bahar) be-libaas ho gaya tha aur
+**probe ne 0 delta diya** kyunke wo bandh panel mein hai. Doosra: `slo` par `margin-top: 6px`
+ki koi buniyad nahi thi — us page par **ek bhi `<label>` nahi** aur us ka `.row` centred flex
+hai. Teesra: untyped inputs gyarah nahi **baara** hain (baarhwan JS template literal mein,
+yani probe se bhi bahar). Chautha: is commit ne `forms.css` mein 45 lines joreen aur **chhe
+files ke line refs** khisak diye. Chaaron band.
+
+⬜ **Browser check nahi hua** — extension phir connect nahi hui. Dekhna hai: `index` ke
+fields (ab 44px/13.5px), `slo` ke selects (40 → 44px) aur file input, `library` ke teen file
+inputs, aur **D52** ke teen checkbox.
 
 ---
 

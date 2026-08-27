@@ -80,13 +80,14 @@
   /* UI-061: font-weight/size/color dropped — dead against forms.css:47 by layer order. */
   label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  input, select {
-    width: 100%; min-height: 48px; padding: 11px 14px; margin-top: 7px;
-    border: 1px solid #D6DEEA; border-radius: 11px;
-    font-size: 15px; font-family: inherit; background: #fff; color: var(--ink);
-  }
+  /* Box + :focus — forms.css:80,132. Selector stays BARE: checkboxes, file and colour
+     rode it too. 48/7 -> 44/6 = Irfan 2026-08-27. PROGRESS.md 2026-08-27. */
+  input, select { width: 100%; min-height: 44px; margin-top: 6px; }
+  /* file + colour are UA-drawn, so forms.css excludes both and their box stays here. */
+  input[type="file"], input[type="color"] { border: 1px solid var(--color-border);
+    border-radius: var(--radius-control); font-size: var(--text-control); font-family: inherit;
+    background: var(--color-surface); color: var(--color-text); }
   input[type="file"] { padding: 11px 12px; }
-  /* input/select :focus — 03-elements/forms.css:79. Deleted UI-061, dead by layer order. */
 
   /* .field-row: 05-components/field.css (UI-042) */
 

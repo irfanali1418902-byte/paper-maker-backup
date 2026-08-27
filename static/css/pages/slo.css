@@ -111,7 +111,7 @@
                        D23's FIRST LIVE APPEARANCE: no @font-face declares that
                        family and no woff2 in the repo provides it, so it falls
                        through to ui-monospace. Pre-existing, now visible.
-     forms.css:101-102 font-family: inherit takes <button class="btn-ghost">
+     forms.css:154-155 font-family: inherit takes <button class="btn-ghost">
                        x2 from ARIAL -> IBM Plex Sans. NOTE the selector: :58
                        carries the same declaration but its rule is
                        input/select/textarea and does NOT match a button — an
@@ -119,8 +119,8 @@
                        This is the exact declaration UI-021's review corrected
                        from the `font` shorthand; D22 parks the rest of that
                        reset for UI-041.
-     forms.css:63      --radius-control on select/input  x5  9px -> 11px
-     forms.css:62      border colour goes from slo.css's own literal to
+     forms.css:92      --radius-control on select/input  x5  9px -> 11px
+     forms.css:91      border colour goes from slo.css's own literal to
                        --color-border, one step lighter. NOTE: the two hex
                        values are deliberately NOT quoted here. Writing them
                        took unsanctioned_hex 429 -> 431 and the ratchet caught
