@@ -228,12 +228,14 @@
   }
   .pin.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
-  /* ---- Responsive ---- */
+  /* ---- Responsive ----
+     UI-065: three sidebar rules deleted — blueprint.html has NO `.app-sidebar`,
+     `.app-nav` or `.sidebar-foot` element (it is the one page on `o-shell`, a top bar).
+     Dead, never applied. Undetectable until UI-064 gave the probes narrow bands: at
+     1280 a dead rule in this block and a live one both read 0. `.brand` stays — that
+     element does exist here. */
   @media (max-width: 760px) {
     body { flex-direction: column; }
-    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
     .brand { padding: 0; }
-    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
-    .sidebar-foot { display: none; }
     .bp-main { padding: 16px 14px; }
   }

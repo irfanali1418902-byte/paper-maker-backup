@@ -1,5 +1,88 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-27 — UI-065: shell/nav — ek shell, aur mobile collapse jo do hafte se toota para tha
+
+Finishing plan ka **item 3**. `legacy_css_lines` **1841 → 1806 (−35)**, `unsanctioned_hex`
+349 → **347**. **1075 pass**, ruff saaf.
+
+### ROADMAP ki row ghalat thi, aur ye naap kar pata chala
+
+Row kehti thi *"there are three navies. Pick one shell, one navy."* **Navy par koi faisla
+darkar nahi tha:** saaton sidebar page `rgb(22,41,74)` hi paint karte hain. Teen **hijje**
+hain (`#16294A`, `var(--brand)`, `var(--sidebar-bg)`), teen rang nahi.
+
+Asal masla ye tha ke **kaun component par hai**: paanch page (`slo`, `slo-health`,
+`library`, `bank`, `index`) `sidenav__panel` carry karte the aur un ki legacy shell rules
+pehle se **mari hui** thin; `taqseem` aur `print` component par thay hi nahi. Irfan ka
+faisla, 2026-08-27: **dono ko component par lao.**
+
+Aur `blueprint` ke paas `.app-sidebar` **element hai hi nahi** (wo `o-shell` par hai, top
+bar) — us ki teen sidebar rules kabhi kisi cheez par lagi hi nahi.
+
+### Us ne aik purana bug benaqab kiya — aur wo is task ka asal nateeja hai
+
+`nav.css` mein **koi `@media` rule tha hi nahi**, aur layer order hai
+`@layer legacy, settings, …, components, utilities` — yani **`legacy` sab se kamzor**. To
+har page ka apna `@media { .app-sidebar { width: 100% } }` component ke `width: 248px` se
+**har baar harta tha**.
+
+**700px band par, kisi bhi tabdeeli se PEHLE naapa gaya:**
+
+| page | width | position | |
+|---|---|---|---|
+| slo, slo-health, library, bank, index | **248px** | sticky | **toota** |
+| taqseem, print | 700px | static | theek |
+
+Yani phone/tablet par paanch page ka sidebar top bar banta hi nahi tha — 248px ka sticky
+column khara rehta tha. **Theek wohi do page saheeh the jo component par nahi thay**, aur
+isi liye unhein component par laane wale task ne ise pakda.
+
+**Ye do hafte chhupa raha kyunke har probe 1280 par chalta tha.** Kal ka UI-064 isi ke liye
+tha. Irfan ka faisla: **jad se theek karo**, phailao mat.
+
+`nav.css` ko ab apna `@media (max-width: 760px)` block mila hai. Qeemat ke do intikhab, dono
+darj:
+* **760px, 720px nahi** — chaar file 760 kehti thin, teen 720. `slo`/`slo-health`/`taqseem`
+  ab 40px pehle collapse karenge (721–760 band ka asli delta).
+* **`flex-direction: row`** — 760 wala group bar banata tha, 720 wala column. Majority.
+
+### Naapa gaya — desktop bilkul nahi hila
+
+| page | 1280 | 900 | 740 | 700 | 520 |
+|---|---:|---:|---:|---:|---:|
+| bank, index, library | 0 | 0 | 15 | 15 | 15 |
+| blueprint, landing | 0 | 0 | 0 | 0 | 0 |
+| slo | 0 | 0 | 76 | 28 | 28 |
+| slo-health | 0 | 0 | 158 | 28 | 28 |
+| **taqseem** | **11** | **11** | 65 | 33 | 33 |
+| **print** | **74** | **74** | 80 | 80 | 80 |
+
+**Desktop (1280/900) par sirf wohi do page hile jin ka move manzoor hua tha.** Baqi saat
+par sifar. State probe: sirf `print` par 80 (rail ka 3px border + hover .08 → .07).
+
+### Do slip jo naap kar pakdi gayin, shipping se pehle
+
+* **Pehla `@media` rule `blueprint` ko tor raha tha.** Maine `.sidenav` likha tha, magar
+  blueprint `class="o-shell__nav sidenav"` carry karta hai — **wohi nav component, magar top
+  bar mein**. 18 deltas aik aise page par jis ke paas collapse karne ko sidebar hai hi nahi.
+  Ab rule `.sidenav__panel .sidenav` par scoped hai; blueprint **0**.
+* **`.brand` do dafa galat delete hui.** Ek dafa `print` se, ek dafa `blueprint` ke media
+  block se. Dono jagah element **maujood hai** (`blueprint` par `class="brand o-shell__brand"`),
+  aur brand **item 6 ki family** hai. Markup dekh kar pakdi gayi, andaze se nahi.
+
+### Aur aik cheez jo maine khud ghalat ki: comment ne file bara kar di
+
+Pehli koshish mein `legacy_css_lines` **1841 → 1861** ho gayi — **barh gayi**. Wajah: maine
+in files mein **44 lines ke comment** likh diye jabke rules **24 lines** ke gaye. Metric har
+line ginti hai. **Jin files ko drain karna hai un mein tafseel likhna drain ke khilaf hai** —
+tafseel ki jagah yehi file hai. Comments chhote kar ke 1841 → 1806.
+
+Aakhir mein 14 legacy `@media` rules (paanch file se) **naap kar** hatayin — component ke
+aane ke baad wo murda thin, aur hatane par **0 deltas**.
+
+⚠ **Browser check darj nahi hua.** Narrow-screen ka rawaiyya aaj badla hai (paanch page par
+behtar, teen par 40px pehle) — ye wo cheez hai jo browser window chhoti kar ke dekhni chahiye.
+
 ## 2026-08-27 — UI-064: viewport pass — pandrah media queries mein se chaudah kabhi naapi hi nahi gayi thin
 
 Finishing plan ka **item 2**. **Auzaar hai, drain nahi:** kisi page ki CSS ka aik byte nahi

@@ -71,7 +71,4 @@
 
   @media (max-width: 720px) {
     body { flex-direction: column; }
-    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: column; }
-    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0 10px; }
-    .sidebar-foot { display: none; }
   }

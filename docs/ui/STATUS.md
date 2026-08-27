@@ -7,27 +7,51 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-27)
 
-**Items 1 and 2 are done. Take item 3 — `shell/nav`, agree + disagree together, 99 lines
-across 8 files.** It is the biggest single family and the most visible, and it needed item 2
-first because six of its lines are `@media` rules no gate could see. They are measurable now.
+**Items 1, 2 and 3 are done. Take item 4 — `field/filter` disagree, 59 lines, 5 files.**
+Its `agree` half already shipped as UI-061, so the ground is known. **One decision: which
+control sizing wins.**
 
-**It needs ONE decision from Irfan, and it is the whole task:** the shell has drifted into
-3–6 versions per selector and **there are three navies**. Pick one shell, one navy.
+**Current numbers, measured 2026-08-27** — re-measure, do not quote:
+`legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target **~1,350** ·
+remaining available work **461** lines (71 agree + 390 disagree).
 
-**Run BOTH probes before and after, and expect non-zero narrow-band deltas** — this is the
-first family whose `@media` rules are inside the measured set. A delta keyed `@700` or `@520`
-is a narrow-width one; that suffix is what tells you.
+⚠ **Three things this week established that the next session should not re-learn:**
 
-> Take **item 3** of `docs/ui/ROADMAP.md`'s "⛳ THE FINISHING PLAN" — `shell/nav`, agree and
-> disagree together. Read `CLAUDE.md` §11–12 and this file's UI-063 and UI-064 sections.
-> **Put the one-shell/one-navy decision to Irfan with measured options before writing
-> anything.** `css_type_probe` now reads five width bands — check its per-run band report
-> and confirm every delta you keep is one of the approved ones.
+1. **Measure the ratchet against `HEAD`, not `BASELINE.json`** — that file is 30+ lines stale.
+2. **`css_type_probe` now reads five width bands** and prints any unobserved band every run.
+   A delta keyed `@700`/`@520` is a narrow-width one.
+3. **Do not write long comments into `99-legacy/*.css`.** `legacy_css_lines` counts every
+   line, comments included — UI-065's first draft made the number go **up** while deleting
+   rules. Reasoning belongs in `PROGRESS.md`; the CSS gets a pointer.
 
-**Still open from item 1:** **D47** (`forms.css` — the lying comment and the ring-vs-glow
-decision) and **D49** (no gate can see `cursor`). Neither blocks item 3.
+**Still open:** **D47** (`forms.css` — lying comment + ring-vs-glow decision), **D49** (no
+gate can see `cursor`), **D48**, **D50**. None blocks item 4.
 
 ---
+
+## UI-065 — shell/nav. **2026-08-27. Item 3. Ek shell — aur do hafte purana bug mila.**
+
+`legacy_css_lines` **1841 → 1806 (−35)**, hex 349 → 347. 1075 pass, ruff saaf.
+Tafseel `PROGRESS.md` 2026-08-27.
+
+**ROADMAP ki row ghalat thi.** *"Three navies"* — nahi. Saaton page `rgb(22,41,74)` paint
+karte hain; teen **hijje**, aik rang. Asal faisla ye tha ke `taqseem` aur `print` component
+par aayen ya nahi. Irfan: **aayen.**
+
+**Aur us ne aik purana bug pakda, jo is task ka asal nateeja hai.** `nav.css` mein koi
+`@media` tha hi nahi aur `legacy` **sab se kamzor layer** hai — to har page ka apna collapse
+rule component se harta tha. **700px par, kisi tabdeeli se pehle:** paanch component pages
+248px sticky (**toota**), `taqseem`/`print` 700px static (theek). Yani wohi do theek thay jo
+component par nahi thay. **Har gate se guzarta raha kyunke har probe 1280 par chalta tha —
+UI-064 isi liye pehle aaya.** Jad se theek: `nav.css` ka apna `@media (max-width:760px)`.
+
+**Naapa gaya: desktop (1280/900) par sirf `print` (74) aur `taqseem` (11)** — yani wohi do
+manzoor-shuda move. Baqi saat par **sifar**. Narrow bands par collapse ka fix.
+
+**Do slip, shipping se pehle naap kar pakdi gayin:** pehla `@media` `.sidenav` par tha aur
+`blueprint` ko tor raha tha (wo `o-shell__nav sidenav` carry karta hai — wohi nav, magar top
+bar) → ab `.sidenav__panel .sidenav`; aur `.brand` do dafa ghalat delete hui (dono jagah
+element maujood hai, aur brand **item 6** ki family hai).
 
 ## ▶ previous entry (2026-08-26)
 

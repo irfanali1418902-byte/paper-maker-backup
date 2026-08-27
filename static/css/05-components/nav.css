@@ -246,3 +246,63 @@
   color: var(--color-sidebar-fg-muted);
   line-height: 1.6;
 }
+
+/* THE NARROW-SCREEN COLLAPSE, AND IT IS A BUG FIX, NOT AN ADDITION.
+   ------------------------------------------------------------------------
+   This component had NO @media rule at all, and `legacy` is the WEAKEST layer
+   (main.css:42). So every page's own `@media { .app-sidebar { width: 100% } }`
+   lost to `.sidenav__panel`'s `width: 248px` here, and the sidebar stayed a
+   248px sticky column on a phone instead of becoming a top bar.
+
+   MEASURED 2026-08-27 at the 700px band, BEFORE this rule existed:
+
+     slo, slo-health, library, bank, index   248px, sticky   <- broken
+     taqseem, print                          700px, static   <- correct
+
+   The five broken ones are exactly the five that carry `sidenav__panel`. The
+   two correct ones were the two still OFF the component — which is why UI-065,
+   moving those two on, is what surfaced it. Nothing caught it for the fourteen
+   days it existed because every probe in this repo ran at 1280x900 until
+   UI-064; see PROBES.md rule 12.
+
+   THE VALUES ARE THE MAJORITY LEGACY VARIANT, NOT NEW DESIGN: bank, blueprint
+   and library all declared exactly this. Two things had to be picked because
+   the nine files disagreed, and both are recorded rather than silently chosen:
+
+     · 760px, not 720px. Four files said 760 (bank, blueprint, library, print),
+       three said 720 (slo, slo-health, taqseem). Those three now collapse
+       40px earlier than they used to — a real, intended delta in the 721-760
+       band, and the only band where this rule changes a page that was already
+       working.
+     · `flex-direction: row`. The 760 group wrapped the nav into a bar; the 720
+       group kept a column. Row is the majority and is what a top bar means. */
+@media (max-width: 760px) {
+  .sidenav__panel {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  /* SCOPED TO INSIDE THE PANEL, and the first draft was not — it said `.sidenav`
+     and broke blueprint. blueprint carries `class="o-shell__nav sidenav"`: the
+     SAME nav component inside a TOP BAR, not a sidebar (it is the one page on
+     `o-shell`). A bare `.sidenav` rule turned its already-horizontal-shell nav
+     from column to row and stripped its padding — 18 deltas on a page that has
+     no sidebar to collapse. Measured, then scoped. */
+  .sidenav__panel .sidenav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  /* Hidden on a bar, exactly as all three legacy variants had it — the foot is
+     a paragraph of help text and there is no room for it beside the links. */
+  .sidenav__panel .sidenav__foot {
+    display: none;
+  }
+}
