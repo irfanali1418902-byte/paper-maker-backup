@@ -54,20 +54,56 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { uncoveredLines } from './css_breakpoints.mjs';
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const VIEWPORT = { width: 1280, height: 900 };
 const BASE = 'http://127.0.0.1:8000/static';
 
+/* VIEWPORT — UI-064 gave css_type_probe five width bands. THIS PROBE DELIBERATELY KEEPS
+ * ONE, and the reason is measured rather than assumed:
+ *
+ *   every screen @media block in static/css/ was parsed on 2026-08-26 and the number of
+ *   :hover / :focus / :focus-visible / :active / :disabled rules inside them is ZERO,
+ *   across all fifteen blocks.
+ *
+ * So a second width would multiply this probe's cost — it is the expensive one, five
+ * states over every interactive element — to measure states that no breakpoint changes.
+ * That is a real reason to stop, not the "nobody asked for it" kind.
+ *
+ * ⚠ IT IS ALSO A REASON WITH AN EXPIRY DATE, which is why the flag exists and why the
+ * summary prints the band coverage anyway. The moment someone writes a :hover inside an
+ * @media block, this default is wrong and nothing will announce it — the same silence
+ * D45 and UI-064 were both about. Re-run `node scripts/css_breakpoints.mjs` and check the
+ * state-rule count before trusting this paragraph in any later month. */
+const VIEWPORTS = [{ width: 1280, height: 900, ref: true }];
+
 const argv = process.argv.slice(2);
-const positional = argv.filter((a) => !a.startsWith('--'));
+
+/* Flag VALUES are consumed, not filtered — see the same block in css_type_probe.mjs.
+   The old `filter(a => !a.startsWith('--'))` put `--page bank`'s "bank" into the
+   positional list, so putting a flag before the label silently produced a run labelled
+   "bank" in a directory named after the label. Pre-existing here, fixed with UI-064. */
+const FLAGS_WITH_VALUE = new Set(['--viewports', '--page']);
+const positional = [];
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i].startsWith('--')) { if (FLAGS_WITH_VALUE.has(argv[i])) i++; continue; }
+  positional.push(argv[i]);
+}
 const label = positional[0];
 const outdir = positional[1];
 const pageIdx = argv.indexOf('--page');
 const onlyPage = pageIdx >= 0 ? argv[pageIdx + 1] : null;
 
+/* --viewports 700 — same spelling as css_type_probe.mjs, and here it is the ESCAPE HATCH
+   for the paragraph above rather than a default. Keys take the same `@<width>` suffix, so
+   css_type_diff.mjs still reads the output and a key reads `<path>@<width>::<state>`. */
+const vpIdx = argv.indexOf('--viewports');
+const viewports = vpIdx >= 0
+  ? argv[vpIdx + 1].split(',').map(Number).map((width, i) => ({ width, height: 900, ref: i === 0 }))
+  : VIEWPORTS;
+
 if (!label || !outdir) {
-  console.error('usage: node scripts/css_state_probe.mjs <label> <outdir> [--page <p>]');
+  console.error('usage: node scripts/css_state_probe.mjs <label> <outdir> [--page <p>] [--viewports 1280,700]');
   process.exit(2);
 }
 
@@ -131,7 +167,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const userDataDir = mkdtempSync(join(tmpdir(), 'state-edge-'));
 const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--no-first-run',
   '--no-default-browser-check', '--disable-extensions', '--remote-debugging-port=0',
-  `--user-data-dir=${userDataDir}`, `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
+  `--user-data-dir=${userDataDir}`, `--window-size=${viewports[0].width},${viewports[0].height}`,
   'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const stderrChunks = [];
 edge.stderr.on('data', (b) => stderrChunks.push(b.toString()));
@@ -294,7 +330,12 @@ async function main() {
   const v = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
   ws = await connect(v.webSocketDebuggerUrl);
 
-  const out = { label, browser: v.Browser, viewport: VIEWPORT, states: STATES, pages: {} };
+  const out = {
+    label, browser: v.Browser,
+    viewport: viewports.find((vp) => vp.ref) ?? viewports[0],
+    viewports: viewports.map(({ width, height }) => ({ width, height })),
+    states: STATES, pages: {},
+  };
 
   for (const spec of PAGES) {
     const rec = { role: spec.role, errors: [] };
@@ -308,7 +349,7 @@ async function main() {
       await send('DOM.enable', {}, sessionId);
       await send('CSS.enable', {}, sessionId);
       await send('Emulation.setDeviceMetricsOverride', {
-        width: VIEWPORT.width, height: VIEWPORT.height, deviceScaleFactor: 1, mobile: false,
+        width: viewports[0].width, height: viewports[0].height, deviceScaleFactor: 1, mobile: false,
       }, sessionId);
       const loaded = onceEvent('Page.loadEventFired', sessionId);
       await send('Page.navigate', { url: spec.url }, sessionId);
@@ -335,51 +376,70 @@ async function main() {
 
       const all = {};
       let restored = 0;
-      for (const [state, forced] of Object.entries(STATES)) {
-        if (forced === null) {
-          /* Attribute, not a forced flag — see the header. Only elements that
-             HAVE a disabled attribute in HTML can take it; a disabled <a> is not
-             a thing and forcing one would invent a state the app cannot reach. */
-          const touched = await evaluate(sessionId, String.raw`(() => {
-            ${HELPERS}
-            const prev = [];
-            for (const el of document.querySelectorAll('button,input,select,textarea,fieldset,optgroup,option')) {
-              prev.push([path(el), el.hasAttribute('disabled') ? el.getAttribute('disabled') : null]);
-              el.setAttribute('disabled', '');
-            }
-            window.__statePrev = prev;
-            return prev.length;
-          })()`);
-          Object.assign(all, await evaluate(sessionId, snapExpr(state)));
-          restored = await evaluate(sessionId, String.raw`(() => {
-            ${HELPERS}
-            const byPath = new Map(window.__statePrev);
-            let n = 0;
-            for (const el of document.querySelectorAll('button,input,select,textarea,fieldset,optgroup,option')) {
-              const was = byPath.get(path(el));
-              if (was === null || was === undefined) el.removeAttribute('disabled');
-              else el.setAttribute('disabled', was);
-              n++;
-            }
-            delete window.__statePrev;
-            return n;
-          })()`);
-          if (restored !== touched) rec.errors.push(`disabled restore mismatch: set ${touched}, restored ${restored}`);
-          continue;
+      /* One load, then resize per band — same shape as css_type_probe.mjs. With the
+         default single viewport this loop runs exactly once and the keys come out
+         byte-identical to what this probe wrote before UI-064. */
+      const ref = viewports.find((vp) => vp.ref) ?? viewports[0];
+      for (const vp of [ref, ...viewports.filter((other) => other !== ref)]) {
+        if (vp !== ref) {
+          await send('Emulation.setDeviceMetricsOverride', {
+            width: vp.width, height: vp.height, deviceScaleFactor: 1, mobile: false,
+          }, sessionId);
+          await sleep(300);
         }
+        const vpAll = {};
+        for (const [state, forced] of Object.entries(STATES)) {
+          if (forced === null) {
+            /* Attribute, not a forced flag — see the header. Only elements that
+               HAVE a disabled attribute in HTML can take it; a disabled <a> is not
+               a thing and forcing one would invent a state the app cannot reach. */
+            const touched = await evaluate(sessionId, String.raw`(() => {
+              ${HELPERS}
+              const prev = [];
+              for (const el of document.querySelectorAll('button,input,select,textarea,fieldset,optgroup,option')) {
+                prev.push([path(el), el.hasAttribute('disabled') ? el.getAttribute('disabled') : null]);
+                el.setAttribute('disabled', '');
+              }
+              window.__statePrev = prev;
+              return prev.length;
+            })()`);
+            Object.assign(vpAll, await evaluate(sessionId, snapExpr(state)));
+            restored = await evaluate(sessionId, String.raw`(() => {
+              ${HELPERS}
+              const byPath = new Map(window.__statePrev);
+              let n = 0;
+              for (const el of document.querySelectorAll('button,input,select,textarea,fieldset,optgroup,option')) {
+                const was = byPath.get(path(el));
+                if (was === null || was === undefined) el.removeAttribute('disabled');
+                else el.setAttribute('disabled', was);
+                n++;
+              }
+              delete window.__statePrev;
+              return n;
+            })()`);
+            if (restored !== touched) rec.errors.push(`disabled restore mismatch: set ${touched}, restored ${restored}`);
+            continue;
+          }
 
-        /* PIPELINED, NOT SERIALISED, and the difference is minutes. Awaiting
-           each forcePseudoState in turn costs one full round-trip per element
-           per state: on bank that is 1,533 x 5 x 2 calls, and review measured
-           the serialised version at ~445 s for that page alone against
-           css_type_probe's ~30 s for all nine. The calls are independent, so
-           they go out together and are awaited once. */
-        await Promise.all(nodeIds.map((nodeId) =>
-          send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: forced }, sessionId)));
-        Object.assign(all, await evaluate(sessionId, snapExpr(state)));
-        await Promise.all(nodeIds.map((nodeId) =>
-          send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }, sessionId)));
-      }
+          /* PIPELINED, NOT SERIALISED, and the difference is minutes. Awaiting
+             each forcePseudoState in turn costs one full round-trip per element
+             per state: on bank that is 1,533 x 5 x 2 calls, and review measured
+             the serialised version at ~445 s for that page alone against
+             css_type_probe's ~30 s for all nine. The calls are independent, so
+             they go out together and are awaited once. */
+          await Promise.all(nodeIds.map((nodeId) =>
+            send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: forced }, sessionId)));
+          Object.assign(vpAll, await evaluate(sessionId, snapExpr(state)));
+          await Promise.all(nodeIds.map((nodeId) =>
+            send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }, sessionId)));
+        }
+        /* Reference width keeps the bare `<path>::<state>` key; any extra band becomes
+           `<path>@<width>::<state>`. The width goes BEFORE the `::` so that stripping the
+           state still leaves a key css_type_probe would recognise at that width. */
+        for (const [k, styles] of Object.entries(vpAll)) {
+          all[vp === ref ? k : k.replace('::', `@${vp.width}::`)] = styles;
+        }
+        }
 
       rec.snapshot = {
         all,
@@ -404,6 +464,14 @@ async function main() {
 
   console.log(`state probe: ${label}   ${v.Browser}`);
   console.log(`states: ${Object.keys(STATES).join(', ')}`);
+  console.log(`viewports: ${viewports.map((vp) => vp.width).join(', ')}`);
+  /* Printed even though the default is deliberately one width — see the VIEWPORT note at
+     the top. The point of saying it every run is that the reason to stop at 1280 is a
+     measured fact about today's CSS, and a run should not look complete when it is not. */
+  const gaps = uncoveredLines(viewports.map((vp) => vp.width));
+  console.log(gaps.length
+    ? `${gaps.length} band(s) not measured here (see header — state rules inside @media: 0):\n${gaps.join('\n')}`
+    : 'every @media width band in static/css is observed by this run');
   console.log('');
   console.log('page              interactive   records   errors');
   console.log('--------------- ------------- --------- --------');

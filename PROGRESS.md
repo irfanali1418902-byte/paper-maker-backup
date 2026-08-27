@@ -1,5 +1,102 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-27 — UI-064: viewport pass — pandrah media queries mein se chaudah kabhi naapi hi nahi gayi thin
+
+Finishing plan ka **item 2**. **Auzaar hai, drain nahi:** kisi page ki CSS ka aik byte nahi
+badla, ratchet bilkul nahi hila (`legacy_css_lines` 1841 → 1841). **1075 pass**, ruff saaf.
+
+### Masla, adad mein
+
+Is repo ka har probe **1280×900** par chalta tha. `static/css/` mein **15 screen `@media`
+width queries** hain. 1280 par un mein se **sirf 1** ka mushahida hota tha:
+
+| band | rules | 1280 par |
+|---|---:|---|
+| 1–560 | 14 | **kuch nahi** |
+| 561–720 | 13 | **kuch nahi** |
+| 721–760 | 10 | **kuch nahi** |
+| 761–1024 | 2 | **kuch nahi** |
+| 1025+ | 1 | 1280 |
+
+### Aur aadha masla width tha hi nahi
+
+Sirf viewport barhane se kaam nahi banta tha: **jo properties ye rules set karte hain, wo
+property list mein thin hi nahi.** Media blocks ke andar `flex-direction` **22 dafa**,
+`flex-wrap` 9, `position` 9, `grid-template-columns` 3, `z-index` 2 aata hai — aur in mein
+se koi bhi naapa nahi jata tha. Yani probe band tak pahunch kar bhi andha rehta.
+
+### Control — daawe se nahi, do mutation se
+
+`slo` ke `@media (max-width: 720px)` block ke andar aik-aik declaration badal kar:
+
+| probe | control A (`display`) | control B (`flex-direction`) |
+|---|---|---|
+| HEAD ka probe, jaisa commit mein tha | **0** | **0** |
+| naya probe, sirf `--viewports 1280` | **0** | — |
+| naya probe, paanch band | **12** (sirf `@700`, `@520`) | **72** |
+
+**Aur aik nateeja jo mere andaze ke khilaf nikla, is liye darj ho raha hai:** control B ke 72
+deltas mein se **sirf 2** nayi properties par the — baqi 70 `width`/`height` ke natije the jo
+purani list pehle se ginti thi. **Yani asal andhapan width tha, property list nahi.**
+Properties ka faida ye hai ke diff ab **wajah ka naam** leta hai (`flex-direction: column ->
+row`) na ke 70 be-wajah box moves, aur `z-index` jaisi cheez cover hoti hai jo kisi box ko
+hilati hi nahi.
+
+### Naya auzaar: `scripts/css_breakpoints.mjs`
+
+Ye CSS parh kar **bands** nikalta hai — width ki wo range jis ke andar matching rules ka set
+badal hi nahi sakta — aur batata hai ke di hui viewport list kaunsa band **nahi** dekh rahi.
+Dono probe ise import karte hain aur **har run mein apne blind spots khud chhapte hain.**
+Ye asal sabaq hai: D45, D49 aur ye — teenon aik hi bimari hain (gate wo cheez nahi dekh sakta
+jis ki wo hifazat kar raha hai), aur us ka dawa ye hai ke gate khud bole ke wo kya nahi dekh raha.
+
+Paanch widths (1280/900/740/700/520) **chuni nahi gayin, nikali gayin** — har band se aik.
+
+### `css_state_probe` jaan-boojh kar 1280 par hi hai
+
+Wajah naapi hui hai: **kisi bhi `@media` block ke andar aik bhi `:hover`/`:focus`/`:active`/
+`:disabled` rule nahi hai** (pandrah ke pandrah blocks). Us par `--viewports` flag maujood
+hai magar default aik hi rahega. Refactor ke baad HEAD ke probe se muqabla: **0 deltas**.
+
+### Review ne chaar asal defect nikale — chaaron isi commit mein band
+
+* **336 MB.** `css_type_probe` ka aik run ab ~80 MB likhta hai (paanch band), aur probe ki
+  output directory `.gitignore` mein thi hi nahi. Aik `git add -A` aur wo history mein.
+  Directory delete, `.gitignore` mein `.probe-*/` aur `docs/ui/probe/`.
+* **Flag parsing chup-chaap tootti thi.** `argv.filter(a => !a.startsWith('--'))` flag ki
+  **value** ko positional samajh leta tha, to `--viewports 1280,700 before out` ka label
+  `1280,700` ban jata aur bina error ke kooda directory banti. Ab values consume hoti hain.
+  `css_state_probe` mein ye **pehle se** thi (`--page` par bhi), wahan bhi theek ki.
+* **`keysPerViewport` sirf chhapta tha, jaancha nahi jata tha** — jabke yehi wo cheez hai jo
+  pakde ke bands ne alag-alag DOM naapa. Ab ginti barabar na ho to `drift` mein jata hai.
+* **300 ms ki wajah galat likhi thi.** Maine likha tha ke sleep mid-reflow read se bachata hai
+  aur determinism check us ki tasdeeq karta hai. **Dono ghalat:** `getComputedStyle` Blink
+  mein synchronous layout flush karta hai, to mid-reflow read mumkin hi nahi. Sleep asal mein
+  **transitions** se bachata hai (tree ki sab se lambi 0.2s), aur ye ab ahem hai kyunke
+  `bottom` unhi properties mein hai jo **is task ne add ki**. Ab `css_type_probe` bhi
+  `css_state_probe` ki tarah motion band karta hai, to sleep par bharosa nahi rehta.
+
+Aur aik trap jis ka koi pehra nahi tha: reference viewport ki keys **bina suffix** hain. Do
+alag viewport list wale runs ka diff poore page ko `beforeOnly`/`afterOnly` dikhata, jise
+`css_type_diff` ka apna usool "0 deltas, 0 beforeOnly, 0 afterOnly" **regression samajh leta**.
+Ab `css_type_diff` dono runs ki viewport list parh kar farq par saaf warning deta hai.
+
+### Do choti ghaltiyan jo maine khud kin
+
+`css_breakpoints.mjs` ka CLI pehli dafa **kuch nahi** chhapa — Windows par
+`file://${argv[1]}` kabhi `import.meta.url` se match nahi karta (`file:///C:/…`, teen slash).
+`pathToFileURL` se theek. Aur **teen dafa** template literal ke andar comment mein backtick
+likh kar string tor di — teesri dafa comment mein hi likh diya ke aisa mat karna.
+
+Ye bhi: comment ke andar likha `@media` pehle asal query gina ja raha tha (**18** aata tha,
+asal **15** hai) — teen jagah ye tree apni hi media rules **prose mein** quote karta hai
+(`shell.css`:58, `pages/index.css`:207, `pages/blueprint.css`:50). Ab comments blank kar ke
+parhe jate hain. Over-report bhi utna hi bura hai jitna under-report.
+
+⚠ **Browser check darj nahi hua** — is task ne kisi page ka CSS badla hi nahi, aur probe ka
+apna determinism check (do run, **0 deltas, 0 drift**, nau ke nau page) wo cheez hai jo yahan
+naapi ja sakti thi.
+
 ## 2026-08-26 — R7 adoption: hafta-war plan pehli dafa asal data se bhara — 4 rows se 91
 
 Backup: `paper_maker_backup_before_r7_import_20260826.db`.

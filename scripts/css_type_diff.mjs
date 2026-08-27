@@ -58,6 +58,30 @@ const after = JSON.parse(readFileSync(files[1], 'utf8'));
 console.log(`before: ${before.label}  ${files[0]}`);
 console.log(`after : ${after.label}  ${files[1]}`);
 console.log(`browser: ${before.browser}${before.browser === after.browser ? '' : ` -> ${after.browser}`}`);
+
+/* VIEWPORT LISTS ARE COMPARED, LOUDLY — UI-064.
+ *
+ * Both probes now write `viewports`, and the reference width's keys are UNSUFFIXED while
+ * every other band carries `@<width>`. That asymmetry is convenient and it is a trap:
+ * diff a `--viewports 1280` run against the 5-band default and the four extra bands land
+ * in `afterOnly`, which this file's own reading rule ("the only acceptable answer is 0
+ * deltas, 0 beforeOnly, 0 afterOnly") reports as a failure that is not one. Change WHICH
+ * width is the reference and it is worse: every bare key silently changes meaning and the
+ * whole page reads as beforeOnly + afterOnly with no stated cause.
+ *
+ * Neither case is detectable from the numbers, so it is stated before them. Old snapshots
+ * that predate this field print nothing extra. */
+const vpList = (d) => (d.viewports ?? (d.viewport ? [d.viewport] : [])).map((v) => v.width).join(',');
+const vpB = vpList(before);
+const vpA = vpList(after);
+if (vpB || vpA) {
+  console.log(`viewports: ${vpB || '?'}${vpB === vpA ? '' : ` -> ${vpA || '?'}`}`);
+  if (vpB !== vpA) {
+    console.log('⚠ THE TWO RUNS DID NOT MEASURE THE SAME WIDTHS. beforeOnly/afterOnly keys');
+    console.log('  below are expected and are NOT a regression; the reference viewport is the');
+    console.log('  unsuffixed one, so if it differs the bare keys are not comparable at all.');
+  }
+}
 console.log('');
 
 const pages = [...new Set([...Object.keys(before.pages), ...Object.keys(after.pages)])]

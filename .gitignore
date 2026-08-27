@@ -40,3 +40,9 @@ sample_slo_assign.xlsx
 
 # One-shot script ke generated Excel (data artifact, code nahi)
 scripts/*.xlsx
+
+# Probe output directories (UI-064). css_type_probe now writes five viewport bands
+# per page, so a single run is ~80 MB and a before/after pair ~160 MB. PROBES.md says
+# these are not repo artefacts; this line is what makes that true under `git add -A`.
+.probe-*/
+docs/ui/probe/

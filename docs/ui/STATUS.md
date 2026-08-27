@@ -5,7 +5,31 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (2026-08-26)
+## ▶ NEXT SESSION — START HERE (2026-08-27)
+
+**Items 1 and 2 are done. Take item 3 — `shell/nav`, agree + disagree together, 99 lines
+across 8 files.** It is the biggest single family and the most visible, and it needed item 2
+first because six of its lines are `@media` rules no gate could see. They are measurable now.
+
+**It needs ONE decision from Irfan, and it is the whole task:** the shell has drifted into
+3–6 versions per selector and **there are three navies**. Pick one shell, one navy.
+
+**Run BOTH probes before and after, and expect non-zero narrow-band deltas** — this is the
+first family whose `@media` rules are inside the measured set. A delta keyed `@700` or `@520`
+is a narrow-width one; that suffix is what tells you.
+
+> Take **item 3** of `docs/ui/ROADMAP.md`'s "⛳ THE FINISHING PLAN" — `shell/nav`, agree and
+> disagree together. Read `CLAUDE.md` §11–12 and this file's UI-063 and UI-064 sections.
+> **Put the one-shell/one-navy decision to Irfan with measured options before writing
+> anything.** `css_type_probe` now reads five width bands — check its per-run band report
+> and confirm every delta you keep is one of the approved ones.
+
+**Still open from item 1:** **D47** (`forms.css` — the lying comment and the ring-vs-glow
+decision) and **D49** (no gate can see `cursor`). Neither blocks item 3.
+
+---
+
+## ▶ previous entry (2026-08-26)
 
 **The ordered finishing plan is `docs/ui/ROADMAP.md` → "⛳ THE FINISHING PLAN".** Nine items,
 one family per session.
@@ -81,6 +105,30 @@ seven migrations opened the other six, four of them on 2026-08-12/13.
 > `feat/ui-architecture` hai magar us ka mazmoon ab sirf UI nahi raha.
 
 ---
+
+## UI-064 — the viewport pass. **2026-08-27. Auzaar, drain nahi — kisi page ka CSS nahi badla.**
+
+Ratchet **1841 → 1841**, 1075 pass, ruff saaf. Tafseel `PROGRESS.md` 2026-08-27.
+
+**Masla:** har probe 1280×900 par chalta tha, aur `static/css/` ki **15 screen `@media`
+queries mein se sirf 1** ka mushahida hota tha. Baqi chaar bands mein **14 + 13 + 10 + 2**
+rules bilkul be-naapi thin.
+
+**Aadha masla width tha hi nahi:** `flex-direction` media blocks ke andar **22 dafa** aata
+hai aur property list mein tha hi nahi — sirf viewport barhane se probe band tak pahunch kar
+bhi andha rehta.
+
+**Control (do mutation, `slo` ke 720px block par):** HEAD ka probe **0 / 0**, naya probe
+**12 / 72**. Aur us 72 mein se **sirf 2** nayi properties par the — **asal andhapan width
+tha**, property list nahi; properties diff ko wajah ka naam dene ke liye hain.
+
+**Naya:** `scripts/css_breakpoints.mjs` — bands nikalta hai aur dono probe **har run mein
+apna blind spot khud chhapte hain**. `css_state_probe` jaan-boojh kar 1280 par hai: **kisi
+`@media` ke andar aik bhi state rule nahi** (naapa gaya).
+
+**Review ne chaar defect nikale, chaaron band:** 336 MB untracked probe output (ab
+gitignored) · flag parsing chup-chaap tootti thi · `keysPerViewport` jaancha nahi jata tha ·
+300 ms ki wajah galat likhi thi (asal wajah transitions hai, ab motion band hoti hai).
 
 ## UI-063 — the button task. **2026-08-26. D44 + D46 band, D47 nahi. Ek radius, ek disabled.**
 

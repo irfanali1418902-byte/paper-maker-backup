@@ -1,6 +1,7 @@
 # UI-ARCH — the measurement probes
 
-Eight CDP drivers in `scripts/`. They are the reason the numbers on `STATUS.md` can be
+Eight CDP drivers in `scripts/`, plus one plain parser (`css_breakpoints.mjs`, UI-064 — it
+reads CSS text, drives no browser, and is listed below because both probes now import it). They are the reason the numbers on `STATUS.md` can be
 re-checked instead of trusted, and they exist as repo files because **this epic has already
 lost a set of measurement scripts once** — the first `print` session wrote them into a
 session scratchpad and they were gone by the next one, with only the method surviving in
@@ -13,12 +14,12 @@ in a scratchpad.
 
 | script | media | answers |
 |---|---|---|
-| `css_type_probe.mjs` | screen | The **live-page regression gate**. Computed styles for every element on `slo`, `slo-health`, `library`, `taqseem` and `bank`, plus `landing` and the Urdu line boxes. This is what proves a type change moved nothing. `taqseem` joined 2026-08-12 — see the page-list rule below for what its absence cost. |
+| `css_type_probe.mjs` | screen, **five widths** | The **live-page regression gate**. **⚠ UNTIL 2026-08-26 IT READ ONE WIDTH, 1280x900, AND SO DID EVERY OTHER PROBE HERE — of the fifteen screen `@media` queries in `static/css/`, exactly ONE was ever observed.** UI-064 gave it the five bands `1280 / 900 / 740 / 700 / 520` (one per band, derived by `css_breakpoints.mjs`) and added the fourteen properties those rules actually set, `flex-direction` and `position` among them. Non-reference bands suffix their keys `<path>@<width>`. Computed styles for every element on `slo`, `slo-health`, `library`, `taqseem` and `bank`, plus `landing` and the Urdu line boxes. This is what proves a type change moved nothing. `taqseem` joined 2026-08-12 — see the page-list rule below for what its absence cost. |
 | `css_print_probe.mjs` | **print** | Print-media computed styles **and PDF page counts** for the three live pages and `print.html` on three real papers. The gate that caught D36's shared-tree blast radius. |
 | `css_margin_probe.mjs` | **print** | `print.html` only: the margin chain (`html`/`body`/`.print-main`/`.sheet`), the three print knobs, `@page` as the engine sees it, and the PDF. Written for D35. |
 | `css_margin_diff.mjs` | — | Diffs two `css_margin_probe` runs and **names every element whose box moved**. Written because "12 elements changed padding" is not an answer when the question is whether the printed margin moved. |
 | `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. **With an optional second argument (a selector substring) it also reports every `CSSStyleRule` carrying it — the layer it arrived in, and how many elements it matches.** That is the "is this new rule inert, or is it simply not there?" check UI-041's review ran by hand; UI-041b made it a flag. |
-| `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`.** That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside the 44 all read 0 without being dead. Its header lists all four. |
+| `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`.** That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside ITS OWN 40 all read 0 without being dead. Its header lists all four. **⚠ Two of those four are no longer shared limits, and that changes what a zero here is worth:** `css_type_probe` now reads five width bands and 58 properties, this probe still reads 1280x900 and 40. Its header's line "One size, 1280x900, same as css_type_probe" was corrected on 2026-08-26. **If a drain candidate sits inside an `@media` block, confirm it with `css_type_probe` at the relevant band before deleting it.** |
 
 | `css_selector_probe.mjs` | screen | **What does this selector actually compute to, page by page?** Takes a selector, a property list and a page list. **`--add=<selector>:<class>` adds a class before reading and removes it after**, which is the only way to reach state that is `display: none` at rest — `.status-bar`'s `.ok`/`.err`/`.warn` are written by inline JS and `.modal-backdrop` needs `.open`, so `css_type_probe` returns 0 for both whether the CSS is right or wrong. Written 2026-08-15/16, when it found **six** families whose rule text was byte-identical across files and whose resolved values were not. Its header lists them. |
 
@@ -45,6 +46,30 @@ pytest, ruff, the ratchet and all 34 measured deltas passed without noticing.
 Both numbers came from the same mutation and the same browser, and review reproduced them
 independently. **Run the state probe before and after any task that touches a `:hover`,
 `:focus`, `:active` or `:disabled` rule** — the rest gate will pass regardless.
+
+**Rule 12, and it is rule 10 on a second axis: A GATE THAT READS ONE WIDTH CANNOT SEE A
+BREAKPOINT.** Every probe here ran at 1280x900, so fourteen of the tree's fifteen screen
+`@media` queries were measured only where they do not apply — a rule inside
+`@media (max-width: 720px)` could be deleted, recoloured or inverted for zero deltas.
+
+**And half of it was not the width at all.** The property list was blind to what those rules
+set: `flex-direction` appears **22 times** inside them and was not measured, likewise
+`flex-wrap`, `position` and `grid-template-columns`. Adding viewports without adding the
+properties would have produced a probe that visits the band and still sees nothing.
+
+**The control, 2026-08-26**, mutating one declaration inside `slo`'s `@media (max-width: 720px)`:
+
+| probe | control A (`display`) | control B (`flex-direction`) |
+|---|---|---|
+| `css_type_probe.mjs` as committed at HEAD | **0** | **0** |
+| new probe restricted to `--viewports 1280` | **0** | — |
+| new probe, five bands | **12** (only `@700`, `@520`) | **72** |
+
+**The honest split, because it corrects the obvious guess:** of control B's 72 deltas only
+**2** were on newly-added properties — the other 70 were `width`/`height` consequences the old
+list already carried. So the properties are not what made these visible; **the width was.**
+What the properties buy is a diff that NAMES the cause (`flex-direction: column -> row`)
+instead of 70 unexplained box moves — and coverage of `z-index`, which moves no box at all.
 
 **Rule 11, and it is the same lesson one level down: FORCING THE WRONG PSEUDO-CLASS LOOKS
 EXACTLY LIKE A CLEAN RESULT.** The first version of `css_state_probe.mjs` forced
@@ -89,13 +114,14 @@ All of them need the app running first:
 Then, from anywhere:
 
 ```
-node scripts/css_type_probe.mjs       <label> <outdir>
+node scripts/css_type_probe.mjs       <label> <outdir> [--viewports 1280,700]
+node scripts/css_breakpoints.mjs      [width...]        # bands, and who observes them
 node scripts/css_print_probe.mjs      <label> <outdir>
 node scripts/css_margin_probe.mjs     <label> <outdir> <paperId...>
 node scripts/css_margin_diff.mjs      <before.json> <after.json>
 node scripts/css_page_rule_probe.mjs  <url> [selector-substring]
 node scripts/css_drain_probe.mjs      <page> [--json <path>]
-node scripts/css_state_probe.mjs      <label> <outdir> [--page <p>]
+node scripts/css_state_probe.mjs      <label> <outdir> [--page <p>] [--viewports 1280,700]
 node scripts/css_selector_probe.mjs   "<selector>" "<prop,prop>" [--add=<sel>:<class>] <page...>
 ```
 
@@ -106,10 +132,19 @@ tool reads both — there is no state-specific diff to learn:
 node scripts/css_type_diff.mjs <before>.json <after>.json --names
 ```
 
-Its keys are `<path>::<state>`, and the `<path>` half is byte-identical to `css_type_probe`'s,
-so a path from a state diff can be pasted into a rest diff and lands on the same element.
-Full run: **nine pages, five states, ~30 s, 13,100 records** (measured 2026-08-25).
+Its keys are `<path>::<state>` — or `<path>@<width>::<state>` when `--viewports` names more
+than one band — and the `<path>` half is byte-identical to `css_type_probe`'s, so a path from
+a state diff can be pasted into a rest diff and lands on the same element. **That invariant now
+depends on both probes spelling the width the same way (`@<width>`, before the `::`), which is
+the thing a future editor would break without noticing.**
+Full run: **nine pages, five states, ~30 s, 13,100 records** (measured 2026-08-25, **at the
+default single viewport** — the figure scales with the band count).
 `--page bank` for one.
+
+**This probe deliberately stays at 1280 while `css_type_probe` moved to five, and the reason is
+measured: there are ZERO `:hover` / `:focus` / `:active` / `:disabled` rules inside any `@media`
+block in `static/css/`** (parsed 2026-08-26). It prints its uncovered bands every run anyway, so
+the day someone writes one, the default is visibly wrong rather than quietly wrong.
 
 > **⚠ An earlier draft of this line said "~41 s, 8,112 records" and review measured `bank`
 > ALONE at 445 s.** Both numbers were real: the first version awaited every
@@ -134,6 +169,14 @@ The usual shape of a task is: measure at HEAD → make the change → measure �
   principle — forcing `:hover` on all 5,379 of bank's elements produces a diff dominated by
   inherited colour, which is why it is scoped to what can actually take a state.
 - **`http://127.0.0.1:8000/static`** as the base URL.
+- **The viewport widths, and this is the one that already bit** — see UI-064. `css_type_probe`
+  now carries a five-entry `VIEWPORTS` list *derived* from the tree's breakpoints, so it is
+  hardcoded but **checked**: it prints any unobserved band every run, and `css_breakpoints.mjs`
+  is what derives them. **`css_drain_probe`, `css_selector_probe` and `css_print_probe` are
+  still single-width and are NOT checked** — a zero from any of those still means "at 1280".
+  The reference width being the *unsuffixed* one is also hardcoded: change which width is the
+  reference and every bare key changes meaning. `css_type_diff.mjs` warns when two runs
+  disagree on their viewport lists; it cannot warn about anything older than that field.
 - **Three paper UUIDs** in `css_print_probe.mjs`, and they are **database-specific**:
 
   | paper | at HEAD |
@@ -165,7 +208,7 @@ The usual shape of a task is: measure at HEAD → make the change → measure �
 Each of these exists because getting it wrong produced a wrong number on this board at least
 once:
 
-1. **Two snapshots with no action between, and compare them.** A data-driven page that jitters
+1. **Two snapshots with no action between, and compare them.** *(UI-064: in `css_type_probe` the pair is now taken PER BAND, after the resize and its settle — there is an action between bands, none within a pair. Motion is switched off for the run, so the pair is comparing settled values, not tween frames.)* A data-driven page that jitters
    run-to-run reads as a CSS delta otherwise. Every probe reports `drift`; a non-zero drift
    means no delta below it can be believed.
 2. **Await `document.fonts.ready` before believing any webfont line box.** `.school-ur` was
