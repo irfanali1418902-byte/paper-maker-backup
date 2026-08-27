@@ -11,6 +11,10 @@
 Its `agree` half already shipped as UI-061, so the ground is known. **One decision: which
 control sizing wins.**
 
+**The whole remaining plan — both tracks, all six sessions, and when each deferred row is
+due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
+before planning anything; it is newer than everything above it in that file.
+
 **Current numbers, measured 2026-08-27** — re-measure, do not quote:
 `legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target **~1,350** ·
 remaining available work **461** lines (71 agree + 390 disagree).

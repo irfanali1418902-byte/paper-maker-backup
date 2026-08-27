@@ -236,7 +236,78 @@ diff unreviewable; that is not caution, it is the reason UI-061 and UI-062 both 
 | **8** | `other` — 15 rules, 9 files | 138 | **Unknown — this is the honest gap.** Nobody has read these 15 rules; "other" is what the family regexes did not match | **Survey it before scheduling it.** It is the single biggest number on this table and the least understood. One session to read and split it into real families, THEN plan |
 | **9** | `UI-064` — delete `app.css`, move mockups, final sweep | — | none | Last. 57 lines still linked by all nine pages for `@font-face` + the `.icon` sprite |
 
-### The estimate, and it is not the old one
+---
+
+## 📋 THE PLAN FROM HERE — settled 2026-08-27, after items 1–3 shipped
+
+**Measured today:** `legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target
+**~1,350** · available work **461** lines (71 `agree` + 390 `disagree`). 1,806 − 461 = 1,345,
+so the target and the work still agree.
+
+### Two tracks, and they do not block each other
+
+**TRACK 1 — the drain. One family per session, in this order.**
+
+| # | session | lines | decisions needed from Irfan |
+|--:|---|--:|---|
+| 4 | `field/filter` disagree | 59 | **1** — which control sizing wins. Its `agree` half shipped as UI-061, so the ground is known. **Take this next** |
+| 5 | `modal` disagree | 58 | **1** — the app has three modal systems; unify or keep three |
+| 6 | `card` + `brand` | 52 | **2 small**, independent, no ordering constraint |
+| 7 | `btn` + `chip/pill/row` + `shortfall` + `page-head` | 39 | **3–4 small** — the tail, possibly one session |
+| 8 | `other` — **SURVEY ONLY, no code** | 134 | **unknown, and that is the point** |
+| 9 | delete `app.css`, move mockups, final sweep | — | none |
+| — | the `agree` bucket | 71 | none — it falls out of the sessions above |
+
+**Item 8 is the honest gap and it gets its own rule: its first session writes no CSS.**
+134 lines, 15 rules, 9 files, and **nobody has read them** — "other" only means the family
+regexes did not match. Survey, split into real families, THEN schedule. Do not attach it to
+a drain session.
+
+**TRACK 2 — not sessions, Irfan's own work.**
+
+* **Bank seeding** — 108 topics left (PY3 44 + PY2 64), ~20–26 AI calls/day = **5–6 days**.
+  It is quota-bound, not time-bound, so run it FIRST each morning, then do everything else.
+  Command and the four forbidden syllabi: §B row R1 above.
+* **R7 plans for PY1 and PY2** — still empty. PY3's filled sheet is now in the repo
+  (`namoona_plan_pre_year_3.xlsx`) so the shape is known.
+* **Merge `master`** — the whole month sits on `feat/ui-architecture`, which is 158 commits
+  ahead and no longer only UI work. **After item 9** is the natural point.
+
+### Deferred rows, and when each one is actually due
+
+| row | due |
+|---|---|
+| **D49** — no gate can see `cursor` | **before any decision that involves a cursor.** Either the probe is blind or every `cursor: not-allowed` in the repo is dead CSS; a small CDP experiment settles it |
+| **D47(a)** — `forms.css`:76's comment contradicts the cascade | **safe and small** — do it in whatever session next opens `forms.css` |
+| **D47(b)** — field focus: ring or glow | **Irfan's design decision.** The instrument is ready (`outline-*` is in the state probe) |
+| **D48**, **D50** | parked; both need palette decisions and neither blocks anything |
+
+### The estimate, on three sessions of real data
+
+UI-063 **−1** line (a decision, not a drain) · UI-064 **0** (a tool) · UI-065 **−35**.
+Plus the two before: UI-061 −9, UI-062 −22.
+
+```
+items 4–7, 9   one family per session, one decision each      6–9 sessions
+item 8         survey (1) + whatever it turns out to be       3–5 sessions
+──────────────────────────────────────────────────────────────────────────
+the drain, from here                                          9–14 sessions
+```
+
+**The 10–17 estimate written on 2026-08-25 is holding.** Three sessions have run and removed
+36 lines between them — but two of those three were not drains, and that is the point the
+old rate-based estimate kept missing: **the cost of a session is the DECISION, not the lines.**
+
+### One rule this week added, and it should survive the epic
+
+**Do not write long comments into `99-legacy/*.css`.** `legacy_css_lines` counts every line,
+comments included. UI-065's first draft deleted 24 lines of rules, wrote 44 lines of comment,
+and made the number go **UP** — 1,841 → 1,861 — while genuinely doing the work. Reasoning
+belongs in `PROGRESS.md`; the legacy file gets a pointer.
+
+---
+
+### The estimate as it stood on 2026-08-25 (superseded by the block above, kept for the argument)
 
 **The old figure on this page said the drain was 5–8 sessions. Two sessions have now actually
 run and they are the only real data:** UI-061 took `legacy` 1,873 → 1,864 and UI-062 1,864 →
