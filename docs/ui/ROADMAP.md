@@ -240,9 +240,32 @@ diff unreviewable; that is not caution, it is the reason UI-061 and UI-062 both 
 
 ## 📋 THE PLAN FROM HERE — settled 2026-08-27, after items 1–3 shipped
 
-**Measured today:** `legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target
+**Measured 2026-08-27:** `legacy_css_lines` **1,806** · `unsanctioned_hex` **347** · target
 **~1,350** · available work **461** lines (71 `agree` + 390 `disagree`). 1,806 − 461 = 1,345,
 so the target and the work still agree.
+
+> ### ⚠ RE-MEASURED 2026-08-28 AFTER ITEM 6 — AND THAT LAST SENTENCE NO LONGER HOLDS
+>
+> `legacy_css_lines` **1,759** · `unsanctioned_hex` **334** · available work **351**
+> (69 `agree` + 282 `disagree`) · page-only **1,047** (75%, skipped by design).
+>
+> ```
+> 1,759 − 351 = 1,408          target ~1,350          shortfall: 58 lines
+> ```
+>
+> **The two numbers count different things, and that is the whole explanation.** Available
+> work is measured on RULE-BLOCK lines — `css_duplication_audit.py` totals 1,398 of them.
+> `legacy_css_lines` counts EVERY line. The 361-line difference is `:root` blocks, `@media`
+> wrappers, comments and blank lines, and **the drain does not target any of it**. So as
+> rules leave, that remainder sits still and the projected floor drifts UP, not down. It
+> was 1,345 on 2026-08-27 and it is 1,408 today; it will keep rising.
+>
+> **This is a decision, not a defect, and it is Irfan's:** either the target becomes ~1,408
+> and "done" means the last shared rule, or some of the 1,047 page-only lines come into
+> scope — which is a different project, since page-only was excluded on purpose on
+> 2026-08-19. **Do not quietly re-derive the target to make a session's numbers look good.**
+>
+> Method and the rule-by-rule evidence: `PROGRESS.md` 2026-08-28 (the audit entry).
 
 ### Two tracks, and they do not block each other
 
@@ -253,10 +276,43 @@ so the target and the work still agree.
 | ~~4~~ ✅ | ~~`field/filter` disagree~~ **DONE 2026-08-27 as UI-066.** Sizing: **44px / 6px**, the majority's (Irfan). **The row's question was a third of it:** of the 59 lines, seven properties per rule were already DEAD against `forms.css` by layer order; only `width`/`min-height`/`margin-top` were live. Two holes the probe found — `index` has **11 inputs with no `type` attribute**, which `forms.css`'s attribute-based selector never matched, and file inputs are outside that set by contract; deleting the legacy rules without covering both drops them to UA defaults. **And the three live properties could NOT move up a layer** — that broke six pages, four outside this family, because every compact override in the app is itself in `layer(legacy)` (**D51**). **Review then found a fifth thing:** `index`'s `input[type="color"]` was left unstyled. *(This row first said "no gate could have seen it — 0 deltas, closed panel". Corrected 2026-08-28: the probe read **30** deltas on it; the printed diff is capped at 60 per page and the reading was taken from the truncated list. D53.)* `legacy_css_lines` 1806 → **1799**, hex 347 → **338**. Detail: `PROGRESS.md` 2026-08-27 | ~~59~~ **−7** | done |
 | ~~5~~ ✅ | ~~`modal` disagree~~ **DONE 2026-08-28 as UI-067.** Irfan: **keep the three systems, unify the values** — renaming classes means markup + JS on five pages and removes no CSS. ⚠ **This row's "58 lines, 5 files" was an undercount:** counted in the markup there are **eight** modals and **four** wrapper names, and the eighth (`print`'s `.lib-picker-overlay` library picker) was in no audit bucket at all because it is page-only. Six radii became one — and that one needed no decision, because `theme.css`:183's `--radius-container` already said "cards, panels, **modals**" and no modal had ever consumed it. Two new tokens: `--color-scrim`, `--shadow-modal`. 220 type / 30 state deltas, every one intended; `slo`, `slo-health`, `blueprint`, `landing` **0**. `legacy_css_lines` 1799 → **1798** — the value here was never in lines. Detail: `PROGRESS.md` 2026-08-28 | ~~58~~ **−1** | done |
 | ~~6~~ ✅ | ~~`card` + `brand`~~ **DONE 2026-08-28 as UI-068/069, one commit.** Three decisions, not two: card values (new tree's — `--radius-container` / `--shadow-card` / `--space-gap`), the sidebar subtitle colour, and taqseem's brand. ⚠ **Both halves of this row's arithmetic were wrong, in opposite directions.** `card` said "6 files" and was **eight** — `pages/taqseem.css` and `pages/plan.css` each shipped a page-scoped bare `.card` with a header explaining why `card.css` could not, and the audit reads `99-legacy/` only, so it never saw them. `brand` counted **too much**: `landing`'s `.brand` is a hero block in a gradient header, not a sidebar brand, and it was removed from the family rather than unified. **Two pre-existing bugs fell out:** `print`'s brand had been sitting at `padding: 0` against the navy edge since UI-065 (the only one of seven), and the sidebar subtitle was rendering slate-500 on navy at ~3.1:1 on six pages — beaten not by legacy but by `03-elements/typography.css:88`'s bare `small { color }` in layer(elements). D51 fired three more times and every lift was verified by the absence of a single `padding` delta. `legacy_css_lines` 1799→**1759**, hex 338→**334**. Five new rows: D54–D58. Detail: `PROGRESS.md` 2026-08-28 | ~~52~~ **−39** | done |
-| 7 | `btn` + `chip/pill/row` + `shortfall` + `page-head` | 39 | **3–4 small** — the tail, possibly one session |
-| 8 | `other` — **SURVEY ONLY, no code** | 134 | **unknown, and that is the point** |
-| 9 | delete `app.css`, move mockups, final sweep | — | none |
-| — | the `agree` bucket | 71 | none — it falls out of the sessions above |
+| 7 | `btn` + `chip/pill/row` + `shortfall` + `page-head`. ⚠ **The 39 was disagree-only; re-measured 2026-08-28 the four families are 61** — btn 24, shortfall 20, chip/pill/row 11, page-head 6. **Two things must be settled BEFORE this row, and both are already written down.** (1) **D49 is due here by its own text** — *"before any decision that involves a cursor"* — and `btn` is exactly where UI-063 left the `cursor: not-allowed` third of its decision unmeasured. (2) **`05-components/card.css`'s closing line says `.btn` is NOT safe**: `slo.html` has two live `class="btn"` buttons, so a bare `.btn` in layer(components) takes them — the same move item 6 made for `.card`, which only worked because every legacy `.card` modifier was enumerated first. **D47 is also still open and was supposed to close at item 1.** | ~~39~~ **61** | **3–4 small** — the tail, possibly one session, but not before D49 |
+| 8 | `other` — **SURVEY ONLY, no code**. ⚠ **Add `body` to this survey (38 lines, 6 files).** It is filed under `shell/nav` by the audit's family regex and is therefore inside a row marked ✅, so no session is scheduled to touch it — see the remnants block below | 134 (+38) | **unknown, and that is the point** |
+| 9 | delete `app.css`, move mockups, final sweep. **Do D56 first** — `plan.html` is in no probe's page list, and this row touches every page | — | none |
+| — | the `agree` bucket | ~~71~~ **69** | none — it falls out of the sessions above |
+
+### ⚠ A ✅ MEANS "THE DECISION WAS TAKEN", NOT "THE LINES ARE GONE" — measured 2026-08-28
+
+Nothing above says this, and it is 44% of the remaining work. Of the 351 available lines,
+**156 sit in families this table already ticks:**
+
+| family | item | ticked | `agree` | `disagree` | still there |
+|---|--:|---|--:|--:|--:|
+| `shell/nav` | 3 | ✅ | 12 | 45 | **57** |
+| `modal` | 5 | ✅ | 11 | 43 | **54** |
+| `field/filter` | 4 | ✅ | 22 | 13 | **35** |
+| `card` | 6 | ✅ | 2 | 4 | **6** |
+| `brand` | 6 | ✅ | 0 | 4 | **4** |
+| | | | | | **156** |
+
+Each session left its remnant on purpose and said so in `PROGRESS.md` — item 6, for
+instance, deliberately left `.card-title` (4 lines, three values) and `print`'s 18px brand
+(2 lines) because neither was among the decisions Irfan was asked. **The problem is not the
+leaving, it is that the board shows a tick and the remnant is invisible from here.** A
+session planning from this table alone will believe items 3–6 are worth 0 lines.
+
+**AND THE FAMILY LABELS THEMSELVES CAN BE WRONG.** Rule-by-rule dump, 2026-08-28:
+
+```
+shell/nav  DISAGREE  38L   body       bank,library,print,slo,slo-health,taqseem
+modal      DISAGREE   2L   #status    index,print
+```
+
+`body` is not a nav. At 38 lines across six files it is **the largest single `disagree`
+item in the repo after `other`**, and because the regex files it under a ✅ family, no row
+schedules it. `#status` is not a modal. **This is the census lesson one level up: item 5
+found the bucket counted too few, item 6 found `card` too few and `brand` too many, and now
+the labels are wrong too. Read the rules, not the family name.**
 
 **Item 8 is the honest gap and it gets its own rule: its first session writes no CSS.**
 134 lines, 15 rules, 9 files, and **nobody has read them** — "other" only means the family

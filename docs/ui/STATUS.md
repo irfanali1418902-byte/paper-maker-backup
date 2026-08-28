@@ -28,7 +28,17 @@ due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-2
 before planning anything; it is newer than everything above it in that file.
 
 **Current numbers, measured 2026-08-28 after UI-068/069** — re-measure, do not quote:
-`legacy_css_lines` **1,759** · `unsanctioned_hex` **334** · target **~1,350**.
+`legacy_css_lines` **1,759** · `unsanctioned_hex` **334** · available work **351**.
+
+⚠ **THE TARGET IS NO LONGER ~1,350 AND NOBODY HAS PICKED THE NEW ONE.** The full audit ran
+2026-08-28: available work is measured on rule-block lines (1,398) while `legacy_css_lines`
+counts every line (1,759), and the 361-line remainder — `:root` blocks, `@media` wrappers,
+comments — is not something the drain removes. So **1,759 − 351 = 1,408**, and that floor
+rises every session. **Three findings, all in `ROADMAP.md`'s re-measure block and
+`PROGRESS.md` 2026-08-28:** the target arithmetic no longer closes; **156 of the 351 lines
+sit in families the board already ticks ✅** (a tick means the decision was taken, not that
+the lines went); and the audit's own family labels can be wrong — **`body`, 38 lines across
+six files, is filed under `shell/nav` and is scheduled by nothing.**
 
 ## UI-068/069 — `card` + `brand`. **2026-08-28. Item 6. Ek commit, do families.**
 

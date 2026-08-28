@@ -1,5 +1,79 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-28 — Audit: baqi kaam ka naya naap, aur teen cheezein jo plan se mail nahi khatin
+
+Item 6 ke baad poora naap dobara liya (`css_baseline.py` + `css_duplication_audit.py` +
+rule-by-rule dump). **Koi CSS, markup ya test nahi chhua** — sirf `ROADMAP.md` ki table,
+ye entry, aur `STATUS.md` ka pointer.
+
+```
+legacy_css_lines   1,759      available work   351  (69 agree + 282 disagree)
+unsanctioned_hex     334      rule-block     1,398
+                              page-only      1,047  (75%, jaan-boojh kar skip)
+```
+
+### 1. Jo hisaab plan ko "finishable" banata tha, wo ab band nahi hota
+
+`ROADMAP.md` khud likhti thi: *"1,806 − 461 = 1,345, so the target and the work still
+agree."* Aaj wohi hisaab **1,759 − 351 = 1,408** deta hai, target `~1,350` ke khilaf —
+**58 lines ka farq.**
+
+**Wajah ghalti nahi, do alag paimane hain.** Available work sirf **rule-block** lines par
+naapa jata hai (1,398). `legacy_css_lines` **har** line ginta hai (1,759). Beech ka
+**361 lines** ka farq `:root` blocks, `@media` wrappers, comments aur khali lines hai —
+aur **drain in mein se kisi ko target nahi karta**. Rules nikalte hain, ye baithi rehti
+hain, aur projected floor **neeche nahi, upar** khisakta hai. 27 tareekh ko 1,345 tha, aaj
+1,408, aur barhta rahega.
+
+Ye faisla hai, bug nahi: ya target ~1,408 ho jaye, ya 1,047 page-only lines mein se kuch
+scope mein aayen — magar page-only 2026-08-19 ko jaan-boojh kar nikala gaya tha, to wo
+doosra project hai.
+
+### 2. 351 mein se 156 un families mein hain jin par ✅ lagi hai
+
+| family | item | agree | disagree | baqi |
+|---|--:|--:|--:|--:|
+| `shell/nav` | 3 ✅ | 12 | 45 | 57 |
+| `modal` | 5 ✅ | 11 | 43 | 54 |
+| `field/filter` | 4 ✅ | 22 | 13 | 35 |
+| `card` | 6 ✅ | 2 | 4 | 6 |
+| `brand` | 6 ✅ | 0 | 4 | 4 |
+
+**44%.** Har session ne apna baqiya jaan-boojh kar chhora aur `PROGRESS.md` mein likha bhi
+— item 6 ne `.card-title` (4 lines, teen qeematein) aur `print` ka 18px brand (2 lines)
+is liye chhora ke wo Irfan se poochhe gaye faislon mein shamil nahi thay. **Masla chhorna
+nahi, ye hai ke board par tick nazar aati hai aur baqiya wahan se dikhta hi nahi.** Sirf
+us table se plan karne wala session samjhega ke items 3–6 ki qeemat 0 lines hai.
+
+### 3. Family labels khud bhi ghalat ho sakti hain
+
+`css_duplication_audit.py:98` `family()` selector par regex chalata hai. Dump se:
+
+```
+shell/nav  DISAGREE  38L   body       bank,library,print,slo,slo-health,taqseem
+modal      DISAGREE   2L   #status    index,print
+```
+
+**`body` nav nahi hai.** Chhe files mein 38 lines — `other` ke baad **repo ka sab se bada
+single disagree item** — aur kyunke regex use ✅ wali family mein daalta hai, koi row use
+shedyool nahi karti. `#status` modal nahi hai.
+
+**Census ka sabaq ab ek darja upar chala gaya hai.** Item 5 ne dekha bucket ne kam gina;
+item 6 ne dekha `card` mein kam aur `brand` mein zyada; ab maloom hua **naam bhi ghalat ho
+sakta hai**. Rules parho, family ka naam nahi.
+
+### Aur item 7 se pehle do cheezein jo pehle se likhi hui hain
+
+- **`D49` apni tehreer ke mutabiq yahin due hai** — *"before any decision that involves a
+  cursor"* — aur `btn` theek wohi jagah hai jahan UI-063 ka `cursor: not-allowed` wala
+  tehai bina naape reh gaya tha. **`D47` bhi khuli hai aur item 1 par band honi thi.**
+- **`card.css` ka aakhri jumla kehta hai `.btn` abhi safe nahi**: `slo.html` par do live
+  `class="btn"` buttons hain. Bare `.btn` un ko le lega — bilkul wohi harkat jo item 6 ne
+  `.card` ke saath ki, aur wo sirf is liye kaamyab hui ke pehle har legacy modifier gina
+  gaya tha.
+
+Item 7 ka asal size bhi **61 lines** hai, 39 nahi — row disagree-only quote karti thi.
+
 ## 2026-08-28 — UI-068: card — bucket chhe kehta tha, markup ne aath dikhaye
 
 Finishing plan ka **item 6**, pehla nisf (`card`). `legacy_css_lines` **1798 → 1772 (−26)**,
