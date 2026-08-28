@@ -1,5 +1,58 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-28 — UI-069a: D49 — probe andha nahi tha, CSS murda thi
+
+Item 7 se pehle wala gate task, bilkul UI-064 wali shakal: pehle aala theek karo, phir us
+family ko haath lagao. **Koi CSS, markup ya test nahi chhua** — sirf `PROBES.md` (naya
+rule 9), `DEFERRED.md` (D49 → Resolved), `ROADMAP.md` ki item 7 row, aur ye entry.
+
+### Sawal
+
+`css_state_probe` ka `:disabled` pass `cursor` par khamosh tha. 2026-08-26 ko control
+chalaya gaya tha: `slo.css` ki `.btn:disabled` ka cursor `not-allowed` → `crosshair` kiya,
+probe dobara chalaya — **0 deltas**, jab ke **usi rule ki `opacity` theek 0.5 parhi ja rahi
+thi.** Ek hi rule, ek hi element, ek hi lamha. D49 ne do imkan likhe thay aur kaha tha
+andaza mat lagao — D45 isi tarah andha ship hone wala tha.
+
+### Naap — chaar buttons, sab disabled, farq sirf layer ka
+
+```
+:disabled rule ka layer          cursor          opacity
+  legacy    (sab se kamzor)      pointer         0.5     <- rule haar gayi
+  elements                       not-allowed     0.5
+  components                     not-allowed     0.5
+  unlayered                      not-allowed     0.5
+```
+
+**CDP disabled control par `cursor` bilkul theek parhta hai.** Farq *muqable* ka hai: is
+app mein kisi cheez ne button par `opacity` declare nahi ki, is liye wo sab se kamzor layer
+se bhi jeet jati hai; `cursor` ka harif maujood hai — `03-elements/forms.css:155` ka bare
+`button { cursor: pointer }`, `layer(elements)` mein, jo `layer(legacy)` ko specificity se
+qat'a nazar harata hai.
+
+**Probe sahi tha. CSS murda thi.**
+
+### Nateeja — jo is task ka asal hasil hai
+
+`99-legacy/` ki **chhe** `cursor: not-allowed` declarations inert hain, aur hamesha se
+thin: `blueprint:48`, `index:96`, `library:185`, `print:74`, `print:83`, `slo:31`. Chhon ke
+chhon `<button>` element par hain, yani `forms.css` un sab ko match karta hai.
+
+**Iska matlab UI-063 ka faisla kabhi render hi nahi hua.** 2026-08-26 ko Irfan ne har
+disabled button ke liye `not-allowed` chuna tha; wo aaj tak kisi page par nazar nahi aaya.
+Item 7 ke liye ye "chhe murda lines nikalo" nahi hai — **"faisla ab bhi chahiye ya nahi,
+aur agar chahiye to use `layer(legacy)` se upar dobara ship karna parega"** — aur upar
+uthana wohi D51 wala kaam hai jis ne UI-066 mein chhe pages tore thay.
+
+### Aur ek aam qaida jo is se nikla — `PROBES.md` rule 9
+
+*"Declaration hili nahi"* aur *"probe use dekh nahi sakta"* **do alag dawe hain**, aur
+inhein alag karne ka sasta tareeqa usi rule ki doosri declaration hai. **Agar ek hili, to
+reader kaam kar raha hai.** Do din ye row is liye khuli rahi ke ye sawal poochha nahi gaya.
+
+*(D49 kehti thi ye note "beside rules 10 and 11" likha jaye — `PROBES.md` mein aath rules
+hain. Wo hawala bhi basi tha; note rule 9 ban gaya.)*
+
 ## 2026-08-28 — Audit: baqi kaam ka naya naap, aur teen cheezein jo plan se mail nahi khatin
 
 Item 6 ke baad poora naap dobara liya (`css_baseline.py` + `css_duplication_audit.py` +

@@ -227,3 +227,30 @@ once:
    with it.
 8. **`Page.printToPDF` is not proof of a physical print.** It is the right tool for measuring
    CSS. Before anything ships on `print.html`, a real print preview is still required.
+9. **When ONE declaration of a rule moves and another does not, suspect the cascade before
+   the probe.** *(D49, settled 2026-08-28. The row is in `DEFERRED.md`'s Resolved section and
+   it asked for this note "beside rules 10 and 11" — there are eight, so it is here.)*
+
+   `slo.css`'s `.btn:disabled { opacity: .5; cursor: not-allowed }` was mutated as a control
+   and the probe reported **0 deltas on `cursor`** while `opacity` read `0.5` correctly — the
+   same rule, the same element, the same moment. That looks exactly like a blind reader, and
+   the row was filed for two days saying it might be one. **It was not.** A four-button
+   control page, all disabled, differing only in which layer carries the `:disabled` rule:
+
+   ```
+   :disabled rule in layer(legacy)      -> cursor: pointer        (loses)
+   :disabled rule in layer(elements)    -> cursor: not-allowed
+   :disabled rule in layer(components)  -> cursor: not-allowed
+   :disabled rule unlayered             -> cursor: not-allowed
+   opacity: .5 in ALL FOUR              -> 0.5
+   ```
+
+   CDP reads `cursor` on a disabled control perfectly. What differs is the COMPETITION:
+   nothing else in the app declares `opacity` on a button, so that declaration wins even from
+   the weakest layer, while `cursor` is contested by `03-elements/forms.css`'s bare
+   `button { cursor: pointer }` in `layer(elements)` — which beats `layer(legacy)` whatever
+   the specificity. **The probe was right and the CSS was dead.**
+
+   The general form, and it is D51 wearing a disguise: *"the declaration did not move"* and
+   *"the probe cannot see it"* are different claims, and the cheap way to tell them apart is
+   a second declaration in the same rule. If one moved, the reader works.

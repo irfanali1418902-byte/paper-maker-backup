@@ -23,6 +23,15 @@ brand at all. **Count the thing in the MARKUP, and check `pages/*.css` as well a
 its closing line. `slo.html` has two live `class="btn"` buttons and a bare `.btn` in
 layer(components) would take them. Read that note before planning item 7.
 
+⚠ **D49 was the gate for item 7 and it is now SETTLED — UI-069a, 2026-08-28 — but the
+answer made item 7 bigger, not smaller.** The probe was never blind: `forms.css`:155's bare
+`button { cursor: pointer }` in `layer(elements)` beats `layer(legacy)`, so **all six
+`cursor: not-allowed` declarations in `99-legacy/` are inert and always have been.** UI-063
+chose `not-allowed` for every disabled button on 2026-08-26 and **it has never rendered.**
+Item 7 must therefore ask Irfan whether he still wants it — and shipping it means lifting a
+declaration above `layer(legacy)`, which is D51, the move that broke six pages in UI-066.
+`PROBES.md` rule 9 has the general lesson.
+
 **The whole remaining plan — both tracks, all six sessions, and when each deferred row is
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
 before planning anything; it is newer than everything above it in that file.
