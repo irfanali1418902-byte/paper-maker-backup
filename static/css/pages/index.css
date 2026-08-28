@@ -150,6 +150,40 @@
     }
   }
 
+  /* THE BRAND ROW, page-scoped, UI-068. index took `.sidenav__brand` for its
+     padding — which was already byte-identical at `2px 22px 20px`, so that
+     half moved 0 pixels. These two cannot go to the component: five of the
+     seven pages wearing `.sidenav__brand` have NO logo and render the brand
+     as a block — bank, library, slo, slo-health and print — so putting
+     `display: flex` there would relayout all five. Only index and taqseem
+     have a logo, and they are the only two that compute `flex`. Same
+     reason `.logo` stays here — it is index's 40px indigo square, not a
+     sidebar-brand part. taqseem carries its own copy of this pair for the
+     same reason and they are deliberately NOT shared: the two logos differ
+     (40px/11px/--primary here, 34px/9px/--accent there).
+
+     `--primary` is kept verbatim and NOT read as `--color-action`: on this
+     page `--primary` is the legacy navy blue (99-legacy/index.css:2) while
+     --color-action is the new tree's indigo. Substituting the role would have
+     repainted the logo. Custom properties declared on `:root` in layer(legacy)
+     still resolve here — layers order declarations, not variable lookup. */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .brand .logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   /* THE URDU RAIL. index's nav adopted .sidenav__link on 2026-08-19, and that
      rule sets `border-left: 3px` in layer(components). The two RTL overrides
      that flip the rail to the trailing edge were in layer(legacy) and lost —
@@ -172,6 +206,19 @@
   @media (max-width: 760px) {
     .field-row {
       gap: 14px;
+    }
+  }
+
+  /* index is also the only page that tightens `.card` on a narrow screen.
+     UI-068 put the bare `.card` in layer(components), so 99-legacy/index.css's
+     `@media (max-width: 760px) { .card { padding: 18px } }` stopped applying —
+     equal 0,1,0, weaker layer, D51 again. Moved here rather than dropped: at
+     360px the 22px inset costs 12% of the viewport, and index is the page a
+     teacher opens on a phone. Only the padding moved; the block's other five
+     rules are page-only and stay in legacy. */
+  @media (max-width: 760px) {
+    .card {
+      padding: 18px;
     }
   }
 

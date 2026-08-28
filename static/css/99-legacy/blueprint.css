@@ -23,11 +23,7 @@
      Yahan sirf blueprint-specific content width. */
   .main { max-width: 1080px; margin: 0 auto; }
 
-  /* ---- Cards ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+  /* ---- Cards ---- UI-068: bare `.card` -> 05-components/card.css. */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; color: var(--ink2); }
 
   /* ---- Form elements ---- */
@@ -197,11 +193,8 @@
      pehle se theme.css mein hain — yahan sirf blueprint-specific naye.
      ======================================================================== */
 
-  /* ---- Card with header/body (.ch/.cb from theme.css) ----
-     Marker class (NOT :has() — purane browsers/print reliability ke liye explicit).
-     blueprint ka apna .card padding/radius sirf yahan neutral; .cb khud pad deta hai.
-     Baaki (bina has-ch) cards apna purana look rakhte hain jab tak unka step na aaye. */
-  .card.has-ch { padding: 0; border-radius: var(--radius); overflow: hidden; }
+  /* ---- Card with header/body (.ch/.cb) ---- UI-068: dead, deleted.
+     card.css owns padding + overflow, and its radius is now the same 16px. */
 
   /* ---- Page header: 05-components/card.css owns .pagehead (UI-040) ---- */
 
@@ -228,10 +221,11 @@
      UI-065: three sidebar rules deleted — blueprint.html has NO `.app-sidebar`,
      `.app-nav` or `.sidebar-foot` element (it is the one page on `o-shell`, a top bar).
      Dead, never applied. Undetectable until UI-064 gave the probes narrow bands: at
-     1280 a dead rule in this block and a live one both read 0. `.brand` stays — that
-     element does exist here. */
+     1280 a dead rule in this block and a live one both read 0.
+     UI-068: `.brand { padding: 0 }` bhi gayi — element to maujood hai, magar
+     pages/blueprint.css ka `.o-shell__brand` layer(components) mein hai aur ye
+     legacy mein, to paanchon bands par 18px/16px hi naapa gaya. Murda thi. */
   @media (max-width: 760px) {
     body { flex-direction: column; }
-    .brand { padding: 0; }
     .bp-main { padding: 16px 14px; }
   }

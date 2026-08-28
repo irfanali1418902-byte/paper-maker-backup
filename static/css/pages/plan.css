@@ -63,17 +63,11 @@
 }
 
 @layer components {
-  /* Bare `.card`, page-scoped — bilkul pages/taqseem.css:97 ki tarah aur usi
-     wajah se: card.css jaan-boojh kar bare `.card` ship nahi karta kyunke wo
-     13 live elements ko dobara paint kar deta. Box (background/border/radius/
-     shadow) usi bare selector par hota hai, us ke chaar descendants par nahi. */
-  .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-container);
-    box-shadow: var(--shadow-card);
-    margin-bottom: var(--space-gap);
-  }
+  /* Bare `.card` yahan se UI-068 mein nikal gaya — 05-components/card.css ab
+     wohi paanch declarations sab aath pages ke liye deta hai. Purana comment
+     kehta tha "card.css 13 live elements ko dobara paint kar deta"; markup se
+     ginne par 2026-08-28 ko 42 nikle, aur wo repaint hi ye task tha. Is page
+     par ek pixel nahi hila — values pehle se wohi thin. */
 
   .plan-hint {
     color: var(--color-text-muted);

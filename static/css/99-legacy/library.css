@@ -32,11 +32,7 @@
   .page-head { margin-bottom: 24px; }
   .page-head p  { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
 
-  /* ---- Card ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+  /* ---- Card ---- UI-068: bare `.card` -> 05-components/card.css. */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
@@ -191,7 +187,6 @@
 
   @media (max-width: 760px) {
     body { flex-direction: column; }
-    .brand { padding: 0; }
     .lib-main { padding: 16px 14px; }
     .filter-bar { flex-direction: column; }
     .filter-bar > div { min-width: 0; }

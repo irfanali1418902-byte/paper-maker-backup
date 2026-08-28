@@ -1,5 +1,229 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-28 — UI-068: card — bucket chhe kehta tha, markup ne aath dikhaye
+
+Finishing plan ka **item 6**, pehla nisf (`card`). `legacy_css_lines` **1798 → 1772 (−26)**,
+`unsanctioned_hex` **338 → 337 (−1)**. **1075 pass**, ruff saaf. Type probe **1284 deltas**,
+state probe **0** — har delta gina gaya, neeche.
+
+### Audit ne chhe files kahe. Aath thin, aur do naye tree mein chhupi thin
+
+Row kehti thi `card` = 28 lines, 6 files (bank, blueprint, index, library, slo, slo-health).
+Ginne par **`.card` aath pages par** — aur do total nikle, dono sahi:
+**markup mein 46, aaram ki halat ke DOM mein 42.**
+
+| page | bank | blueprint | index | library | slo | slo-health | taqseem | plan |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `.card` (markup) | 4 | 4 | 20 | 4 | 3 | 6 | 1 | 4 |
+
+Farq index ke **chaar** cards ka hai jo JS template strings se bante hain
+(`index.html`:876 / 2390 / 2404 / 2418), is liye kisi probe snapshot mein maujood nahi
+(`css_selector_probe` index par `n=16` deta hai). **Probe se moqabla karte waqt 42, HTML
+parhte waqt 46.** Review ne pakda ke pehli tehreer dono adad ko ek bana rahi thi.
+
+`taqseem` aur `plan` kisi bucket mein nahi thay **kyunke un ki `.card` rule `99-legacy/`
+mein hai hi nahi** — wo `pages/taqseem.css` aur `pages/plan.css` ke andar `@layer components`
+mein bare `.card` ship kar rahe thay, dono apne header ke saath jo samjhata tha ke card.css
+ye rule kyun nahi de sakta. `css_duplication_audit.py` sirf `99-legacy/` parhta hai, is liye
+us ne aath ko chhe gina. **UI-067 ka sabaq bilkul dobara: bucket par nahi, markup par gino.**
+
+### Aur ek adad jo teen hafte se ghalat tha, aur khud ko theek nahi kar sakta tha
+
+`05-components/card.css:8` likhta tha: *"`.card` is carried by 13 elements today — slo 3,
+slo-health 6, library 4, measured 2026-08-08"*, aur isi jumle ki bina par bare `.card` rule
+ko rok rakha tha. **Aaj 42 elements, 8 pages hain.** Adad 29 elements aur 5 pages kam tha —
+aur wo kabhi theek na hota, kyunke *dekhne se rokne ki wajah* usi paragraph mein likhi thi
+jis mein adad tha. Header ab naapi hui tafseel ke saath badal diya gaya.
+
+Usi file ka doosra dawa bhi expire ho chuka tha: *"the day a live page's markup gains a `.ch`
+child, these four rules activate"*. Teen pages ne le liya — blueprint 1, taqseem 1, plan 4.
+Rules haftôn se live hain aur theek chal rahi hain; note sahi tha, defect nahi.
+
+### Irfan ka faisla: naye tree ki qeematein
+
+Aath implementations sirf **teen** properties par ikhtelaf karti thin (`css_selector_probe`,
+2026-08-28) — baqi sab par pehle se muttafiq thin:
+
+| | radius | shadow | margin-bottom |
+|---|---|---|--:|
+| bank, blueprint, library, slo, slo-health | 14px | `rgba(22,33,58,.06)` | 22px |
+| index | 16px | `rgba(22,33,58,.05)` | 0 |
+| taqseem, plan | 16px | `--shadow-card` | 0 / 22px |
+
+Faisla: **`--radius-container` · `--shadow-card` · `--space-gap`**. Radius phir faisla nahi
+tha balke **parhna** tha — `theme.css:183` khud kehta hai *"cards, panels, modals"*, wohi
+be-istemal role jo UI-067 ne modals ke liye dhoonda tha.
+
+### Chauthi tabdeeli jo faisle mein NAHI thi, aur majboori thi
+
+**Border ka rang 620 deltas mein badla: `rgb(227,232,241)` → `rgb(234,237,243)`.** Legacy
+`--border` `#E3E8F1` hai, naye tree ka `--color-border` `#EAEDF3`. Ek component Tier 2 role
+hi parh sakta hai (CLAUDE.md §11), is liye ye tabdeeli component par jaane ka **lazmi**
+nateeja thi, alag intikhab nahi. Farq bohat halka hai magar 42 elements par hai —
+**browser check ki fehrist mein pehla item yehi hai.** Do border rang poori app mein hain,
+sirf cards mein nahi: **D55**.
+
+### D51 phir — teen rules layer badalne se mar rahi thin
+
+Bare `.card` `layer(components)` mein hai aur legacy sab se kamzor layer hai. Ye teen rules
+barabar specificity (0,1,0) par bhi **haar jatin**, is liye naapi aur upar uthai gayin:
+
+| rule | tha | agar na uthate |
+|---|---|---|
+| `bank` `.add-q-collapse { padding: 0 }` | legacy | collapsible add-question card ko 22px padding milti, jab ke summary ki apni `18px 22px` pehle se hai |
+| `bank` `.bp-card` / `.bulk-card { border: 2px solid #c7d8f7 }` | legacy | neela 2px border 1px slate ban jata |
+| `index` `@media(760) .card { padding: 18px }` | legacy | phone par 22px inset reh jata |
+
+Pehli do ab `pages/bank.css` mein `.card.bp-card` / `.card.add-q-collapse` (0,2,0) ke tor
+par hain — `.bp-card` nahi, taake import order par bharosa na karna pare. Teesri
+`pages/index.css` ke `@media` block mein. **Naapa gaya: probe mein `padding` ka ek bhi delta
+nahi aaya**, yani teeno lift kaam kar gaye.
+
+`.card.has-ch` (blueprint) poori tarah murda ho gayi — `card.css` padding aur overflow deta
+hai, aur radius ab dono taraf wohi 16px hai. Delete.
+
+### Padding literal 22px hai, aur ye bhool nahi
+
+`--space-inset` sab se zahir choice thi — `theme.css:176` khud use *"card / panel padding"*
+kehta hai — magar wo **24px** resolve karta hai, aur **kisi bhi page ka koi card 24px nahi
+padta**; chhon ke chhon bare cards 22px naapte hain. Yani role maujood hai, isi kaam ka naam
+lekar, aur ghalat adad rakhta hai. Us par rule point karna 42 elements ko token ki aar mein
+2px hila deta. `--space-inset` ko 22px karna `.card > .ch` aur `.card > .cb` ko hila deta, jo
+aaj waqai 24px chahte hain. **Ye token ka faisla hai, card ka nahi — D54.**
+
+### Naapa gaya — 1284 type deltas, poore, capped list se nahi
+
+Diff ki chhapi hui list 60 per page par cap hoti hai (D53), is liye ginti seedhi JSON se
+ki gayi. **Chhe qism ke ilawa kuch nahi:**
+
+```
+  620  border-*-color   rgb(227,232,241) -> rgb(234,237,243)   (--border -> --color-border)
+  400  border-radius    14px -> 16px
+  185  box-shadow       -> --shadow-card
+   75  margin-bottom    0px -> 22px        (index 70, taqseem 5)
+    4  height           taqseem 900 -> 915.156px  (upar wale margin ka nateeja)
+    0  padding          -- teeno lift kaam kar gaye
+```
+
+`landing` aur `print` par **0** — un par `.card` hai hi nahi. State probe **0**, sab pages.
+
+**`plan` kisi probe ki page list mein nahi hai** (na type, na state). Alag se
+`css_selector_probe` se naapa: 16px / padding 0 / `--shadow-card` / mb 22px /
+`rgb(234,237,243)` — **bilkul pehle jaisa, ek pixel nahi hila**. Probe ki ye khali jagah
+khud ek row hai: **D56**.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
+## 2026-08-28 — UI-069: brand — nau pages par ek naam, chhe alag cheezein
+
+Finishing plan ka **item 6**, doosra nisf (`brand`). `legacy_css_lines` **1772 → 1759 (−13)**,
+`unsanctioned_hex` **337 → 334 (−3)**. **1075 pass**, ruff saaf. Type probe **297 deltas**,
+state probe **0**. Frozen inventory (`id`/`onclick`/`name`/`for`/`data-*`) das pages par
+**bilkul yaksan** — naapa gaya, maana nahi.
+
+### `.brand` ek class hai, chhe cheezein hain
+
+ROADMAP:155 kehta tha `.brand` chhe tarah drift ho chuki hai. Markup se ginne par wo chhe
+**shakalein** nahi, chhe **mukhtalif dhaanche** nikle:
+
+| | dhaancha | kahan |
+|---|---|---|
+| bank, library, slo, slo-health | `.name` + `<small>`, logo nahi | sidebar — pehle se component par |
+| index | `.logo` + `.name` + `<div class="tag">` | sidebar |
+| taqseem | `.logo` + `.name` + `<small>` + divider | sidebar |
+| print | **naked text + `<small>` — `.name` element hai hi nahi** | sidebar |
+| blueprint | `o-shell__brand`, safed topbar, dark text | top bar |
+| landing | **hero header ke andar** — 52px safed logo, 20px naam, gradient par | sidebar nahi |
+
+**`landing` is family ka member hai hi nahi.** Audit ne use "brand" bucket mein daala kyunke
+selector ka naam ek hai; wo hero ka block hai, sidebar ka nahi. Chhoda nahi gaya — **nikala
+gaya**, aur wajah likh di gayi (`nav.css` header). UI-067 ka wohi sabaq, ulti simt se: bucket
+ne is dafa zyada gina, kam nahi.
+
+### `print` ka brand 27 ghante navy kinare se chipka raha
+
+`UI-065` ne print ka `.app-sidebar { padding: 24px 18px }` delete kiya aur `sidenav__panel`
+(`padding: 18px 0`) diya. `.sidenav__link` apni padding khud rakhta hai — magar **`.brand` ko
+kuch nahi mila**, aur us ki apni rule mein sirf font tha. Naapa gaya:
+
+```
+.brand padding-left   bank 22 · library 22 · slo 22 · slo-health 22 · index 22 · taqseem 18
+                      print 0        <- saat sidebar pages mein akela
+```
+
+Aankh se nahi, probe se pakda gaya, aur paanchon bands par. `sidenav__brand` dene se theek.
+
+### Subtitle ka rang — legacy ki ghalti nahi, ek na-chuna hua role tha
+
+`nav.css` ka purana comment kehta tha ke legacy ka `color: #9DB0D0` "already dead" hai, is
+liye component use na uthaye. **Dono baatein sahi thin, magar sawal adhoora tha: "murda" ne
+sirf itna kaha ke legacy haar gayi — ye kabhi nahi poochha ke JEETA KAUN.** Jeeta
+`03-elements/typography.css:88` — ek bare `small { color: var(--color-text-muted) }`,
+layer(elements) mein, body copy ke liye bilkul theek — aur wo **navy sidebar par slate-500
+paint kar raha tha, chhe pages par**. Contrast ~3.1:1, AA se neeche.
+
+Faisla (Irfan, 2026-08-28): **`--color-sidebar-fg-muted`** (`--navy-400`, ~4.5:1). Ye token
+`theme.css:131` par pehle se maujood tha, isi kaam ke liye likha gaya tha, aur us ka ek hi
+consumer tha — `.sidenav__foot`. **Phir wohi shakal jo UI-067 ne `--radius-container` ke
+saath dekhi thi: jawab design system ke paas pehle se tha, bas koi consumer nahi tha.**
+
+Purana pale-blue wapas nahi laya gaya: wo kisi Tier 1 role mein nahi hai, aur ab sirf
+`landing` us ka user hai — aur us ka hex `nav.css` ke comment se bhi nikal gaya, jahan wo
+purane note se chala aa raha tha. **Yehi teesra hex hai** (`#9DB0D0` index se, `#A9B6CE`
+print se, aur ye). Review ne pakda: mera pehla draft us hex ko comment mein dobara likh
+raha tha, aur usi paragraph ke aakhir mein daawa kar raha tha ke "no hex is spelled here".
+
+### Teen pages component par aaye
+
+`index`, `taqseem`, `print` → `.sidenav__brand*`. **`index` par 0 deltas** — us ki padding
+pehle se `2px 22px 20px` thi, yani component ki hu-ba-hu; jo nahi ja sakta tha wo flex row
+aur 40px logo hai, aur wo `pages/index.css` mein page-scoped hai. `taqseem` ka logo isi tarah
+`pages/taqseem.css` mein. **Component sirf padding deta hai** — `display: flex` wahan nahi ja
+sakta, kyunke saat mein se chaar pages ka brand logo-less block hai.
+
+`taqseem` ne shared values qubool kiye (Irfan): padding 18→22, divider gayi, `margin-bottom`
+10→0, sub ka uppercase/letter-spacing/opacity gaye, line-height 1.1→1.15.
+
+### Do murda cheezein naap kar nikleen
+
+- **`.brand { padding: 0 }` teeno @media blocks mein** (bank, library, blueprint) — "agree"
+  bucket ki poori teen lines. Paanchon bands par naapa: teeno jagah padding 22/22/18 hi
+  aata tha. bank aur library pehle se `.sidenav__brand` par thay; blueprint ka
+  `.o-shell__brand` `pages/blueprint.css` mein hai. **Legacy sab se kamzor layer hai, to
+  teeno kabhi lagi hi nahi.**
+- **`index` ka `.brand .tag`** — `font-size` aur `color` murda thay. Purana comment kehta tha
+  *"both are live at 0,2,0"*; specificity theek thi magar `pages/index.css` ka `.tag`
+  layer(components) mein hai aur ye legacy mein. **D51 phir.** Sirf `letter-spacing` zinda
+  thi, wohi rehne di.
+
+### Naapa gaya — 297 deltas, poore
+
+```
+  150  color + border-*-color   slate-500 -> navy-400   (6 pages ka subtitle; border
+                                zero-width hai, currentColor ka shor)
+   68  print                    padding 0 -> 2/22/20, sub ka margin-top 4 -> 3px,
+                                aur un ke layout knock-ons (widths/heights)
+   99  taqseem                  padding, divider, margin, letter-spacing, opacity,
+                                line-height + unki heights
+    0  index, blueprint, landing
+```
+
+`plan` (probe list mein nahi, D56) alag naapa gaya: us ka `.sidenav__brand-sub` naya rang
+qubool karta hai — maqsood, wo saatwan page hai jo component par hai. State probe **0**.
+
+### Do cheezein jo theek NAHI ki gayin
+
+1. **`print` ka brand ab bhi 18px/700 hai**, baqi chhe ka 15.5px. Us ke markup mein `.name`
+   element hai hi nahi, to `.sidenav__brand-name` bina markup badle nahi lag sakta. Ye ek
+   qeemat ka faisla hai jo poochha nahi gaya tha — is liye chhera nahi gaya. Agle session ka
+   sawal.
+2. **`brand.js` ka school-name feature do pages tak pohanchta hi nahi** — `print.html`
+   `brand.js` load hi nahi karta, aur `plan.html` karta hai magar us par `.brand`/`.name` hai
+   hi nahi. Dono pehle se aise thay. **D57**, aur wo `UI-070` se pehle due hai kyunke drain
+   `.brand` ko delete karega aur script khamoshi se toot jayegi.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
 ## 2026-08-28 — UI-067: modal — teen system rehne diye, shakal ek kar di
 
 Finishing plan ka **item 5**. `legacy_css_lines` **1799 → 1798**, `unsanctioned_hex` **338**

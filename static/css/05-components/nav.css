@@ -187,15 +187,32 @@
 
    Adopted by bank, library, slo and slo-health, whose six legacy shell rules
    were measured identical on all four before any of this was written, and by
-   index on 2026-08-20 — the panel and the brand name only. index's `.brand` is
-   a flex row around a 40px logo and its `.tag` is a live `<div>`, so neither
-   `.sidenav__brand` nor `.sidenav__brand-sub` is on it. index also hid this
-   panel below 760px, and that override had to move UP into pages/index.css to
-   outrank the `display: flex` below. Opt-in
+   index on 2026-08-20 — the panel and the brand name only.
+
+   UI-068 BROUGHT THE LAST THREE SIDEBAR PAGES ONTO `.sidenav__brand`: index,
+   taqseem and print. The paragraph here used to explain why index was not on
+   it — "index's `.brand` is a flex row around a 40px logo and its `.tag` is a
+   live `<div>`" — and that reasoning was sound but produced the wrong split.
+   `.sidenav__brand` declares PADDING and nothing else, and index's padding was
+   already `2px 22px 20px`, byte-identical to it. The flex row and the logo are
+   what could not come, and those are page cosmetics; they live in
+   pages/index.css and pages/taqseem.css. Same for taqseem's logo.
+
+   print had never been given the class at all, and UI-065 had already taken
+   its `.app-sidebar { padding: 24px 18px }` away — so from 2026-08-27 to
+   2026-08-28 print's brand sat flush at padding 0 against the navy edge, the
+   only sidebar page of seven that did. Measured, not spotted by eye. Adopting
+   the class is the fix.
+
+   index also hid this panel below 760px, and that override had to move UP into
+   pages/index.css to outrank the `display: flex` below. Opt-in
    by class, the same way `.sidenav` was: nothing here is named `.app-sidebar`
    or `.brand`, so no page gets it without asking. That distinction is what
    UI-047b's ban was actually about — a rule NAMED `.brand` in layer(components)
-   repaints all nine pages the moment they link main.css.
+   repaints all nine pages the moment they link main.css. It is still the right
+   ban: `.brand` is on landing too, where it is a HERO block in a gradient
+   header — a 52px white logo and a 20px name, nothing to do with a sidebar.
+   The audit files landing under "brand"; the markup says it is not this thing.
 
    blueprint is not in this group: it runs 04-objects/shell.css's `.o-shell`
    grid, which owns its sidebar box already.
@@ -229,14 +246,32 @@
   line-height: 1.15;
 }
 
-/* TWO DECLARATIONS OF THE LEGACY RULE ARE DELIBERATELY ABSENT. It also set
-   `font-size: 10.5px` and `color: #9DB0D0`, and both are already dead: the
-   subtitle measures 11.5px in slate on all four pages, not 10.5px in pale
-   blue. Carrying them into layer(components) would have brought them back —
-   the mistake .filter-bar made on 2026-08-15. */
+/* THE FONT-SIZE STAYS ABSENT. THE COLOUR CAME BACK IN UI-068, AND THE
+   REASON THE OLD NOTE MISSED IT IS WORTH KEEPING.
+
+   That note said the legacy rule's `font-size: 10.5px` and its pale-blue
+   `color` were "already dead — the subtitle measures 11.5px in slate on all
+   four pages", and carrying them up would resurrect them. True on both counts,
+   and it is why the size is still not here. But "dead" only said the legacy
+   declaration lost; it never asked WHAT WON. What won is
+   03-elements/typography.css:88 — a bare `small { color: --color-text-muted }`
+   in layer(elements), correct for body copy, and it was painting slate-500
+   on a navy sidebar on six pages. Measured 2026-08-28: --slate-500 over
+   --navy-900 is ~3.1:1, under AA for small text.
+
+   So this is not a legacy value being resurrected — it is a role that was
+   never chosen being replaced by one that was. `--color-sidebar-fg-muted`
+   (--navy-400, ~4.5:1) already existed for exactly this job (theme.css:131)
+   and had one consumer, `.sidenav__foot`. Irfan, 2026-08-28.
+
+   The old legacy pale blue was NOT the answer even though it reads better
+   still (~6.8:1): it is in no Tier 1 role, and 99-legacy/landing.css is now
+   its only user. No hex is spelled in this comment on purpose — the ratchet
+   counts comment lines too, and this check has failed that way before. */
 .sidenav__brand-sub {
   display: block;
   margin-top: 3px;
+  color: var(--color-sidebar-fg-muted);
 }
 
 .sidenav__foot {

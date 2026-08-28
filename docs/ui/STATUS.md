@@ -7,21 +7,79 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-28)
 
-**Items 1–5 are done. Take item 6 — `card` + `brand`, 52 lines. Two small decisions,
-independent, no ordering constraint.**
+**Items 1–6 are done. Take item 7 — `btn` + `chip/pill/row` + `shortfall` + `page-head`,
+39 lines, 3–4 small decisions. The tail; possibly one session.**
 
-⚠ **Before item 6, read UI-067's census lesson below.** Twice now the audit's file/line
-figures have been an undercount of the real work: item 5's "58 lines, 5 files" missed an
-eighth modal entirely because it was page-only. **Count the thing in the MARKUP before
-trusting the bucket.** `.brand` in particular is already known to have drifted six ways
-(ROADMAP:155) and is live on all nine pages.
+⚠ **The census lesson has now fired THREE sessions running, and item 7 is four families
+in one row — the highest-risk shape yet for it.** Item 5's "58 lines, 5 files" missed an
+eighth modal (page-only). Item 6's `card` said "6 files" and was **eight** — two of them
+were page-scoped copies in `pages/*.css`, which `css_duplication_audit.py` cannot see
+because it reads `99-legacy/` only. Its `brand` bucket made the opposite error and counted
+**too much**: `landing`'s `.brand` is a hero block in a gradient header, not a sidebar
+brand at all. **Count the thing in the MARKUP, and check `pages/*.css` as well as
+`99-legacy/`, before trusting the bucket.**
+
+⚠ **And `btn` is the one family card.css's header explicitly says is NOT safe yet** — see
+its closing line. `slo.html` has two live `class="btn"` buttons and a bare `.btn` in
+layer(components) would take them. Read that note before planning item 7.
 
 **The whole remaining plan — both tracks, all six sessions, and when each deferred row is
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
 before planning anything; it is newer than everything above it in that file.
 
-**Current numbers, measured 2026-08-28 after UI-067** — re-measure, do not quote:
-`legacy_css_lines` **1,798** · `unsanctioned_hex` **338** · target **~1,350**.
+**Current numbers, measured 2026-08-28 after UI-068/069** — re-measure, do not quote:
+`legacy_css_lines` **1,759** · `unsanctioned_hex` **334** · target **~1,350**.
+
+## UI-068/069 — `card` + `brand`. **2026-08-28. Item 6. Ek commit, do families.**
+
+`legacy_css_lines` **1798 → 1759 (−39)**, hex **338 → 334**. 1075 pass, ruff saaf.
+Type probe 1284 (card) + 297 (brand), state probe **0**. Frozen inventory das pages par
+yaksan. Tafseel `PROGRESS.md` 2026-08-28.
+
+**Irfan ke teen faisle:** card = naye tree ki qeematein (`--radius-container`,
+`--shadow-card`, `--space-gap`) · sidebar subtitle = `--color-sidebar-fg-muted` ·
+taqseem ka brand shared values qubool kare (divider gaya).
+
+⚠ **`card.css` ka header teen hafte se ghalat tha aur khud ko theek nahi kar sakta tha.**
+Wo kehta tha *"13 elements — slo 3, slo-health 6, library 4, measured 2026-08-08"*, aur
+usi jumle ki bina par bare `.card` rule ko rok rakha tha. Asal adad **46 markup mein / 42
+DOM mein** (farq index ke chaar JS-template cards ka). **Jab dekhne se rokne ki wajah aur
+adad ek hi paragraph mein likhe hon, to adad kabhi theek nahi hota.**
+
+**Do bug naap kar nikle, dono pehle se maujood:**
+1. **`print` ka brand navy kinare se chipka tha — padding 0**, saat sidebar pages mein
+   akela. UI-065 ne `.app-sidebar { padding: 24px 18px }` hataya, `.brand` ko badal mein
+   kuch na mila. `sidenav__brand` dene se theek.
+2. **Sidebar ka subtitle chhe pages par slate-500 tha, navy par — ~3.1:1, AA se neeche.**
+   Wajah legacy nahi thi: `03-elements/typography.css:88` ka bare `small { color }`
+   layer(elements) mein jeet raha tha. Purana note kehta tha legacy "dead" hai — sach —
+   **magar us ne kabhi nahi poochha ke JEETA KAUN.**
+
+**D51 phir teen dafa:** bare `.card` ko component mein rakhne se `bank` ki
+`.add-q-collapse` / `.bp-card` / `.bulk-card` aur `index` ki `@media(760)` padding sab
+haar rahi thin — naap kar `pages/*.css` mein uthai gayin. Probe mein `padding` ka ek bhi
+delta na aana hi is ka saboot hai.
+
+⚠ **Ratchet is dafa upar NAHI gaya** (chauthi dafa se bacha). Magar review ne pakda ke
+maine `nav.css` ke comment mein ek hex likh diya tha **aur usi paragraph mein likha tha
+"no hex is spelled here"**. `99-legacy/print.css` phir bhi **+1 line** hai — waahid legacy
+file jo barhi.
+
+⬜ **Browser check nahi hua.** Sab se pehla item: **cards ka border rang** — `--border`
+`#E3E8F1` se `--color-border` `#EAEDF3` par gaya, 42 elements, chhe pages, aur ye 1284
+mein se 620 deltas hai. Ye faisle mein shamil nahi tha, component ka lazmi nateeja tha
+(**D55**). Phir: `print` ka sidebar (ab inset hai), `taqseem` ka brand (divider gaya),
+aur kisi bhi page ke cards ke kone (14 → 16px).
+
+**Do cheezein jaan-boojh kar chhori gayin:** `print` ka brand ab bhi 18px/700 hai (us ke
+markup mein `.name` element hai hi nahi — qeemat ka faisla, poochha nahi gaya), aur
+`.card-title` ki teen qeematein abhi ek nahi ki gayin (index 600/15/6px vs teen pages
+700/14.5/16px — chautha faisla jo is row mein nahi tha).
+
+**Naye rows: D54** (`--space-inset` "card / panel padding" kehta hai magar 24px hai, jab
+ke har card 22px padta hai) · **D55** (do border rang) · **D56** (`plan.html` kisi probe
+ki page list mein nahi) · **D57** (`brand.js` `print`/`plan` tak pohanchta hi nahi) ·
+**D58** (do comments ek doosre ke ulat cascade ka dawa karte hain).
 
 ## UI-067 — `modal`. **2026-08-28. Item 5. Teen system rehne diye, shakal ek kar di.**
 

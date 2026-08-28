@@ -32,15 +32,11 @@
   .page-head { margin-bottom: 24px; }
   .page-head p  { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
 
-  /* ---- Card ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+  /* ---- Card ---- UI-068: bare `.card` -> 05-components/card.css.
+     `.add-q-collapse`/`.bp-card`/`.bulk-card` -> pages/bank.css (D51). */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
   /* Collapsible "Naya question add karo" — print.html ke Print Settings jaisa */
-  .add-q-collapse { padding: 0; }
   .add-q-collapse > .add-q-summary {
     list-style: none; cursor: pointer; user-select: none;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -98,7 +94,6 @@
   .radio-row input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--primary); }
 
   /* ---- Bank-paper section ---- */
-  .bp-card { border: 2px solid #c7d8f7; }   /* subtle blue border — distinguishes from add form */
   .bp-card .card-title { color: var(--primary); }
   /* .type-checks + its label: 05-components/field.css (UI-042). The checkbox
      rule below stays — see that file's header for why. */
@@ -203,7 +198,6 @@
   }
 
   /* ---- Bulk Upload ---- */
-  .bulk-card { border: 2px solid #c7d8f7; }
   .bulk-card .card-title { color: var(--primary); }
   .bulk-drop-zone {
     border: 2px dashed #b8c9e8; border-radius: 10px;
@@ -286,7 +280,6 @@
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
     body { flex-direction: column; }
-    .brand { padding: 0; }
     .bank-main { padding: 16px 14px; }
     .options-grid { grid-template-columns: 1fr; }
   }
