@@ -65,11 +65,16 @@ maine `nav.css` ke comment mein ek hex likh diya tha **aur usi paragraph mein li
 "no hex is spelled here"**. `99-legacy/print.css` phir bhi **+1 line** hai — waahid legacy
 file jo barhi.
 
-⬜ **Browser check nahi hua.** Sab se pehla item: **cards ka border rang** — `--border`
-`#E3E8F1` se `--color-border` `#EAEDF3` par gaya, 42 elements, chhe pages, aur ye 1284
-mein se 620 deltas hai. Ye faisle mein shamil nahi tha, component ka lazmi nateeja tha
-(**D55**). Phir: `print` ka sidebar (ab inset hai), `taqseem` ka brand (divider gaya),
-aur kisi bhi page ke cards ke kone (14 → 16px).
+✅ **BROWSER CHECK HO GAYA — Irfan, 2026-08-28. Teen session ke baad pehli dafa ye khana
+bhara hua hai.** Saaton item dekhe gaye aur sab theek: cards ka naya border rang
+(`bank`, `slo-health`), kone 14→16px, `index` ke cards ka naya 22px faasla, `print` ka
+sidebar (ab 22px inset — wo bug jo UI-065 se chala aa raha tha), `taqseem` ka brand
+(divider gaya), subtitle ka rang (`library`), aur `landing`/`blueprint` par kuch na hilna.
+
+**Is se D55 ka nisf tay ho gaya:** border ka rang badalna **defect nahi hai**, Irfan ne
+dekh kar qubool kiya. Row khuli rehti hai magar ab wo *"cards toot gaye"* nahi balki
+*"poori app mein do border rang hain"* wali consistency row hai — aur agla khandan jo
+component par aayega wohi seam phir dikhayega.
 
 **Do cheezein jaan-boojh kar chhori gayin:** `print` ka brand ab bhi 18px/700 hai (us ke
 markup mein `.name` element hai hi nahi — qeemat ka faisla, poochha nahi gaya), aur

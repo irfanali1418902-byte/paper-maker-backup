@@ -112,7 +112,11 @@ ki gayi. **Chhe qism ke ilawa kuch nahi:**
 `rgb(234,237,243)` — **bilkul pehle jaisa, ek pixel nahi hila**. Probe ki ye khali jagah
 khud ek row hai: **D56**.
 
-⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+✅ **Browser check ho gaya — Irfan, 2026-08-28.** `bank` aur `slo-health` par naya border
+rang aur 16px kone, `index` par cards ka naya 22px faasla, aur `landing`/`blueprint` par
+kuch na hilna — sab theek. **Border ke rang par khaas poochha gaya kyunke wo faisle mein
+shamil nahi tha; Irfan ne dekh kar qubool kiya**, is liye D55 defect nahi, consistency row
+hai.
 
 ## 2026-08-28 — UI-069: brand — nau pages par ek naam, chhe alag cheezein
 
@@ -222,7 +226,10 @@ qubool karta hai — maqsood, wo saatwan page hai jo component par hai. State pr
    hi nahi. Dono pehle se aise thay. **D57**, aur wo `UI-070` se pehle due hai kyunke drain
    `.brand` ko delete karega aur script khamoshi se toot jayegi.
 
-⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+✅ **Browser check ho gaya — Irfan, 2026-08-28.** `print` ka sidebar ab links ke barabar
+andar hai (wo bug jo UI-065 se chala aa raha tha), `taqseem` ka brand bina divider ke
+theek lagta hai, aur `library` par subtitle ka naya rang theek. `blueprint` par kuch nahi
+hila — jo maqsood tha, kyunke wo `o-shell__brand` par hai.
 
 ## 2026-08-28 — UI-067: modal — teen system rehne diye, shakal ek kar di
 
