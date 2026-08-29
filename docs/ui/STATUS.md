@@ -5,6 +5,51 @@
 
 ---
 
+## 📅 KAL KA PLAN — 2026-08-30, is tarteeb mein
+
+**1. SEEDING — PEHLA KAAM, sab se pehle.** Ye quota-bound hai, waqt-bound nahi: agar
+subah nahi chala to din bhar ka quota zaya. 108 topics baqi (PY3 44 + PY2 64), ~20–26
+calls/din = **5–6 din**. Command aur chetawni `scripts/seed_bank.py` ke header mein hain,
+aur Track 2 ki row mein bhi (2026-08-29 se — pehle wahan ek toota hua pointer tha).
+
+> **Pehle dry run, phir `--write`.** Aur `--write` se pehle syllabus rows aankh se dekho —
+> 2026-08-21 ko paanch rows ek jaisi nikleen aur 44 ghalat sawal delete karne pare.
+
+**2. PUSH — do commits** (`90610fb`, `5f7d631`). GitHub Desktop se, jaise hamesha.
+
+**3. BROWSER CHECK — chhota bakaya, 5 minute.** Server:
+`python -m uvicorn app.main:app --port 8000`
+
+| dekho | kahan |
+|---|---|
+| do boxes ka border (SLO add / edit) | `bank.html` — **UI-072 ki waahid pixel tabdeeli** |
+| pagination buttons ka rang | `library.html` — kaala dikhe to `color: inherit` fail hai |
+| disabled button par 🚫 cursor | `bank.html` |
+| heading ke neeche subtitle | `bank` · `library` · `slo-health` — **saath ek line par aaya to bug** |
+| import counters styled hain | `slo.html` (Excel import ke baad) |
+| chips column mein | `taqseem.html` |
+| shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
+
+**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1729**, target ka sawal
+khula hai (neeche). Jo bacha:
+
+* **`body` — 38 lines, 6 files.** `other` ke baad sab se bara `disagree` item, aur audit
+  ka regex ise `shell/nav` (✅) mein file karta hai, is liye **koi row ise shedyool nahi
+  karti**. Sab se zyada qeemat yahin hai.
+* **Item 8 ke bache hue 6 lines** — `.options-grid`, `.strip-empty`, `.list-empty`.
+* **`index` ki do `.tag` declarations** — review ne 2026-08-29 ko dono murda naapin.
+* **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle** (`css_orphans.py`
+  basi hai) — ya use retire karo.
+
+**5. EK FAISLA JO SIRF IRFAN KA HAI — target.** `1729 − available work` ab `~1350` par
+nahi girta. Do raste, dono jaiz: target `~1400` kar do, **ya** page-only ki 1,047 lines
+mein se kuch scope mein lao (wo 2026-08-19 ko jaan-boojh kar nikali gayi thin). Jab tak
+faisla na ho, **koi session target ko chupke se dobara na likhe**.
+
+**Aur jo bilkul na karna ho:** `master` merge — wo item 9 ke baad hai, pehle nahi.
+
+---
+
 ## ▶ NEXT SESSION — START HERE (2026-08-28)
 
 **ITEMS 1–7 ARE DONE, AND ITEM 8 HAS BEEN SURVEYED — IT IS NOT WHAT ITS ROW SAYS.**

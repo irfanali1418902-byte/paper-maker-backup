@@ -323,7 +323,23 @@ a drain session.
 
 * **Bank seeding** — 108 topics left (PY3 44 + PY2 64), ~20–26 AI calls/day = **5–6 days**.
   It is quota-bound, not time-bound, so run it FIRST each morning, then do everything else.
-  Command and the four forbidden syllabi: §B row R1 above.
+  ⚠ **This used to say "Command and the four forbidden syllabi: §B row R1 above". There is
+  no §B and no row R1 — anywhere.** Corrected 2026-08-29: the command and the warning both
+  live in `scripts/seed_bank.py`'s own header, which is the better place for them:
+
+  ```
+  python -m scripts.seed_bank --subject "<subject>" --grade "<grade>"          # dry run
+  python -m scripts.seed_bank --subject "<subject>" --grade "<grade>" --write  # spends money
+  ```
+
+  **DRY RUN IS THE DEFAULT and `--write` is the whole risk** — one careless command is 310
+  topics of AI calls. Already-seeded topics are skipped, so a re-run tops up rather than
+  duplicating, and a rate-limited run recovers by simply being run again.
+
+  ⚠ **READ THE SYLLABUS BEFORE SEEDING.** On 2026-08-21 five `syllabus_topics` rows
+  (Geography G8, Science G7, Maths G4/G5/G6) were byte-identical — all eleven Grade-4 maths
+  topics. Seeding them produced 44 arithmetic questions filed under "Geography" that had to
+  be deleted. The script trusts the topic title as stored and cannot tell.
 * **R7 plans for PY1 and PY2** — still empty. PY3's filled sheet is now in the repo
   (`namoona_plan_pre_year_3.xlsx`) so the shape is known.
 * **Merge `master`** — the whole month sits on `feat/ui-architecture`, which is 158 commits
