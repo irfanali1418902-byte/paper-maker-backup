@@ -54,19 +54,30 @@
    99-legacy/bank.css reads is declared in that file's own :root as a literal,
    and none of those names collide with 01-settings/.
 
-   THE MARKUP IS A DIFFERENT QUESTION, AND THE ANSWER IS NOT ZERO. bank.html:98
-   and :593 set a border colour inline as `var(--line, <fallback>)` — the
-   literal is in the markup and is deliberately NOT copied here, because a
-   copy-pasteable hex counts toward `unsanctioned_hex` even inside a comment
-   and the ratchet caught exactly that while this file was being written, for
-   the fourth time in this epic. `--line` is declared only by
-   /static/theme.css — 99-legacy/bank.css declares it zero times. Measured on
-   those two elements: the border goes from theme.css's value to that inline
-   fallback. It is harmless BECAUSE the fallback is there, which is the same
-   shape D9 records for print's --accent —
-   not because nothing was orphaned. `scripts/css_orphans.py` parses
+   THE MARKUP WAS A DIFFERENT QUESTION, AND UI-072 CLOSED IT — 2026-08-29.
+   ⚠ THIS PARAGRAPH DESCRIBED A CASCADE THAT NO LONGER EXISTS, and it was the
+   commit closing D58 that made it stale, which is D58's own defect repeated.
+   Kept and corrected rather than deleted, because the reasoning is still the
+   reason the sweep happened.
+
+   As written: bank.html's two inline borders read `var(--line, <fallback>)`,
+   `--line` was declared only by /static/theme.css and never by
+   99-legacy/bank.css, so the fallback always painted and the read was called
+   "harmless BECAUSE the fallback is there" — the same shape D9 records for
+   print's --accent. Harmless, but it meant bank quietly carried a THIRD border
+   grey, belonging to neither of the app's two. UI-072 pointed both at
+   `var(--color-border)`; `grep "var(--line" static/*.html` now returns
+   nothing, and /static/theme.css itself was deleted on 2026-08-13.
+
+   The literal is still deliberately not copied into this comment: a
+   copy-pasteable hex counts toward `unsanctioned_hex` even inside a comment,
+   and the ratchet caught exactly that while this file was being written — and
+   twice more since, in UI-069 and UI-070.
+
+   `scripts/css_orphans.py` parses
    99-legacy/*.css and never reads the markup, so it cannot see this class of
-   read at all — that blind spot is D32. All nine pages were then swept rather
+   read at all — that blind spot is D32, and the script has since gone stale
+   in its own right (D59). All nine pages were then swept rather
    than this one argued about: nothing already shipped is affected, `index` is
    clean despite holding most of the project's inline style attributes, and the
    one page it changes is `blueprint`, which reads nine theme.css-only tokens

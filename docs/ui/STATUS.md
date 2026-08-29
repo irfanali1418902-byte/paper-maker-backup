@@ -15,7 +15,7 @@ files.** The rest is three rules totalling six lines (`.options-grid`, `.strip-e
 `.list-empty`).
 
 Of the 150 tokens those `:root` blocks declared, **44 were dead and UI-072 deleted them**
-(0 deltas on all ten pages). **The ~103 that remain are not a family and cannot be
+(0 deltas on all ten pages). **The 106 that remain are not a family and cannot be
 drained as one** — each one leaves when its last consumer leaves, which makes them the
 drain's terminal state, not a session. **That is also why the target arithmetic stopped
 closing**: those lines were being counted as available work.

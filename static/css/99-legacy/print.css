@@ -12,8 +12,8 @@
     --bg: #F5F7FB;
     --radius-btn: var(--radius-control);
     /* Print knobs (Marhala 4A). Defaults = purani hardcoded values, isliye
-    koi class-override na ho to output bilkul waisa. JS in par per-class
-    settings apply karta hai (loadPaper mein). */
+       koi class-override na ho to output bilkul waisa. JS in par per-class
+       settings apply karta hai (loadPaper mein). */
     --page-margin: 14mm;
     --q-font: 14px;
     --q-gap: 14px;

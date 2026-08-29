@@ -239,8 +239,10 @@
      specificity, and this rule is in layer(components) while both of those are
      in layer(legacy). Measured: index's `.brand .tag` computes font-size 11px
      and color --color-action, i.e. THIS rule; only `letter-spacing` ever
-     survived from legacy, and 99-legacy/index.css:36 is now that one
-     declaration. `.topbar .tag` is untested — it may be dead the same way. NOT a
+     survived from legacy, and 99-legacy/index.css:32 is now that one
+     declaration. `.topbar .tag` IS dead the same way — measured by review
+     2026-08-29: it computes 11px / --color-action, i.e. this rule, not
+     legacy's 10.5px. Both legacy `.tag` declarations can go. NOT a
      component — `.tag` is live on landing as the hero tagline and on
      slo-health as a JS-rendered SLO code badge, three different things
      wearing one class, which is why UI-043 could not own it

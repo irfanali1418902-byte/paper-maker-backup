@@ -1,7 +1,4 @@
-  /* Local aliases. UI-072: pandrah mein se baarah delete — un ko is page par koi nahi
-     parhta tha (pages/taqseem.css apna compat block khud rakhta hai). Purana comment
-     kehta tha "purane naam barqarar taake page-specific rules na tootein"; wo naam ab
-     yahan hain hi nahi aur kuch nahi toota. Teen bache jo waqai parhe jate hain. */
+  /* UI-072: 15 mein se 12 alias delete — be-consumer thay. PROGRESS.md 2026-08-29. */
   :root {
     --err-tx: var(--red);
     --ok-tx: var(--green);

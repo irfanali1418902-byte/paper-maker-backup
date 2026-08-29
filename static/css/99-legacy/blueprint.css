@@ -1,7 +1,7 @@
   :root {
-    /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
-    hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
-    light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
+    /* Local semantic aliases. UI-072 ne --ok-bg/--ok-tx delete kiye (koi nahi parhta
+       tha), to status ab traffic-light nahi — sirf err aur warn bache. `theme.css`
+       ka hawala tareekhi hai: wo file 2026-08-13 ko delete ho chuki. */
     --primary: var(--brand);
     --tint: var(--chip-bg);
     --ink: var(--fg);

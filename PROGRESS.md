@@ -6,7 +6,8 @@ Irfan: *"ache tarah audit karlo, jaha jo kaam baqi hai aur ghalti ke zumre mein 
 theek karlo."* Ye us ka nateeja — **baqi kaam se alag kar ke sirf ghaltiyan**.
 
 `legacy_css_lines` **1751 → 1732 (−19)** · `unsanctioned_hex` **333 → 308 (−25)** ·
-`hardcoded_hex_inline` **76 → 74** · **unresolved `var()` 3 → 0** · 1075 pass, ruff saaf,
+`hardcoded_hex_inline` **76 → 74** · **unresolvable `var()` bina fallback ke 1 → 0** (do
+aur jo fallback rakhte thay wo bhi gaye — alag cheez, alag ginti) · 1075 pass, ruff saaf,
 frozen yaksan · type probe **sirf 40** (maqsood), state **0**, inject **0**.
 
 ### Sab se ahem: D14 kehti thi ye "already inert" hai. Wo inert nahi thi.
@@ -41,15 +42,15 @@ alag naapa — us ki apni legacy file, us ka entry file, **aur us ka HTML (inlin
 JS ka `setProperty`)**, kyunke D12 ka sabaq yehi hai:
 
 ```
-taqseem  15 declare -> 12 murda      index  25 -> 8      slo  17 -> 7
-blueprint 18 -> 6    slo-health 16 -> 6   bank 18 -> 3   landing/library 2   print 1
+taqseem   12 murda    index 7    slo 5    blueprint 6    slo-health 6
+bank       3          landing 2  library 2               print 1        = 44
 ```
 
 **`--primary-hover` nau ke nau files mein declare hota hai aur sifar dafa parha jata hai**
 — chhe jagah apni poori line par, `#244a90` ke saath. Us ke saath `--easy`/`--medium`/
 `--hard`/`--prog-bg`/`--prog-tx` bhi poore repo mein be-consumer hain.
 
-**44 declarations, 21 poori lines, aur teeno probes par 0 deltas** — yani wo waqai murda
+**44 declarations (150 declare thay, 106 bache), 21 poori lines, aur teeno probes par 0 deltas** — yani wo waqai murda
 thin. `taqseem` ka `:root` 15 se **3** par aa gaya; us ke upar ka comment ("purane naam
 barqarar taake page-specific rules na tootein") ab jhoot tha, wo bhi durust.
 
