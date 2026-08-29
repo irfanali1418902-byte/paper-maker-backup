@@ -1,6 +1,5 @@
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
@@ -8,12 +7,10 @@
     --muted: #5B6678;
     --muted2: #8A93A4;
     --border: #E3E8F1;
-    --surface: #FFFFFF;
     --bg: #EEF1F6;
     --err-bg: #FBE9E7; --err-tx: #C0392B;
     --ok-bg: #E6F4EC;  --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
-    --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
   html, body { margin: 0; height: 100%; }
   body {

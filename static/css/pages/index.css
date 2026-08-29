@@ -233,9 +233,14 @@
     padding: var(--space-inset) 28px 44px;
   }
 
-  /* `.tag` — the brand tagline. 99-legacy/index.css:53's `.brand .tag` and
-     :317's `.topbar .tag` already win font-size and color at 0,2,0, so what
-     actually goes when theme.css goes is the pill: these five. NOT a
+  /* `.tag` — the brand tagline. ⚠ D58, CORRECTED UI-072: this used to say
+     99-legacy/index.css's `.brand .tag` and `.topbar .tag` "already win
+     font-size and color at 0,2,0". THEY DO NOT — layer order is decided before
+     specificity, and this rule is in layer(components) while both of those are
+     in layer(legacy). Measured: index's `.brand .tag` computes font-size 11px
+     and color --color-action, i.e. THIS rule; only `letter-spacing` ever
+     survived from legacy, and 99-legacy/index.css:36 is now that one
+     declaration. `.topbar .tag` is untested — it may be dead the same way. NOT a
      component — `.tag` is live on landing as the hero tagline and on
      slo-health as a JS-rendered SLO code badge, three different things
      wearing one class, which is why UI-043 could not own it

@@ -107,8 +107,8 @@ if (!label || !outdir) {
   process.exit(2);
 }
 
-/* Same nine pages as css_type_probe.mjs, same roles, so the two probes are read
-   side by side rather than reconciled. */
+/* Same TEN pages as css_type_probe.mjs, same roles, so the two probes are read
+   side by side rather than reconciled. (Nine until UI-072 added plan — D56.) */
 const PAGES = [
   { page: 'slo', url: `${BASE}/slo.html`, role: 'LIVE — regression gate' },
   { page: 'slo-health', url: `${BASE}/slo-health.html`, role: 'LIVE — regression gate' },
@@ -119,6 +119,12 @@ const PAGES = [
   { page: 'landing', url: `${BASE}/landing.html`, role: 'subject' },
   { page: 'index', url: `${BASE}/index.html`, role: 'subject' },
   { page: 'print', url: `${BASE}/print.html`, role: 'LIVE — shell only, no paper_id' },
+  /* D56, added UI-072. plan was in NO probe's list until 2026-08-29 — and it is the
+     one page whose ONLY stylesheet is the new tree (no 99-legacy file at all), so
+     every component change reached it unmeasured. It carries 4 `.card.has-ch` and
+     the .ch/.cb rules, so it is not a cheap addition; it is the page that most
+     needed watching. */
+  { page: 'plan', url: `${BASE}/plan.html`, role: 'LIVE — new tree only, no legacy file' },
 ].filter((p) => !onlyPage || p.page === onlyPage);
 
 /* The states, and the forced pseudo-classes each one means.

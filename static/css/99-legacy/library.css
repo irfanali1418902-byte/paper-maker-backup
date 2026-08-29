@@ -1,10 +1,8 @@
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
-    --ink2: #1B2433;
     --muted: #5B6678;
     --muted2: #8A93A4;
     --border: #E3E8F1;
@@ -177,7 +175,7 @@
   /* ---- Responsive ---- */
   /* ---- Pagination ---- */
   .pg-btn {
-    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); background: var(--surface); color: inherit;  /* D14: `var(--text)` tha, kahin declare nahi -- magar inert BHI nahi tha */
     border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer; min-width: 36px;
   }
   .pg-btn:hover:not(:disabled) { background: var(--tint); color: var(--primary); border-color: var(--primary); }

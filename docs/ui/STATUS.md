@@ -7,10 +7,24 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-28)
 
-**ITEMS 1–7 ARE DONE. Take item 8 — `other`, 134 lines, 15 rules, 9 files. Its first
-session WRITES NO CSS: survey, split into real families, then schedule.**
+**ITEMS 1–7 ARE DONE, AND ITEM 8 HAS BEEN SURVEYED — IT IS NOT WHAT ITS ROW SAYS.**
 
-Three things item 8 must fold in, all found after the row was written:
+The row calls `other` "134 lines, 15 rules, nobody has read them, unknown". Read on
+2026-08-29: **128 of those 134 lines are ONE selector, `:root`, in all nine legacy
+files.** The rest is three rules totalling six lines (`.options-grid`, `.strip-empty`,
+`.list-empty`).
+
+Of the 150 tokens those `:root` blocks declared, **44 were dead and UI-072 deleted them**
+(0 deltas on all ten pages). **The ~103 that remain are not a family and cannot be
+drained as one** — each one leaves when its last consumer leaves, which makes them the
+drain's terminal state, not a session. **That is also why the target arithmetic stopped
+closing**: those lines were being counted as available work.
+
+**So what is actually left of item 8 is six lines in three rules.** Take them with
+whatever tail work remains; there is no survey session to run and no 3–5 sessions to
+schedule.
+
+Three things any remaining session must still fold in:
 
 * **Add `body` to the survey — 38 lines across six files.** The audit's family regex files
   it under `shell/nav`, which is ticked ✅, so **no row schedules it.** After `other` it is
@@ -114,8 +128,8 @@ hai aur **har dafa comment ke zariye**.
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that
 before planning anything; it is newer than everything above it in that file.
 
-**Current numbers, measured 2026-08-28 after UI-068/069** — re-measure, do not quote:
-`legacy_css_lines` **1,759** · `unsanctioned_hex` **334** · available work **351**.
+**Current numbers, measured 2026-08-29 after UI-072** — re-measure, do not quote:
+`legacy_css_lines` **1,732** · `unsanctioned_hex` **308** · unresolved `var()` **0**.
 
 ⚠ **THE TARGET IS NO LONGER ~1,350 AND NOBODY HAS PICKED THE NEW ONE.** The full audit ran
 2026-08-28: available work is measured on rule-block lines (1,398) while `legacy_css_lines`

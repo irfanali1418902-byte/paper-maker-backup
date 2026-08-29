@@ -1,6 +1,5 @@
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --tint2: #EEF3FC;
@@ -11,12 +10,9 @@
     --border: #E3E8F1;
     --line: #EDF0F5;
     --surface: #FFFFFF;
-    --bg: #EEF1F6;
     --ok-bg: #E6F4EC;   --ok-tx: #2E7D5B;
-    --prog-bg: #E7EEFB; --prog-tx: #2E5AAC;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
     --err-bg: #FBE9E7;  --err-tx: #C0392B;
-    --easy: #7FC8A0; --medium: #5B8DEF; --hard: #E89B5B;
     /* --radius-card deleted UI-068 — its one consumer was `.card`. */
     --shadow: 0 2px 12px rgba(22,33,58,.05);
   }

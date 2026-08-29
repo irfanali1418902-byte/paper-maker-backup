@@ -1,12 +1,11 @@
-  /* Local aliases → theme.css tokens (ek source of truth; koi hardcoded hex).
-     Purane naam (--primary/--ink/…) barqarar taake page-specific rules na tootein. */
+  /* Local aliases. UI-072: pandrah mein se baarah delete — un ko is page par koi nahi
+     parhta tha (pages/taqseem.css apna compat block khud rakhta hai). Purana comment
+     kehta tha "purane naam barqarar taake page-specific rules na tootein"; wo naam ab
+     yahan hain hi nahi aur kuch nahi toota. Teen bache jo waqai parhe jate hain. */
   :root {
-    --primary: var(--brand); --primary-hover: var(--brand-2); --navy: var(--brand);
-    --tint: var(--accent-soft); --ink: var(--fg); --muted2: var(--muted);
-    --border: var(--line); --surface: var(--panel); --bg: var(--app-bg);
-    --err-bg: var(--red-bg); --err-tx: var(--red);
-    --ok-bg: var(--green-bg); --ok-tx: var(--green);
-    --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
+    --err-tx: var(--red);
+    --ok-tx: var(--green);
+    --warn-tx: var(--yellow);
   }
   body {
     font-family: var(--font-body); color: var(--fg); background: var(--app-bg);

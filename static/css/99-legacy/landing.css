@@ -1,14 +1,12 @@
   /* Palette index.html se — same brand system (koi naya color nahi). */
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
     --muted: #5B6678;
     --border: #E3E8F1;
     --surface: #FFFFFF;
-    --bg: #EEF1F6;
     --radius-card: 16px;
     --shadow: 0 2px 12px rgba(22,33,58,.05);
   }

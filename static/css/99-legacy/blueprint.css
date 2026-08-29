@@ -1,22 +1,17 @@
   :root {
     /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
-       hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
-       light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
+    hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
+    light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
     --primary: var(--brand);
-    --primary-hover: var(--brand-2);
-    --navy: var(--brand);
     --tint: var(--chip-bg);
     --ink: var(--fg);
     --ink2: var(--fg);
     --muted2: var(--muted);
     --border: var(--line);
     --surface: var(--panel);
-    --bg: var(--app-bg);
     --err-bg: var(--red-bg);     --err-tx: var(--red);
-    --ok-bg: var(--green-bg);    --ok-tx: var(--green);
     --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
     --radius-btn: var(--radius-control);
-    --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
 
   /* Chrome (.app grid · .brand · .top · .nav · .main) theme.css se aata hai.

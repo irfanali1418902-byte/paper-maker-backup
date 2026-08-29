@@ -1,5 +1,85 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-29 — UI-072: audit — jo baqi kaam nahi, ghalti thi
+
+Irfan: *"ache tarah audit karlo, jaha jo kaam baqi hai aur ghalti ke zumre mein hai use
+theek karlo."* Ye us ka nateeja — **baqi kaam se alag kar ke sirf ghaltiyan**.
+
+`legacy_css_lines` **1751 → 1732 (−19)** · `unsanctioned_hex` **333 → 308 (−25)** ·
+`hardcoded_hex_inline` **76 → 74** · **unresolved `var()` 3 → 0** · 1075 pass, ruff saaf,
+frozen yaksan · type probe **sirf 40** (maqsood), state **0**, inject **0**.
+
+### Sab se ahem: D14 kehti thi ye "already inert" hai. Wo inert nahi thi.
+
+`99-legacy/library.css` ka `.pg-btn { color: var(--text) }` — `--text` kahin declare hi
+nahi hota. **D14 ise 2026-07-28 se "already inert" keh kar parked rakhe hue thi.** Maine
+usi bunyaad par declaration delete ki, "zero-delta" samajh kar.
+
+**Probe ne 25 deltas dikhaye: `rgb(15,23,42)` → `rgb(0,0,0)`.**
+
+Wajah — aur ye poore epic ke liye kaam ki hai: **ek `var()` jo resolve na ho, wo "kuch
+nahi" ke barabar NAHI hai.** Wo declaration ko *invalid at computed-value time* banata
+hai, aur `color` jaisi **inherited** property par us ka natija `inherit` hota hai.
+`<button>` par yehi cheez UA ke `color: buttontext` (kaala) ko harati thi. Declaration
+hatate hi UA ka kaala rang wapas aa gaya.
+
+Yani **toota hua `var()` teen hafte se kaam kar raha tha.** Ab wo `color: inherit` hai —
+sahi qeemat, sahi tareeqe se, aur repo mein ab **koi unresolved `var()` nahi bacha**.
+
+### `bank` par teen border grey thay, aur teesra sirf ghalat token naam se tha
+
+`bank.html`:104 aur :601 ke do inline boxes `var(--line, #e2e8f0)` parhte thay. **`--line`
+bank par declare hi nahi hota** (wo `theme.css`/blueprint/taqseem ka naam hai), to hamesha
+fallback `#e2e8f0` paint hota tha — jab ke usi page ke cards `#EAEDF3` aur legacy `--border`
+`#E3E8F1` hai. Ab dono `var(--color-border)` par; **do inline hex kam**, aur ye D55 ki
+fehrist mein teesra rang tha jo kisi faisle se nahi, ek typo se aaya tha.
+
+### 44 murda token declarations — nau pages, sifar deltas
+
+`99-legacy` ke nau `:root` blocks mein **150 tokens declare** hote hain. Har page ke liye
+alag naapa — us ki apni legacy file, us ka entry file, **aur us ka HTML (inline `var()` +
+JS ka `setProperty`)**, kyunke D12 ka sabaq yehi hai:
+
+```
+taqseem  15 declare -> 12 murda      index  25 -> 8      slo  17 -> 7
+blueprint 18 -> 6    slo-health 16 -> 6   bank 18 -> 3   landing/library 2   print 1
+```
+
+**`--primary-hover` nau ke nau files mein declare hota hai aur sifar dafa parha jata hai**
+— chhe jagah apni poori line par, `#244a90` ke saath. Us ke saath `--easy`/`--medium`/
+`--hard`/`--prog-bg`/`--prog-tx` bhi poore repo mein be-consumer hain.
+
+**44 declarations, 21 poori lines, aur teeno probes par 0 deltas** — yani wo waqai murda
+thin. `taqseem` ka `:root` 15 se **3** par aa gaya; us ke upar ka comment ("purane naam
+barqarar taake page-specific rules na tootein") ab jhoot tha, wo bhi durust.
+
+### Teen deferred rows band, dono tools mein
+
+* **D56** — `plan.html` kisi probe ki page list mein nahi tha, aur wohi **ek page hai jis
+  ka koi legacy file hai hi nahi** (sirf naya tree), yani har component tabdeeli us tak
+  bina naape pohanchti thi. Ab dono probes mein hai.
+* **D53** — `css_type_diff` ka 60-delta cap khamosh tha. Ab list aakhir mein
+  `… and N more` likhti hai aur `--all` cap uthata hai. *(Isi khamoshi se ek dafa board
+  par "0 deltas" likha gaya tha jab ginti 30 keh rahi thi.)*
+* **D58** — `pages/index.css` ka comment kehta tha legacy ka `.brand .tag`
+  *"already wins at 0,2,0"*. Layer order specificity se pehle chalta hai; durust.
+
+### Do cheezein jo aage kaam aayengi
+
+**`node --check` kaafi nahi.** D53 ke fix mein maine `LIST_CAP` ko `args` se pehle rakh
+diya — syntax bilkul theek, magar chalane par `Cannot access 'args' before initialization`.
+**Tool ko chala kar hi pakda gaya**, check se nahi.
+
+**`scripts/css_orphans.py` ab khud basi hai.** Wo `static/theme.css` ke against naapta hai,
+jo 2026-08-13 ko delete ho chuki. Chalane par khud warning deta hai ke *"'supplied' will
+read 0 for every page"* — aur us ke `orphan`/`dead`/`covered` columns isi wajah se bay-maani
+hain. Us ki jagah per-page `var()` resolution wali check hai jo is audit mein chali.
+**D59.**
+
+⬜ **Browser check nahi hua.** Sirf do cheezein nazar aane wali hain: `bank` ke do boxes ka
+border (halka farq), aur `library` ke pagination buttons ka rang (jo pehle jaisa hi hona
+chahiye — agar kaala dikhe to `color: inherit` kaam nahi kar raha).
+
 ## 2026-08-29 — UI-071: item 7 ka doosra nisf — aur ek probe jo pehle mumkin hi nahi thi
 
 Item 7 mukammal. `legacy_css_lines` **1757 → 1751 (−6)** · `unsanctioned_hex` **333**
