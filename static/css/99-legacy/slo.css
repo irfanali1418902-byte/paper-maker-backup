@@ -40,15 +40,17 @@
 
   .summary { display: none; margin-top: 16px; }
   .pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-  .pill { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 20px; }
-  .pill.add { background: var(--ok-bg); color: var(--ok-tx); }
-  .pill.upd { background: var(--tint); color: var(--primary); }
-  .pill.err { background: var(--err-bg); color: var(--err-tx); }
+  /* UI-071: `.pill` -> `.sum-pill`. index ka `.pill` question ka metadata chip hai
+     (apna rang inline se leta hai); ye import ka natija-counter hai. */
+  .sum-pill { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 20px; }
+  .sum-pill.add { background: var(--ok-bg); color: var(--ok-tx); }
+  .sum-pill.upd { background: var(--tint); color: var(--primary); }
+  .sum-pill.err { background: var(--err-bg); color: var(--err-tx); }
 
   td.code { font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
   .bloom { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--tint); color: var(--primary); }
   .bloom.empty { background: #F1F2F5; color: var(--muted); font-style: italic; }
-  .empty-state { color: var(--muted); font-size: 13.5px; padding: 18px 0; }
+  .empty-state { color: var(--muted); font-size: 13.5px; padding: 16px 0; }  /* 18->16, majority; UI-071 */
 
   @media (max-width: 720px) {
     body { flex-direction: column; }

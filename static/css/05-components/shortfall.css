@@ -1,0 +1,75 @@
+/* =========================================================================
+   05-components/shortfall.css — the shortfall note's INSIDES only (UI-071)
+
+   THE BOX IS DELIBERATELY ABSENT. `blueprint` and `print` both build a
+   `.shortfall-panel`, and the six rules below were BYTE-IDENTICAL in both
+   99-legacy files — but the panels themselves are not the same object and
+   Irfan kept them apart on 2026-08-29:
+
+     blueprint  white surface + 3px left rail, inside `.status-bar.warn`
+     print      amber fill + amber border, inside the paper preview
+
+   So `.shortfall-panel { }` stays page-scoped in each legacy file and only
+   the contents come here. Adding a bare `.shortfall-panel` rule to this file
+   would repaint both boxes at once, which is the decision reversed.
+
+   ⚠ THE REASON FIRST GIVEN FOR KEEPING TWO WAS WRONG, AND IT IS RECORDED SO
+   NOBODY RE-DERIVES IT. The session argued print's amber fill "costs toner".
+   It does not: `print.html`:993 builds the panel with `no-print`, and
+   `99-legacy/print.css`:203/:338 hide `.no-print` inside `@media print`. The
+   panel NEVER prints — it is screen-only on both pages, and print's
+   `display: block` exists only to beat `.no-print`'s `inline-flex`
+   (`99-legacy/print.css`:373 says so). Irfan re-decided on the corrected
+   fact: two boxes, two contexts, one set of contents.
+
+   ⚠ NOTHING IN THIS FAMILY IS VISIBLE TO css_type_probe OR css_state_probe.
+   `.shortfall-panel` returns ZERO elements on every page at rest — both
+   panels are built in JS (`blueprint.html`:1280, `print.html`:993). Those
+   gates report 0 deltas for this file whether it is right or wrong. It was
+   measured with `scripts/css_inject_probe.mjs`, which exists because of this
+   family; verify any change to it the same way. D12, and PROBES.md rule 10.
+
+   MOVING THESE SIX UP A LAYER WAS CHECKED FIRST, NOT ASSUMED — D51/UI-066.
+   `layer(components)` beats `layer(generic)` and `layer(elements)`, so a
+   declaration that is DEAD in legacy comes alive on the way up. Measured
+   before the move: `.sf-options` computes `padding-left: 20px` and
+   `margin-top: 3px`, and every element reports `list-style-type: disc`, so
+   all three were already live and nothing is resurrected. (`reset.css`'s
+   `* { margin: 0; padding: 0 }` is inside a comment, not a live rule — that
+   was the one thing that could have made them dead.)
+
+   The literals stay literal: 12.5px is not a step on the type scale, and
+   3px / 7px / 2px / 20px are optical one-offs with no member in the space
+   scale — the same call nav.css and status.css made.
+   ========================================================================= */
+
+.shortfall-panel .sf-head {
+  font-size: 12.5px;
+  font-weight: var(--font-weight-heading);
+}
+
+.shortfall-panel .sf-reason {
+  font-size: 12.5px;
+  margin-top: 3px;
+}
+
+.shortfall-panel .sf-q {
+  font-size: 12.5px;
+  font-weight: var(--font-weight-strong);
+  margin-top: 7px;
+}
+
+.shortfall-panel .sf-options {
+  list-style: disc;
+  margin: 3px 0 0;
+  padding-left: 20px;
+  font-size: 12.5px;
+}
+
+.shortfall-panel .sf-options li {
+  margin-top: 2px;
+}
+
+.shortfall-panel .sf-gain {
+  font-weight: var(--font-weight-strong);
+}

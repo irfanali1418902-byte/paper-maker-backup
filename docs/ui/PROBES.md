@@ -123,10 +123,12 @@ node scripts/css_page_rule_probe.mjs  <url> [selector-substring]
 node scripts/css_drain_probe.mjs      <page> [--json <path>]
 node scripts/css_state_probe.mjs      <label> <outdir> [--page <p>] [--viewports 1280,700]
 node scripts/css_selector_probe.mjs   "<selector>" "<prop,prop>" [--add=<sel>:<class>] <page...>
+node scripts/css_inject_probe.mjs     <label> <outdir>          # JS-built families — rule 10
 ```
 
-`css_state_probe.mjs` writes the same JSON shape as `css_type_probe.mjs`, so the SAME diff
-tool reads both — there is no state-specific diff to learn:
+`css_state_probe.mjs` and `css_inject_probe.mjs` both write the same JSON shape as
+`css_type_probe.mjs`, so the SAME diff tool reads all three — there is no per-probe diff to
+learn:
 
 ```
 node scripts/css_type_diff.mjs <before>.json <after>.json --names
@@ -254,3 +256,35 @@ once:
    The general form, and it is D51 wearing a disguise: *"the declaration did not move"* and
    *"the probe cannot see it"* are different claims, and the cheap way to tell them apart is
    a second declaration in the same rule. If one moved, the reader works.
+10. **A family built in JS is measured by INJECTING it, not by hoping.** *(UI-071,
+    2026-08-29. Tool: `scripts/css_inject_probe.mjs`.)*
+
+    Both snapshot probes walk `document.querySelectorAll('*')`, so anything the page builds
+    later is simply not there. Measured at rest on every page, **zero elements**:
+
+    ```
+    .shortfall-panel   blueprint, print     blueprint.html:1280, print.html:993
+    .pill              index, slo           index.html:2190, slo.html:180
+    .chips             slo-health, taqseem  slo-health.html:181, taqseem.html:150
+    ```
+
+    That is 26 of item 7's 31 lines, and both gates report **0 deltas on all of it whether
+    the CSS is right or wrong** — D45's shape, and D12 has recorded the general hole since
+    2026-07-28. `status.css`'s header had already been telling sessions to "verify colour by
+    injecting the class"; each one did it by hand and threw it away.
+
+    The probe injects each family's own builder markup into the REAL container the builder
+    writes into, so inherited context is real — blueprint's panel genuinely sits inside
+    `.status-bar.warn`, which is why its `background: var(--surface)` reads as a white panel
+    on a tinted bar. Output is `css_type_probe`'s shape on purpose, so `css_type_diff` reads
+    it unchanged.
+
+    ⚠ **THE FIXTURES ARE COPIES AND THEY ROT.** Every entry cites the builder line it came
+    from. If the builder's markup changes and the fixture does not, the probe measures a
+    shape the app no longer renders and returns a confident zero — worse than no probe.
+    Re-read the cited lines before trusting a run. And a fixture that cannot find its
+    container reports it rather than silently measuring nothing: that is how `print`'s
+    `.section-block` was caught being JS-built too.
+
+    ⚠ **A RENAME MAKES ITS OWN ENTRY'S BEFORE/AFTER MEANINGLESS.** The element identity
+    changed on purpose, so read absolute values for that entry instead of the diff.

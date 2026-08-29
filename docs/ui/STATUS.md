@@ -7,25 +7,23 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-28)
 
-**Items 1–6 are done, and item 7's FIRST HALF shipped as UI-070 (`btn` + `page-head`).
-Take item 7's second half — `shortfall` (20 lines, blueprint + print) and
-`chip/pill/row` (11 lines, index + slo + slo-health + taqseem). Two decisions, and
-BOTH ARE DESIGN FORKS, not value differences:**
+**ITEMS 1–7 ARE DONE. Take item 8 — `other`, 134 lines, 15 rules, 9 files. Its first
+session WRITES NO CSS: survey, split into real families, then schedule.**
 
-* **`shortfall-panel`** — its six inner rules are byte-identical on both pages; only the
-  box differs (blueprint: white surface + 3px left rail · print: amber fill). **Irfan
-  decided 2026-08-28: keep both boxes, move the six shared rules to a component.** print
-  is a printed page and an amber fill costs toner.
-* **`.chips`** — `slo-health` is `flex-wrap: wrap`, `taqseem` is `flex-direction: column`.
-  **Irfan decided 2026-08-28: keep both, give them different names** — one class doing two
-  layouts is the `.tag` problem again (`pages/index.css`:189).
-* Still undecided and small: `.row` gap (slo/slo-health 10px vs taqseem 12px), `.pill`
-  (index 11.5px/radius 99 vs slo 13px/radius 20), `.empty-state` padding (16 vs 18).
-  `.slo-main` is an `agree` freebie. ⚠ **`.slo-main` and `.empty-state` are filed under
-  `chip/pill/row` by the audit regex and are neither** — see the label warning below.
+Three things item 8 must fold in, all found after the row was written:
 
-⚠ **Item 7 was split because four families and five decisions in one diff breaks the
-project's own reviewability rule.** Do not re-merge them.
+* **Add `body` to the survey — 38 lines across six files.** The audit's family regex files
+  it under `shell/nav`, which is ticked ✅, so **no row schedules it.** After `other` it is
+  the largest single `disagree` item in the repo.
+* **`.slo-main` / `.empty-state` are filed under `chip/pill/row`** and are neither. Expect
+  more of this: the labels are as unreliable as the counts.
+* **`scripts/css_inject_probe.mjs` exists now (PROBES.md rule 10).** Before scheduling any
+  family out of `other`, check whether it is JS-built — three of item 7's four were, and
+  both snapshot probes report 0 deltas on those whether the CSS is right or wrong.
+
+⚠ **Item 7 was split into two sessions because four families and five decisions in one
+diff breaks the project's own reviewability rule. That split was right and should be the
+default for any multi-family row.**
 
 ⚠ **The census lesson has now fired THREE sessions running, and item 7 is four families
 in one row — the highest-risk shape yet for it.** Item 5's "58 lines, 5 files" missed an
@@ -39,6 +37,41 @@ brand at all. **Count the thing in the MARKUP, and check `pages/*.css` as well a
 ⚠ **And `btn` is the one family card.css's header explicitly says is NOT safe yet** — see
 its closing line. `slo.html` has two live `class="btn"` buttons and a bare `.btn` in
 layer(components) would take them. Read that note before planning item 7.
+
+## UI-071 — item 7, doosra nisf: `shortfall` + `chip/pill/row`. **2026-08-29. Item 7 mukammal.**
+
+`legacy_css_lines` **1757 → 1751**, hex **333** (nahi hila). 1075 pass, ruff saaf, frozen
+yaksan. Type **36**, state **0**, **injection probe 0**. Tafseel `PROGRESS.md` 2026-08-29.
+
+⚠ **PEHLE YE MALOOM HUA KE IS NISF KA ZYADA HISSA NAAPA HI NAHI JA SAKTA.** 31 lines mein
+se **26** aisi thin jin ko koi probe dekh hi nahi sakta — `.shortfall-panel`, `.pill`,
+`.chips` teeno **JS se bante hain**, to dono gates un par har haal mein 0 deltas dete hain.
+D45 wali shakal, aur **D12 ise 2026-07-28 se darj kar rahi thi**. Irfan: harness banao.
+
+**`scripts/css_inject_probe.mjs` — naya gate, `PROBES.md` rule 10.** Har khandan ka apna
+builder-markup asal container mein daal kar naapta hai; output `css_type_probe` ki shakal ka
+hai to `css_type_diff` bina tabdeeli ke parhta hai.
+
+**Us ka pehla nateeja:** `shortfall` ki chhe rules `layer(legacy)` se `layer(components)`
+gayin aur **blueprint/print par 0 deltas** — ye saboot koi maujooda gate de hi nahi sakta tha.
+
+**Irfan ke faisle:** shortfall ke do dabbe alag rahenge, sirf chhe andar wale rules component
+par. `.chips` → `taqseem` par `.col-chips`. *(`.pill` → `.sum-pill` maine khud kiya, poochha
+nahi tha — `.chips` wala usool laga diya. Ulta kiya ja sakta hai.)*
+
+⚠ **Aur jo wajah pehle di gayi thi wo ghalat thi:** "print chhapta hai, amber toner kharch
+karta hai" — panel `no-print` hai, **kabhi chhapta hi nahi**. Irfan ko durust haqeeqat par
+faisla dobara diya gaya, aur wo wohi raha.
+
+⚠ **Review ne naye gate ko FAIL kiya aur theek kiya** — teen fixtures pehle hi din ghalat
+thay (`index` ka container `.pill` ki asal jagah nahi thi; `taqseem` ke bachche `.tag` thay
+jab ke asal `.chip` hain). **Jo fixture resolve ho jaye zaroori nahi ke wafadar ho.**
+
+⚠ **Ratchet PAANCHWEEN dafa upar gaya** (1751 → 1755), phir comment se. **Hal ab likha hua
+hai: legacy mein wajah rule ki line ke AAKHIR mein daalo, upar alag line par nahi** — wajah
+bhi darj rehti hai aur metric nahi hilta.
+
+⬜ **Browser check nahi hua.**
 
 ## UI-070 — item 7, pehla nisf: `btn` + `page-head`. **2026-08-28.**
 

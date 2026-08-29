@@ -1,5 +1,122 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-29 — UI-071: item 7 ka doosra nisf — aur ek probe jo pehle mumkin hi nahi thi
+
+Item 7 mukammal. `legacy_css_lines` **1757 → 1751 (−6)** · `unsanctioned_hex` **333**
+(nahi hila) · **1075 pass**, ruff saaf · frozen inventory yaksan · type probe **36**,
+state probe **0**, **injection probe blueprint/print/index/slo/slo-health par 0**.
+
+### Pehle ye maloom hua ke is nisf ka zyada hissa naapa hi nahi ja sakta
+
+Probe se ginti, kaam shuru karne se pehle:
+
+```
+.shortfall-panel   blueprint 0   print 0        <- JS se banta hai
+.pill              har page  0                  <- JS se banta hai
+.chips             har page  0                  <- JS se banta hai
+.row               index 1 · slo 4 · slo-health 2 · taqseem 1
+.empty-state       slo 1 · slo-health 4   (display:none, JS kholta hai)
+```
+
+**31 lines mein se 26 aisi thin jin par dono gates har haal mein 0 deltas dete** — chahe
+main kuch bhi torh doon. Ye D45 wali shakal hai aur **D12 is ko 2026-07-28 se darj kar rahi
+thi**; `status.css` ka header bhi sessions ko *"verify colour by injecting the class"* keh
+raha tha, magar har session ye kaam haath se karta aur phenk deta.
+
+Irfan ka faisla: **harness banao.** `scripts/css_inject_probe.mjs` — har khandan ka apna
+builder-markup us **asal container** mein daalta hai jahan builder likhta hai, phir computed
+values naapta hai. Output `css_type_probe` ki shakal ka hai, to maujooda review-shuda
+`css_type_diff` bina kisi tabdeeli ke parh leta hai. `PROBES.md` rule 10.
+
+Ek cheez us ne foran pakdi: `print` ka `.section-block` **khud bhi JS-built hai**, to fixture
+ne container na milne par **report kiya, khamoshi se 0 nahi diya** — yehi design ka maqsad
+tha.
+
+### `shortfall` — chhe rules component par, do dabbe apni jagah
+
+Chhe andar wale rules (`.sf-head`, `.sf-reason`, `.sf-q`, `.sf-options`, `.sf-options li`,
+`.sf-gain`) dono files mein **byte-identical** thay → `05-components/shortfall.css`.
+`.shortfall-panel` ka dabba dono jagah apna rehta hai.
+
+⚠ **Layer upar le jaane se pehle naapa gaya (D51/UI-066).** `layer(components)` `generic`
+aur `elements` dono ko harata hai, to legacy mein murda declaration upar ja kar zinda ho
+jati. Naap: `.sf-options` `padding-left: 20px` aur `margin-top: 3px` **pehle se live** thay
+aur `list-style-type: disc` har element par — yani kuch resurrect nahi hua. (`reset.css` ka
+`* { margin: 0; padding: 0 }` comment ke andar hai, live rule nahi — wohi ek cheez thi jo
+inhein murda kar sakti thi.)
+
+**Injection probe: blueprint 0, print 0.** Yani chhe rules layer badalne ke bawajood bilkul
+waise hi paint karti hain. **Koi maujooda gate ye saboot de hi nahi sakta tha.**
+
+### ⚠ Aur wo wajah jo maine Irfan ko di thi, ghalat thi
+
+Maine likha tha *"print chhapta hai; amber fill toner kharch karta hai"*, aur usi bunyaad
+par do dabbe rakhne ka faisla hua. **Panel kabhi chhapta hi nahi:** `print.html`:993 use
+`no-print` ke saath banata hai aur `99-legacy/print.css`:203/:338 `@media print` mein
+`.no-print` ko chhupa dete hain. Us ka `display: block` bhi sirf `.no-print` ke
+`inline-flex` ko harane ke liye hai (`print.css`:373 khud kehta hai). Irfan ko durust
+haqeeqat batai gayi aur unhone **wohi faisla dobara diya, asal wajah par**: do jagah, do
+maqsad — blueprint ka panel `.status-bar.warn` ke andar baithta hai, print ka paper preview
+mein.
+
+### `.chips` aur `.pill` — ek naam, do cheezein
+
+Irfan: **dono rakho, alag naam do.**
+
+* `taqseem` ka `.chips` → **`.col-chips`** (us page ke apne `.col-head`/`.col-empty` ke
+  khandan mein). `slo-health` ka `wrap` hai, ye `column` — **sirf `display: flex` sanjha
+  tha**, baqi har cheez alag.
+* `slo` ka `.pill` → **`.sum-pill`** (import ka natija-counter). `index` ka `.pill` question
+  ka metadata chip hai jo **apna rang inline `style=` se leta hai**. *(Ye `.pill` wala faisla
+  poochha nahi gaya tha — maine `.chips` wala usool laga diya, kyunke haalat bilkul wohi
+  hai. Agar Irfan `.pill` ko alag rakhna chahein to ye ulta ho sakta hai.)*
+
+Injection probe se naapa: `.col-chips` aur `.sum-pill` **bilkul waise hi** paint karte hain
+jaise purane naam karte thay.
+
+⚠ **Aur rename ne ek break banaya jo maine khud paida kiya.** `slo.html` par `.pill` **do**
+jagah render hota hai — `:180` (`renderSummary`) aur `:238` (`renderAssignSummary`). Maine
+pehla rename kiya, doosra chhoot gaya; wo teen counters bilkul unstyled ho jate. Poore repo
+ka sweep chalane par pakda gaya. **Rename karte waqt ek call site kaafi nahi — sab gino**,
+aur JS template strings grep se hi milte hain.
+
+### Do chhoti qeematein majority par
+
+* `.row` gap — `taqseem` 12px → **10px** (`slo` 4 + `slo-health` 2 elements banaam 1)
+* `.empty-state` padding — `slo` 18px → **16px** (`slo-health` 4 banaam 1)
+
+Type probe ke 36 deltas theek yehi do hain, plus un ke height knock-ons. State probe 0.
+
+### Review ne naye gate ko hi FAIL kiya — aur wo theek tha
+
+**Rule 10 pehle hi din apne aap par laga.** Us ne likha tha *"fixtures are copies and they
+rot"*, aur teen fixtures pehle hi ghalat thay:
+
+* **`index` — container hi ghalat tha.** `#results` maujood hai, resolve bhi hota hai, aur
+  **`.pill` wahan kabhi render hota hi nahi**. Asal container `#replaceCandidates`
+  (`index.html`:592) hai, jo ek modal ke andar hai. Yani probe ek saaf, purevishwas
+  measurement de rahi thi aisi jagah se jahan app ye cheez rakhti hi nahi. **Jo fixture
+  resolve ho jaye zaroori nahi ke wafadar ho** — aur modal band hota hai, to ab
+  `data-open="1"` set kar ke pehle khola jata hai.
+* **`taqseem` — bachche ghalat thay.** Maine `.tag` daale; `.col-chips` ke andar asal mein
+  `.chip` cards hote hain (`chipHtml()`, `taqseem.html`:127). `.tag` taqseem ki class hai
+  hi nahi, to probe do be-style spans naap rahi thi aur **`.chip` ki koi bhi regression pass
+  kar deti.**
+* **`slo-health` — container ka ancestor** (`.slo-main`) diya tha, asal `#uncoveredBox` hai.
+
+Teeno theek. Ab naap: `taqseem` ke asal `.chip` cards (safed, 11px radius, `.code` badge),
+`slo-health` ke `.tag`, aur `index` ke `.pill` modal ke andar — sab styled.
+
+⚠ **Ratchet PAANCHWEEN dafa upar gaya (1751 → 1755)** — review ne `.row`/`.empty-state` par
+wajah likhne ko kaha, maine paanch line ke comment likh diye. Ab wajah **usi rule ki line ke
+aakhir mein** hai: wajah bhi darj, aur ek line bhi nahi barhi. **Ye is qaide ka hal hai jo
+pehle nahi likha gaya tha — legacy mein comment upar nahi, line par.**
+
+Aur ek chhoti: probe ka comment `String.raw` template ke andar tha aur us mein backtick
+likh diya — literal wahin khatam ho gaya. `node --check` ne pakda.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
 ## 2026-08-28 — UI-070: item 7 ka pehla nisf — `btn` + `page-head`, aur do census ghaltiyan meri apni
 
 `legacy_css_lines` **1759 → 1757 (−2)** · `unsanctioned_hex` **334 → 333 (−1)** ·

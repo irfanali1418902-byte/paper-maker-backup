@@ -195,6 +195,13 @@
 @import url("05-components/field.css")     layer(components);
 /* @import url("05-components/badge.css")     layer(components); */
 @import url("05-components/nav.css")       layer(components);
+/* UI-071 — the shortfall note's INSIDES, on blueprint and print. The box is
+   NOT here: the two pages keep different panels by decision, and only the six
+   identical inner rules moved. ⚠ Neither snapshot probe can see this family —
+   both panels are built in JS, so `.shortfall-panel` is 0 elements at rest and
+   css_type_probe reports 0 deltas whether this file is right or wrong. Verify
+   with scripts/css_inject_probe.mjs. Read its header. */
+@import url("05-components/shortfall.css") layer(components);
 /* UI-043 — status bar. LIVE on bank, blueprint and library the moment it
    loads, unlike the two above: `.status-bar` is in all three pages' markup.
    It unifies two palettes that were both live. Read its header. */

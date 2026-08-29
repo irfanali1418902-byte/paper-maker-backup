@@ -24,7 +24,7 @@
   .tq-main { flex: 1; min-width: 0; padding: 24px 30px 40px; margin: 0 auto; width: 100%; max-width: 1400px; }
 
   /* toolbar row inside card */
-  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }  /* 12->10, majority; UI-071 */
   .n-badge {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
     padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: #8a6410;
@@ -47,7 +47,9 @@
   .col-head .count { font-size: 11px; font-weight: 700; color: var(--muted);
     background: var(--chip-bg); padding: 1px 8px; border-radius: 999px; }
   .col.unassigned .col-head .title { color: var(--warn-tx); }
-  .chips { display: flex; flex-direction: column; gap: 8px; min-height: 24px; }
+  /* UI-071: `.chips` -> `.col-chips`. slo-health ka `.chips` qatar mein bahta hai,
+     ye column hai -- ek naam, do layout the. */
+  .col-chips { display: flex; flex-direction: column; gap: 8px; min-height: 24px; }
   .chip {
     border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 9px;
     background: var(--panel); display: flex; flex-direction: column; gap: 6px;
