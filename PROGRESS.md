@@ -1,5 +1,135 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-28 — UI-070: item 7 ka pehla nisf — `btn` + `page-head`, aur do census ghaltiyan meri apni
+
+`legacy_css_lines` **1759 → 1757 (−2)** · `unsanctioned_hex` **334 → 333 (−1)** ·
+**1075 pass**, ruff saaf · type probe **2543**, state probe **1530** · frozen inventory
+das pages par yaksan.
+
+Item 7 ko do sessions mein baanta gaya — chaar families aur paanch faisle ek diff mein
+un-reviewable ho jate (`ROADMAP.md` ka apna qaida). Ye pehla nisf: `btn` + `page-head`.
+
+### 1. D49 ka nateeja ship hua — `cursor: not-allowed` pehli dafa zinda
+
+`03-elements/forms.css` ko `button:disabled { cursor: not-allowed }` mila. Yahan rakhne ki
+wajah ye hai ke **jise harana tha wo isi file mein us se teen satar upar hai** — bare
+`button { cursor: pointer }`. Ek hi layer, aur `(0,1,1)` banaam `(0,0,1)`, yani specificity
+se jeet — source order par bharosa nahi. Component file mein rakhna ghalat hota: ye disabled
+controls ke bare mein element-darja haqeeqat hai, `.btn--*` variant nahi.
+
+Chhe legacy declarations delete: `blueprint:48`, `index:96`, `library:185`, `print:74`,
+`print:83`, `slo:31`.
+
+**State probe: 1050 `cursor: pointer → not-allowed`** — bank 921, library 68, index 44,
+print 12, blueprint 3, slo 2. Ye adad hi is task ka nateeja hai: UI-063 ka faisla
+2026-08-26 ko hua tha aur **aaj tak ek bhi pixel par render nahi hua tha**.
+
+⚠ **Ab ye chhe se zyada buttons par lagta hai** — `button:disabled` un buttons ko bhi
+pakadta hai jin ki apni kabhi koi rule nahi thi. Ye maqsood hai (Irfan ka faisla "har
+disabled button" tha) magar likha ja raha hai kyunke scope chhe rules se bara hai.
+
+⚠ **Magar "har" bhi ghalat lafz hai, aur review ne naap kar pakda.** Ek bare-class
+`cursor: pointer` jo `layer(components)` mein ho wo is rule ko harata hai — layer upar
+hai, specificity ka koi dakhal nahi. **Yani wohi shakal jo bug ki thi, ulti taraf se.**
+Do aisi classes hain jin ka apna `:disabled` sathi nahi:
+
+```
+btn.css:380          .btn-save, .btn-cancel { cursor: pointer }
+                     .btn-save:disabled hai (:400), .btn-cancel ka nahi
+pages/print.css:291  .ps-range-all { cursor: pointer }, koi :disabled nahi
+```
+
+Naapa gaya: `.btn-cancel` disabled kar ke bhi `pointer` deta hai. Aaj ye dono kabhi
+disabled hote hi nahi (`bank.html`:605, `print.html`:223/257/66 — sab static), to kuch
+ghalat render nahi hota. **Aur yehi wajah hai ke `bank` par 921 deltas aaye jab ke us par
+928 buttons hain** — farq isi carve-out ka hai. `index` par 44 deltas banaam 36 buttons
+ulta sabab rakhta hai: `cursor` inherit hone wali property hai, to disabled button ke
+andar ke `<span>` bhi ginti mein aate hain.
+
+### 2. D47(a) band — jhoota comment durust
+
+`forms.css` khulа to D47(a) apni tehreer ke mutabiq due thi. Comment kehta tha
+`:focus-visible` "being later in the file it wins". **Nahi jeetta.** Dono `layer(elements)`
+mein hain, to source order ka koi dakhal nahi — **specificity faisla karti hai**, aur
+`input:focus` `(0,1,1)` hai jab ke `:focus-visible` `(0,1,0)`. Keyboard focus par dono
+match karte hain aur `outline: none` qaim rehta hai; field ka indicator teal border + 3px
+glow hai. **Rendering ghalat nahi — sirf comment ghalat tha.** D47(b) (ring ya glow) ab
+bhi khuli hai aur Irfan ki hai.
+
+### 3. `btn-danger` / `btn-edit` — aur meri census ghalti
+
+Maine Irfan ko bataya tha ke ye "dono pages par ek-ek button hain, barabari hai", aur usi
+bunyaad par unhone `library` wali size chuni. **Wo bunyaad ghalat thi.** Probe:
+
+```
+.btn-danger    bank n=459    library n=24
+.btn-edit      bank n=459    library n=24
+```
+
+Maine sirf static HTML ka template gina tha — **ye buttons JS se render hote hain**, har
+question row par ek jodi. 483 buttons, do nahi, aur `bank` un ka 95% rakhta hai. Faisla
+sahi ginti ke saath dobara liya gaya: **bank wali (12px / 4px 10px)**, yani 48 buttons
+hile, 918 nahi. `library` ka `.btn-edit` border `#c0d0ea` → `var(--border)` bhi gaya, jo
+bank pehle se paint karta tha — ek raw hex kam.
+
+**Teen session se yehi sabaq lag raha hai aur is dafa main hi us mein phansa.** Markup ginna
+kaafi nahi jab markup JS se banta ho — probe ka `n` hi asal ginti hai (D12).
+
+### 4. `page-head` → `.pagehead`, aur wo wrapper `<div>` jo faisle mein nahi tha
+
+`.pagehead` chaar pages par pehle se live tha (blueprint, slo, taqseem, plan). Teen baqi
+(bank, library, slo-health) `.page-head` par thay. Rename hua, 6 legacy lines gayin, aur ab
+**koi page `.page-head` nahi pehnta.**
+
+⚠ **Pehli koshish ghalat thi aur probe ne pakdi.** `.pagehead` `display: flex` hai. Maujooda
+chaar pages apne `<h1>` + `<p>` ko ek `<div>` mein lapetate hain, yani flex ka **ek hi
+child** hota hai aur andar sab kuch normal stack karta hai. Teen nayi pages par `<h1>` aur
+`<p>` **seedhe children** thay — flex ne unhein **saath saath** rakh diya, aur naapa gaya:
+
+```
+slo-health  h1        26.39px -> 52.78px     (do lines par wrap)
+slo-health  #draftNote 32.12px -> 86.50px    (teesra flex child, dab gaya)
+h1/p        min-height 0px -> auto           (flex item ban gaye)
+```
+
+`slo-health` par to ek **teesra** element bhi tha — `#draftNote` — jo faisle mein zikr hi
+nahi hua tha. Teeno par wrapper `<div>` daal kar shakal maujooda chaar jaisi kar di gayi;
+2798 deltas ghat kar 2543 reh gaye aur wrapping wale sab ghayab.
+
+⚠ **Aur ye trap pehle se likha hua tha — maine parha hi nahi.** Chaaron maujooda pages ke
+markup mein ek comment maujood hai: *".pagehead is display:flex — the inner `<div>` is
+what keeps the title and subtitle stacked… which is what this page did until
+2026-08-15."* Yani blueprint isi mein gir chuka tha aur warning chhod gaya tha. **Maine
+CSS parhi aur markup ka comment nahi** — wohi ek darja jo bachaata. Ab teeno nayi pages
+par bhi wohi comment hai (review ne yaad dilaya).
+
+**Jo preview maine Irfan ko dikhaya tha (h1 aur p ek line par) wo ghalat tha** — sahi
+adoption stack ko waisa hi rakhta hai. Asal tabdeeli sirf itni hai: container ka
+`margin` 0/24 → 6/22, aur `p` ka rang `--muted` → `--color-text-muted`, `margin-top` 3px,
+`max-width` 620px. Saaton pages ab hu-ba-hu ek jaise.
+
+### 5. `card.css` ka **teesra** basi dawa — jo UI-068 mein mujh se chhoot gaya
+
+Header kehta tha `.pagehead` rules "off every live page — **0 matches, measured**".
+`.pagehead` us waqt **chaar pages par live tha**. UI-068 ne isi header ke **do** basi dawe
+theek kiye (13-element census aur `.ch` wala) aur **yehi teesra chhod diya**. `main.css`
+:180 par bhi wohi teen dawe naql shuda thay — dono jagah durust.
+
+**Sabaq: jab ek comment block ka koi hissa ghalat nikle, poora block parho** — sirf wo
+jumla nahi jis par thokar lagi.
+
+### 6. Ratchet phir upar gaya — CHAUTHI dafa — aur phir mere comment se
+
+Pehli measurement par `legacy_css_lines` 1759 → **1760**. Maine `library.css` mein chaar
+line ka comment likh diya tha. Chhota kar ke **1757**.
+
+Aur usi comment mein **ek raw hex** (`#c0d0ea`) tha — **is session mein doosri dafa**
+(pehli `nav.css` mein, UI-069). `unsanctioned_hex` us ke nikalne par hi 334 se 333 hua.
+Qaida `card.css` ke header mein pehle se likha hai aur ab paanch nahi, **saat** dafa fail
+ho chuka hai — har dafa comment ke zariye.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
 ## 2026-08-28 — UI-069a: D49 — probe andha nahi tha, CSS murda thi
 
 Item 7 se pehle wala gate task, bilkul UI-064 wali shakal: pehle aala theek karo, phir us

@@ -71,7 +71,7 @@
     font-family: inherit; display: flex; align-items: center; justify-content: center;
   }
   .ps-stepper button:hover { background: #38507f; }
-  .ps-stepper button:disabled { opacity: .5; cursor: not-allowed; }
+  .ps-stepper button:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   .ps-value { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #fff; }
   .ps-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
   .ps-save {
@@ -80,7 +80,7 @@
     font-family: inherit; cursor: pointer;
   }
   .ps-save:hover { background: var(--tint); }
-  .ps-save:disabled { opacity: .5; cursor: not-allowed; }
+  .ps-save:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   .ps-reset {
     padding: 7px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius-btn);
     background: none; color: #C7D2E6; font-size: 12.5px; font-family: inherit; cursor: pointer;

@@ -28,7 +28,7 @@
     padding: 10px 16px; background: var(--color-action); color: #fff;
   }
   .btn:hover { background: var(--color-action-hover); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   /* Box — forms.css:80. min-height is NEW (this page had no control height). NOT
      margin-top: this page has zero <label> elements and `.row` above is a centred
      horizontal flex, so 6px would drop these below their button row-mates. Not

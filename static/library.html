@@ -40,9 +40,15 @@
 </aside>
 
 <main class="lib-main">
-  <div class="page-head">
-    <h1>Image Library</h1>
-    <p>Shared images upload karen — subject, class aur topic tag karen taake auto-suggest kaam kare.</p>
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side. UI-070 adopted this class here and hit exactly that on the first
+       attempt; the probe caught it. See mockup-modern.html:279. -->
+  <div class="pagehead">
+    <div>
+      <h1>Image Library</h1>
+      <p>Shared images upload karen — subject, class aur topic tag karen taake auto-suggest kaam kare.</p>
+    </div>
   </div>
 
   <!-- ===== UPLOAD FORM ===== -->

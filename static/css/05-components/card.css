@@ -38,12 +38,21 @@
    not a defect. Recorded so the next reader does not re-derive it from the
    old 0 / 0 / 0.
 
-   THE `.pagehead` RULES REST ON ONE HYPHEN. The live pages carry
-   `.page-head`; theme.css writes `.pagehead`. PLAN.md:48 records the fork
-   ("`.page-head` (4 pages) vs `.pagehead` (theme.css)") and it is what keeps
-   these three rules off every live page — 0 matches, measured. That is
-   load-bearing, not a typo, the same way `.btn-primary` and `.btn--primary`
-   differ by one hyphen in btn.css.
+   THE `.pagehead` HYPHEN FORK IS CLOSED — UI-070, 2026-08-28. This block used
+   to end "it is what keeps these three rules off every live page — 0 matches,
+   measured", and that was **the third stale claim in this header**, alongside
+   the 13-element census and the `.ch` note above. It went stale quietly: by
+   2026-08-28 `.pagehead` was live on FOUR pages (blueprint, slo, taqseem,
+   plan) and these rules had been painting them for weeks. **UI-068 corrected
+   the other two claims in this same header and missed this one** — which is
+   the argument for reading a whole comment block when any part of it is
+   found wrong, not just the sentence that tripped you.
+
+   The fork itself: the live pages spelled it `.page-head`, theme.css wrote
+   `.pagehead`, and PLAN.md:48 recorded the split. UI-070 renamed the last
+   three (bank, library, slo-health) in markup and deleted their six legacy
+   lines, so all seven pages now wear this rule and no page carries
+   `.page-head` at all. The hyphen is no longer load-bearing anywhere.
 
    WHAT THIS UNBLOCKS. The line above used to read "it prepares a component
    and releases no page", and said taqseem's bare `.card` would "arrive with

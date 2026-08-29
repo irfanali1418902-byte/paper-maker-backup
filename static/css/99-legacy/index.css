@@ -93,7 +93,7 @@
     font-family: inherit; box-shadow: 0 6px 16px rgba(46,90,172,.3); cursor: pointer;
   }
   .gen-btn:hover { background: var(--color-action-hover); }
-  .gen-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  .gen-btn:disabled { opacity: .5; box-shadow: none; }   /* cursor -> forms.css (D49) */
   .ghost-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 9px;
     background: #fff; border: 1px solid #D6DEEA; color: var(--ink);

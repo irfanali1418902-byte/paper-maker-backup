@@ -7,8 +7,25 @@
 
 ## ▶ NEXT SESSION — START HERE (2026-08-28)
 
-**Items 1–6 are done. Take item 7 — `btn` + `chip/pill/row` + `shortfall` + `page-head`,
-39 lines, 3–4 small decisions. The tail; possibly one session.**
+**Items 1–6 are done, and item 7's FIRST HALF shipped as UI-070 (`btn` + `page-head`).
+Take item 7's second half — `shortfall` (20 lines, blueprint + print) and
+`chip/pill/row` (11 lines, index + slo + slo-health + taqseem). Two decisions, and
+BOTH ARE DESIGN FORKS, not value differences:**
+
+* **`shortfall-panel`** — its six inner rules are byte-identical on both pages; only the
+  box differs (blueprint: white surface + 3px left rail · print: amber fill). **Irfan
+  decided 2026-08-28: keep both boxes, move the six shared rules to a component.** print
+  is a printed page and an amber fill costs toner.
+* **`.chips`** — `slo-health` is `flex-wrap: wrap`, `taqseem` is `flex-direction: column`.
+  **Irfan decided 2026-08-28: keep both, give them different names** — one class doing two
+  layouts is the `.tag` problem again (`pages/index.css`:189).
+* Still undecided and small: `.row` gap (slo/slo-health 10px vs taqseem 12px), `.pill`
+  (index 11.5px/radius 99 vs slo 13px/radius 20), `.empty-state` padding (16 vs 18).
+  `.slo-main` is an `agree` freebie. ⚠ **`.slo-main` and `.empty-state` are filed under
+  `chip/pill/row` by the audit regex and are neither** — see the label warning below.
+
+⚠ **Item 7 was split because four families and five decisions in one diff breaks the
+project's own reviewability rule.** Do not re-merge them.
 
 ⚠ **The census lesson has now fired THREE sessions running, and item 7 is four families
 in one row — the highest-risk shape yet for it.** Item 5's "58 lines, 5 files" missed an
@@ -23,14 +40,42 @@ brand at all. **Count the thing in the MARKUP, and check `pages/*.css` as well a
 its closing line. `slo.html` has two live `class="btn"` buttons and a bare `.btn` in
 layer(components) would take them. Read that note before planning item 7.
 
-⚠ **D49 was the gate for item 7 and it is now SETTLED — UI-069a, 2026-08-28 — but the
-answer made item 7 bigger, not smaller.** The probe was never blind: `forms.css`:155's bare
-`button { cursor: pointer }` in `layer(elements)` beats `layer(legacy)`, so **all six
-`cursor: not-allowed` declarations in `99-legacy/` are inert and always have been.** UI-063
-chose `not-allowed` for every disabled button on 2026-08-26 and **it has never rendered.**
-Item 7 must therefore ask Irfan whether he still wants it — and shipping it means lifting a
-declaration above `layer(legacy)`, which is D51, the move that broke six pages in UI-066.
-`PROBES.md` rule 9 has the general lesson.
+## UI-070 — item 7, pehla nisf: `btn` + `page-head`. **2026-08-28.**
+
+`legacy_css_lines` **1759 → 1757**, hex **334 → 333**. 1075 pass, ruff saaf. Type 2543,
+state **1530 — jin mein 1050 `cursor: pointer → not-allowed`**. Frozen inventory yaksan.
+Tafseel `PROGRESS.md` 2026-08-28.
+
+**D49 ka nateeja ship hua.** `forms.css` ko `button:disabled { cursor: not-allowed }` mila
+— usi file mein, kyunke jise harana tha (`button { cursor: pointer }`) wo teen satar upar
+hai; ek hi layer, `(0,1,1)` banaam `(0,0,1)`. UI-063 ka faisla **pehli dafa render hua**.
+⚠ Magar "har disabled button" ghalat lafz hai: `layer(components)` ka bare-class
+`cursor: pointer` ise harata hai. `btn.css`:380 `.btn-cancel` aur `pages/print.css`:291
+`.ps-range-all` ke apne `:disabled` nahi hain — aaj dono kabhi disabled hote hi nahi.
+
+**`.btn-danger`/`.btn-edit` `bank` ki size par.** ⚠ **Faisla pehle GHALAT ginti par diya
+gaya tha.** Maine markup gina — ek-ek — magar ye buttons **JS se bante hain**: probe kehta
+hai `bank` 459, `library` 24. Sahi ginti par faisla ulat gaya. **Markup ginna kaafi nahi
+jab markup JS banata ho (D12); `n` probe se lo.**
+
+**`.page-head` → `.pagehead`, saaton pages ab ek jaise**, aur `.page-head` ab kahin nahi.
+⚠ **Pehli koshish tori thi:** `.pagehead` `display:flex` hai aur maujooda chaar pages apne
+`h1`+`p` ko ek `<div>` mein lapetate hain. Bina wrapper ke `slo-health` ka h1 do lines par
+gaya aur us ka teesra child `#draftNote` dab gaya. **Warning un chaar pages ke MARKUP
+comment mein pehle se likhi thi — maine CSS parhi, markup ka comment nahi.** Ab teeno nayi
+pages par bhi wohi comment hai.
+
+**`card.css` ka teesra basi dawa theek** — `.pagehead` "0 matches, measured" jab ke wo
+chaar pages par live tha. **UI-068 ne isi header ke do dawe theek kiye thay aur yehi
+chhod diya.** Sabaq: ek jumla ghalat mile to poora block parho.
+
+**D47(a) band** — `forms.css` ka jhoota focus comment durust. **D47(b) khuli hai.**
+
+⚠ **Ratchet CHAUTHI dafa upar gaya** (1759 → 1760) mere comment se, aur usi comment mein
+**doosri dafa** ek raw hex tha. Dono theek; magar ye qaida ab **saat** dafa fail ho chuka
+hai aur **har dafa comment ke zariye**.
+
+⬜ **Browser check nahi hua.**
 
 **The whole remaining plan — both tracks, all six sessions, and when each deferred row is
 due — is `docs/ui/ROADMAP.md` → "📋 THE PLAN FROM HERE", settled 2026-08-27.** Read that

@@ -29,8 +29,7 @@
   /* ---- Main ---- */
   .lib-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-  .page-head { margin-bottom: 24px; }
-  .page-head p  { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+  /* UI-070: page-head -> `.pagehead`, 05-components/card.css. */
 
   /* ---- Card ---- UI-068: bare `.card` -> 05-components/card.css. */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
@@ -50,9 +49,10 @@
   /* .btn-primary + states: 05-components/btn.css (UI-041) */
 
 
+  /* UI-070: size bank ki (majority). PROGRESS.md 2026-08-28. */
   .btn-danger {
     background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
-    padding: 5px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer; min-height: 0;
   }
   .btn-danger:hover { background: #fdd; }
@@ -102,8 +102,8 @@
   .bulk-result-list li.err  { background: var(--err-bg);  color: var(--err-tx); }
 
   .btn-edit {
-    background: var(--tint); border: 1px solid #c0d0ea; color: var(--primary);
-    padding: 5px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 600;
+    background: var(--tint); border: 1px solid var(--border); color: var(--primary);
+    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer; min-height: 0;
   }
   .btn-edit:hover { background: var(--primary); color: #fff; }
@@ -182,7 +182,7 @@
   }
   .pg-btn:hover:not(:disabled) { background: var(--tint); color: var(--primary); border-color: var(--primary); }
   .pg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; cursor: default; }
-  .pg-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .pg-btn:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   .pg-info { font-size: 12.5px; color: var(--muted); padding: 0 4px; }
 
   @media (max-width: 760px) {

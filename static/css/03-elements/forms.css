@@ -126,9 +126,24 @@ textarea {
   resize: vertical;
 }
 
-/* Mouse and keyboard focus both land here; :focus-visible below re-adds a real
-   outline for keyboard users, and being later in the file it wins. Same order,
-   same pair, as theme.css. */
+/* ⚠ D47(a), CORRECTED 2026-08-28 — THIS COMMENT SAID THE OPPOSITE OF WHAT THE
+   CASCADE DOES, AND THE FILE HAD BEEN READ AS DOCUMENTATION FOUR TIMES SINCE.
+   It read: ":focus-visible below re-adds a real outline for keyboard users, and
+   being later in the file it wins." **It does not win.** Both rules sit in
+   layer(elements), so source order never gets a say — SPECIFICITY DECIDES, and
+   `input:focus` is (0,1,1) against `:focus-visible`'s (0,1,0). During real
+   keyboard focus both match, and this rule's `outline: none` holds.
+
+   So a focused field's indicator is THIS rule's teal border + 3px glow, not the
+   2px outline below. Measured with css_state_probe forcing
+   ["focus","focus-visible"] on `select#fSubject`: border-top-color
+   rgb(14,165,164), box-shadow rgb(220,245,244) 0 0 0 3px, outline-style none.
+
+   THE RENDERING IS NOT WRONG — the glow is a real, visible focus indicator and
+   Irfan confirmed it by eye on bank, 2026-08-25. Only the comment was wrong.
+   Whether fields SHOULD ring on outline instead is D47(b), still open and still
+   Irfan's; making :focus-visible win would change focus on every field in the
+   app. Do not "fix" that as a side effect of reading this note. */
 input:focus,
 select:focus,
 textarea:focus {
@@ -154,6 +169,46 @@ input[type="range"] {
 button {
   font-family: inherit;
   cursor: pointer;
+}
+
+/* THE DISABLED CURSOR, AND IT IS HERE RATHER THAN IN btn.css FOR ONE REASON:
+   the main rule it has to beat is the one directly above.
+
+   SIX DECLARATIONS ACROSS FIVE LEGACY FILES declared `cursor: not-allowed` on
+   a `:disabled` button — blueprint:48, index:96, library:185, print:74,
+   print:83 (print carries two), slo:31 — and every one of them was INERT,
+   because they sit in layer(legacy) and `button` above sits in
+   layer(elements), which wins whatever the specificity. UI-063 chose
+   `not-allowed` for every disabled button on 2026-08-26 and it had never once
+   rendered. D49 settled that on 2026-08-28 with a four-button control page;
+   PROBES.md rule 9 carries the general lesson.
+
+   Same layer, and (0,1,1) against `button`'s (0,0,1), so this wins on
+   specificity and does not depend on source order.
+
+   ⚠ IT DOES NOT REACH EVERY DISABLED BUTTON, AND THE EXCEPTION IS THE SAME
+   SHAPE AS THE BUG IT FIXES — one layer up instead of one down. A bare-class
+   `cursor: pointer` in layer(components) outranks this rule whatever the
+   specificity, so any such class WITHOUT its own `:disabled` companion still
+   measures `pointer` when disabled. Two exist, both found by review 2026-08-28
+   and both measured, not reasoned:
+
+     btn.css:380      `.btn-save, .btn-cancel { cursor: pointer }`
+                      `.btn-save:disabled` exists at :400; `.btn-cancel` has none
+     pages/print.css:291  `.ps-range-all { cursor: pointer }`, no `:disabled`
+
+   Neither is ever disabled in the app today (bank.html:605, print.html:223/257,
+   print.html:66 — all static, none disabled), so nothing renders wrong. Give a
+   new component class a `:disabled` rule of its own, or leave `cursor` off it
+   and let this one through.
+
+   This is an element-level fact about disabled controls, not a button-component
+   variant, which is the other reason it belongs in this file. btn.css's own
+   `:disabled` rules stay there — note they are NOT only `.btn--*`:
+   `.btn-primary:disabled` (:298) and `.btn-save:disabled` (:400) are
+   single-hyphen legacy names. Irfan, 2026-08-28: yes, still wanted. */
+button:disabled {
+  cursor: not-allowed;
 }
 
 :focus-visible {
