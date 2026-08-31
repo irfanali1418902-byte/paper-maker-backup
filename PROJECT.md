@@ -9,13 +9,13 @@ Yeh ek AI-powered exam paper generator hai jo:
 3. Balanced exam paper assemble karta hai (expected difficulty + balance summary ke saath)
 4. Student results analyze karta hai (dashboard + P-value/D-index item analysis)
 5. Class ki kamzoriyon se adaptive paper banata hai (Phase 3)
-6. Word (.docx) aur PDF export karta hai
+6. Paper browser se chhapta hai (`print.html` + print CSS) — Word/PDF export **delete ho chuka** (2026-08-13, `e2bdcc4`)
 
 ## TECH STACK
 - Backend: Python + FastAPI
 - Database: SQLite (paper_maker.db)
 - AI: Anthropic Claude API
-- Export: python-docx + LibreOffice headless
+- Output: browser print (`static/print.html`) — **export deleted 2026-08-13, `e2bdcc4`**
 - Font: Jameel Noori Nastaleeq (Urdu)
 - Tests: pytest (128/128 passing)
 
@@ -55,8 +55,7 @@ paper-maker-mvp/
 - Student ranking (competition-style: 1,1,3)
 - Pass threshold: 33% (KPK board standard)
 - Dashboard frontend UI (`static/dashboard.html`)
-- Word (.docx) export with Jameel Noori Nastaleeq
-- PDF export via LibreOffice headless
+- ~~Word (.docx) export~~ / ~~PDF export via LibreOffice~~ — **deleted 2026-08-13 (`e2bdcc4`)**; browser print replaced both
 
 ### ✅ Phase 2.5 — Item Analysis (psychometrics)
 - Expected difficulty (Bloom → Easy/Medium/Hard) + paper balance summary at build time
@@ -74,9 +73,7 @@ paper-maker-mvp/
 - 128/128 pytest passing
 
 ## NEXT TASKS (Priority Order)
-- [ ] LibreOffice install verify karo — PDF end-to-end test
 - [ ] Syllabus PDF upload — topics auto-extract
-- [ ] README mein LibreOffice install step add karo
 - [ ] Per-student adaptive papers (abhi whole-class only)
 - [ ] Topic-level weakness targeting (abhi Bloom-level only)
 - [ ] Adaptive: weak level mein bank khali ho to AI se auto-generate
@@ -98,10 +95,6 @@ POST /api/paper/{paper_id}/upload-results    # Filled results CSV upload + valid
 GET  /api/paper/{paper_id}/uploads       # Paper ki uploads list
 GET  /api/paper/{paper_id}/dashboard     # Latest upload dashboard
 GET  /api/upload/{upload_id}/dashboard   # Specific upload dashboard
-
-# Export
-GET  /api/paper/{paper_id}/export.docx   # Word export (Jameel Noori Nastaleeq)
-GET  /api/paper/{paper_id}/export.pdf    # PDF export (LibreOffice headless)
 
 # Syllabus + settings
 GET  /api/syllabus-grades                # Distinct (subject, grade) pairs
@@ -157,7 +150,7 @@ http://localhost:8000
 - Pass threshold = 33% (KPK board) — Swat ka alag ho to batao
 - Ranking = competition style (ties: 1, 1, 3)
 - Urdu font = Jameel Noori Nastaleeq
-- PDF ke liye LibreOffice install hona zaroori hai
+- Urdu Nastaliq mein chhapne ke liye font us PC par install hona chahiye jahan se print ho
 
 ## RELATED CONFIG
 - Coding conventions: `CLAUDE.md`

@@ -2,7 +2,7 @@
 
 This document describes the architecture of `paper-maker-mvp`: its layering,
 folder structure, database schema, HTTP API, how the AI provider is used, and
-how paper export works. It is also the **layering contract** that every
+how papers are printed. It is also the **layering contract** that every
 contributor (human or AI) must follow when adding or modifying code.
 
 `CLAUDE.md` (coding conventions) sits on top of this document. If the two ever
@@ -118,7 +118,6 @@ paper-maker-mvp/
 │   │   ├── questions.py        #   /api/generate-questions, /api/questions
 │   │   ├── papers.py           #   paper assembly, adaptive, replace, results upload
 │   │   ├── dashboard.py        #   result analyzer read views
-│   │   ├── export.py           #   /export.docx, /export.pdf
 │   │   ├── syllabus.py         #   syllabus grades/topics + PDF/ZIP import
 │   │   ├── school_settings.py  #   letterhead settings (singleton)
 │   │   └── stats.py            #   home-screen quick stats
@@ -134,7 +133,6 @@ paper-maker-mvp/
 │   │   ├── syllabus_service.py #   PDF/ZIP parse -> AI extract -> save topics
 │   │   ├── settings_service.py #   school settings get/save
 │   │   ├── stats_service.py    #   quick stats aggregation
-│   │   ├── export_service.py   #   .docx render + PDF conversion
 │   │   └── exceptions.py       #   domain exceptions (raised by services)
 │   ├── repositories/           # REPOSITORIES — the only SQL
 │   │   ├── questions_repository.py
@@ -151,7 +149,7 @@ paper-maker-mvp/
 ├── static/
 │   ├── index.html              # paper maker + adaptive frontend
 │   ├── dashboard.html          # result analyzer dashboard
-│   └── print.html              # printable paper layout (mirrored by .docx export)
+│   └── print.html              # printable paper layout (browser print — the only output)
 ├── tests/                      # pytest suite (services, repos, HTTP routes)
 │   └── fixtures/               # sample CSVs (syllabus + happy_birds results)
 ├── scripts/                    # CLI tools — run as `python -m scripts.<name>`
@@ -321,13 +319,6 @@ Paths use kebab-case. FastAPI serves interactive docs at `/docs`.
 | GET    | `/api/paper/{paper_id}/dashboard`   | Full dashboard for the paper's latest upload.      |
 | GET    | `/api/upload/{upload_id}/dashboard` | Full dashboard for a specific upload.              |
 
-### Export
-
-| Method | Path                              | Purpose                                    |
-|--------|-----------------------------------|--------------------------------------------|
-| GET    | `/api/paper/{paper_id}/export.docx` | Download the paper as Word (.docx).      |
-| GET    | `/api/paper/{paper_id}/export.pdf`  | Download the paper as PDF (via LibreOffice).|
-
 ### Syllabus & settings
 
 | Method | Path                          | Purpose                                                |
@@ -356,7 +347,7 @@ Every handler returns JSON on **every** path. Services raise domain exceptions
 | 404    | Referenced resource doesn't exist.                                |
 | 422    | Pydantic validation failed (FastAPI does this automatically).     |
 | 500    | Our code / DB broke.                                              |
-| 502    | Upstream provider broke (Gemini/Claude, or LibreOffice for PDF).  |
+| 502    | Upstream provider broke (Gemini/Claude).                          |
 
 Detail strings are short, user-facing, and Hinglish-OK (the frontend shows them
 directly to teachers).
@@ -414,48 +405,26 @@ Each builds a prompt, calls `_call_ai(...)`, and parses with `_extract_json(...)
 
 ---
 
-## 7. Export flow
+## 7. Printing (there is no export flow)
 
-Export is handled by `app/services/export_service.py`. One layout, two formats:
-the PDF is rendered from the exact same `.docx`.
+> ⛔ **This section used to document `app/services/export_service.py` — a file that
+> has not existed since 2026-08-13 (`e2bdcc4`).** It described `build_paper_docx`,
+> `build_paper_pdf`, `_find_soffice`, the LibreOffice profile cache and its warm/cold
+> timings, in ~40 lines of confident detail. Two API routes above it (`export.docx`,
+> `export.pdf`) were listed the same way and would 404. **Measured 2026-08-31:** no
+> `soffice`, `docx` or `LibreOffice` reference survives anywhere in `app/` or
+> `scripts/`, and `python-docx` is not in `requirements.txt`.
 
-**Word (`.docx`):** `build_paper_docx(paper_id)`
+Papers are printed **from the browser**. `static/print.html` renders the paper and
+the teacher prints with Ctrl+P (or the page's Print button, which awaits
+`img.decode()` on every image first so nothing prints half-loaded).
 
-1. `_load_paper` fetches the paper (`papers_repository`), each question
-   (`questions_repository`), and the letterhead (`settings_repository`).
-   Returns `None` if the paper doesn't exist → the route maps that to 404.
-2. `_render_paper` builds the document with python-docx, mirroring
-   `static/print.html`: letterhead (logo, school name EN/UR, address, accent
-   bottom border), title, meta table (name/class/date/roll/marks/time), a
-   bilingual instruction line, then numbered questions.
-3. Each question renders the English text with its marks, the Urdu text as a
-   right-to-left paragraph, an optional emoji visual row, and MCQ options in a
-   two-column grid (or an answer line if none).
-4. **Urdu handling:** Urdu runs get the complex-script font
-   (`Jameel Noori Nastaleeq` on `w:rFonts w:cs`) plus a `w:rtl` flag, and their
-   paragraphs are marked `w:bidi` so Word lays them out right-to-left.
-5. Returns the `.docx` as bytes; the route streams it with a `.docx`
-   `Content-Disposition`.
+The print rules live in CSS, not in a service: `@page` margins, `.no-print` for the
+chrome, and per-class print settings (`class_print_settings`) that the page applies
+as CSS custom properties at runtime.
 
-**PDF:** `build_paper_pdf(paper_id)`
-
-1. Calls `build_paper_docx` first (same bytes, `None` → 404).
-2. `_convert_docx_to_pdf` locates the LibreOffice binary via `_find_soffice`
-   (`SOFFICE_PATH` → PATH → common install locations). If not found, raises
-   `PdfConversionFailed` → route maps to 502. Word export still works without
-   LibreOffice.
-3. Writes the `.docx` to a temp dir and runs headless LibreOffice:
-   `soffice --headless -env:UserInstallation=<profile> --convert-to pdf --outdir <tmp> <docx>`.
-   A **persistent profile** in the system temp dir is reused across calls so
-   warm conversions are fast (~13s vs ~50s cold). Timeout is 120s.
-4. On non-zero exit / missing output / timeout, raises `PdfConversionFailed`
-   with the trimmed LibreOffice stderr. Otherwise returns the PDF bytes.
-
-For faithful Urdu output the **Jameel Noori Nastaleeq** font must be installed
-on the machine that runs LibreOffice; otherwise a fallback font is substituted.
-The conversion assumes a single concurrent conversion (single-school MVP) — the
-LibreOffice profile lock means concurrent calls can clash; async is out of scope
-(see §8).
+**Urdu:** the browser needs **Jameel Noori Nastaleeq** installed on the printing
+machine; otherwise it substitutes a fallback font.
 
 ---
 

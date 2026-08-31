@@ -39,10 +39,13 @@ database server, no cloud dependency beyond the AI provider.
 - **Syllabus import** — upload a text-based PDF, or a ZIP of PDFs and page
   images (JPG/PNG), and the AI extracts structured units/topics (using vision
   for images) so teachers can select topics from a dropdown instead of typing.
-- **Export** — download any paper as an editable Word `.docx` (with Urdu RTL /
-  Nastaliq support) or as a PDF (rendered from the same `.docx` via headless
-  LibreOffice). Papers carry an optional school letterhead (name, address,
-  logo, accent color).
+- **Printing** — papers are printed **from the browser** (`static/print.html`,
+  Ctrl+P), with print-specific CSS, per-class print settings, and an optional
+  school letterhead (name, address, logo, accent color). Urdu renders in
+  Nastaliq using the font installed on the machine.
+  *(There is no Word/PDF export. It existed once and was deleted in `e2bdcc4`,
+  2026-08-13 — 621 lines nothing called, plus a LibreOffice subprocess
+  dependency.)*
 
 ---
 
@@ -58,10 +61,9 @@ database server, no cloud dependency beyond the AI provider.
 | HTTP client  | `requests` (to the AI providers)                              |
 | PDF parsing  | PyMuPDF (text + page-image extraction for syllabus import)    |
 | Spreadsheets | pandas + openpyxl (results template / upload)                 |
-| Word export  | python-docx                                                   |
-| PDF export   | headless LibreOffice (`soffice --convert-to pdf`)             |
+| Printing     | Browser print (`static/print.html` + print CSS) — **no Word/PDF export**, deleted in `e2bdcc4` |
 | Frontend     | Static HTML/JS (`static/`) served by FastAPI                  |
-| Urdu font    | Jameel Noori Nastaleeq (must be installed on the box that renders PDFs) |
+| Urdu font    | Jameel Noori Nastaleeq (installed on the machine that prints)  |
 | Tooling      | ruff (lint), black (format), pytest (tests), pre-commit       |
 | Deployment   | **None — runs locally.** Cloud plan closed 2026-08-31 (O1); see below |
 
@@ -77,8 +79,6 @@ contract and [`CLAUDE.md`](CLAUDE.md) for coding conventions.
 
 - Python 3.10 or newer (3.12 is the pinned version in `.python-version`).
 - Git.
-- (Optional, for PDF export only) LibreOffice — see
-  [PDF export](#pdf-export-libreoffice) below.
 
 ### 2. Install dependencies
 
@@ -144,7 +144,6 @@ generation to work. Full descriptions and placeholders are in `.env.example`.
 | `GEMINI_API_KEY`    | One of Gemini/Anthropic           | Google Gemini key (free tier). Used when Anthropic key is absent.       |
 | `ANTHROPIC_API_KEY` | One of Gemini/Anthropic           | Anthropic Claude key (paid). **Takes priority** over Gemini if set.     |
 | `DB_PATH`           | No (defaults to `paper_maker.db`) | Absolute/relative path to the SQLite file (point at a volume in prod).  |
-| `SOFFICE_PATH`      | No (auto-detected)                | Explicit path to the LibreOffice `soffice` binary for PDF export.       |
 | `PORT`              | No                                | Unused — nothing in `app/` reads it. It existed for the deploy start command; that was closed 2026-08-31 (O1). |
 
 Never commit `.env`. `.gitignore` already ignores `.env` and `.env.*`.
@@ -160,7 +159,7 @@ Never commit `.env`. `.gitignore` already ignores `.env` and `.env.*`.
 3. Click **Build paper from bank** — a balanced paper is assembled (each
    question shows its expected difficulty, plus a paper-level balance summary).
    You can manually replace individual questions from the bank.
-4. **Export** the paper as Word or PDF, or print it.
+4. **Print** the paper from the browser (`print.html` → Ctrl+P).
 5. Download the **results CSV template**, fill in each student's marks per
    question, and upload it on the dashboard (`/dashboard.html`) to see
    rankings, P-value, D-index, and bad-question flags.
@@ -181,24 +180,22 @@ result set for an existing paper:
 python -m scripts.seed_large_class <paper_id>
 ```
 
-### PDF export (LibreOffice)
+### Printing
 
-Word (`.docx`) export works with no extra install. **PDF** export needs
-LibreOffice — the app builds the `.docx` internally and converts it to PDF via
-a headless LibreOffice subprocess.
+There is **no Word or PDF export, and LibreOffice is not needed.** That feature
+was deleted on 2026-08-13 (`e2bdcc4`) — 621 lines that nothing called, plus a
+LibreOffice subprocess dependency. This section used to be a four-step install
+guide for it; it was **18 days out of date** before anyone measured it.
 
-1. Install LibreOffice (64-bit) from
-   <https://www.libreoffice.org/download/download-libreoffice/> with default
-   settings.
-2. The app auto-detects the binary in this order:
-   `SOFFICE_PATH` env → system `PATH` → common install locations (e.g.
-   `C:\Program Files\LibreOffice\program\soffice.exe`, `/usr/bin/soffice`).
-   In most cases you don't need to configure anything.
-3. If installed to a non-default location, set `SOFFICE_PATH` in `.env`.
+The teacher prints from the browser: open a paper in `print.html` and press
+Ctrl+P (or the page's Print button, which waits for images to decode first).
+`static/css/99-legacy/print.css` and `pages/print.css` carry the print rules —
+`@page` margins, the `.no-print` chrome, and per-class print settings the
+teacher can adjust on the page.
 
-For faithful Urdu rendering in the PDF, the **Jameel Noori Nastaleeq** font must
-be installed on the machine that renders the PDF; otherwise LibreOffice
-substitutes a fallback font.
+For Urdu to print in Nastaliq, **Jameel Noori Nastaleeq** must be installed on
+the machine doing the printing; otherwise the browser substitutes a fallback
+font.
 
 ---
 
@@ -246,10 +243,8 @@ pre-commit install
 > `railway.toml` was **deleted on 2026-08-31** along with this decision — it was
 > config for a platform nothing points at.
 >
-> ⚠ One claim elsewhere in this file is older than this section and was **not**
-> re-checked while closing O1: the tech table's *"PDF export — headless LibreOffice"*.
-> DOCX/PDF export was deleted in `e2bdcc4`; today the teacher prints from the browser
-> (`static/print.html`). Treat it as suspect until somebody measures it.
+> The Word/PDF-export claims this file used to carry are gone too — measured and
+> corrected 2026-08-31, in eight places. See **Printing** below.
 
 ### How it actually runs
 
@@ -287,7 +282,7 @@ because the AI provider is mocked and tests use a temporary SQLite DB.
 | Phase | Scope | Status |
 |-------|-------|--------|
 | Phase 1   | Core engine — AI generation, Bloom tagging, question bank, balanced paper assembly, frontend | ✅ Complete |
-| Phase 2   | Result analyzer dashboard, rankings, Word + PDF export | ✅ Complete |
+| Phase 2   | Result analyzer dashboard, rankings, ~~Word + PDF export~~ (export shipped, then deleted 2026-08-13 — `e2bdcc4`) | ✅ Complete |
 | Phase 2.5 | Item analysis — P-value, D-index, bad-question flags | ✅ Complete |
 | Phase 3   | Adaptive paper generation from class weaknesses | ✅ Complete |
 

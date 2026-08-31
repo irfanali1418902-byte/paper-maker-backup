@@ -23,7 +23,7 @@ A FastAPI + SQLite web app that lets a teacher generate bilingual (EN + Urdu), B
 | F5 | Paper type filter: MCQ-only / Subjective / Mixed | ✅ Live |
 | F6 | Custom MCQ-vs-Subjective ratio (presets 20/80…80/20 + custom %) | ✅ Live |
 | F7 | Manual question replace on a built paper | ✅ Live |
-| F8 | Word export + PDF via LibreOffice; print view | ✅ Live |
+| F8 | ~~Word export + PDF via LibreOffice~~; **browser print view** | ⚠ **Export DELETED 2026-08-13 (`e2bdcc4`)** — sirf print view live hai |
 | F9 | Results CSV upload → item analysis (P-value, D-index, flags) | ✅ Live |
 | F10 | Adaptive paper generation targeting weak Bloom levels | ✅ Live |
 | F11 | Syllabus upload → topic dropdown | ✅ Live |

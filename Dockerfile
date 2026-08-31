@@ -1,6 +1,13 @@
-# Northflank deploy image — slim Python, koi LibreOffice nahi (PDF export baad ke PR mein).
-# App uvicorn ko fixed port 8080 par bind karta hai kyunki Northflank $PORT inject nahi
-# karta; wahi 8080 Northflank ke port config mein publicly expose hota hai.
+# Container image. Slim Python, koi LibreOffice nahi.
+#
+# ⚠ Ye file do purani baaton par likhi gayi thi, dono ab ghalat hain (durust 2026-08-31):
+#   1. "Northflank deploy image" — cloud plan BAND hai (docs/ROADMAP.md, O1). Is image ka
+#      maqsad ab school PC / publisher distribution package hai, koi cloud host nahi.
+#   2. "koi LibreOffice nahi (PDF export baad ke PR mein)" — wo PR kabhi nahi aayega:
+#      DOCX/PDF export 2026-08-13 ko delete hua (e2bdcc4). Paper browser se chhapta hai.
+#      LibreOffice ki zaroorat KABHI nahi paregi — ye ghair-mojoodgi ab permanent hai.
+#
+# App uvicorn ko fixed port 8080 par bind karta hai (PORT env kahin parha nahi jata).
 FROM python:3.12-slim
 
 WORKDIR /app

@@ -15,11 +15,13 @@ chuno jo school hours mein ON + LAN par rahe.
 | Software | Kyun | Kahan se |
 |---|---|---|
 | **Python 3.12** | app runtime | https://www.python.org/downloads/ (3.12.x; "Add Python to PATH" tick karo) |
-| **LibreOffice** *(optional)* | **PDF export** chalane ke liye | https://www.libreoffice.org/download — default path par install (`C:\Program Files\LibreOffice\`) |
+| **Jameel Noori Nastaleeq** *(Urdu ke liye)* | browser is font se Urdu chhapta hai; na ho to fallback font aata hai | school PC par install |
 
-> LibreOffice ke baghair: **Word (.docx) export chalega**, PDF export par app saaf error
-> deti hai. LibreOffice install karte hi PDF export bhi chalne lagega (app khud
-> `C:\Program Files\LibreOffice\program\soffice.exe` dhoond leti hai).
+> ⛔ **LibreOffice ki zaroorat NAHI hai. Ye row pehle usay maangti thi** — "PDF export
+> chalane ke liye" — magar wo feature **2026-08-13 ko delete ho chuka** (`e2bdcc4`).
+> Aaj paper **browser se chhapta hai** (`print.html` → Ctrl+P), koi Word/PDF export
+> nahi. Agar aap ne is guide par chal kar LibreOffice install kiya hai to us ki koi
+> zaroorat nahi thi; use rehne dein ya hata dein, app par koi farq nahi parta.
 
 Verify (CMD/PowerShell): `python --version` → `Python 3.12.x`.
 
@@ -178,7 +180,7 @@ python -c "import sqlite3; s=sqlite3.connect(r'C:\PaperMakerData\paper_maker.db'
 | Teacher connect nahi hota | Firewall rule (step 6)? Same WiFi? Sahi IP? Server `--host 0.0.0.0` par chal raha? |
 | `/api` par "API key ghalat ya missing" | Teacher ne sahi key daali? Server par `PAPER_MAKER_API_KEY` wahi hai? |
 | AI generate fail | `GEMINI_API_KEY` set + internet? |
-| PDF export error, Word chal raha | LibreOffice install karo (step 1) — default path par |
+| Urdu Nastaliq mein nahi chhap raha | Jameel Noori Nastaleeq font us PC par install karo jahan se print ho raha hai |
 | Purana data nahi dikh raha | `DB_PATH` sahi file (step 4) point kar raha? |
 
 ---
@@ -186,11 +188,17 @@ python -c "import sqlite3; s=sqlite3.connect(r'C:\PaperMakerData\paper_maker.db'
 ## Internet dependency — saaf
 - **One-time setup:** `pip install` ke liye internet.
 - **Rozana:** sirf **Gemini AI** call ke waqt internet. Baaki sab (bank, papers, dashboard,
-  Word/PDF export, 20 teachers LAN serving) **offline**.
+  browser se printing, 20 teachers LAN serving) **offline**.
 
 ---
 
 ## (Task 3 — future) Company/Publisher distribution
-Multi-school package alag `docs/DISTRIBUTION.md` mein: Docker image (Python + LibreOffice
-bundled), ek installer script, per-school config (DB_PATH, keys, port), aur update mechanism.
-Repo ka `Dockerfile` (slim, cloud wala) is ke liye base hai — LibreOffice add hoga.
+Multi-school package alag `docs/DISTRIBUTION.md` mein: Docker image, ek installer script,
+per-school config (DB_PATH, keys, port), aur update mechanism. Repo ka `Dockerfile` is ke
+liye base hai.
+
+> **LibreOffice is package mein NAHI aayega.** Ye line pehle "Python + LibreOffice bundled"
+> kehti thi aur `Dockerfile` ke baare mein "LibreOffice add hoga" — dono us export feature
+> ke liye thay jo delete ho chuka. Package sirf Python + app hai, jo use chhota rakhta hai.
+> *(Wo `Dockerfile` "slim, cloud wala" bhi nahi raha — cloud plan 2026-08-31 ko band hua,
+> `docs/ROADMAP.md` O1.)*

@@ -1,5 +1,49 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-31 — LibreOffice ka daawa: ek row samjha gaya tha, **satrah** nikla
+
+Irfan: *"README ka LibreOffice wala daawa bhi dekh lo."* Naapne par ye ek row nahi,
+**saat files** thin — aur do jagah wo mehaz ghalat nahi, **nuqsan-deh** thi.
+
+**Pehle saboot, phir tabdeeli.** `e2bdcc4` (2026-08-13) ne `app/api/export.py`,
+`app/services/export_service.py`, un ke tests aur `python-docx` dependency delete ki
+thi. Aaj naapa: `app/` aur `scripts/` mein **`soffice` / `docx` / `LibreOffice` ka ek
+bhi zikr nahi**, aur `requirements.txt` mein `python-docx` nahi. **Ye daawa 18 din se
+jhoota tha.**
+
+| file | kya kehti thi |
+|---|---|
+| `README.md` | **aath jagah** — feature bullet, tech table ki do rows, prerequisites, `SOFFICE_PATH` env row, step 4 "Export as Word or PDF", **poora `### PDF export (LibreOffice)` install guide**, aur phase table |
+| `ARCHITECTURE.md` | **do API routes** (`export.docx` / `export.pdf` — 404 dete), 502 ki wajah, folder-tree mein **do na-mojood files**, aur **`## 7. Export flow` ka poora ~40-line section** — `build_paper_docx`, `_find_soffice`, LibreOffice profile cache, warm/cold timings (~13s vs ~50s) |
+| `docs/SETUP-LOCAL.md` | **prerequisites table LibreOffice install karwati thi**, troubleshooting row, offline-list, aur distribution plan |
+| `Dockerfile` | pehla comment: "Northflank deploy image … PDF export baad ke PR mein" |
+| `docs/PRD.md` | F8 row: "Word export + PDF via LibreOffice" **✅ Live** |
+| `docs/SRS.md` | FR-6, external interfaces, aur `SOFFICE_PATH` ka contract |
+| `PROJECT.md` | intro, tech stack, done-list, do API routes, aur **ek khula TODO: "README mein LibreOffice install step add karo"** |
+
+**Do sab se buri:**
+
+* **`SETUP-LOCAL.md` wo file hai jise insaan follow karta hai.** Wo school PC par
+  LibreOffice install karwa rahi thi — ek aisi cheez jis ki app ko zaroorat hi nahi.
+  Us mein ab saaf likha hai ke agar aap ne install kar liya hai to koi harj nahi, magar
+  zaroorat nahi thi.
+* **`PROJECT.md` ka TODO is jhoot ko wapas README mein daalne ko keh raha tha.** Yani
+  README theek karne ke baad bhi ek row us ko dobara torhne ke liye khari thi.
+
+**Do jagah jaan-boojh kar chhori:** `docs/MIGRATION.md` (poori file band aur ⛔
+banner-shuda hai) aur `docs/CLAUDE-CODE-PROMPTS.md` (purane session prompts — tareekh
+hai, hidayat nahi).
+
+**Saath mein `Dockerfile` ka doosra jhoot bhi gaya:** wo khud ko "Northflank deploy
+image" kehta tha aur LibreOffice ki ghair-mojoodgi ko *"PDF export baad ke PR mein"*
+bata kar **aarzi** dikhata tha. Wo PR kabhi nahi aayega, aur cloud plan bhi aaj band
+hua — comment ab dono baatein saaf kehta hai, aur ye ke image ka maqsad **school PC /
+distribution package** hai.
+
+**Ye row is liye ahem hai:** kal is ko "README ki ek row" samajh kar ✅ kar diya jata,
+aur baqi chhe files aaj bhi jhoot bol rahi hotin. **Daawa dhoondte waqt poore repo mein
+grep karo, us file mein nahi jahan wo nazar aaya.** 1075 pass, ruff saaf.
+
 ## 2026-08-31 — FAISLA: O1 band — cloud migration ka plan khatam (Irfan)
 
 `docs/MIGRATION.md` (Railway → Northflank) **ab kaam nahi, tareekh hai.** Row
