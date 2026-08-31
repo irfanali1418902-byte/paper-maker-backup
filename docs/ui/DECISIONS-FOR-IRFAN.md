@@ -1,7 +1,11 @@
-# Four things only Irfan can settle — 2026-08-09
+# Things only Irfan can settle — 2026-08-09, §5 added 2026-08-31
 
-**Every number below is the board's own measured figure, copied with its source. None of it was
-re-measured while writing this page. No review agent read it — Irfan reads it himself.**
+**Every number in §1–§4 is the board's own measured figure, copied with its source. None of it
+was re-measured while writing this page. No review agent read it — Irfan reads it himself.**
+
+**⚠ §5 is different and says so: its figures were re-measured on the day** (`css_baseline.py`
+aur `css_duplication_audit.py` dobara chalayi gayin), kyunke sawal hi ye tha ke board ka
+purana adad ab bhi sach hai ya nahi — aur nahi tha.
 
 **Answer 1, 2 and 3 and three pages open with no new CSS.**
 
@@ -90,3 +94,26 @@ inline `style` with the Nastaliq stack, and inline beats every layer. `bank` and
 not affected: their `urdu-toggle-row`, `qtext-ur`, `school-ur` and `urdu-input` are different
 class names that `.urdu` does not match. A first grep said otherwise and was wrong — ``
 treats the hyphen as a word boundary, the same trap this epic hit on `app-nav` a day earlier.
+
+---
+
+### 5. Target — `legacy_css_lines` ka aakhri adad · **ANSWERED: ~1400, 2026-08-31**
+
+**Irfan ne range khatam ki: ek adad, `~1400`.** Purana `1,200–1,400` mansookh.
+
+Sawal kyun uthana para: **`1,200` riyazi taur par pohanch se bahar tha.** 2026-08-31 ko
+`css_duplication_audit.py` dobara chali — `agree` **76** + `disagree` **232** = **308 lines
+scope mein**, aur us waqt `legacy_css_lines` **1729** tha. Baqi 1,051 lines page-only hain,
+jo 2026-08-19 ko jaan-boojh kar scope se bahar ki gayi thin.
+
+| | | |
+|---|---|---|
+| **A** | target **~1400** | scope waise hi rahe; bacha kaam kar ke epic band |
+| **B** | page-only ki 1,051 lines mein se kuch scope mein lao | sirf `99-legacy/<page>.css` → `pages/<page>.css` shift — na duplication ghatti hai, na CSS |
+
+**A liya gaya.** Aaj ka faasla: **1707 − 1400 = 307 lines**, yani lag-bhag utna hi jitna
+scope mein bacha hai — target pohanch mein hai magar har bacha hua tukda chahiye.
+
+| # | answer |
+|---|---|
+| 5 target | **A — ~1400. Answered 2026-08-31** ✅ |

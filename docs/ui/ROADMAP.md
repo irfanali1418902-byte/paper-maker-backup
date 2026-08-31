@@ -73,8 +73,12 @@ inconsistent with itself — `.btn-ghost` renders **four different ways across f
 shell has drifted, `.brand` has drifted. Fixing them is user-visible and is the thing this epic
 was started for.
 
-**So the target is `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**
-Estimated 5–8 sessions. Anything below that number is the 999, and the 999 are not the work.
+~~**So the target is `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**~~
+**⚠ SUPERSEDED 2026-08-31 — Irfan set a single number: `legacy_css_lines` ~1400.** The
+range's lower end was never reachable: re-running the audit that day gave `agree` 76 +
+`disagree` 232 = **308 lines in scope**, against 1,729 at the time. See `docs/ui/STATUS.md`
+§5 for the arithmetic. The rest of this section stands unchanged — the target is **not 0**,
+and anything below it is the page-only bucket, which is not the work.
 
 **Re-derive the split with `scripts/css_duplication_audit.py`** — it is a repo file so this
 decision does not rest on a number nobody can check. **The three figures move as work lands**

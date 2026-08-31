@@ -397,8 +397,10 @@ icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEA
 >
 > Draining the 1,055 moves a rule from `99-legacy/<page>.css` into `pages/<page>.css`. **Both
 > are already one file per page**, so it removes no duplication, no CSS and no lookup step —
-> `legacy_css_lines` would fall to ~0 and nothing else would change. **The target is
-> `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**
+> `legacy_css_lines` would fall to ~0 and nothing else would change. ~~**The target is
+> `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**~~ **⚠ SUPERSEDED
+> 2026-08-31 — one number now: `legacy_css_lines` ~1400** (Irfan). The 1,200 end was
+> unreachable; see `docs/ui/STATUS.md` §5. "Not 0" is unchanged.
 >
 > **"Per page" was replaced by "per family" on 2026-08-25**, by Irfan, and it follows from the
 > line above: once 68% of a file is deliberately skipped, no file can reach zero, so a per-page

@@ -55,23 +55,31 @@ khula hai (neeche). Jo bacha:
 * **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle** (`css_orphans.py`
   basi hai) — ya use retire karo.
 
-**5. EK FAISLA JO SIRF IRFAN KA HAI — target. KHULA HAI.** 2026-08-31 ko
-`css_duplication_audit.py` dobara chalayi gayi, aur ab hisaab saaf hai:
+**5. TARGET — ✅ FAISLA HO GAYA. IRFAN, 2026-08-31: `legacy_css_lines` ~1400.**
+
+Purani range `1,200–1,400` **mansookh**. Ek adad, aur wo range ka ooncha sira hai.
+Hisaab jis par ye faisla hua — `css_duplication_audit.py`, usi din:
 
 ```
 rule-block lines  1359
-page-only         1051  (77%)  <- scope se bahar, 2026-08-19 ka faisla
+page-only         1051  (77%)  <- scope se bahar, 2026-08-19 ka faisla, barqarar
 agree                76  (6%)
 disagree            232  (17%)
 ```
 
-**Scope mein kul 308 lines hain** (ye ginti UI-073 se pehle ki hai; us ke baad
-`legacy_css_lines` **1707** hai), yani floor lag-bhag **1400–1420**. **Purana `~1350` riyazi taur
-par pohanch se bahar hai** — page-only ko scope mein laaye baghair. Do raste, dono jaiz:
-target **`~1400`** kar do, **ya** page-only ki 1,051 lines mein se kuch scope mein lao
-(magar wo sirf `99-legacy/<page>.css` → `pages/<page>.css` shift hai: na duplication
-ghatti hai na CSS). Jab tak faisla na ho, **koi session target ko chupke se dobara na
-likhe**.
+**Scope mein kul 308 lines hain**, yani `1729 − 308 ≈ 1420` — **`~1350` riyazi taur par
+pohanch se bahar tha** aur mahine bhar isi liye "target ka hisaab band nahi hota" wali
+row chalti rahi. Doosra raasta (page-only ki 1,051 lines scope mein laana) **rad kar diya
+gaya** — wo sirf `99-legacy/<page>.css` → `pages/<page>.css` shift hai: na duplication
+ghatti hai, na CSS.
+
+**Aaj ka faasla: 1707 − 1400 = 307 lines.** Ye lag-bhag theek utna hi hai jitna scope
+mein bacha hai, yani target **pohanch mein hai magar khairaat mein nahi milega** — item
+8 ka tail, item 9, aur `body` ka bacha hua hissa teenon chahiyen.
+
+⚠ **Ab is adad ko koi session dobara na khole.** Agar kabhi 1400 na-mumkin lage to wajah
+naap kar likho aur Irfan se poochho — chupke se number badalna wohi bimari hai jis ka
+hisaab `docs/ROADMAP.md` §E rakhta hai.
 
 **Aur jo bilkul na karna ho:** `master` merge — wo item 9 ke baad hai, pehle nahi.
 

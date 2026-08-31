@@ -1,5 +1,34 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-31 — FAISLA: CSS epic ka target `legacy_css_lines` ~1400 (Irfan)
+
+Purani range **`1,200–1,400` mansookh**. Ab ek adad hai: **~1400**.
+
+**Wajah ye nahi ke kaam mushkil hai — wajah ye hai ke 1,200 riyazi taur par pohanch se
+bahar tha.** Usi din `css_duplication_audit.py` dobara chali:
+
+```
+rule-block lines  1359
+page-only         1051  (77%)  <- 2026-08-19 ka faisla, barqarar
+agree                76  (6%)
+disagree            232  (17%)
+```
+
+**Scope mein kul 308 lines.** Us waqt `legacy_css_lines` 1729 tha, to floor `≈1420`.
+Range ka neecha sira sirf tab milta jab page-only ki 1,051 lines scope mein aatin — aur
+wo **rad kar diya gaya**, kyunke wo mehaz `99-legacy/<page>.css` → `pages/<page>.css`
+shift hai: na duplication ghatti hai, na CSS.
+
+**Ye adad chaar files mein alag alag likha hua tha** (`HANDOFF.md`, `PLAN.md`,
+`docs/ui/ROADMAP.md`, `STATUS.md`). Chaaron par nishan lagaya gaya, aur faisla
+`DECISIONS-FOR-IRFAN.md` §5 mein apni jagah darj hua — us file ka header ab ye bhi
+kehta hai ke §5 ke adad **usi din dobara naape gaye** (§1–§4 board se copy kiye gaye
+thay). Warna wohi bimari: ek file mein faisla, teen mein purana number.
+
+**Aaj ka faasla: 1707 − 1400 = 307 lines** — lag-bhag utna hi jitna scope mein bacha
+hai. Yani target pohanch mein hai, magar item 8 ka tail, item 9 aur `body` ka bacha hua
+hissa **teenon** chahiyen.
+
 ## 2026-08-31 — UI-073: `body` — jise "sab se bara bacha hua kaam" kaha gaya tha, wo zyada tar murda tha
 
 `legacy_css_lines` **1729 → 1707 (−22)** · `unsanctioned_hex` **308 → 301 (−7)** ·
