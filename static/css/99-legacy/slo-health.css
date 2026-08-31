@@ -1,7 +1,6 @@
   :root {
     --primary: #2E5AAC;
-    --tint: #EAF1FB; --ink: #16213A; --muted: #5B6678; --border: #E3E8F1;
-    --bg: #EEF1F6;
+    --tint: #EAF1FB; --muted: #5B6678; --border: #E3E8F1;
     --err-tx: #C0392B;
     --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;

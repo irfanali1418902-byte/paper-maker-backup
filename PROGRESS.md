@@ -2,8 +2,8 @@
 
 ## 2026-08-31 — UI-073: `body` — jise "sab se bara bacha hua kaam" kaha gaya tha, wo zyada tar murda tha
 
-`legacy_css_lines` **1729 → 1711 (−18)** · `unsanctioned_hex` **308 → 307** ·
-**type probe 0 deltas, state probe 0 deltas**, dono 10 pages par.
+`legacy_css_lines` **1729 → 1707 (−22)** · `unsanctioned_hex` **308 → 301 (−7)** ·
+**type probe 0 deltas, state probe 0 deltas**, dono 10 pages par. 1075 pass, ruff saaf.
 
 ### Board ne ise "38 lines, `other` ke baad sab se bara `disagree` item" kaha. Dono baatein ghalat thin.
 
@@ -34,6 +34,15 @@ kyunke typography ye do deti hi nahi.
 
 **Do gates, 0 deltas:** type probe **2,450,110 element×property** (10 pages × 5
 viewports) aur state probe **368,620** (paanch states) — dono par **0**.
+
+### Review ne pakda: is task ne khud chhe declarations murda kar dein
+
+`body` hi wo aakhri jagah thi jahan chaar pages ka `--bg` parha jata tha, aur `slo`/
+`slo-health` ka `--ink` bhi. Hataate hi wo be-consumer ho gaye — **yani task ne apne
+peechhe wohi kachra chhora jo UI-072 saaf karne baitha tha.** Chhe declarations
+(`--bg` × 4, `--ink` × 2) delete; JS ka `setProperty` bhi dekha (sirf `--accent` aur
+print knobs set karta hai, ye do nahi). **Gate dobara: 0 deltas.** Isi se `unsanctioned_hex`
+307 → **301**.
 
 ### Aur wohi trap, terhvin dafa
 

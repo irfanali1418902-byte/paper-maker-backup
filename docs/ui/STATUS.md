@@ -38,7 +38,7 @@ aakhri `151e1d1`. Master se **38 commits aage** — merge item 9 ke baad.
 | chips column mein | `taqseem.html` |
 | shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
 
-**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1711**, target ka sawal
+**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1707**, target ka sawal
 khula hai (neeche). Jo bacha:
 
 * ~~**`body` — 38 lines, 6 files.**~~ **✅ UI-073, 2026-08-31 — aur row ka daawa ghalat
@@ -65,7 +65,8 @@ agree                76  (6%)
 disagree            232  (17%)
 ```
 
-**Scope mein kul 308 lines hain**, yani `1729 − 308 ≈ 1420`. **Purana `~1350` riyazi taur
+**Scope mein kul 308 lines hain** (ye ginti UI-073 se pehle ki hai; us ke baad
+`legacy_css_lines` **1707** hai), yani floor lag-bhag **1400–1420**. **Purana `~1350` riyazi taur
 par pohanch se bahar hai** — page-only ko scope mein laaye baghair. Do raste, dono jaiz:
 target **`~1400`** kar do, **ya** page-only ki 1,051 lines mein se kuch scope mein lao
 (magar wo sirf `99-legacy/<page>.css` → `pages/<page>.css` shift hai: na duplication
