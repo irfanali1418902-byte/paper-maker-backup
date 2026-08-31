@@ -1,5 +1,47 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-31 — R2 seeding: Pre Year 3 — 43/87 se 64/87
+
+Backup: `paper_maker_backup_before_preyear3_seed_20260831.db` (run se pehle).
+
+| | pehle | ab |
+|---|---:|---:|
+| bank kul | 766 | **850** |
+| PY3 topics | 43/87 | **64/87** |
+| PY3 sawal | 172 | **256** |
+
+PY1 (71/81, 329) aur PY2 (23/87, 92) chhue nahi gaye. Wohi command jo `ROADMAP.md`
+mein darj hai (defaults NAHI):
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+**Quota:** 21 topics ke baad HTTP 429, phir musalsal 3 par script khud ruki —
+`[25/44]` tak pohanch kar 19 topics chhu-e bhi nahi gaye. Andaza "~20/din" tha,
+aaj **21** mile. **Baqi: PY3 ke 23 + PY2 ke 64 = 87 topics**, lag-bhag **chaar
+aur din**.
+
+### `--write` se pehle jo dekha gaya — aur jo pehli nazar mein khatra laga
+
+44 unseeded rows aankh se parhi gayeen: sab asli pre-school Math hain, wo jaali
+Grade-4 duplicate rows nahi. **Magar title khud dohraye hue thay** —
+`Concept of subtraction` **13 dafa**, `Practice of addition` 4, `Addition` 3 —
+aur un ka `learning_outcome` bhi bilkul title ke barabar hai. Sirf `page_no`
+farq karta hai, jo prompt mein jata hi nahi. Yani 13 topics ko **ek jaisa prompt**
+milna tha.
+
+Kharch karne se pehle naapa gaya: PY3 ke pehle se seeded topics mein
+`Activity of missing number` **3 dafa** isi shakal mein seed ho chuka tha, aur us
+ke 12 sawal alag alag hain; poore 172 sawal mein **bilkul ek jaisa matn sifar**.
+Is bunyaad par run kiya gaya. **Baad ki tasdeeq: 36 subtraction sawal, 36 ke 36
+alag**, aur PY3 mein ab bhi duplicate matn **0**. Yani ek jaisa prompt duplicate
+sawal nahi deta — mazmoon ka overlap hai, naql nahi.
+
+⬜ Sawalon ka **matn** nazar se nahi parha gaya (sirf ginti aur duplicate-check).
+
 ## 2026-08-29 — UI-072: audit — jo baqi kaam nahi, ghalti thi
 
 Irfan: *"ache tarah audit karlo, jaha jo kaam baqi hai aur ghalti ke zumre mein hai use
