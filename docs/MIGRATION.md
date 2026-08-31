@@ -1,7 +1,24 @@
 # MIGRATION PLAN — Railway → Northflank
 
-**Status:** PLAN FINALIZED (decisions locked, §8) — no deploy/code change yet, awaiting
-"implement karo".
+> # ⛔ BAND — Irfan ka faisla, 2026-08-31. YE PLAN AB KAAM NAHI, TAREEKH HAI.
+>
+> **Cloud migration nahi ho rahi.** Ye file record ke taur par rakhi gayi hai (market
+> research aur §8 ke locked decisions kaam ke hain agar kabhi cloud ka sawal dobara
+> uthe), magar **is par amal nahi karna**.
+>
+> **Wajah, naapi hui:** repo mein sirf **ek remote** hai (`backup`), koi hosting remote
+> nahi, koi auto-deploy nahi. App **local chalti hai** aur Irfan GitHub Desktop se push
+> karta hai. Aage ki simt **school PC / Docker package** hai — cloud us ke raaste mein
+> nahi aata.
+>
+> ⚠ **Neeche ka "Author basis" khud purana hai:** wo *"261 tests green · prod live &
+> verified on Railway"* kehta hai. Aaj **1,075 tests** hain aur **"prod" ka koi wujood
+> nahi** — `docs/ROADMAP.md` ki pehli chetawni ye 2026-08-25 ko naap chuki thi.
+>
+> Asal row: `docs/ROADMAP.md` §B, **O1** (band).
+
+**Status:** ~~PLAN FINALIZED (decisions locked, §8) — no deploy/code change yet, awaiting
+"implement karo".~~ **BAND 2026-08-31 — upar dekhein.**
 **Reason:** Railway trial credit ~27 din mein khatam. Card add karke bhi paisa kharch
 nahi karna. **Target = Northflank free (Sandbox)** — free limit mein charge zero.
 **Author basis:** repo @ `master` (261 tests green) · prod live & verified on Railway.

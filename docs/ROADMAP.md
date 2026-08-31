@@ -47,7 +47,7 @@
 ### P2 — Ops decision (before Railway day ~28)
 | # | Finding | Action |
 |---|---------|--------|
-| O1 ⏸ | Railway credit expires; card not added (correct) | **Plan likha ja chuka: `docs/MIGRATION.md`** (Railway → Northflank, decisions locked, "awaiting implement karo"). Magar amal ruka hua hai aur shayad hona bhi nahi chahiye — **repo mein sirf EK remote hai (`backup`), koi hosting remote nahi**, aur Irfan ka asal tareeqa GitHub Desktop se backup push hai, cloud deploy nahi. Roadmap ki simt bhi ab school PC / Docker package hai. **`docs/MIGRATION.md` ka status line is se purana hai — usay parhne se pehle ye row parhein.** Faisla Irfan ka: plan zinda rakhna hai ya band karna |
+| ~~O1~~ ✅ | ~~Railway credit expires; card not added (correct)~~ | **BAND — Irfan ka faisla, 2026-08-31: cloud migration ka plan band.** `docs/MIGRATION.md` (Railway → Northflank) ab **tareekh hai, kaam nahi** — us ke oopar ⛔ banner laga diya gaya. Wajah wohi jo is row mein mahine bhar se naapi hui thi: **repo mein sirf EK remote hai (`backup`), koi hosting remote nahi**, koi auto-deploy nahi, aur Irfan ka asal tareeqa GitHub Desktop se backup push hai. App **local chalti hai**, aur roadmap ki simt **school PC / Docker package** hai — cloud us ke raaste mein nahi. <br><br>Saath band hui: **D3** (`docs/SDLC-WORKFLOW.md` §4/§6 Railway auto-deploy bata rahi thi) aur `README.md` ka Deployment section. <br><br>⬜ **`railway.toml` abhi disk par mojood hai** — ab kisi platform ka config nahi. Delete karna alag faisla hai (`ARCHITECTURE.md` ka file-tree bhi us ka zikr karta hai); jab tak na kaha jaye, chhora hua hai. |
 
 ## C. Feature Roadmap (after P0/P1)
 

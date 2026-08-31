@@ -1,5 +1,39 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-31 — FAISLA: O1 band — cloud migration ka plan khatam (Irfan)
+
+`docs/MIGRATION.md` (Railway → Northflank) **ab kaam nahi, tareekh hai.** Row
+`docs/ROADMAP.md` §B mein band, aur us ke saath **D3** bhi.
+
+**Faisla naye maloomat par nahi hua — wo baat mahine bhar se naapi hui thi aur row phir
+bhi ⏸ par khari thi:** repo mein sirf **ek remote** hai (`backup`), koi hosting remote
+nahi, koi auto-deploy nahi. App local chalti hai. Aage ki simt school PC / Docker hai.
+
+**Kahan kahan laga (paanch jagah, kyunke daawa paanch jagah bikhra hua tha):**
+
+* `docs/ROADMAP.md` — O1 row band, wajah aur natija ke saath.
+* `docs/MIGRATION.md` — ⛔ banner. File record ke taur par rakhi gayi (market research
+  aur §8 ke locked decisions kaam ke hain agar cloud ka sawal dobara uthe), magar amal
+  mana hai. Us ka apna "Author basis" bhi jhoota tha — *"261 tests · prod live &
+  verified on Railway"*; aaj **1,075 tests** hain aur prod hai hi nahi.
+* `docs/SDLC-WORKFLOW.md` — §4 ki DevOps row aur §6 ki **poori "Production" row** kaati
+  gayi. **Aur us ka qaida ulta kar diya gaya:** wo kehti thi *"never assume local data
+  exists in prod — seed prod deliberately"*, jo do DB farz karta hai. **Ek hi DB hai aur
+  wohi teacher ka asal data hai**, to qaida ab ye hai: seeding se pehle backup lo.
+* `README.md` — Deployment section aur tech table ki row.
+* `docs/ui/DEFERRED.md` — D3 band.
+
+**Do cheezein jaan-boojh kar nahi ki gayin, aur donon darj hain:**
+
+⬜ **`railway.toml` disk par mojood hai.** Ab kisi platform ka config nahi, magar delete
+karna apna faisla hai (`ARCHITECTURE.md` ka file-tree bhi us ka zikr karta hai). Chhora
+hua hai, README batata hai kyun.
+
+⚠ **`README.md` ke do aur daawe purane hain aur O1 band karte hue naape NAHI gaye** —
+tech table ka *"PDF export — headless LibreOffice"* aur deployment checklist ka
+PDF/Word bullet. DOCX/PDF export `e2bdcc4` mein delete ho chuka. README mein us jagah
+tanbeeh laga di gayi hai — **theek karna alag kaam hai, aur ise "ho gaya" mat ginna.**
+
 ## 2026-08-31 — FAISLA: CSS epic ka target `legacy_css_lines` ~1400 (Irfan)
 
 Purani range **`1,200–1,400` mansookh**. Ab ek adad hai: **~1400**.

@@ -63,7 +63,7 @@ database server, no cloud dependency beyond the AI provider.
 | Frontend     | Static HTML/JS (`static/`) served by FastAPI                  |
 | Urdu font    | Jameel Noori Nastaleeq (must be installed on the box that renders PDFs) |
 | Tooling      | ruff (lint), black (format), pytest (tests), pre-commit       |
-| Deployment   | Railway (Nixpacks) — see `railway.toml`                       |
+| Deployment   | **None — runs locally.** Cloud plan closed 2026-08-31 (O1); see below |
 
 The codebase follows a strict layered architecture (routes → services →
 repositories → database). See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full
@@ -234,6 +234,25 @@ pre-commit install
 ---
 
 ## Deployment
+
+> **⛔ There is no deployment. Closed 2026-08-31 (ROADMAP §B, O1).**
+>
+> The app **runs locally** on the teacher's machine. The repo has exactly one git
+> remote — `backup` — and it is a backup, not a host: no auto-deploy, no hosting
+> remote, no prod environment. The Railway → Northflank migration plan
+> (`docs/MIGRATION.md`) is closed and marked as history. The next direction is a
+> **school PC / Docker package**, not cloud.
+>
+> Everything below is kept because it is still true of *any* host that runs Python —
+> `railway.toml` is still on disk and still valid config, it is simply not pointed at
+> anything today. Read it as "how to run this somewhere else if that ever comes back",
+> not as a description of how it runs now.
+>
+> ⚠ Two claims elsewhere in this file are older than this section and were **not**
+> re-checked while closing O1: the tech table's *"PDF export — headless LibreOffice"*
+> and the PDF/Word bullet below. DOCX/PDF export was deleted in `e2bdcc4`; today the
+> teacher prints from the browser (`static/print.html`). Treat both as suspect until
+> somebody measures them.
 
 The app is configured for **Railway** (see `railway.toml`):
 
