@@ -145,7 +145,7 @@ generation to work. Full descriptions and placeholders are in `.env.example`.
 | `ANTHROPIC_API_KEY` | One of Gemini/Anthropic           | Anthropic Claude key (paid). **Takes priority** over Gemini if set.     |
 | `DB_PATH`           | No (defaults to `paper_maker.db`) | Absolute/relative path to the SQLite file (point at a volume in prod).  |
 | `SOFFICE_PATH`      | No (auto-detected)                | Explicit path to the LibreOffice `soffice` binary for PDF export.       |
-| `PORT`              | No (deploy only)                  | Port for the deploy start command; Railway injects it automatically.    |
+| `PORT`              | No                                | Unused — nothing in `app/` reads it. It existed for the deploy start command; that was closed 2026-08-31 (O1). |
 
 Never commit `.env`. `.gitignore` already ignores `.env` and `.env.*`.
 
@@ -243,39 +243,36 @@ pre-commit install
 > (`docs/MIGRATION.md`) is closed and marked as history. The next direction is a
 > **school PC / Docker package**, not cloud.
 >
-> Everything below is kept because it is still true of *any* host that runs Python —
-> `railway.toml` is still on disk and still valid config, it is simply not pointed at
-> anything today. Read it as "how to run this somewhere else if that ever comes back",
-> not as a description of how it runs now.
+> `railway.toml` was **deleted on 2026-08-31** along with this decision — it was
+> config for a platform nothing points at.
 >
-> ⚠ Two claims elsewhere in this file are older than this section and were **not**
-> re-checked while closing O1: the tech table's *"PDF export — headless LibreOffice"*
-> and the PDF/Word bullet below. DOCX/PDF export was deleted in `e2bdcc4`; today the
-> teacher prints from the browser (`static/print.html`). Treat both as suspect until
-> somebody measures them.
+> ⚠ One claim elsewhere in this file is older than this section and was **not**
+> re-checked while closing O1: the tech table's *"PDF export — headless LibreOffice"*.
+> DOCX/PDF export was deleted in `e2bdcc4`; today the teacher prints from the browser
+> (`static/print.html`). Treat it as suspect until somebody measures it.
 
-The app is configured for **Railway** (see `railway.toml`):
+### How it actually runs
 
-- **Builder:** Nixpacks — detects `requirements.txt` and installs with pip.
-- **Start command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-  (Railway injects `$PORT`; do not use `--reload` in production).
-- **Healthcheck:** `GET /` — serves the static frontend, so it returns 200 once
-  the app is ready.
-- **Restart policy:** on failure, up to 10 retries.
+Locally, on the teacher's Windows machine:
 
-Deployment checklist:
+```
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
 
-- Set `ANTHROPIC_API_KEY` (or `GEMINI_API_KEY`) in the environment.
-- Set `DB_PATH` to a path on a **persistent volume** (e.g.
-  `/data/paper_maker.db`) — the container filesystem is ephemeral, so without a
-  volume all data is lost on every redeploy.
-- For PDF export in production, ensure LibreOffice and the Urdu font are
-  installed in the runtime image, or set `SOFFICE_PATH` accordingly. Word export
-  works without them.
+`start.bat` / `start-local.bat` / `start-school.bat` wrap this.
 
-Any host that can run Python and Uvicorn works the same way — the only
-environment-specific pieces are the AI key, `DB_PATH`, and (optionally)
-LibreOffice for PDF.
+**If it ever needs to run somewhere else**, only three things are
+environment-specific — nothing here assumes a particular host:
+
+- **AI key** — `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY`).
+- **`DB_PATH`** — must point at storage that survives a restart. There is exactly
+  one database and it holds the teacher's real data.
+- **`PAPER_MAKER_API_KEY`** — unset means the `/api` routes are **unprotected**,
+  which is fine on localhost and is not fine anywhere else. The app warns about
+  this on startup.
+
+A `Dockerfile` is in the repo for the school-PC / Docker packaging work, which is
+the direction that replaced cloud.
 
 ### CI
 

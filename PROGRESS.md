@@ -25,14 +25,22 @@ nahi, koi auto-deploy nahi. App local chalti hai. Aage ki simt school PC / Docke
 
 **Do cheezein jaan-boojh kar nahi ki gayin, aur donon darj hain:**
 
-⬜ **`railway.toml` disk par mojood hai.** Ab kisi platform ka config nahi, magar delete
-karna apna faisla hai (`ARCHITECTURE.md` ka file-tree bhi us ka zikr karta hai). Chhora
-hua hai, README batata hai kyun.
+✅ **`railway.toml` DELETE ho gayi** (Irfan ne usi din kaha). Us ke saath teen aur
+jagah durust hueen: `ARCHITECTURE.md` ka file-tree, `README.md` ka Deployment section
+(ab "How it actually runs" — local command + wo teen cheezein jo host-specific hain),
+aur `PORT` wali env row.
 
-⚠ **`README.md` ke do aur daawe purane hain aur O1 band karte hue naape NAHI gaye** —
-tech table ka *"PDF export — headless LibreOffice"* aur deployment checklist ka
-PDF/Word bullet. DOCX/PDF export `e2bdcc4` mein delete ho chuka. README mein us jagah
-tanbeeh laga di gayi hai — **theek karna alag kaam hai, aur ise "ho gaya" mat ginna.**
+**`PORT` ka daawa likhne se pehle naapa gaya, aur achha hua:** row kehti thi *"Railway
+injects it automatically"*. `app/`, `scripts/`, `Dockerfile` aur `.bat` — **kahin `PORT`
+parha hi nahi jata**; jo grep hits aaye wo sab `IMPORT` / `EXPORT` / `REPORT` ke andar
+thay. Yani wo variable pehle bhi be-kaar tha, sirf deploy command ke saath likha gaya
+tha. Row ab yehi kehti hai.
+
+⚠ **`README.md` ka ek daawa purana hai aur O1 band karte hue naapa NAHI gaya** — tech
+table ka *"PDF export — headless LibreOffice"*. DOCX/PDF export `e2bdcc4` mein delete ho
+chuka. README mein us jagah tanbeeh laga di gayi hai — **theek karna alag kaam hai, aur
+ise "ho gaya" mat ginna.** (Deployment checklist ka PDF/Word bullet ab mojood nahi —
+poora purana section chala gaya.)
 
 ## 2026-08-31 — FAISLA: CSS epic ka target `legacy_css_lines` ~1400 (Irfan)
 

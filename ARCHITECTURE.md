@@ -158,7 +158,6 @@ paper-maker-mvp/
 │   ├── import_syllabus.py      # import syllabus topics from CSV
 │   └── seed_large_class.py     # seed engineered >=10-student results
 ├── requirements.txt
-├── railway.toml                # Railway deploy config
 ├── pyproject.toml              # ruff + black config
 ├── pytest.ini
 ├── .python-version             # 3.12
