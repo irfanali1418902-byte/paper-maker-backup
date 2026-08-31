@@ -13,12 +13,10 @@
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
   }
   html, body { margin: 0; height: 100%; }
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: var(--ink); background: var(--bg);
-    display: flex; min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+  /* UI-073: font/colour/background/smoothing gaye — 03-elements/typography.css
+     layer(elements) mein wohi paint karti hai aur layer order legacy ko harata
+     hai. Sirf ye do zinda thin. */
+  body { display: flex; min-height: 100vh; }
 
   /* ---- Sidebar ---- */
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }

@@ -5,19 +5,27 @@
 
 ---
 
-## 📅 KAL KA PLAN — 2026-08-30, is tarteeb mein
+## 📅 PLAN — 2026-08-31 ko dobara naapa gaya, is tarteeb mein
 
 **1. SEEDING — PEHLA KAAM, sab se pehle.** Ye quota-bound hai, waqt-bound nahi: agar
-subah nahi chala to din bhar ka quota zaya. 108 topics baqi (PY3 44 + PY2 64), ~20–26
-calls/din = **5–6 din**. Command aur chetawni `scripts/seed_bank.py` ke header mein hain,
+subah nahi chala to din bhar ka quota zaya. **Baqi 87 topics (PY3 23 + PY2 64)**, ~21
+calls/din = **~4 din**. Command aur chetawni `scripts/seed_bank.py` ke header mein hain,
 aur Track 2 ki row mein bhi (2026-08-29 se — pehle wahan ek toota hua pointer tha).
 
 > **Pehle dry run, phir `--write`.** Aur `--write` se pehle syllabus rows aankh se dekho —
 > 2026-08-21 ko paanch rows ek jaisi nikleen aur 44 ghalat sawal delete karne pare.
+>
+> **2026-08-31 ka sabaq — dohraye hue title bhi dekho, sirf jaali rows nahi.** PY3 ki 44
+> rows mein `Concept of subtraction` **13 dafa** tha aur us ka `learning_outcome` bhi
+> title ke barabar; sirf `page_no` farq karta hai, jo prompt mein jata hi nahi. Yani 13
+> topics ko ek jaisa prompt milta hai. **Ye khatra naapa gaya aur mauzoon nikla:** 36
+> subtraction sawal bane, 36 ke 36 alag. Aage bhi yehi tareeqa — kharch se pehle mojooda
+> data se naapo, farz mat karo.
 
-**2. PUSH — do commits** (`90610fb`, `5f7d631`). GitHub Desktop se, jaise hamesha.
+**2. PUSH — ✅ ho chuka (2026-08-31).** `backup/feat/ui-architecture` HEAD ke barabar hai;
+aakhri `151e1d1`. Master se **38 commits aage** — merge item 9 ke baad.
 
-**3. BROWSER CHECK — chhota bakaya, 5 minute.** Server:
+**3. BROWSER CHECK — chhota bakaya, 5 minute. ABHI TAK NAHI HUA.** Server:
 `python -m uvicorn app.main:app --port 8000`
 
 | dekho | kahan |
@@ -30,21 +38,39 @@ aur Track 2 ki row mein bhi (2026-08-29 se — pehle wahan ek toota hua pointer 
 | chips column mein | `taqseem.html` |
 | shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
 
-**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1729**, target ka sawal
+**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1711**, target ka sawal
 khula hai (neeche). Jo bacha:
 
-* **`body` — 38 lines, 6 files.** `other` ke baad sab se bara `disagree` item, aur audit
-  ka regex ise `shell/nav` (✅) mein file karta hai, is liye **koi row ise shedyool nahi
-  karti**. Sab se zyada qeemat yahin hai.
+* ~~**`body` — 38 lines, 6 files.**~~ **✅ UI-073, 2026-08-31 — aur row ka daawa ghalat
+  tha.** Wo 38 nahi **50 lines** thin, aur `disagree` (har ek par faisla) nahi thin:
+  `03-elements/typography.css` ka `body` layer(elements) mein legacy ko haraata hai, to
+  font/rang/background/smoothing **nau ke nau pages par pehle se murda** thay — `print`
+  ka apna rang bhi. Deletion tha, faisla nahi. Dono gates 0. **Jo `body` par ab bhi zinda
+  hai** — `display:flex` + `min-height:100vh` (6 pages, `pages/plan.css` ka
+  `@layer objects` namoona mojood), `@media` ka `flex-direction: column` (7 files
+  byte-identical, **magar media-query + layer wali shakl hai, uthane se pehle naapo**),
+  `html, body { height: 100% }` (naapa nahi gaya), aur `index` ke teen `body.lang-ur`.
 * **Item 8 ke bache hue 6 lines** — `.options-grid`, `.strip-empty`, `.list-empty`.
 * **`index` ki do `.tag` declarations** — review ne 2026-08-29 ko dono murda naapin.
 * **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle** (`css_orphans.py`
   basi hai) — ya use retire karo.
 
-**5. EK FAISLA JO SIRF IRFAN KA HAI — target.** `1729 − available work` ab `~1350` par
-nahi girta. Do raste, dono jaiz: target `~1400` kar do, **ya** page-only ki 1,047 lines
-mein se kuch scope mein lao (wo 2026-08-19 ko jaan-boojh kar nikali gayi thin). Jab tak
-faisla na ho, **koi session target ko chupke se dobara na likhe**.
+**5. EK FAISLA JO SIRF IRFAN KA HAI — target. KHULA HAI.** 2026-08-31 ko
+`css_duplication_audit.py` dobara chalayi gayi, aur ab hisaab saaf hai:
+
+```
+rule-block lines  1359
+page-only         1051  (77%)  <- scope se bahar, 2026-08-19 ka faisla
+agree                76  (6%)
+disagree            232  (17%)
+```
+
+**Scope mein kul 308 lines hain**, yani `1729 − 308 ≈ 1420`. **Purana `~1350` riyazi taur
+par pohanch se bahar hai** — page-only ko scope mein laaye baghair. Do raste, dono jaiz:
+target **`~1400`** kar do, **ya** page-only ki 1,051 lines mein se kuch scope mein lao
+(magar wo sirf `99-legacy/<page>.css` → `pages/<page>.css` shift hai: na duplication
+ghatti hai na CSS). Jab tak faisla na ho, **koi session target ko chupke se dobara na
+likhe**.
 
 **Aur jo bilkul na karna ho:** `master` merge — wo item 9 ke baad hai, pehle nahi.
 

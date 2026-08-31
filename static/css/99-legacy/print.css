@@ -19,14 +19,10 @@
     --q-gap: 14px;
   }
 
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: #1a1a1a;
-    margin: 0;
-    background: var(--bg);
-    display: flex;
-    min-height: 100vh;
-  }
+  /* UI-073: dekho bank.css ka wohi note. `margin` 02-generic/reset.css deti hai,
+     aur is page ka apna `color` (rgb(26,26,26)) bhi murda tha — nau ke nau pages
+     ek hi qeemat compute karte hain. */
+  body { display: flex; min-height: 100vh; }
 
   /* ---- Sidebar (screen only, hidden in print) ----
      UI-065: panel + nav + links moved to 05-components/nav.css; print.html now carries

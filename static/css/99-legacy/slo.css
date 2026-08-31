@@ -8,11 +8,8 @@
     --radius-btn: var(--radius-control);
   }
   html, body { margin: 0; height: 100%; }
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: var(--ink); background: var(--bg);
-    display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
-  }
+  /* UI-073: dekho bank.css ka wohi note. */
+  body { display: flex; min-height: 100vh; }
 
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
 

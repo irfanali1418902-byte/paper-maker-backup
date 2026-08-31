@@ -1,5 +1,64 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-08-31 — UI-073: `body` — jise "sab se bara bacha hua kaam" kaha gaya tha, wo zyada tar murda tha
+
+`legacy_css_lines` **1729 → 1711 (−18)** · `unsanctioned_hex` **308 → 307** ·
+**type probe 0 deltas, state probe 0 deltas**, dono 10 pages par.
+
+### Board ne ise "38 lines, `other` ke baad sab se bara `disagree` item" kaha. Dono baatein ghalat thin.
+
+Ginti pehle: `99-legacy` ke `body` rules **50 lines** hain, 38 nahi — board `@media`
+wale nahi ginta.
+
+Aur "disagree" ka matlab hota hai *har ek par faisla chahiye*. Naapa gaya —
+`css_selector_probe` `body` par, nau pages:
+
+```
+font-family  "IBM Plex Sans", system-ui, sans-serif   nau ke nau par
+color        rgb(15,23,42)                            nau ke nau par
+background   rgb(247,248,251)                         nau ke nau par
+smoothing    antialiased                              nau ke nau par
+```
+
+**Nau ke nau pages ek hi qeemat compute karte hain — is ke bawajood ke chhe files
+ne ye chaar cheezein apne apne tareeqe se likhi hui thin.** `print` `color: #1a1a1a`
+(rgb(26,26,26)) likhta hai aur rgb(15,23,42) paint karta hai; `taqseem` teen alag
+token naam (`--font-body`/`--fg`/`--app-bg`) likhta hai aur wohi qeemat paint karta
+hai. Wajah `css_page_rule_probe` se: **`03-elements/typography.css` ka `body`
+`layer(elements)` mein hai aur `margin` `02-generic/reset.css` deta hai** — layer
+order legacy ko harata hai, to ye sab **migration ke din se murda** hain.
+
+**Yani ye faislon ka khandan nahi tha, deletion tha.** Chhe files ke `body` blocks se
+sirf do zinda declarations bachi hain — `display: flex` aur `min-height: 100vh` —
+kyunke typography ye do deti hi nahi.
+
+**Do gates, 0 deltas:** type probe **2,450,110 element×property** (10 pages × 5
+viewports) aur state probe **368,620** (paanch states) — dono par **0**.
+
+### Aur wohi trap, terhvin dafa
+
+Pehle draft mein maine `print` ke murde rang ko comment mein `#1a1a1a` likh diya.
+`unsanctioned_hex` **308 par khara raha** jab ke ek hex delete hua tha — kyunke
+**comment ke andar ka raw hex bhi ginta hai** (`HANDOFF.md` trap 1, "baarah dafa fail
+ho chuka" — ab terah). `rgb(26,26,26)` likhne par ginti 307 par aa gayi.
+**Ginti ne pakda, meri nazar ne nahi.**
+
+### Jo `body` par ab bhi zinda hai (agle session ke liye)
+
+* `display: flex` + `min-height: 100vh` — chhe pages par. `pages/plan.css` pehle se
+  `@layer objects { body { display: flex } }` ka namoona rakhti hai. **Faisla Irfan
+  ka:** shared objects rule, ya per-page rehne do.
+* `@media (max-width:760px) body { flex-direction: column }` — **saat files mein
+  byte-identical**, magar media query + layer order milkar wohi shakal banate hain
+  jis ne UI-05x mein 75 deltas diye the. Uthane se pehle naapna laazmi.
+* `html, body { margin: 0; height: 100% }` — chaar files. `margin` reset se murda
+  hai; **`height: 100%` aur `html` ka hissa naapa nahi gaya** — is round mein chhua
+  nahi.
+* `index` ke teen `body.lang-ur` rules — `05-components/urdu.css` mojood hai, magar
+  ye khandan badalna apna faisla hai.
+
+⬜ **Browser check nahi hua** (aaj ka bakaya pehle se khula hai).
+
 ## 2026-08-31 — R2 seeding: Pre Year 3 — 43/87 se 64/87
 
 Backup: `paper_maker_backup_before_preyear3_seed_20260831.db` (run se pehle).

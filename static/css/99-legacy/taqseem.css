@@ -4,10 +4,8 @@
     --ok-tx: var(--green);
     --warn-tx: var(--yellow);
   }
-  body {
-    font-family: var(--font-body); color: var(--fg); background: var(--app-bg);
-    display: flex; min-height: 100vh; -webkit-font-smoothing: antialiased;
-  }
+  /* UI-073: dekho bank.css ka wohi note. */
+  body { display: flex; min-height: 100vh; }
 
   /* ---- Sidebar (mockup: navy bg, gold active rail) ----
      UI-065: panel + foot moved to 05-components/nav.css (this page already had

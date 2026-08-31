@@ -1,14 +1,21 @@
 # Handoff — 2026-08-20 (`legacy_css_lines` 1,874 · `unsanctioned_hex` 354 · gate is 9 pages now)
 
-> # 🛑 CSS EPIC ROKA HUA HAI — 20 Agast. YEH AGLA KAAM NAHI HAI.
+> # ⛔ YE FILE BASI HAI — 2026-08-31 ko naapa gaya. `docs/ui/STATUS.md` parho.
 >
-> Irfan ne CSS rok kar features par jane ka faisla kiya. **Product roadmap
-> `docs/ROADMAP.md` mein hai; agli cheez school PC / Docker.** Tafseel neeche
-> §"CSS EPIC ROKA HUA HAI" mein.
+> Do daawe jo ab ghalat hain:
 >
-> Yeh file phir bhi mukammal aur durust hai — CSS dobara khule to yahin se shuru karo.
-> Banner isliye hai ke `NEXT-SESSION.md` ka sabaq yeh tha: **ghalat simt wali file ko apni
-> simt upar likhni chahiye, warna agla banda 180 lines parh kar hi jaanega.**
+> 1. **"CSS EPIC ROKA HUA HAI" — nahi hai.** Wo 20 Agast ka faisla tha; epic **24–29
+>    Agast ko dobara khula aur chala** (UI-063 se UI-072 tak, items 1–7 mukammal). Ye
+>    banner nau din tak jhoota khara raha — wohi bimari jis ka hisaab `docs/ROADMAP.md`
+>    §E rakhta hai.
+> 2. **Har adad purana hai.** `legacy_css_lines` 1,874 nahi, **1729**; `unsanctioned_hex`
+>    354 nahi, **308**; gate 9 pages nahi, **10** (D56 ne `plan` shamil kiya), aur ab teen
+>    gates hain — `css_type_probe`, `css_state_probe`, `css_inject_probe`.
+>
+> **Jo is file mein aaj bhi durust hai wo "KAISE" wale hisse hain** — teen qaide, gates
+> ka andhapan, do traps, tools ki list. Wohi `MEASURED.md` ka usool hai: *jo kehta hai
+> kya DONE ya NEXT hai us par yaqeen na karo; jo kehta hai cheez KAISE kaam karti hai wo
+> abhi bhi durust hai.*
 
 Naye session mein yeh poori file paste kar dein. Yeh file har session ke aakhir mein
 **dobara likhi jaati hai** — purani cheezein jorhi nahi jaatin, hamesha sirf aakhri haalat.
