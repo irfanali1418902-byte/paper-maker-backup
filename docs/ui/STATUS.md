@@ -82,19 +82,32 @@ KUL              310     214    96    1030
 options 0, MCQ ka jawab options mein 68/68, Urdu 164/164, tashreeh 164/164. Dohraav:
 poori PY3 348 mein se 2, PY2 164 mein se 1.
 
-**2. BROWSER CHECK — ⬜ ABHI TAK NAHI HUA, aur ye TEEN sessions se khula hai.** 5 minute.
-Server: `python -m uvicorn app.main:app --port 8000`
+**2. BROWSER CHECK — aath mein se CHAAR naap liye gaye, CHAAR ab bhi khule.**
+Server: `python -m uvicorn app.main:app --port 8000`, phir kholo:
 
-| dekho | kahan |
-|---|---|
-| do SLO boxes ka border (add / edit) | `bank.html` — UI-072 ki waahid pixel tabdeeli |
-| pagination buttons ka rang | `library.html` — **kaala dikhe to `color: inherit` fail hai** |
-| disabled button par 🚫 cursor | `bank.html` |
-| heading ke neeche subtitle | `bank` · `library` · `slo-health` — saath ek line par aaya to bug |
-| import counters styled hain | `slo.html` (Excel import ke baad) |
-| chips column mein | `taqseem.html` (class + subject chuno) |
-| shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
-| **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi |
+### 👉 `http://127.0.0.1:8000/static/dev/ui-check.html`
+
+`static/dev/ui-check.html` (banai 2026-09-01) har page ko **iframe mein kholti hai — same
+origin, is liye andar dekh sakti hai** — aur jo naapa ja sakta hai khud naap kar THEEK /
+KHARAB likh deti hai. Jo click ke baghair nahi banta, us par **AANKH** likhti hai aur
+neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi honge.**
+
+| dekho | kahan | halat 2026-09-01 |
+|---|---|---|
+| do SLO boxes ka border (add / edit) | `bank.html` — UI-072 ki waahid pixel tabdeeli | ✅ dono par `1px solid rgb(234,237,243)` |
+| pagination buttons ka rang | `library.html` — **kaala dikhe to `color: inherit` fail hai** | ✅ `rgb(15,23,42)`, body ke barabar — kaala nahi |
+| disabled **button** par 🚫 cursor | `bank.html` | ✅ `not-allowed` |
+| heading ke neeche subtitle | `bank` · `library` · `slo-health` — saath ek line par aaya to bug | ✅ teenon par `p` ka top 65.4px, `h1` ka bottom 62.4px |
+| import counters styled hain | `slo.html` (Excel import ke baad) | ⬜ **AANKH** |
+| chips column mein | `taqseem.html` (class + subject chuno) | ⬜ **AANKH** |
+| shortfall warning ka andar ka text | `blueprint.html` (paper banao) | ⬜ **AANKH** |
+| **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi | ⬜ **AANKH** |
+
+> ⚠ **`disabled` wala row ab saaf likha gaya hai: sirf `button`.** Pehli chalaayi mein
+> check ne pehla disabled element uthaya, jo `<select>` tha, aur **jhoota KHARAB** de
+> diya. `forms.css:211` ka rule `button:disabled` hai — disabled `<select>` ka `default`
+> cursor **bug nahi**, aur us file ka apna comment ye wajah likhta hai. Check ab dono
+> qadrein alag alag dikhata hai.
 
 **3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1706**, target **1400**.
 

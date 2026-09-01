@@ -96,6 +96,23 @@ copied into `layer(components)`, because layer order is decided before specifici
 computed value on each page before extracting a rule, and measure again after. `.filter-bar`'s
 resurrection cost 75 deltas before it was caught.
 
+**Rule 13, added 2026-09-01: the human half of the check is a probe too, and it kept
+slipping because nothing carried it.** The eight-item browser check sat ⬜ for three
+sessions, not because it was hard but because every session handed it on as prose.
+`static/dev/ui-check.html` now measures the four that CAN be measured — it opens each page in
+an **iframe on the same origin**, so it reads their DOM and computed styles with no
+extension, no headless runner and no new dependency, in whatever browser the teacher
+already uses. The other four (slo import counters, taqseem chips, blueprint shortfall
+text, print + Ctrl+P) exist only after a click; the page marks them **AANKH**, never
+THEEK, which is rule 10's lesson applied to a human gate.
+
+⚠ **Its first run produced a FALSE FAIL, and the check was wrong, not the app.** It asked
+for `select[disabled], button:disabled, input:disabled` and took the FIRST match — a
+`<select>`, cursor `default`. But `03-elements/forms.css:211` is `button:disabled` ONLY,
+and that file's own comment says so. **A selector list that is wider than the rule under
+test will accuse the app of the test's own sloppiness.** Name the exact selector the rule
+names, and print the neighbouring value separately if it is interesting.
+
 **`css_orphans.py`'s main job is over.** It measured pages against `static/theme.css`, and that
 file was deleted on 2026-08-13. It still runs — it degrades with a warning rather than crashing
 — but every column now reads zero, correctly, because no page can be exposed to a file that
@@ -124,6 +141,12 @@ node scripts/css_drain_probe.mjs      <page> [--json <path>]
 node scripts/css_state_probe.mjs      <label> <outdir> [--page <p>] [--viewports 1280,700]
 node scripts/css_selector_probe.mjs   "<selector>" "<prop,prop>" [--add=<sel>:<class>] <page...>
 node scripts/css_inject_probe.mjs     <label> <outdir>          # JS-built families — rule 10
+```
+
+The browser check is not a script — it is a page. With the app running, open:
+
+```
+http://127.0.0.1:8000/static/dev/ui-check.html      # four measured, four marked AANKH — rule 13
 ```
 
 `css_state_probe.mjs` and `css_inject_probe.mjs` both write the same JSON shape as

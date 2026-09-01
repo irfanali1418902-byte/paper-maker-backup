@@ -1,5 +1,70 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-01 — `ui-check.html`: browser check ka aadha hissa ab naapa jata hai
+
+Browser check **teen sessions se ⬜ par khara tha** — is liye nahi ke mushkil tha, is liye
+ke har session use "aap dekh len" keh kar chhor deta tha. Ab aath mein se **chaar naap
+liye jate hain**, aur baqi chaar ke liye saaf hidayat likhi hai.
+
+**Tareeqa:** `static/dev/ui-check.html` har page ko **iframe mein kholti hai**. Dono same
+origin par hain (`127.0.0.1:8000`), is liye safha andar ke DOM aur computed styles parh
+sakta hai — koi extension, koi headless runner, koi nayi dependency nahi. Teacher ke apne
+browser mein, asli rendering par.
+
+**Chaar jo ab khud naapte hain (2026-09-01 ka natija):**
+
+| check | naapa |
+|---|---|
+| do SLO boxes ka border | `#addSloBox` / `#efSloBox` — dono `1px solid rgb(234,237,243)` |
+| pagination ka rang | `.pg-btn` = `rgb(15,23,42)` = body ka rang, **kaala nahi** |
+| disabled button ka cursor | `button:disabled` → `not-allowed` |
+| subtitle heading ke neeche | teen pages, `p` top **65.4px** > `h1` bottom **62.4px** |
+
+**Chaar jo AANKH par chhore gaye, aur ye jaan-boojh kar hai:** slo ke import counters,
+taqseem ke chips, blueprint ka shortfall text, aur print ka paper + Ctrl+P. **Ye chaaron
+sirf click ke baad bante hain.** Safha inhein `AANKH` likhta hai, `THEEK` nahi — kyunke
+is repo ka apna sabaq yehi hai (D45, PROBES.md rule 10): **jo gate cheez dekh hi nahi
+sakta, wo guzar jata hai chahe cheez ghalat ho.**
+
+### Pehli chalaayi ne ek JHOOTA FAIL diya — aur galti check ki thi, app ki nahi
+
+Check `select[disabled], button:disabled, input:disabled` poochhta tha aur **pehla**
+element uthata tha — jo `<select>` nikla, aur `default` cursor par KHARAB likh diya.
+Naapne par: `button:disabled` → `not-allowed`, `select[disabled]` → `default`.
+**`forms.css:211` ka rule `button:disabled` hai — sirf button**, aur usi file ka comment
+(`:189–202`) likhta hai ke ye har disabled control tak jaan-boojh kar nahi pohanchta.
+Yani `<select>` ka `default` **theek hai**. Check ab sirf button dekhta hai aur select ki
+qadar alag se dikhata hai taake koi dobara ye ghalti na kare.
+
+**Doosri chhoti ghalti usi chalaayi mein:** natija `innerHTML` se likha ja raha tha, aur
+`<select …>` wali line ko browser ne **tag samajh kar nigal liya** — KHARAB to dikha
+magar tafseel khali thi. Ab escape hota hai.
+
+### Aur teesri, jo repo ke apne gate ne pakri — is liye file `static/dev/` mein hai
+
+Pehle ye safha `static/ui-check.html` par rakha tha. **`pytest` ne saat test tore:**
+
+```
+expected 10 real pages, found 11: [... 'ui-check.html']
+style_blocks went UP: 0 -> 1
+css_lines_in_html went UP: 0 -> 26
+```
+
+`page_paths()` `static/*.html` ko glob karta hai, is liye **ek dev-auzaar gyarhwan asli
+page gin liya gaya**, aur us ke apne `<style>` block ne ratchet tor diya. Test ka apna
+comment kehta hai ke naya page jorna "ek test-edit ka kharch" hona chahiye — **bilkul
+theek, magar ye app ka page hai hi nahi.**
+
+`page_paths()` recursive **nahi** hai. Is liye file `static/dev/ui-check.html` mein chali
+gayi: **same origin barqarar** (iframe wali poori tarkeeb isi par khari hai), aur **na
+koi test badla, na koi metric, na re-baseline.** `mockup-modern.html` ko `EXCLUDED_PAGES`
+mein daal kar chhora gaya tha; wo raasta bhi khula tha, magar us mein metric ki tareef
+chhoona parti — ye sasta hal hai. Baad mein: `style_blocks` 0, `css_lines_in_html` 0,
+`test_css_architecture.py` ke **32/32 pass**.
+
+**Sabaq:** dev-auzaar `static/` ki jar mein mat rakho — wahan jo bhi `.html` girega, wo
+app ka page gina jayega.
+
 ## 2026-09-01 — UI-074: `.topbar .tag` — "do murda declarations" mein se ek zinda nikla
 
 STATUS.md ka row kehta tha **"`index` ki do murda `.tag` declarations"**, aur
