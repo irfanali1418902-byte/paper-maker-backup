@@ -1,5 +1,67 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-01 — Seeding: PY3 mukammal, PY2 aadha — aur do kharabiyan jo naapne par nikleen
+
+**Bank 850 → 1014 (+164).** Pre Year 3 ab **87/87 — mukammal**. Pre Year 2 23/87 →
+**41/87**. Din poora seeding par gaya: **CSS par kuch nahi hua, browser check phir nahi
+hua** (ab teen sessions se khula).
+
+**Do run, dono `--types "multiple-choice,short-answer,true-false" --bloom foundational`,
+dono se pehle backup aur dry run** (`paper_maker_backup_before_preyear3_seed_20260901.db`,
+`..._preyear2_...`):
+
+* **PY3** — 23 topics × 4 = **92 sawal, 23/23 topics**, poora chala.
+* **PY2** — 64 topics maange the; run **18 topics ke baad kat gaya** (72 sawal).
+  **Kyun kata, maloom nahi — output file khali thi**, na error mila na wo line jahan ruki.
+
+**Kata hua run DB ko toorta nahi, aur ye naapa gaya, farz nahi kiya:** `integrity_check`
+= ok, aaj chhue gaye 18 topics mein se **har ek mein poore 4 sawal** — yani script har
+topic ke baad commit karti hai, beech mein kata hua koi topic nahi. Dobara chalana bhi
+mehfooz hai: `--include-seeded` ke baghair wo pehle se seeded topics chhorti hai, is liye
+agla run seedha baqi **46** par jayega — na dohraav, na quota zaya.
+
+**Dohraye-hue title wala khatra dobara naapa gaya (2026-08-31 ka sabaq):** PY3 ke baqi
+23 mein se 8 topics ke title dohraye hue thay (`Concept of subtraction` 4x) aur **23/23
+ka `learning_outcome` bilkul title ke barabar** — yani ek jaisa prompt. Natija phir bhi
+mauzoon: un chaar topics ke **16 sawal, 16 ke 16 alag**. PY2 ke baqi 64 mein bhi yehi
+shakl hai — **64 topics magar sirf 52 alag titles** (`Practice of subtraction` 5x,
+`Concept of addition` 4x) — is liye agla run bhi naap kar dekha jaye.
+
+**Dhaancha saaf nikla** (aaj ke 164 par naapa): khaali sawal 0, khaali jawab 0, MCQ bina
+options 0, **MCQ ka jawab options mein 68/68**, Urdu 164/164, tashreeh 164/164. Dohraav
+kam: poori PY3 348 mein se **2**, PY2 164 mein se **1**.
+
+### Do cheezein jo theek nahi hain — dono aaj ki paida-kardah NAHI
+
+1. **`learning_outcome` har seed-shuda sawal mein khaali hai.** Aaj ke 164 mein se 164
+   khaali. Magar tareekh-war naapne par: 08-31, 08-26, 08-23, 08-22, 08-21, 07-30 —
+   **har batch 100% khaali**. Sirf 07-15 / 07-19 wale (329 sawal, alag raste se aaye)
+   bhare hue hain. Yani **`seed_bank.py` ye khana kabhi nahi bharta** — ye khamoshi se
+   chal raha tha aur ab tak kisi ne naapa nahi tha.
+2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
+   mark** (240 sawal, sab ke sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7 tak).
+   Aaj ka batch (4.4 / 4.55) pichhle **sab** AI batches ke barabar hai — **behkaav aaj
+   nahi aaya** — magar bank ke andar do paimane mojood hain, aur mile-jule paper ka total
+   ajeeb banega.
+
+**Dono par koi tabdeeli nahi ki gayi — faisla Irfan ka.** Dono `docs/ui/STATUS.md` ke
+board par darj hain taake agla session inhein dobara dhoondne mein waqt zaya na kare.
+
+### Aur ek surakh jo plan mein tha
+
+Purana plan kehta tha **"baqi 87 topics — PY3 ke 23, phir PY2 ke 64"**, aur bas. Naapne
+par nikla ke **Pre Year 1 ke 10 topics bhi khaali hain** (71/81) — unhein **koi row
+schedule nahi kar rahi thi**. Asal ba-ikhtiyar kaam 46 nahi, **56 topics** hai. Ye wohi
+census wali bimari hai jo is repo mein baar baar fire hoti hai: **row ka adad naapo, us
+par bharosa mat karo.**
+
+**Bank ka poora hisaab (2026-09-01):** 310 topics, 210 seeded, **100 baqi**, 1014 sawal.
+In 100 mein se **44 wo jaali jode hain jinhein seed karna mana hai** (G5, G6, Science G7,
+Geography G8) — naapa gaya, chaaron ab bhi **0** par hain, qaida nahi toota.
+
+**1075 pass, ruff saaf** (dono aaj chalaye). `master` se 45 commits aage, 0 peechhe —
+merge item 9 se pehle nahi.
+
 ## 2026-08-31 — LibreOffice ka daawa: ek row samjha gaya tha, **satrah** nikla
 
 Irfan: *"README ka LibreOffice wala daawa bhi dekh lo."* Naapne par ye ek row nahi,

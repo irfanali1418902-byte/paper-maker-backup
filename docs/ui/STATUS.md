@@ -5,42 +5,79 @@
 
 ---
 
-## 📅 PLAN — **2026-09-01 ke liye**, is tarteeb mein
+## 📅 PLAN — **2026-09-02 ke liye**, is tarteeb mein
 
-> *(Likha 2026-08-31 ki raat. Heading mein tareekh hai, "kal" nahi — is repo mein har
+> *(Likha 2026-09-01. Heading mein tareekh hai, "kal" nahi — is repo mein har
 > relative label basi ho kar jhoot ban chuka hai: `HANDOFF.md` ka banner nau din,
-> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-01 nahi hai to
+> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-02 nahi hai to
 > **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
-> **2026-08-31 ka natija:** saat commits, sab push. `legacy_css_lines` **1729 → 1707**,
-> `unsanctioned_hex` **308 → 301**, bank **766 → 850** (PY3 43/87 → 64/87), do faisle
-> band (target `~1400`, O1), aur teen dastavez-bimariyan theek. **1075 pass, ruff saaf.**
+> **2026-09-01 ka natija:** bank **850 → 1014** (+164). **PY3 ab 87/87 — mukammal.**
+> PY2 23/87 → **41/87**. **CSS par kuch nahi hua, browser check phir nahi hua.**
+> Din ka kaam sirf seeding tha; koi commit nahi (ye board hi pehla hai).
+> 1075 pass, ruff saaf (dono 09-01 ko chalaye).
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
-nahi chala to din ka quota zaya. **Baqi 87 topics — PY3 ke 23, phir PY2 ke 64.** Aaj 21
-mile, yani **~4 din**.
+nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 56 topics — PY2 ke 46, phir PY1 ke 10.**
 
 ```
-python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
 ```
 
-> **PY3 ke 23 khatam hote hi wohi command `--grade "Pre Year 2"` ke saath.** Defaults
-> NAHI — pre-school par `fill-blank`/`essay`/`balanced` ghalat hain.
+> ⚠ **PY1 ke 10 topics ko purana plan ginta hi nahi tha** (wo "baqi 87" kehta tha, jo
+> sirf PY3+PY2 tha). 2026-09-01 ko naapne par nikle: **Pre Year 1 = 71/81 seeded, 10
+> khaali.** PY2 khatam hote hi wohi command `--grade "Pre Year 1"` ke saath.
+>
+> **Defaults NAHI** — pre-school par `fill-blank`/`essay`/`balanced` ghalat hain.
 >
 > **Pehle dry run, phir `--write`, aur `--write` se pehle backup.** Namoona:
-> `paper_maker_backup_before_preyear3_seed_20260831.db`.
+> `paper_maker_backup_before_preyear2_seed_20260901.db`.
+>
+> **Dobara chalana mehfooz hai:** `--include-seeded` ke baghair script pehle se seeded
+> topics chhorti hai, aur har topic ke baad commit karti hai. 09-01 ko PY2 ka run beech
+> mein kat gaya (18/64 topics ke baad) — DB phir bhi saaf thi: `integrity_check` ok, koi
+> adhoora topic nahi, har chhue topic mein poore 4 sawal. **Kyun kata, maloom nahi —
+> output file khali thi.**
 >
 > **Rows aankh se dekho — do alag khatre hain, aur dono ki shakl alag hai:**
 > 1. **Jaali syllabus** — 2026-08-21 ko paanch rows ek jaisi nikleen, 44 ghalat sawal
 >    delete karne pare. Chaar jaali jode (G5, G6, Science G7, Geography G8) **seed karna
->    mana hai** jab tak asal syllabus import na ho.
-> 2. **Dohraya hua title** (2026-08-31 ka sabaq) — PY3 mein `Concept of subtraction`
->    **13 dafa** tha aur `learning_outcome` bhi title ke barabar, yani ek jaisa prompt.
->    **Naapa gaya aur mauzoon nikla** (36 sawal, 36 ke 36 alag) — magar naapo, farz mat
->    karo. PY2 mein bhi yehi shakl hai: `Practice of subtraction` 5 dafa, `Concept of
->    addition` 4.
+>    mana hai** jab tak asal syllabus import na ho. 09-01 ko naapa: chaaron ab bhi **0**.
+> 2. **Dohraya hua title** — PY3 mein `Concept of subtraction` ke chaar baqi topics ka
+>    `learning_outcome` bhi title ke barabar tha, yani ek jaisa prompt. **09-01 ko dobara
+>    naapa aur dobara mauzoon nikla** (16 sawal, 16 ke 16 alag) — magar naapo, farz mat
+>    karo. PY2 ke baqi 64 mein bhi yehi shakl hai: 64 topics magar sirf **52 alag titles**
+>    (`Practice of subtraction` 5x, `Concept of addition` 4x, `Practice of addition of
+>    currency` 3x).
 
-**2. BROWSER CHECK — ⬜ ABHI TAK NAHI HUA, aur ye do sessions se khula hai.** 5 minute.
+**BANK KA HISAAB — 2026-09-01 ko naapa gaya (adad yahan se parho, yaad se nahi):**
+
+```
+grade         topics  seeded  baqi   sawal
+Pre Year 1        81      71    10     329
+Pre Year 2        87      41    46     164
+Pre Year 3        87      87     0     348   <- mukammal
+Grade 4           11      11     0      43
+G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
+KUL              310     210   100    1014
+```
+
+**DO CHEEZEIN JO NAAPI GAYIN AUR THEEK NAHI HAIN — faisla Irfan ka, maine kuch nahi badla:**
+
+1. **`learning_outcome` har seed-shuda sawal mein khaali hai.** 09-01 ke 164 mein se 164
+   khaali — magar ye aaj ka bug **nahi**: 08-31, 08-26, 08-23, 08-22, 08-21, 07-30 —
+   **har batch 100% khaali**. Sirf 07-15/07-19 wale (alag raste se aaye) bhare hain.
+   Yani `seed_bank.py` ye khana **kabhi nahi bharta**. Khamoshi se chal raha tha.
+2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
+   mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
+   batch (4.4 / 4.55) pichhle sab AI batches ke barabar hai — **behkaav aaj nahi aaya**,
+   magar bank mein do paimane mojood hain. Mile-jule paper ka total ajeeb banega.
+
+**Dhaancha saaf hai** (09-01 ke 164 par naapa): khaali sawal 0, khaali jawab 0, MCQ bina
+options 0, MCQ ka jawab options mein 68/68, Urdu 164/164, tashreeh 164/164. Dohraav:
+poori PY3 348 mein se 2, PY2 164 mein se 1.
+
+**2. BROWSER CHECK — ⬜ ABHI TAK NAHI HUA, aur ye TEEN sessions se khula hai.** 5 minute.
 Server: `python -m uvicorn app.main:app --port 8000`
 
 | dekho | kahan |
@@ -57,7 +94,13 @@ Server: `python -m uvicorn app.main:app --port 8000`
 **3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1707**, target **1400**.
 
 * **Item 8 ka tail — 6 lines:** `.options-grid`, `.strip-empty`, `.list-empty`.
+  ⚠ **Ye chhe lines sirf `bank.css` mein hain; grep aath jagah dikhata hai** —
+  `blueprint.css:117` (`.list-empty`), `print.css:257–258, 306`, aur `bank.css:277` ki
+  media-query wali copy. Audit `page-only` chhorta hai, is liye us ke 6 mein ye nahi
+  aatin. **Chhoote waqt pehle naapo ke kaun `disagree` hai aur kaun page-only** — yehi
+  census wala sabaq hai jo teen sessions se lagataar fire ho raha hai.
 * **`index` ki do murda `.tag` declarations** — review ne 2026-08-29 ko naapin.
+  (09-01 ko mojood paayi gayin: `index.css:32` `.brand .tag`, `:288` `.topbar .tag`.)
 * **`body` ka bacha hua hissa** (UI-073 ne sirf murda hissa liya): `display:flex` +
   `min-height:100vh` chhe pages par — `pages/plan.css` ka `@layer objects { body }`
   namoona mojood hai, **faisla Irfan ka**; `@media` ka `flex-direction: column` saat
@@ -67,15 +110,16 @@ Server: `python -m uvicorn app.main:app --port 8000`
   hai, magar khandan badalna apna faisla hai).
 * **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle**
   (`css_orphans.py` basi hai) — ya use saaf lafzon mein retire karo.
-* **Phir `master` merge** — abhi **44 commits aage**. Item 9 se pehle **nahi**.
+* **Phir `master` merge** — 09-01 ko naapa: **45 commits aage**, 0 peechhe. Item 9 se
+  pehle **nahi**.
 
-**4. ⚠ TARGET KA HISAAB AAJ KE BAAD TANG HO GAYA — ye kal ki pehli CSS baat hai.**
+**4. ⚠ TARGET KA HISAAB TANG HAI — ye agle session ki pehli CSS baat hai.**
 
 Target `~1400` **Irfan ka faisla hai aur qaim hai** (§5 / `DECISIONS-FOR-IRFAN.md` §5).
 Magar UI-073 ke baad audit dobara chali aur scope **ghat gaya**:
 
 ```
-             faisle ke waqt      aaj shaam
+             faisle ke waqt      2026-09-01
 rule-block        1359              1327
 page-only         1051 (77%)        1051 (79%)
 agree               76               86
@@ -90,9 +134,13 @@ farq comments, blank lines aur `@media` ke bracket hain, **jo apni rules ke saat
 jate hain** (UI-073 mein 34 rule-lines ke saath 8 comment-lines bhi gayin, magar naye
 comment 6 wapas aaye). Yani 1400 **ban sakta hai, magar khud-ba-khud nahi**.
 
-**Kal ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye number
-board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —
+**Agle session ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye
+number board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —
 chupke se target mat badalna.
+
+> **09-01 ko CSS par kuch nahi hua** — poora din seeding par gaya. Ye teenon adad us din
+> dobara naape gaye aur **hile nahi**: `legacy_css_lines` 1707, `unsanctioned_hex` 301,
+> scope 276. Yani faasla ab bhi ~31 lines ka hai.
 
 **Aur jo bilkul na karna ho:** `master` merge item 9 se pehle.
 
