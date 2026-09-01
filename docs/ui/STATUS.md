@@ -5,83 +5,96 @@
 
 ---
 
-## 📅 PLAN — 2026-08-31 ko dobara naapa gaya, is tarteeb mein
+## 📅 PLAN — **2026-09-01 ke liye**, is tarteeb mein
 
-**1. SEEDING — PEHLA KAAM, sab se pehle.** Ye quota-bound hai, waqt-bound nahi: agar
-subah nahi chala to din bhar ka quota zaya. **Baqi 87 topics (PY3 23 + PY2 64)**, ~21
-calls/din = **~4 din**. Command aur chetawni `scripts/seed_bank.py` ke header mein hain,
-aur Track 2 ki row mein bhi (2026-08-29 se — pehle wahan ek toota hua pointer tha).
-
-> **Pehle dry run, phir `--write`.** Aur `--write` se pehle syllabus rows aankh se dekho —
-> 2026-08-21 ko paanch rows ek jaisi nikleen aur 44 ghalat sawal delete karne pare.
+> *(Likha 2026-08-31 ki raat. Heading mein tareekh hai, "kal" nahi — is repo mein har
+> relative label basi ho kar jhoot ban chuka hai: `HANDOFF.md` ka banner nau din,
+> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-01 nahi hai to
+> **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
-> **2026-08-31 ka sabaq — dohraye hue title bhi dekho, sirf jaali rows nahi.** PY3 ki 44
-> rows mein `Concept of subtraction` **13 dafa** tha aur us ka `learning_outcome` bhi
-> title ke barabar; sirf `page_no` farq karta hai, jo prompt mein jata hi nahi. Yani 13
-> topics ko ek jaisa prompt milta hai. **Ye khatra naapa gaya aur mauzoon nikla:** 36
-> subtraction sawal bane, 36 ke 36 alag. Aage bhi yehi tareeqa — kharch se pehle mojooda
-> data se naapo, farz mat karo.
+> **2026-08-31 ka natija:** saat commits, sab push. `legacy_css_lines` **1729 → 1707**,
+> `unsanctioned_hex` **308 → 301**, bank **766 → 850** (PY3 43/87 → 64/87), do faisle
+> band (target `~1400`, O1), aur teen dastavez-bimariyan theek. **1075 pass, ruff saaf.**
 
-**2. PUSH — ✅ ho chuka (2026-08-31).** `backup/feat/ui-architecture` HEAD ke barabar hai;
-aakhri `151e1d1`. Master se **38 commits aage** — merge item 9 ke baad.
+**1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
+nahi chala to din ka quota zaya. **Baqi 87 topics — PY3 ke 23, phir PY2 ke 64.** Aaj 21
+mile, yani **~4 din**.
 
-**3. BROWSER CHECK — chhota bakaya, 5 minute. ABHI TAK NAHI HUA.** Server:
-`python -m uvicorn app.main:app --port 8000`
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
+```
+
+> **PY3 ke 23 khatam hote hi wohi command `--grade "Pre Year 2"` ke saath.** Defaults
+> NAHI — pre-school par `fill-blank`/`essay`/`balanced` ghalat hain.
+>
+> **Pehle dry run, phir `--write`, aur `--write` se pehle backup.** Namoona:
+> `paper_maker_backup_before_preyear3_seed_20260831.db`.
+>
+> **Rows aankh se dekho — do alag khatre hain, aur dono ki shakl alag hai:**
+> 1. **Jaali syllabus** — 2026-08-21 ko paanch rows ek jaisi nikleen, 44 ghalat sawal
+>    delete karne pare. Chaar jaali jode (G5, G6, Science G7, Geography G8) **seed karna
+>    mana hai** jab tak asal syllabus import na ho.
+> 2. **Dohraya hua title** (2026-08-31 ka sabaq) — PY3 mein `Concept of subtraction`
+>    **13 dafa** tha aur `learning_outcome` bhi title ke barabar, yani ek jaisa prompt.
+>    **Naapa gaya aur mauzoon nikla** (36 sawal, 36 ke 36 alag) — magar naapo, farz mat
+>    karo. PY2 mein bhi yehi shakl hai: `Practice of subtraction` 5 dafa, `Concept of
+>    addition` 4.
+
+**2. BROWSER CHECK — ⬜ ABHI TAK NAHI HUA, aur ye do sessions se khula hai.** 5 minute.
+Server: `python -m uvicorn app.main:app --port 8000`
 
 | dekho | kahan |
 |---|---|
-| do boxes ka border (SLO add / edit) | `bank.html` — **UI-072 ki waahid pixel tabdeeli** |
-| pagination buttons ka rang | `library.html` — kaala dikhe to `color: inherit` fail hai |
+| do SLO boxes ka border (add / edit) | `bank.html` — UI-072 ki waahid pixel tabdeeli |
+| pagination buttons ka rang | `library.html` — **kaala dikhe to `color: inherit` fail hai** |
 | disabled button par 🚫 cursor | `bank.html` |
-| heading ke neeche subtitle | `bank` · `library` · `slo-health` — **saath ek line par aaya to bug** |
+| heading ke neeche subtitle | `bank` · `library` · `slo-health` — saath ek line par aaya to bug |
 | import counters styled hain | `slo.html` (Excel import ke baad) |
-| chips column mein | `taqseem.html` |
+| chips column mein | `taqseem.html` (class + subject chuno) |
 | shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
+| **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi |
 
-**4. CSS KAAM — ab chhota reh gaya hai.** `legacy_css_lines` **1707**, target ka sawal
-khula hai (neeche). Jo bacha:
+**3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1707**, target **1400**.
 
-* ~~**`body` — 38 lines, 6 files.**~~ **✅ UI-073, 2026-08-31 — aur row ka daawa ghalat
-  tha.** Wo 38 nahi **50 lines** thin, aur `disagree` (har ek par faisla) nahi thin:
-  `03-elements/typography.css` ka `body` layer(elements) mein legacy ko haraata hai, to
-  font/rang/background/smoothing **nau ke nau pages par pehle se murda** thay — `print`
-  ka apna rang bhi. Deletion tha, faisla nahi. Dono gates 0. **Jo `body` par ab bhi zinda
-  hai** — `display:flex` + `min-height:100vh` (6 pages, `pages/plan.css` ka
-  `@layer objects` namoona mojood), `@media` ka `flex-direction: column` (7 files
-  byte-identical, **magar media-query + layer wali shakl hai, uthane se pehle naapo**),
-  `html, body { height: 100% }` (naapa nahi gaya), aur `index` ke teen `body.lang-ur`.
-* **Item 8 ke bache hue 6 lines** — `.options-grid`, `.strip-empty`, `.list-empty`.
-* **`index` ki do `.tag` declarations** — review ne 2026-08-29 ko dono murda naapin.
-* **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle** (`css_orphans.py`
-  basi hai) — ya use retire karo.
+* **Item 8 ka tail — 6 lines:** `.options-grid`, `.strip-empty`, `.list-empty`.
+* **`index` ki do murda `.tag` declarations** — review ne 2026-08-29 ko naapin.
+* **`body` ka bacha hua hissa** (UI-073 ne sirf murda hissa liya): `display:flex` +
+  `min-height:100vh` chhe pages par — `pages/plan.css` ka `@layer objects { body }`
+  namoona mojood hai, **faisla Irfan ka**; `@media` ka `flex-direction: column` saat
+  files mein byte-identical — **magar media-query + layer wali shakl hai, uthane se
+  pehle naapo** (UI-05x mein isi ne 75 deltas diye thay); `html, body { height: 100% }`
+  **naapa nahi gaya**; `index` ke teen `body.lang-ur` (`05-components/urdu.css` mojood
+  hai, magar khandan badalna apna faisla hai).
+* **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle**
+  (`css_orphans.py` basi hai) — ya use saaf lafzon mein retire karo.
+* **Phir `master` merge** — abhi **44 commits aage**. Item 9 se pehle **nahi**.
 
-**5. TARGET — ✅ FAISLA HO GAYA. IRFAN, 2026-08-31: `legacy_css_lines` ~1400.**
+**4. ⚠ TARGET KA HISAAB AAJ KE BAAD TANG HO GAYA — ye kal ki pehli CSS baat hai.**
 
-Purani range `1,200–1,400` **mansookh**. Ek adad, aur wo range ka ooncha sira hai.
-Hisaab jis par ye faisla hua — `css_duplication_audit.py`, usi din:
+Target `~1400` **Irfan ka faisla hai aur qaim hai** (§5 / `DECISIONS-FOR-IRFAN.md` §5).
+Magar UI-073 ke baad audit dobara chali aur scope **ghat gaya**:
 
 ```
-rule-block lines  1359
-page-only         1051  (77%)  <- scope se bahar, 2026-08-19 ka faisla, barqarar
-agree                76  (6%)
-disagree            232  (17%)
+             faisle ke waqt      aaj shaam
+rule-block        1359              1327
+page-only         1051 (77%)        1051 (79%)
+agree               76               86
+disagree           232              190
+scope mein         308              276
 ```
 
-**Scope mein kul 308 lines hain**, yani `1729 − 308 ≈ 1420` — **`~1350` riyazi taur par
-pohanch se bahar tha** aur mahine bhar isi liye "target ka hisaab band nahi hota" wali
-row chalti rahi. Doosra raasta (page-only ki 1,051 lines scope mein laana) **rad kar diya
-gaya** — wo sirf `99-legacy/<page>.css` → `pages/<page>.css` shift hai: na duplication
-ghatti hai, na CSS.
+**`1707 − 276 = 1431`** — yani sirf rules delete karne se **1400 nahi aata, ~31 lines
+reh jati hain.** Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
+**1707** poori file ginta hai, jab ke audit ka 1327 sirf rule-block lines hai — beech ka
+farq comments, blank lines aur `@media` ke bracket hain, **jo apni rules ke saath khud
+jate hain** (UI-073 mein 34 rule-lines ke saath 8 comment-lines bhi gayin, magar naye
+comment 6 wapas aaye). Yani 1400 **ban sakta hai, magar khud-ba-khud nahi**.
 
-**Aaj ka faasla: 1707 − 1400 = 307 lines.** Ye lag-bhag theek utna hi hai jitna scope
-mein bacha hai, yani target **pohanch mein hai magar khairaat mein nahi milega** — item
-8 ka tail, item 9, aur `body` ka bacha hua hissa teenon chahiyen.
+**Kal ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye number
+board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —
+chupke se target mat badalna.
 
-⚠ **Ab is adad ko koi session dobara na khole.** Agar kabhi 1400 na-mumkin lage to wajah
-naap kar likho aur Irfan se poochho — chupke se number badalna wohi bimari hai jis ka
-hisaab `docs/ROADMAP.md` §E rakhta hai.
-
-**Aur jo bilkul na karna ho:** `master` merge — wo item 9 ke baad hai, pehle nahi.
+**Aur jo bilkul na karna ho:** `master` merge item 9 se pehle.
 
 ---
 
