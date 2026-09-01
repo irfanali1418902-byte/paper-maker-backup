@@ -15,7 +15,9 @@
 > **2026-09-01 ka natija:** bank **850 → 1030** (+180). **PY3 ab 87/87 — mukammal.**
 > PY2 23/87 → **45/87**. **Din ka quota HTTP 429 par khatam hua** — aakhri run 46 mein se
 > 9 topics tak pahunchi (4 kaamyab, 5 fail). CSS mein UI-074 (`.topbar .tag`, probed dead,
-> 0 deltas). **Browser check phir nahi hua.**
+> 0 deltas) — 1707 → **1706**, hex 301 → **300**. **Browser check ab aadha naapa jata
+> hai:** `static/dev/ui-check.html` — 4 ✅, 4 ⬜ AANKH. Chaar commits, sab push.
+> **1075 pass, ruff saaf.**
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
 nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 52 topics — PY2 ke 42, phir PY1 ke 10.**
