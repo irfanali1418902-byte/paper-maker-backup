@@ -114,6 +114,44 @@ jo 2026-08-19 ko jaan-boojh kar scope se bahar ki gayi thin.
 **A liya gaya.** Aaj ka faasla: **1707 − 1400 = 307 lines**, yani lag-bhag utna hi jitna
 scope mein bacha hai — target pohanch mein hai magar har bacha hua tukda chahiye.
 
+### 6. Item 8 ka tail — teen rules jo do-do files mein hain **aur aapas mein mel nahi khatin**
+
+**Ye "chhe lines delete karo" wala kaam nahi nikla.** `STATUS.md` ka row in teen rules ko
+6 lines kehta tha; 2026-09-01 ko grep aur probe se naapa gaya to **teenon ki do-do copies
+hain aur har jodi mein qadrein alag hain.** Isi liye audit ne inhein `disagree` mein rakha
+hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti hain, is liye
+**pehle faisla, phir component.**
+
+**Naapa gaya (probe, 1280px):**
+
+```
+.options-grid   bank    gap=8px  margin-top=8px
+                print   gap=6px  margin-top=0px
+```
+
+| rule | kahan | ikhtilaf |
+|---|---|---|
+| `.options-grid` | `bank.css:77`, `print.css:257` | gap **8px** banaam **6px**; bank par `margin-top: 8px`, print par nahi. Print ke paas `.options-grid input { width:100% }` bhi hai, bank ke paas nahi. Bank ke paas `@760` ka `1fr` override bhi hai. |
+| `.strip-empty` | `bank.css:106`, `print.css:306` | sirf rang: `var(--muted2)` banaam **ek hardcoded hex**. Wo hex `unsanctioned_hex` mein ginta hai. |
+| `.list-empty` | `bank.css:163`, `blueprint.css:117` | padding **40px 20px** banaam **30px**. Baqi teen declarations barabar. |
+
+| | |
+|---|---|
+| **A** | **Component banao, farq page par chhoro** — mushtarka declarations `05-components/` mein, aur har page apna farq (`gap`, `margin-top`, `padding`) `pages/*.css` mein rakhe. Sab se zyada lines bachti hain, magar teen chhoti page-overrides banti hain. |
+| **B** | **Ek qadar par muttafiq ho jao** — yani `gap` dono jagah 8px (ya 6px), `padding` dono jagah ek. Sab se saaf CSS, **magar ye dikhne wali tabdeeli hai** aur bank/print ka farq jaan-boojh kar bhi ho sakta hai (print ki jagah tang hoti hai). |
+| **C** | **Haath na lagao** — page-only samjho, aur target ka faasla kahin aur se poora karo. |
+
+**Do baatein jo faisle se pehle jaan lena zaroori hai:**
+
+* **`.strip-empty` aur `.list-empty` dono JS se bante hain** (`innerHTML`, `bank.html:844`,
+  `:1007`, `print.html:354`, `bank.html:1256`, `blueprint.html:1063`). **`css_type_probe`
+  aur `css_state_probe` inhein sifar elements ginte hain, yani ghalat tabdeeli par bhi
+  0 deltas denge** (D45 ki shakl, PROBES.md rule 10). `css_inject_probe.mjs` ke fixtures
+  mein ye do abhi **nahi** hain — B ya A par jane se pehle **fixtures likhni parengi.**
+* **B ka ek muft faida hai:** `.strip-empty` ka print wala hardcoded hex `var(--muted2)`
+  ke haq mein khatam ho jayega, yani `unsanctioned_hex` ek aur ghatega.
+
 | # | answer |
 |---|---|
 | 5 target | **A — ~1400. Answered 2026-08-31** ✅ |
+| 6 item-8 tail | ⬜ **khula — 2026-09-01 ko naapa aur likha gaya** |

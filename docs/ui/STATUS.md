@@ -103,12 +103,16 @@ Server: `python -m uvicorn app.main:app --port 8000`
 > 301 → 302**, kyunke hex comment ke andar likha gaya tha aur counter use ginta hai.
 > **Wazahat PROGRESS.md mein likho, legacy file mein nahi.**
 
-* **Item 8 ka tail — 6 lines:** `.options-grid`, `.strip-empty`, `.list-empty`.
-  ⚠ **Ye chhe lines sirf `bank.css` mein hain; grep aath jagah dikhata hai** —
-  `blueprint.css:117` (`.list-empty`), `print.css:257–258, 306`, aur `bank.css:277` ki
-  media-query wali copy. Audit `page-only` chhorta hai, is liye us ke 6 mein ye nahi
-  aatin. **Chhoote waqt pehle naapo ke kaun `disagree` hai aur kaun page-only** — yehi
-  census wala sabaq hai jo teen sessions se lagataar fire ho raha hai.
+* **Item 8 ka tail — ⛔ ab FAISLA-TALAB hai, "6 lines delete" nahi.**
+  `.options-grid`, `.strip-empty`, `.list-empty` — **teenon ki do-do copies hain aur har
+  jodi mein qadrein alag hain** (naapa 2026-09-01: `.options-grid` gap **8px** banaam
+  **6px**; `.list-empty` padding **40px 20px** banaam **30px**; `.strip-empty` mein
+  `var(--muted2)` banaam hardcoded hex). Isi liye audit ne inhein `disagree` mein rakha
+  hai. **Teen soortein `DECISIONS-FOR-IRFAN.md` §6 mein likhi hain — pehle jawab, phir
+  kaam.**
+  ⚠ **`.strip-empty` aur `.list-empty` JS se bante hain** — `css_type_probe` inhein sifar
+  ginta hai, yani **ghalat tabdeeli par bhi 0 deltas dega.** `css_inject_probe.mjs` ke
+  fixtures mein ye do nahi hain; kaam se pehle fixtures likhni parengi.
 * ~~**`index` ki do murda `.tag` declarations**~~ — **✅ UI-074, magar row GHALAT thi.**
   09-01 ko dono alag alag naapi gayin: **`.topbar .tag` (`:288`) waqai murda thi —
   delete ho gayi** (0 deltas, das pages × paanch viewports). **Magar `.brand .tag`
