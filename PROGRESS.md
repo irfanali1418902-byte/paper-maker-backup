@@ -1,5 +1,53 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-01 — UI-074: `.topbar .tag` — "do murda declarations" mein se ek zinda nikla
+
+STATUS.md ka row kehta tha **"`index` ki do murda `.tag` declarations"**, aur
+`pages/index.css:245` ka comment bhi: *"Both legacy `.tag` declarations can go."*
+**Naapne par ek zinda nikli.** Agar row par bharosa kar ke dono delete ho jatin to
+index ka brand tagline apni tracking kho deta.
+
+**Naap (`css_selector_probe.mjs`, 2026-09-01), dono alag alag:**
+
+```
+.brand .tag    index   font-size=11px  color=rgb(79,70,229)  letter-spacing=0.44px
+.topbar .tag   index   font-size=11px  color=rgb(79,70,229)  letter-spacing=normal
+```
+
+* **`.brand .tag` (`99-legacy/index.css:32`) ZINDA hai.** 11px × `.04em` = **0.44px** —
+  wo `letter-spacing` kahin aur se nahi aa raha, `pages/index.css` ka `.tag` letter-spacing
+  declare hi nahi karta. **Chhora gaya, aur `:30–31` ka mojood comment** (*"Only the
+  tracking was ever live"*) **is ki hifazat pehle se karta hai.**
+* **`.topbar .tag` (`:288`) MURDA nikli** — 10.5px / hex ke bajaye 11px / `--color-action`
+  compute karti hai, yani `pages/index.css` ka `.tag`. **Delete ki gayi.**
+
+**Kyun murda, aur kyun `@media` ne use nahi bachaya:** `main.css:42` ka layer order
+`legacy, settings, generic, elements, objects, components, utilities` hai — **`legacy`
+sab se pehla, yani sab se kam wazan.** Layer ka faisla specificity se pehle hota hai
+**aur `@media` se bhi pehle** — is liye `max-width: 760px` block ke andar hone se us ko
+koi panaah nahi mili. Wo har width par murda thi.
+
+**Tasdeeq — `css_type_probe` ka poora snapshot, pehle aur baad (stash → naap → pop →
+naap):** das pages, paanch viewports (**1280, 900, 740, 700, 520** — yani wo mobile band
+bhi jahan ye rule waqai lagti hai), **kul element × property deltas: 0.**
+
+**Adad:** `unsanctioned_hex` **301 → 300** (rule apne saath ek ghair-manzoor hex le gayi),
+`legacy_css_lines` **1707 → 1706**, audit ka rule-block 1327 → 1326.
+
+### Ek sabaq jo naapne se mila: comment ki apni qeemat hai
+
+Pehli koshish mein maine 7-line ka wazahati comment likha. Naapne par
+`legacy_css_lines` **1707 → 1713** ho gaya **aur `unsanctioned_hex` 301 → 302** — kyunke
+**maine hex ko comment ke andar likh diya tha aur counter use ginta hai.** Yani ek murda
+rule hatane ke baad bhi dono adad ulti simt gaye. Comment chhota kiya, phir bilkul hataya:
+tab jaa kar 1706 / 300 mila. **`legacy_css_lines` sirf rules nahi, comments bhi ginta hai
+— wazahat PROGRESS.md mein likho, legacy file mein nahi.** (STATUS.md pehle se aagah
+karti thi: UI-073 mein 34 rule-lines ke saath 8 comment-lines gayi thin magar **naye
+comment 6 wapas aa gaye thay.**)
+
+**Scope par asar nahi:** deleted rule `page-only` thi (1051 → 1050), is liye `agree` 86 +
+`disagree` 190 = **276 jyun ka tyun**. Target ka faasla ab **1706 − 276 = 1430**.
+
 ## 2026-09-01 — Seeding: PY3 mukammal, PY2 aadha — aur do kharabiyan jo naapne par nikleen
 
 **Bank 850 → 1014 (+164).** Pre Year 3 ab **87/87 — mukammal**. Pre Year 2 23/87 →

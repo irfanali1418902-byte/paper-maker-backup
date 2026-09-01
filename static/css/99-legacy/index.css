@@ -285,7 +285,6 @@
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .topbar .name { font-size: 15.5px; font-weight: 700; line-height: 1.1; }
-    .topbar .tag { font-size: 10.5px; color: #9DB0D0; }
     .bottomnav {
       display: flex; position: sticky; bottom: 0; background: #fff;
       border-top: 1px solid var(--border); align-items: center;

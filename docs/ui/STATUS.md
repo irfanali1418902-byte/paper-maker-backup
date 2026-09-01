@@ -12,13 +12,18 @@
 > P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-02 nahi hai to
 > **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
-> **2026-09-01 ka natija:** bank **850 → 1014** (+164). **PY3 ab 87/87 — mukammal.**
-> PY2 23/87 → **41/87**. **CSS par kuch nahi hua, browser check phir nahi hua.**
-> Din ka kaam sirf seeding tha; koi commit nahi (ye board hi pehla hai).
-> 1075 pass, ruff saaf (dono 09-01 ko chalaye).
+> **2026-09-01 ka natija:** bank **850 → 1030** (+180). **PY3 ab 87/87 — mukammal.**
+> PY2 23/87 → **45/87**. **Din ka quota HTTP 429 par khatam hua** — aakhri run 46 mein se
+> 9 topics tak pahunchi (4 kaamyab, 5 fail). CSS mein UI-074 (`.topbar .tag`, probed dead,
+> 0 deltas). **Browser check phir nahi hua.**
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
-nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 56 topics — PY2 ke 46, phir PY1 ke 10.**
+nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 52 topics — PY2 ke 42, phir PY1 ke 10.**
+
+> **09-01 ko quota ka anjaam aankhon se dekha gaya:** `FAIL: Gemini ka quota/rate-limit
+> lag gaya (HTTP 429)`. Script rukti nahi, **har baqi topic par yehi FAIL deti hai** —
+> is liye output ka tail parho, sirf exit code par mat jao (exit code 0 tha).
+> Us din ~180 sawal ke baad quota khatam hua; ye taqreeban hai, hadd nahi.
 
 ```
 python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
@@ -55,11 +60,11 @@ python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types
 ```
 grade         topics  seeded  baqi   sawal
 Pre Year 1        81      71    10     329
-Pre Year 2        87      41    46     164
+Pre Year 2        87      45    42     180
 Pre Year 3        87      87     0     348   <- mukammal
 Grade 4           11      11     0      43
 G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
-KUL              310     210   100    1014
+KUL              310     214    96    1030
 ```
 
 **DO CHEEZEIN JO NAAPI GAYIN AUR THEEK NAHI HAIN — faisla Irfan ka, maine kuch nahi badla:**
@@ -91,7 +96,12 @@ Server: `python -m uvicorn app.main:app --port 8000`
 | shortfall warning ka andar ka text | `blueprint.html` (paper banao) |
 | **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi |
 
-**3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1707**, target **1400**.
+**3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1706**, target **1400**.
+
+> ⚠ **Comment ki apni qeemat hai — 09-01 ko naapa gaya.** UI-074 mein 7-line ka wazahati
+> comment likhne se `legacy_css_lines` **1707 → 1713** ho gaya **aur `unsanctioned_hex`
+> 301 → 302**, kyunke hex comment ke andar likha gaya tha aur counter use ginta hai.
+> **Wazahat PROGRESS.md mein likho, legacy file mein nahi.**
 
 * **Item 8 ka tail — 6 lines:** `.options-grid`, `.strip-empty`, `.list-empty`.
   ⚠ **Ye chhe lines sirf `bank.css` mein hain; grep aath jagah dikhata hai** —
@@ -99,8 +109,12 @@ Server: `python -m uvicorn app.main:app --port 8000`
   media-query wali copy. Audit `page-only` chhorta hai, is liye us ke 6 mein ye nahi
   aatin. **Chhoote waqt pehle naapo ke kaun `disagree` hai aur kaun page-only** — yehi
   census wala sabaq hai jo teen sessions se lagataar fire ho raha hai.
-* **`index` ki do murda `.tag` declarations** — review ne 2026-08-29 ko naapin.
-  (09-01 ko mojood paayi gayin: `index.css:32` `.brand .tag`, `:288` `.topbar .tag`.)
+* ~~**`index` ki do murda `.tag` declarations**~~ — **✅ UI-074, magar row GHALAT thi.**
+  09-01 ko dono alag alag naapi gayin: **`.topbar .tag` (`:288`) waqai murda thi —
+  delete ho gayi** (0 deltas, das pages × paanch viewports). **Magar `.brand .tag`
+  (`:32`) ZINDA hai** — 0.44px letter-spacing, jo kahin aur declare nahi hota. **Wo
+  chhori gayi hai; use delete mat karna.** `pages/index.css:245` ka comment
+  (*"Both legacy `.tag` declarations can go"*) **is baare mein ghalat hai.**
 * **`body` ka bacha hua hissa** (UI-073 ne sirf murda hissa liya): `display:flex` +
   `min-height:100vh` chhe pages par — `pages/plan.css` ka `@layer objects { body }`
   namoona mojood hai, **faisla Irfan ka**; `@media` ka `flex-direction: column` saat
@@ -127,7 +141,7 @@ disagree           232              190
 scope mein         308              276
 ```
 
-**`1707 − 276 = 1431`** — yani sirf rules delete karne se **1400 nahi aata, ~31 lines
+**`1706 − 276 = 1430`** — yani sirf rules delete karne se **1400 nahi aata, ~30 lines
 reh jati hain.** Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
 **1707** poori file ginta hai, jab ke audit ka 1327 sirf rule-block lines hai — beech ka
 farq comments, blank lines aur `@media` ke bracket hain, **jo apni rules ke saath khud
@@ -138,9 +152,9 @@ comment 6 wapas aaye). Yani 1400 **ban sakta hai, magar khud-ba-khud nahi**.
 number board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —
 chupke se target mat badalna.
 
-> **09-01 ko CSS par kuch nahi hua** — poora din seeding par gaya. Ye teenon adad us din
-> dobara naape gaye aur **hile nahi**: `legacy_css_lines` 1707, `unsanctioned_hex` 301,
-> scope 276. Yani faasla ab bhi ~31 lines ka hai.
+> **09-01 ka asar chhota tha:** UI-074 ne ek murda rule li — `legacy_css_lines` 1707 →
+> **1706**, `unsanctioned_hex` 301 → **300**. Deleted rule `page-only` thi, is liye
+> **scope 276 par jyun ka tyun hai** aur faasla ab bhi **~30 lines** ka hai.
 
 **Aur jo bilkul na karna ho:** `master` merge item 9 se pehle.
 
