@@ -77,6 +77,83 @@ naape aage chala diye. **Wahi purani bimari: row ka adad naapo, us par bharosa m
 Aaj ki baqi seeding ke baad **backfill chalani hogi**, jo naye rows ko bhi utha legi.
 Tafseel `docs/ui/DEFERRED.md` **D60** mein.
 
+### Seeding: quota chauthe topic par lag gayi — 168 maange, 12 mile
+
+PY2 ke 42 topics ka run (backup + dry run pehle, `paper_maker_backup_before_preyear2_seed_20260902.db`).
+Dry run ne 42 topic × 4 = 168 kaha. Asal natija:
+
+```
+Kul mehfooz: 12 sawal, 3/7 topics
+Run beech mein ruki -- 35 topics chhu-e bhi nahi gaye.
+```
+
+**Exit code 0 tha.** Ye board ka sabaq hai aur aaj phir sach nikla: **tail parho, exit code
+par mat jao.** 09-01 ko ~180 sawal ke baad quota lagi thi, aaj **chauthe topic par** —
+yani quota ki hadd din-ba-din alag hai aur us par plan nahi bandha ja sakta.
+
+**Bank 1030 → 1042. PY2 45 → 48/87. Baqi ba-ikhtiyar ab 49 topics** (PY2 ke 39, PY1 ke 10).
+
+**DB saaf nikli, naapi gayi:** `integrity_check` ok, teenon chhue gaye topics mein **poore
+4-4 sawal** (koi adhoora topic nahi — script har topic ke baad commit karti hai), aur aaj ke
+12 ka dhaancha saaf: khaali sawal 0, khaali jawab 0, Urdu 12/12, tashreeh 12/12.
+
+#### Board ka ek daawa ghalat nikla — aur us se 09-01 ka muamma hal ho gaya
+
+Board kehta tha: *"Script rukti nahi, **har baqi topic par yehi FAIL deti hai**."*
+Naapa gaya — `seed_bank.py`:59 par `MAX_CONSECUTIVE_RATE_LIMITS = 3` hai, aur script
+musalsal teen 429 par **jaan-boojh kar rukti hai**:
+
+```
+  RUK GAYE: musalsal 3 dafa rate limit.
+```
+
+**Board ki nasihat (tail parho) bilkul sahi thi; us ke saath likhi wajah ghalat thi.**
+Aur isi se wo muamma hal hota hai jise board "**kyun kata, maloom nahi — output file khali
+thi**" kehta hai: 09-01 ko bhi qareeb yaqeenan yehi stop tha, jo sirf is liye nazar nahi
+aaya ke output kahin mehfooz nahi hua tha. **Is liye ab output hamesha file mein
+(`> seed.log 2>&1`)** — aaj yehi kiya gaya aur isi wajah se ye baat maloom hui.
+
+### Backfill: 583 rows, koi AI call nahi
+
+`learning_outcome` AI se nahi, syllabus row se aata hai — is liye khaali rows ki qeemat
+**pehle se DB mein mojood thi**. Backup (`paper_maker_backup_before_lo_backfill_20260902.db`),
+phir preview, phir `--write`:
+
+```
+khaali LO       713 -> 130
+likhi gayin     583
+kul sawal      1042 (badla nahi)
+integrity_check  ok
+```
+
+**Script ke apne daawe par bharosa nahi kiya — backup se row-by-row diff liya gaya:**
+
+```
+rows: pehle 1042, ab 1042, gayab 0, naye 0
+badle hue columns: {'learning_outcome': 583}
+```
+
+Yani **theek ek column, theek 583 rows**. Alag se naapa: bache hue **130 ke 130 wahi English
+rows hain jin ka `syllabus_topic_id` NULL hai**, aur bhare hue **583 ke 583 apne topic se
+hu-ba-hu** mel khate hain. Purane 329 rows (07-15/07-19 wale) **chhue hi nahi gaye** — un ka
+outcome alag raaste se aaya tha aur topic se mukhtalif hai, jo theek hai.
+
+### PY1 ke baqi das topics — aik tanbeeh jo naapne par nikli
+
+Baqi topics ke titles aankh se dekhe gaye (board ka qaida). **Khatra PY2 mein nahi, PY1 mein
+hai:**
+
+```
+       baqi topics   alag titles   LO == title
+PY2         39           ~30          41/42
+PY1         10            3           10/10
+```
+
+PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur har topic ka
+`learning_outcome` bilkul title ke barabar — yani **saat qareeb-yaksan prompt**. PY3 par yehi
+shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
+dohraav naapna zaroori hai.
+
 ## 2026-09-01 — `ui-check.html`: browser check ka aadha hissa ab naapa jata hai
 
 Browser check **teen sessions se ⬜ par khara tha** — is liye nahi ke mushkil tha, is liye

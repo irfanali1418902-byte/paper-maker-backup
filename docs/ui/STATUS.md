@@ -5,27 +5,61 @@
 
 ---
 
-## 📅 PLAN — **2026-09-02 ke liye**, is tarteeb mein
+## 📅 PLAN — **2026-09-03 ke liye**, is tarteeb mein
 
-> *(Likha 2026-09-01. Heading mein tareekh hai, "kal" nahi — is repo mein har
+> *(Likha 2026-09-02. Heading mein tareekh hai, "kal" nahi — is repo mein har
 > relative label basi ho kar jhoot ban chuka hai: `HANDOFF.md` ka banner nau din,
-> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-02 nahi hai to
+> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-03 nahi hai to
 > **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
-> **2026-09-01 ka natija:** bank **850 → 1030** (+180). **PY3 ab 87/87 — mukammal.**
-> PY2 23/87 → **45/87**. **Din ka quota HTTP 429 par khatam hua** — aakhri run 46 mein se
-> 9 topics tak pahunchi (4 kaamyab, 5 fail). CSS mein UI-074 (`.topbar .tag`, probed dead,
-> 0 deltas) — 1707 → **1706**, hex 301 → **300**. **Browser check ab aadha naapa jata
-> hai:** `static/dev/ui-check.html` — 4 ✅, 4 ⬜ AANKH. Chaar commits, sab push.
-> **1075 pass, ruff saaf.**
+> **2026-09-02 ka natija — din audit par gaya, seeding quota par mari gayi.**
+> Irfan ne audit maanga; **board pehli baar poora sach nikla** (310/214/96, 1030 sawal,
+> 1706 lines, scope 276, 1075 pass — sab dobara naape gaye aur sab barabar), sirf
+> commit-count basi tha (45 likha, **50** tha).
+>
+> **Seeding:** PY2 ke 42 topics maange, **quota chauthe topic par lag gaya** — sirf
+> **12 sawal, 3/7 topics**, 35 topics chhue hi nahi gaye. Bank **1030 → 1042**,
+> PY2 45 → **48/87**. **Baqi ba-ikhtiyar 49 topics: PY2 ke 39, PY1 ke 10.**
+>
+> **`persist_batch` ka surakh (`DEFERRED.md` D60):** `learning_outcome` kabhi save nahi
+> hota tha — 571/571 gemini sawal khaali. Fix `master` se kaati branch par
+> (`fix/persist-batch-learning-outcome`, `f547f21`, ek line + paanch tests, 980 pass),
+> **is branch par nahi** — `PLAN.md` §6 yahan service tabdeeli mana karta hai.
+> **Backfill chal gaya:** 583 rows syllabus se bhari gayin, koi AI call nahi;
+> khaali `learning_outcome` **701 → 130**, aur wo 130 English bulk-import ki hain
+> jin ka `syllabus_topic_id` NULL hai. Backup se row-by-row diff: **sirf
+> `learning_outcome` badla, 583 rows, koi row na gayi na aayi.**
+>
+> **CSS par aaj kuch nahi hua** — 1706 jyun ka tyun. **Browser check phir nahi hua**
+> (ab chaar sessions se khula). Do commit bane, **dono un-pushed**.
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
-nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 52 topics — PY2 ke 42, phir PY1 ke 10.**
+nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phir PY1 ke 10.**
 
-> **09-01 ko quota ka anjaam aankhon se dekha gaya:** `FAIL: Gemini ka quota/rate-limit
-> lag gaya (HTTP 429)`. Script rukti nahi, **har baqi topic par yehi FAIL deti hai** —
-> is liye output ka tail parho, sirf exit code par mat jao (exit code 0 tha).
-> Us din ~180 sawal ke baad quota khatam hua; ye taqreeban hai, hadd nahi.
+> **Quota ka anjaam aankhon se dekha gaya, dono din:** `FAIL: Gemini ka quota/rate-limit
+> lag gaya (HTTP 429)`. **Output ka tail parho, sirf exit code par mat jao** — 09-02 ko
+> exit code **0** tha jab ke 168 mein se sirf **12** sawal bane.
+>
+> ⚠ **09-01 ka wo jumla ke "script rukti nahi, har baqi topic par yehi FAIL deti hai"
+> GHALAT tha — 09-02 ko naapa gaya.** `seed_bank.py`:59 par
+> `MAX_CONSECUTIVE_RATE_LIMITS = 3` hai: musalsal teen 429 par script **jaan-boojh kar
+> rukti hai** aur saaf likhti hai —
+>
+> ```
+>   RUK GAYE: musalsal 3 dafa rate limit.
+> Kul mehfooz: 12 sawal, 3/7 topics
+> Run beech mein ruki -- 35 topics chhu-e bhi nahi gaye.
+> ```
+>
+> **Aur is se 09-01 ka wo muamma bhi hal hota hai jise ye board "kyun kata, maloom nahi"
+> kehta hai** — wo qareeb yaqeenan yehi stop tha, jo sirf is liye nazar nahi aaya ke us
+> din output file khali reh gayi thi. **Nasihat sahi thi, wajah ghalat.**
+>
+> **Quota ki hadd din-ba-din alag hai, is liye us par plan mat bandho:** 09-01 ko ~180
+> sawal ke baad lagi, 09-02 ko **chauthe topic par** hi lag gayi.
+>
+> **Output hamesha file mein bhejo** (`> seed.log 2>&1`) — do baar ye tail sirf is liye
+> nahi parha ja saka ke wo kahin mehfooz hi nahi hua tha.
 
 ```
 python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
@@ -40,34 +74,46 @@ python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types
 > **Pehle dry run, phir `--write`, aur `--write` se pehle backup.** Namoona:
 > `paper_maker_backup_before_preyear2_seed_20260901.db`.
 >
-> **Dobara chalana mehfooz hai:** `--include-seeded` ke baghair script pehle se seeded
-> topics chhorti hai, aur har topic ke baad commit karti hai. 09-01 ko PY2 ka run beech
-> mein kat gaya (18/64 topics ke baad) — DB phir bhi saaf thi: `integrity_check` ok, koi
-> adhoora topic nahi, har chhue topic mein poore 4 sawal. **Kyun kata, maloom nahi —
-> output file khali thi.**
+> **Dobara chalana mehfooz hai, aur ye do baar naapa ja chuka hai:** `--include-seeded`
+> ke baghair script pehle se seeded topics chhorti hai, aur **har topic ke baad commit
+> karti hai** — is liye beech mein ruk jane par bhi koi topic adhoora nahi rehta.
+> 09-01 (18 topics ke baad ruki) aur 09-02 (3 ke baad) — **dono dafa DB saaf**:
+> `integrity_check` ok, har chhue topic mein poore 4 sawal.
 >
 > **Rows aankh se dekho — do alag khatre hain, aur dono ki shakl alag hai:**
 > 1. **Jaali syllabus** — 2026-08-21 ko paanch rows ek jaisi nikleen, 44 ghalat sawal
 >    delete karne pare. Chaar jaali jode (G5, G6, Science G7, Geography G8) **seed karna
->    mana hai** jab tak asal syllabus import na ho. 09-01 ko naapa: chaaron ab bhi **0**.
-> 2. **Dohraya hua title** — PY3 mein `Concept of subtraction` ke chaar baqi topics ka
->    `learning_outcome` bhi title ke barabar tha, yani ek jaisa prompt. **09-01 ko dobara
->    naapa aur dobara mauzoon nikla** (16 sawal, 16 ke 16 alag) — magar naapo, farz mat
->    karo. PY2 ke baqi 64 mein bhi yehi shakl hai: 64 topics magar sirf **52 alag titles**
->    (`Practice of subtraction` 5x, `Concept of addition` 4x, `Practice of addition of
->    currency` 3x).
+>    mana hai** jab tak asal syllabus import na ho. 09-02 ko naapa: chaaron ab bhi **0**.
+> 2. **Dohraya hua title** — 09-02 ko baqi topics par naapa gaya, aur **PY1 sab se
+>    khatarnaak nikla, PY2 nahi**:
+>
+>    ```
+>    baqi topics   alag titles   LO == title
+>    PY2   39          ~30           41/42
+>    PY1   10           3            10/10   <- "Practice and Review of number and
+>                                                 value" SAAT baar
+>    ```
+>
+>    Yani PY1 ke das mein se **saat qareeb-yaksan prompt** hain. PY3 par yehi shakl thi
+>    aur natija phir bhi mauzoon nikla tha (16 sawal, 16 ke 16 alag) — **magar wo PY1 ka
+>    saboot nahi hai. Un ke banne ke baad dohraav zaroor naapo.**
 
-**BANK KA HISAAB — 2026-09-01 ko naapa gaya (adad yahan se parho, yaad se nahi):**
+**BANK KA HISAAB — 2026-09-02 ko naapa gaya (adad yahan se parho, yaad se nahi):**
 
 ```
 grade         topics  seeded  baqi   sawal
 Pre Year 1        81      71    10     329
-Pre Year 2        87      45    42     180
+Pre Year 2        87      48    39     192
 Pre Year 3        87      87     0     348   <- mukammal
 Grade 4           11      11     0      43
 G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
-KUL              310     214    96    1030
+KUL              310     217    93     912
 ```
+
+> **`912` topic-se-jure sawal hain; `questions` table mein kul 1042 hain.** Farq wo
+> **130 English sawal** hain jin ka `syllabus_topic_id` NULL hai (bulk Excel import) —
+> un ke liye koi syllabus row hai hi nahi. **Dono adad theek hain, bas alag cheez
+> ginte hain** — jo bhi "bank ka size" likhe, batae ke kaun sa.
 
 **DO CHEEZEIN JO NAAPI GAYIN AUR THEEK NAHI HAIN — faisla Irfan ka, maine kuch nahi badla:**
 
@@ -84,7 +130,14 @@ KUL              310     214    96    1030
    > aur `bulk_import_service.py:334` un ka khana **bharta** hai — wo Excel ka column
    > khaali hone se khaali hain. **Fix `f547f21` par ho chuki hai magar `master`-wali
    > branch par — IS branch par nahi**, is liye yahan se chalayi gayi seeding ab bhi
-   > khaali likhegi aur baad mein **backfill** chahiye (571 rows, syllabus se SQL, muft).
+   > khaali likhegi aur baad mein **backfill** chahiye (syllabus se SQL, muft).
+   > **✅ BACKFILL 09-02 KO CHAL GAYA:** 583 rows bhari gayin, khaali **701 → 130**.
+   > Backup se row-by-row diff liya gaya — **sirf `learning_outcome` badla, 583 rows,
+   > koi row na gayi na aayi**, `integrity_check` ok. Bache hue 130 wohi English
+   > bulk-import wale hain (`syllabus_topic_id` NULL) — **un ki wajah ye bug nahi hai**
+   > aur unhein syllabus se nahi bhara ja sakta; wo Excel ya manual ka kaam hai.
+   > ⚠ **Har seeding ke baad ise dobara chalana parega** jab tak `master` merge na ho —
+   > wo ek line is branch par nahi hai.
 2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
    mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
    batch (4.4 / 4.55) pichhle sab AI batches ke barabar hai — **behkaav aaj nahi aaya**,
