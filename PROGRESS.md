@@ -154,6 +154,51 @@ PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur
 shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
 dohraav naapna zaroori hai.
 
+### D59 band — 1039 lines delete, aur row ki apni dalil ghalat nikli
+
+`STATUS.md` kehta tha *"Item 9 — ... **D59 pehle** (`css_orphans.py` basi hai)"*, yani ye
+waahid CSS kaam tha jo Irfan ke kisi faisle par nahi ruka hua tha.
+
+**D59 ka bayan sach nikla:** `css_orphans.py` har run ke shuru mein
+`WARNING: static/theme.css not found` deta hai aur `supplied`/`covered`/`compat`/`fallbk`/
+`collide` — paanchon column — nau ke nau pages par **0**.
+
+**Magar us ki dalil sach nahi nikli.** Row kehti thi:
+
+> *"Deleting it is tempting and wrong: its `--rules` mode does a job nothing else does."*
+
+Chala kar dekha:
+
+```
+static/theme.css: 0 rules probed (0 selectors; 0 token rule(s) excluded)
+browser: Edg/152.0.4191.53
+
+page        theme?  elems  match  redecl  partial  orphan  state  EXPOSURE  media  drift
+bank            no     54      0       0        0       0      0         0      0      0
+...  (nau ke nau pages, har column 0)
+```
+
+`--rules` bhi usi deleted file par khara hai (`:89` ka `OLD_THEME`) — aur ye **sifar naapne
+ke liye asli browser bhi chalata hai**. Yani **dono halves murda thay, ek nahi.**
+
+**Delete:** `scripts/css_orphans.py` (822) + `scripts/css_rules_probe.mjs` (217, sirf us ke
+`--rules` ka DOM half, `PROBES.md`:28) = **1039 lines**. Pehle naapa gaya ke koi cheez in par
+khari nahi: **kisi test mein nahi, kisi script mein nahi** — sirf docs ke hawale.
+
+**Rakhne ke bajaye delete kyun:** poore aitmad ke saath, saaf-suthri table mein sifar
+chhapne wala auzaar na-mojood auzaar se **bura** hai. Saboot khud D59 hai — use likhna para
+tha *"do not quote its table before then"*, aur aisi tanbeeh sirf us par kaam karti hai jo
+pehle `DEFERRED.md` parhe. Naap git history mein aur `PROBES.md` mein mehfooz hai.
+
+**Kisi ne is ki jagah nahi li, kyunke sawal band hua hai, muntaqil nahi.** Wo poochta tha
+*"`static/theme.css` unlink hone par page kya khota hai"* — wo file mojood nahi aur koi page
+use link nahi karta. Qareeb-tareen zinda sawal (*"koi `var()` hal hone se reh to nahi
+gayi?"*) **UI-072 / D14** band kar chuka hai: poore repo mein zero. Sprint 6 ka drain sawal
+`css_drain_probe.mjs` hai — wo **ulta** sawal hai aur mutassir nahi hua.
+
+**Item 9 ab khula hai.** 1075 pass, ruff saaf, ratchet OK (CSS ki ek line bhi nahi chhui —
+ye auzaar the, app ka code nahi).
+
 ## 2026-09-01 — `ui-check.html`: browser check ka aadha hissa ab naapa jata hai
 
 Browser check **teen sessions se ⬜ par khara tha** — is liye nahi ke mushkil tha, is liye

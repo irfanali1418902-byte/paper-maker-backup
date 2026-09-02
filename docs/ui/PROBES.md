@@ -19,14 +19,14 @@ in a scratchpad.
 | `css_margin_probe.mjs` | **print** | `print.html` only: the margin chain (`html`/`body`/`.print-main`/`.sheet`), the three print knobs, `@page` as the engine sees it, and the PDF. Written for D35. |
 | `css_margin_diff.mjs` | — | Diffs two `css_margin_probe` runs and **names every element whose box moved**. Written because "12 elements changed padding" is not an answer when the question is whether the printed margin moved. |
 | `css_page_rule_probe.mjs` | **print** | Walks the CSSOM **including `@import`ed sheets** to find `@page` and report which layer it arrived in. **With an optional second argument (a selector substring) it also reports every `CSSStyleRule` carrying it — the layer it arrived in, and how many elements it matches.** That is the "is this new rule inert, or is it simply not there?" check UI-041's review ran by hand; UI-041b made it a flag. |
-| `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`.** That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside ITS OWN 40 all read 0 without being dead. Its header lists all four. **⚠ Two of those four are no longer shared limits, and that changes what a zero here is worth:** `css_type_probe` now reads five width bands and 58 properties, this probe still reads 1280x900 and 40. Its header's line "One size, 1280x900, same as css_type_probe" was corrected on 2026-08-26. **If a drain candidate sits inside an `@media` block, confirm it with `css_type_probe` at the relevant band before deleting it.** |
+| `css_drain_probe.mjs` | screen | **Sprint 6's tool, and it answers the opposite question to `css_orphans.py`** (deleted 2026-09-02, D59). That one asked what a page LOSES when `static/theme.css` is unlinked; this asks, of each rule still sitting in `99-legacy/<page>.css`, **"if I delete it, does anything move?"** Deletes each rule from the CSSOM, re-snapshots, counts deltas, puts it back — one page load, no file ever edited. **A zero is a candidate, not a verdict**: `@media` blocks outside the viewport, JS-rendered content, `:hover`/`:focus`, and properties outside ITS OWN 40 all read 0 without being dead. Its header lists all four. **⚠ Two of those four are no longer shared limits, and that changes what a zero here is worth:** `css_type_probe` now reads five width bands and 58 properties, this probe still reads 1280x900 and 40. Its header's line "One size, 1280x900, same as css_type_probe" was corrected on 2026-08-26. **If a drain candidate sits inside an `@media` block, confirm it with `css_type_probe` at the relevant band before deleting it.** |
 
 | `css_selector_probe.mjs` | screen | **What does this selector actually compute to, page by page?** Takes a selector, a property list and a page list. **`--add=<selector>:<class>` adds a class before reading and removes it after**, which is the only way to reach state that is `display: none` at rest — `.status-bar`'s `.ok`/`.err`/`.warn` are written by inline JS and `.modal-backdrop` needs `.open`, so `css_type_probe` returns 0 for both whether the CSS is right or wrong. Written 2026-08-15/16, when it found **six** families whose rule text was byte-identical across files and whose resolved values were not. Its header lists them. |
 
 | `css_state_probe.mjs` | screen | **What does a HOVERED, FOCUSED, ACTIVE or DISABLED element paint?** Every other probe here reads the page **at rest**, so a state declaration contributes **zero deltas whether it is right or wrong**. Forces the state through CDP `CSS.forcePseudoState` — the flag the style engine itself reads, so the cascade resolves as it would under a real pointer, with no synthetic mouse events to race the pages' JS. `:disabled` is the exception and is applied as the **attribute**, then restored. Writes `css_type_probe`'s exact JSON shape, so **`css_type_diff.mjs` compares two runs unchanged**, `--names` included. Carries **`outline-*`, which `css_type_probe` does not have at all**. **Five states, and FOCUS IS TWO OF THEM:** `focus` forces `:focus` alone (pointer focus — this is the pass that sees `forms.css`:79 and every `input:focus` rule), `focus-visible` forces **both** `:focus` and `:focus-visible`, because a real tab-stop matches both and anything else models a state no user can reach. |
 
-`css_rules_probe.mjs` (older, UI-032) is the DOM half of `css_orphans.py --rules` and is
-unrelated to these.
+`css_rules_probe.mjs` (older, UI-032) was the DOM half of `css_orphans.py --rules`. **Both
+files were deleted on 2026-09-02 — see below and `DEFERRED.md` D59.**
 
 **Rule 10, added 2026-08-25, and it is the only rule here that was proved by a control rather
 than by a bug: A GATE THAT READS THE PAGE AT REST CANNOT SEE A STATE.** `css_state_probe.mjs`
@@ -113,10 +113,25 @@ and that file's own comment says so. **A selector list that is wider than the ru
 test will accuse the app of the test's own sloppiness.** Name the exact selector the rule
 names, and print the neighbouring value separately if it is interesting.
 
-**`css_orphans.py`'s main job is over.** It measured pages against `static/theme.css`, and that
-file was deleted on 2026-08-13. It still runs — it degrades with a warning rather than crashing
-— but every column now reads zero, correctly, because no page can be exposed to a file that
-does not exist.
+**`css_orphans.py` and `css_rules_probe.mjs` were DELETED on 2026-09-02 (D59 closed).** They
+measured pages against `static/theme.css`, and that file was deleted on 2026-08-13.
+
+**D59's own reason for keeping the file was measured and found false.** That row said
+*"Deleting it is tempting and wrong: its `--rules` mode does a job nothing else does."*
+Run on 2026-09-02, `--rules` reported `static/theme.css: 0 rules probed (0 selectors)` and
+**zero in every column on all nine pages** — it reads the deleted file too. Both halves were
+dead, not one. The table half printed the same nine rows of zeros with a warning at the top.
+
+**Why deleted rather than left to degrade:** a tool that prints a confident, well-formatted
+table of zeros is worse than an absent one. D59 itself had to warn *"do not quote its
+table before then"* — a warning that only works on someone who reads `DEFERRED.md` first.
+The measurement lives in git history and in this paragraph.
+
+**Nothing replaced them, because the question is closed, not moved.** They asked *"what does
+a page LOSE when `static/theme.css` is unlinked?"*; that file no longer exists and no page
+links it. The nearest live question — *"does any `var()` fail to resolve?"* — was settled by
+**UI-072 (D14)**: zero unresolved `var()` on any page. Sprint 6's drain question is
+`css_drain_probe.mjs`, which is the opposite question and is unaffected.
 
 ---
 

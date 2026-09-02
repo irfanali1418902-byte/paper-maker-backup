@@ -204,10 +204,17 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
   pehle naapo** (UI-05x mein isi ne 75 deltas diye thay); `html, body { height: 100% }`
   **naapa nahi gaya**; `index` ke teen `body.lang-ur` (`05-components/urdu.css` mojood
   hai, magar khandan badalna apna faisla hai).
-* **Item 9** — `app.css` delete, mockups move, final sweep. **D59 pehle**
-  (`css_orphans.py` basi hai) — ya use saaf lafzon mein retire karo.
-* **Phir `master` merge** — 09-01 ko naapa: **45 commits aage**, 0 peechhe. Item 9 se
-  pehle **nahi**.
+* **Item 9** — `app.css` delete, mockups move, final sweep. **✅ D59 ab rukawat nahi:**
+  09-02 ko `css_orphans.py` (822) aur `css_rules_probe.mjs` (217) **delete ho gayin**.
+  D59 kehta tha ke `--rules` mode ko bachana chahiye kyunke wo "wo kaam karta hai jo aur
+  koi nahi karta" — naapne par **wo bhi bilkul murda nikla** (0 rules probed, nau pages
+  par har column 0). Tafseel D59 aur `PROBES.md` mein. **Item 9 ab khula hai.**
+* **Phir `master` merge** — 09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**.
+  ⚠ **Ye adad har commit par badalta hai — isay yahan se mat quote karo, naapo:**
+  `git rev-list --left-right --count master...HEAD`. Board is se pehle do baar basi
+  mila (09-01 ne 45 likha, 09-02 ko 50 tha). Item 9 se
+  pehle **nahi**. ⚠ Merge ke waqt `master` par `fix/persist-batch-learning-outcome`
+  (D60 ka fix) bhi shamil hona chahiye, warna wo ek line yahan nahi aayegi.
 
 **4. ⚠ TARGET KA HISAAB TANG HAI — ye agle session ki pehli CSS baat hai.**
 
