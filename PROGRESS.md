@@ -154,6 +154,70 @@ PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur
 shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
 dohraav naapna zaroori hai.
 
+### D57 — row ka symptom mojood nahi, us ka fix nuqsan-deh, aur asal khatra ab test se guarded
+
+Board D57 ko "item 9 se pehle" schedule karta tha, to item 9 ke baad ye uthai gayi.
+**Teen mein se do baatein naapne par ghalat nikleen.**
+
+**1. "sets the school name" ghalat hai.** `/api/brand` school ka naam deta hi nahi:
+
+```
+{"name":"Parcha","full_name":"Parcha Paper Maker","tagline":"Exam paper generator"}
+```
+
+School ka naam school-settings mein hai aur sirf **chhape hue letterhead** par aata hai
+(`print.html`:1036–37, `#schoolNameEn` / `#schoolNameUr`) — jise `brand.js` chhoota hi
+nahi. **Chhapa hua parcha kabhi khatre mein tha hi nahi**, aur ye baat is session mein
+maine pehle khud ulta bayan ki thi (kaha tha "teacher ke chhape parche par naam ghalat");
+naapne par wo ghalat nikla aur usi waqt durust kar diya gaya.
+
+**2. "print's sidebar shows the hardcoded string while the other pages show the configured
+school name" — koi farq hai hi nahi.** `brand.js` `.brand .name` mein `full_name` likhta
+hai = `"Parcha Paper Maker"`, aur **wohi string pehle se har page ke markup mein mojood
+hai** (`slo.html`:13, `print.html`:12, `plan.html`:16). Yani aaj daswon pages bilkul ek
+jaisa dikhate hain, script pohanche ya na pohanche.
+
+**3. Row ka rukh ulta nuqsan karta.** Wo kehti thi print par bhi brand.js chalao.
+`print.html` ke `<body>` par `data-page` hai hi nahi, aur script title ko
+`data-page ? "<page> — <full_name>" : "<full_name>"` set karti hai — yani title
+**`Exam Paper — Print` se ghat kar sirf `Parcha Paper Maker`** reh jata. **Maloomat kam
+karne wala "fix".**
+
+#### Jo sach hai: khatra aaj ka farq nahi, kal ki khamoshi hai
+
+`brand.js` presentational classes par chalta hai (`CLAUDE.md` §11 isi ko mana karta hai),
+aur drain `.brand` ko lay ja raha hai. Jis din wo class markup se jayegi, **na error aayega,
+na koi test toote ga — bas naam update hona band ho jayega.**
+
+**Aur ye ho chuka hai.** Naapa gaya, har page par alag alag:
+
+```
+.brand .name   ->  bank blueprint index landing library slo slo-health taqseem : n=1
+                   plan, print : no match
+```
+
+`plan.html` brand.js load karti hai aur us ke **dono** selectors sifar element chhoote hain
+— yani wo khamoshi jis se baqi ko bachana hai, wahan pehle se mojood hai.
+
+#### `tests/test_brand_hooks.py` — teen tests, aur guard control se sabit
+
+Regex ke bajaye stdlib `html.parser` (class attribute ki tarteeb aur nesting regex se theek
+nahi parhi jati; koi nayi dependency nahi). Tests:
+
+1. `print` hi waahid page hai jo brand.js load nahi karti — **aur karni bhi nahi chahiye**,
+   wajah docstring mein (title ghat jata).
+2. Jo bhi page brand.js load karti hai, us par hook mojood ho.
+3. **Ulta test:** `plan` waahid page hai jahan hook pehle se gaayab hai — **agar plan theek
+   ho jaye to ye FAIL karega** aur agle session ko batayega ke D57 band karo. Ek known gap
+   ko khamoshi se exempt karna wahi bimari hoti jo D57 khud hai.
+
+**Guard chalta hai ye control se sabit kiya, daawe se nahi:** `slo.html` se `.name` class
+hata kar (drain ki naqal) test chalaya — `assert not {'slo.html'}` par fail hua, theek us
+page ka naam le kar. File bahal, `git status` khali.
+
+**1078 pass** (1075 + teen), ruff aur black saaf, ratchet OK. Markup ka ek byte nahi badla,
+is liye frozen inventory bhi jyun ka tyun.
+
 ### UI-075 — item 9: `app.css` khatam, dono mockups docs mein, har page ab EK stylesheet
 
 Item 9 board par teen cheezein kehta tha: `app.css` delete, mockups move, final sweep.
