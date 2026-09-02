@@ -62,6 +62,7 @@ def persist_batch(ai_questions: list[dict], req: GenerateQuestionsRequest) -> li
                 "visual_emoji": q.get("visual_emoji"),
                 "visual_count": q.get("visual_count"),
                 "syllabus_topic_id": req.syllabus_topic_id,
+                "learning_outcome": req.learning_outcome,
             }
         )
         saved_ids.append(qid)
