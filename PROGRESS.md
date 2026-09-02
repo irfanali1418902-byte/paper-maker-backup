@@ -154,6 +154,43 @@ PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur
 shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
 dohraav naapna zaroori hai.
 
+### D29 aur D30 band — aur ek row jo apni hi peshgoi par mari
+
+**D30** kehti thi: *"a single docs-only sweep, cheapest as its own small task."* Wo sweep ho
+gayi. Row **teen** mauqe ginti thi; **chautha** usi row ke apne 08-04 wale update mein darj
+tha:
+
+```
+pages/slo.css         "still linked by the six unmigrated pages"
+pages/slo-health.css  "still linked by the five unmigrated pages"
+main.css:10-12        "the other eight pages still carry their own app.css…"   (item 9 mein)
+main.css:117          "That file is still a plain <link> on 6 pages"
+```
+
+Bimari yeh thi ke **"theme.css link karta hai" aur "unmigrated" do alag set hain**, aur har
+dafa inhein mila diya gaya — ginti har baar theek, isim har baar ghalat.
+
+**Sweep ka jawab pehle se saaf tha, is liye nayi ginti likhni hi nahi pari:**
+`/static/theme.css` UI-064 mein delete ho chuki hai, aur item 9 ke baad **har page sirf apni
+entry file link karta hai** — yani "kitne pages ise link karte hain" ab **hamesha sifar** hai
+aur ye jumla dobara basi ho hi nahi sakta. Row ki apni hidayat (*"give the count **and** name
+the pages"*) is soorat mein la-yaani ho gayi — **aur yehi is ka behtareen anjaam tha: aisa
+jumla jise dobara naapna hi na pare.**
+
+Har jagah asal alfaz `~~strike~~` ke saath chhore gaye aur wajah likhi gayi — record chupke
+se nahi badla (§12 rule 11).
+
+**D29 apni hi peshgoi par band hua.** Us ka aakhri khana kehta tha: *"the collision dies on
+its own in UI-064 when `static/theme.css` is deleted."* Wo file ja chuki hai, aur ab repo
+mein `theme.css` naam ki **ek hi** file hai — is liye Network panel mein basename dekh kar
+wo galat-fehmi mumkin hi nahi rahi jis ne epic ka pehla browser check zaya kiya tha. Rename
+(`roles.css`/`semantic.css`) ki zaroorat bhi khatam, wo sirf isi takraav ka hal thi.
+
+`main.css` ke line-citations **jaan-boojh kar mehfooz** rakhe gaye — `@layer` 42 par,
+`theme.css` import 87 par, `:73-74` apni jagah. Ye aaj ka apna sabaq hai.
+
+**1078 pass, ruff saaf, ratchet OK**, aur CSS ka parse bhi naapa (`.icon` 17px).
+
 ### D57 — row ka symptom mojood nahi, us ka fix nuqsan-deh, aur asal khatra ab test se guarded
 
 Board D57 ko "item 9 se pehle" schedule karta tha, to item 9 ke baad ye uthai gayi.

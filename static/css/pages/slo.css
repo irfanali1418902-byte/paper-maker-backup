@@ -35,8 +35,11 @@
 
    ⚠ QUOTE FULL PATHS WHEN YOU HAND THIS OVER — TWO FILES ARE NAMED theme.css.
    This page drops /static/theme.css (the old live stylesheet: --fg, --brand,
-   --app-bg, --sidebar-bg; 13787 bytes; still linked by the six unmigrated
-   pages, deleted in UI-064). It KEEPS /static/css/01-settings/theme.css (the
+   --app-bg, --sidebar-bg; 13787 bytes; ~~still linked by the six unmigrated
+   pages~~ — D30: that phrase conflated "links theme.css" with "unmigrated" and
+   was wrong every time it was written; the file was DELETED at UI-064 and no
+   page links anything but its own entry file since item 9, 2026-09-02).
+   It KEEPS /static/css/01-settings/theme.css (the
    Tier 2 semantic tokens authored in UI-020: --color-canvas, --color-surface,
    --color-text; 8682 bytes), which main.css:87 imports into layer(settings)
    and which carries the entire Modern palette — remove that one and the page

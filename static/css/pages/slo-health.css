@@ -32,7 +32,10 @@
 
    ⚠ QUOTE FULL PATHS WHEN YOU HAND THIS OVER — TWO FILES ARE NAMED theme.css
    (D29). This page drops /static/theme.css (the old live stylesheet, 13787
-   bytes, still linked by the five unmigrated pages, deleted in UI-064). It
+   bytes, ~~still linked by the five unmigrated pages~~ — D30: "links
+   theme.css" and "unmigrated" are different sets and that phrase merged them;
+   the file was DELETED at UI-064 and every page has been on its own entry file
+   alone since item 9, 2026-09-02). It
    KEEPS /static/css/01-settings/theme.css (the Tier 2 semantic tokens, 8682
    bytes), which main.css imports into layer(settings) and which carries the
    whole Modern palette. A Network panel prints only the basename, so a

@@ -113,11 +113,13 @@
    too, since a layer decides the contest before specificity is consulted. Each
    file's header states what it deliberately does NOT reset for that reason.
 
-   NOT over static/theme.css, though — and the distinction matters for Sprint 3.
-   That file is still a plain <link> on 6 pages, so it is UNLAYERED and beats
-   every @layer here, exactly as the legacy note above says. `.tbl` lives there,
-   not in layer(legacy), so for as long as a page keeps its theme.css <link> that
-   class wins over `table` below; once main.css is a page's only stylesheet,
+   NOT over static/theme.css, though — and the distinction mattered for Sprint 3.
+   ~~That file is still a plain <link> on 6 pages~~ — D30 again: the count was a
+   timestamp, not a fact. static/theme.css was DELETED at UI-064, so nothing
+   below is contested by it any more. While it lived it was UNLAYERED and beat
+   every @layer here, exactly as the legacy note above says. `.tbl` lived there,
+   not in layer(legacy), so for as long as a page kept its theme.css <link> that
+   class won over `table` below; now that main.css is every page's only stylesheet,
    theme.css is not loaded at all and `.tbl` simply stops existing. BOTH HALVES
    ARE NOW LIVE, on different pages: slo.html dropped its theme.css link in
    UI-031 and takes `table` from tables.css below, the other six still keep it.
