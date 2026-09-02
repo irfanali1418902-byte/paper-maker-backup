@@ -72,9 +72,19 @@ KUL              310     214    96    1030
 **DO CHEEZEIN JO NAAPI GAYIN AUR THEEK NAHI HAIN — faisla Irfan ka, maine kuch nahi badla:**
 
 1. **`learning_outcome` har seed-shuda sawal mein khaali hai.** 09-01 ke 164 mein se 164
-   khaali — magar ye aaj ka bug **nahi**: 08-31, 08-26, 08-23, 08-22, 08-21, 07-30 —
+   khaali — magar ye aaj ka bug **nahi**: 08-31, 08-26, 08-23, 08-22, 08-21 —
    **har batch 100% khaali**. Sirf 07-15/07-19 wale (alag raste se aaye) bhare hain.
-   Yani `seed_bank.py` ye khana **kabhi nahi bharta**. Khamoshi se chal raha tha.
+   Khamoshi se chal raha tha.
+   > **⚠ 2026-09-02 — is row ke do adad ghalat thay aur wajah bhi ghalat thi. Dekhein
+   > `DEFERRED.md` D60.** (a) Ye row **`seed_bank.py`** par ilzaam lagati thi; script
+   > theek bhejti hai (`:146`) — surakh `question_service.py` ke **`persist_batch()`**
+   > mein tha, jise `/api/generate` bhi bulata hai. (b) Row **"701 khaali"** ke saath
+   > **07-30** ko seed batch gin rahi thi. Naapa gaya: bug ka daira **571** hai
+   > (`source='gemini'`, 571/571 khaali); 07-30 wale **130 rows bulk Excel import** hain
+   > aur `bulk_import_service.py:334` un ka khana **bharta** hai — wo Excel ka column
+   > khaali hone se khaali hain. **Fix `f547f21` par ho chuki hai magar `master`-wali
+   > branch par — IS branch par nahi**, is liye yahan se chalayi gayi seeding ab bhi
+   > khaali likhegi aur baad mein **backfill** chahiye (571 rows, syllabus se SQL, muft).
 2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
    mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
    batch (4.4 / 4.55) pichhle sab AI batches ke barabar hai — **behkaav aaj nahi aaya**,

@@ -1,5 +1,82 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-02 — Audit: board pehli baar poora sach nikla, aur `persist_batch` ka chhupa surakh
+
+Irfan: *"audit kar lo aur phir plan do kya zaroori hai."* Sab kuch **khud naapa gaya**,
+board par bharosa nahi kiya — aur is baar board **theek nikla**, jo is repo mein pehli
+dafa hai. Sirf ek adad basi tha aur do adad ghalat, aur teenon neeche darj hain.
+
+**Naap (2026-09-02):** 1075 pass · ruff saaf · working tree saaf · DB `integrity_check` ok ·
+bank **310 topics, 214 seeded, 96 baqi, 1030 sawal** · PY1 71/81 · PY2 45/87 · PY3 **87/87** ·
+chaaron jaali jode (G5, G6, Science G7, Geography G8) **ab bhi 0** — qaida nahi toota ·
+`legacy_css_lines` **1706** · scope (agree 86 + disagree 190) = **276**.
+
+**Board ka waahid basi adad:** `master` se aage **50** commits, board kehta tha 45 —
+wo 09-01 ko din ke beech likha gaya tha.
+
+### `persist_batch()` ne `learning_outcome` kabhi save nahi kiya
+
+Board ise "faisla-talab" kehta tha aur ilzaam `seed_bank.py` par tha. **Dono ghalat.**
+Script to `:146` par theek bhejti hai; surakh
+`app/services/question_service.py` ke `persist_batch()` mein hai — insert-dict banta hai
+aur us mein ye khana daala hi nahi jata, halanke wohi function `:30` par usi `req` se use
+prompt ke liye parhta hai. Aur khamoshi ki wajah ek line ka farq hai:
+
+```
+questions_repository.py:44   question_row.get("source", "gemini")   <- default hai
+questions_repository.py:45   question_row.get("learning_outcome")   <- default nahi -> NULL
+```
+
+Column `INSERT` mein mojood hai, is liye na error aaya na koi test toota. **Kisi gate ne is
+liye nahi pakra ke `persist_batch` par ek bhi test nahi tha.**
+
+**Ye sirf seeding ka masla nahi:** `app/api/questions.py:61` bhi ise bulata hai, yani
+`/api/generate` se bana har sawal bhi khaali aata tha — **aur us raaste par koi backfill
+nahi chalti.** `save_manual_question()` (`:105`) ye khana theek bharta hai; usi ka mojood
+hona batata hai ke ye bhoolna tha, faisla nahi.
+
+**Fix `master` se kaati gayi branch par gayi, is epic par nahi** — `PLAN.md` §6 yahan
+`service/repository` tabdeeli mana karta hai aur kehta hai ke backend findings `DEFERRED.md`
+mein jayen. Bandish mutlaq nahi (D40 ne 08-21 ko manzoori se `requests.py` chhua tha), magar
+Irfan ne saaf `master` wala raasta chuna. Branch `fix/persist-batch-learning-outcome`,
+commit `f547f21`: **ek line + paanch tests, 980 pass, ruff saaf.**
+
+### Do adad jo board se ghalat chale — aur review ne pakre, main ne nahi
+
+Pehli commit message mein **"701 khaali"** likha tha aur **"har seed batch 07-30 se 09-01"**.
+Review ne dono par shak kiya aur naapne par dono ghalat nikle:
+
+```
+source   kul    khaali
+gemini   571    571      <- is bug ka asal daira
+manual   459    130
+```
+
+Wo 130 rows `Happy Birds - English Pre Year 1` ka **bulk Excel import** hain (`source='manual'`,
+`syllabus_topic_id` NULL, 07-30) — aur `bulk_import_service.py:334` ye khana **bharta** hai;
+wo is liye khaali hain ke **Excel ka column khaali tha**. Yani `07-30` seed batch hai hi nahi,
+aur ye fix un 130 mein se ek bhi nahi badlegi. **701 bank ke kul khaali sawal hain, is bug ke
+nahi** — bug ka daira **571** hai. Dono adad `STATUS.md` ke board se aaye the aur maine bina
+naape aage chala diye. **Wahi purani bimari: row ka adad naapo, us par bharosa mat karo.**
+
+### Teen sabaq jo is session ne diye
+
+1. **Control `git stash` se mat lo agar fix commit ho chuki ho.** Ek control run **jhoota
+   PASS** de gaya — 5/5 — kyunke stash ke paas hatane ko kuch tha hi nahi. Sahi tareeqa
+   `git checkout <commit>~1 -- <file>` hai; us se teen tests waqai fail hueen.
+2. **`black --diff` ki lines ginte waqt `---`/`+++` header bhi gin liye the** — "23" likha,
+   asal **21**. `grep -c "^[+-][^+-]"` sahi ginti deta hai.
+3. **Backfill muft hai, aur maine pehle ulta bataya tha.** `learning_outcome` AI se nahi,
+   syllabus row se aata hai: 571 khaali rows mein se **571 ke topic ka outcome bhara hua hai**,
+   yani seedha SQL `UPDATE`, koi AI call nahi. Is se ye dalil kamzor hui ke "seeding se pehle
+   fix zaroori hai" — asal wajah `/api/generate` ka live raasta hai, jahan koi backfill nahi
+   chalti.
+
+**Ek amali natija jo agla session zaroor parhe:** wo line **is branch par nahi hai**, is liye
+`feat/ui-architecture` se chalayi gayi seeding ab bhi khaali `learning_outcome` likhegi.
+Aaj ki baqi seeding ke baad **backfill chalani hogi**, jo naye rows ko bhi utha legi.
+Tafseel `docs/ui/DEFERRED.md` **D60** mein.
+
 ## 2026-09-01 — `ui-check.html`: browser check ka aadha hissa ab naapa jata hai
 
 Browser check **teen sessions se ⬜ par khara tha** — is liye nahi ke mushkil tha, is liye
