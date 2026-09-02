@@ -154,6 +154,83 @@ PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur
 shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
 dohraav naapna zaroori hai.
 
+### UI-075 — item 9: `app.css` khatam, dono mockups docs mein, har page ab EK stylesheet
+
+Item 9 board par teen cheezein kehta tha: `app.css` delete, mockups move, final sweep.
+
+**`static/app.css` ke do hisse thay aur dono ka intezam alag tha.** Nau `@font-face` rules —
+`02-generic/fonts.css` ne UI-021 mein hi absorb kar liye thay; **face-ba-face naapa gaya**
+(family, weight, style, aur woff2 ka naam): **9 ke 9 barabar**, koi kami nahi. Aur ek
+`.icon` rule, jis ka naye tree mein ghar nahi tha — ab `05-components/icon.css`,
+`main.css` se `layer(components)` mein import.
+
+**Ye rule cosmetic nahi hai:** bina width/height ke inline `<svg>` SVG ke default
+**300×150** par girta hai, sifar par nahi. `pages/slo-health.css` ka header ye anjaam
+pehle se likh chuka tha.
+
+**Das pages ke `<link>` do se EK ho gaye.** `<link>` byte-level par hataya gaya (koi
+encoding tabdeeli nahi), aur frozen inventory ka diff **khali** raha.
+
+**Dono mockups `docs/design/` mein — D5 band.**
+
+**Gates:** `css_type_probe` — das pages × paanch viewports, **`total element x property
+deltas: 0`**. Har page par `b-only 5` aaya; naam le kar naapa gaya ke wo sirf
+`HTML[0]>HEAD[0]>LINK[4]` hai — hataya gaya `<link>` khud, paanch viewports par —
+aur `only-after` har jagah khali. `.icon` nau icon-wale pages par **17×17 / flex-shrink 0**
+(`print` par sifar icons hain, wo theek hai). **1075 pass, ruff saaf, ratchet OK**,
+`legacy_css_lines` **1706 par jyun ka tyun** — koi legacy file nahi chhui.
+`shared_css_lines` 4746 → 4807 (app.css ki 57 lines gayin, icon.css aur durust-shuda
+comments aaye).
+
+#### Review ne FAIL diya, aur wo bilkul theek tha
+
+Maine `icon.css` mein "is move ka waahid asal khatra" ke unwan se likha tha ke 17px ab
+`layer(components)` se `99-legacy/landing.css` ki 22px ko harata hai. **Wo rule mojood hi
+nahi:**
+
+```
+$ grep -c "\.icon" static/css/99-legacy/landing.css
+0
+```
+
+`UI-060` ne use **2026-08-16 ko dead keh kar delete** kar diya tha — is task se sattrah din
+pehle. Yani `.icon` ab **be-muqabla** hai aur 17px is liye jeetta hai ke koi larta hi nahi.
+**Pixels naape gaye thay aur sahi thay; un ki jo wajah pesh ki gayi wo farzi thi** — aur ye
+ghalti usi paragraph mein hui jo likha hi is bimari se bachne ko tha.
+
+Wajah ye thi ke maine `pages/slo.css` aur `pages/landing.css` ke **headers par bharosa kiya
+aur cascade khud nahi naapa**. Sabaq, aur ye is repo ke liye naya hai: **ek header jo cascade
+bayan karta hai theek waise basi hota hai jaise carried number** — ye wala apni rule se
+sattrah din zyada jiya aur us dauran do baar quote hua. Chaaron jagah durust kiya.
+
+#### Do aur ghaltiyan, dono meri, dono line-numbers ki
+
+1. **`main.css` ke header mein 5 lines barhane se chaar in-repo citations toot gayin**
+   (`main.css:42` wala `@layer` 47 par chala gaya). Header ko **line-neutral** likh kar
+   theek kiya — `@layer` wapas 42 par, `:73-74` wapas apni jagah.
+2. **Mockup ke naye comment ne (2 lines ki jagah 7) us ki apni paanch references torh dein**
+   (`bank/blueprint/library/slo-health` ka `mockup-modern.html:279`, `taqseem` ka `:345`,
+   `reset.css` ka `:20`). Comment 2 lines ka kar diya: file phir se 435 lines, paanchon
+   references bahal.
+
+**Sabaq:** jis file ko doosri files line-number se quote karti hain, us ka header
+line-neutral rakho — warna ek wazahat likhne ki qeemat paanch toote hue pointers hai.
+
+#### Aur ek cheez jo maine ghalat batayi thi
+
+Maine kaha tha ke D5 "aadhi basi" hai kyunke `papermaker-mockup.html` mojood nahi.
+**Wo mojood thi — repo ki jar par**, aur maine sirf `static/` mein dekha tha.
+**`ls <ek jagah>` "mojood nahi" ka saboot nahi hai.** (Us row ka doosra nisf waqai ghalat
+tha, magar alag wajah se: wo file kabhi *serve* nahi hoti thi, kyunke `/static` mount jar
+tak pohanchta hi nahi.) Ab dono `docs/design/` mein hain.
+
+Saath hi `CLAUDE.md` ka wo hukm bhi theek kiya jo aaj tak kehta tha ke `app.css` migrated
+pages par doosra link hai, aur `css_baseline.py` ke wo docstrings jo `app.css`/`theme.css`
+ko zinda batate thay.
+
+**Irfan ne browser mein dekh kar OK kiya** (incognito, Ctrl+Shift+R — purani `app.css`
+cached thi).
+
 ### D59 band — 1039 lines delete, aur row ki apni dalil ghalat nikli
 
 `STATUS.md` kehta tha *"Item 9 — ... **D59 pehle** (`css_orphans.py` basi hai)"*, yani ye

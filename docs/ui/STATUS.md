@@ -204,17 +204,24 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
   pehle naapo** (UI-05x mein isi ne 75 deltas diye thay); `html, body { height: 100% }`
   **naapa nahi gaya**; `index` ke teen `body.lang-ur` (`05-components/urdu.css` mojood
   hai, magar khandan badalna apna faisla hai).
-* **Item 9** — `app.css` delete, mockups move, final sweep. **✅ D59 ab rukawat nahi:**
-  09-02 ko `css_orphans.py` (822) aur `css_rules_probe.mjs` (217) **delete ho gayin**.
-  D59 kehta tha ke `--rules` mode ko bachana chahiye kyunke wo "wo kaam karta hai jo aur
-  koi nahi karta" — naapne par **wo bhi bilkul murda nikla** (0 rules probed, nau pages
-  par har column 0). Tafseel D59 aur `PROBES.md` mein. **Item 9 ab khula hai.**
+* ~~**Item 9**~~ ✅ **HO GAYA 2026-09-02 (UI-075).** `static/app.css` delete (57 lines);
+  us ka `.icon` rule ab `05-components/icon.css` mein; **das ke das pages ab EK hi
+  stylesheet link karte hain**; dono mockups `docs/design/` mein — **D5 band**.
+  **Gate: `css_type_probe` — das pages × paanch viewports, 0 element × property deltas.**
+  `.icon` nau icon-wale pages par 17×17. Irfan ne browser mein OK kiya.
+  ⚠ **Review ne FAIL diya tha aur theek diya:** maine likha tha ke 17px ab layer order se
+  `99-legacy/landing.css` ki 22px ko harata hai — **wo rule UI-060 ne 2026-08-16 ko delete
+  kar diya tha.** `.icon` ab be-muqabla hai. **Ek header jo cascade bayan karta hai utna hi
+  basi hota hai jitna carried number** — ye wala apni rule se sattrah din zyada jiya.
+  D59 (jo item 9 ki rukawat thi) usi din band hua: `css_orphans.py` + `css_rules_probe.mjs`
+  delete, 1039 lines — us row ki apni dalil bhi naapne par ghalat nikli.
 * **Phir `master` merge** — 09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**.
   ⚠ **Ye adad har commit par badalta hai — isay yahan se mat quote karo, naapo:**
   `git rev-list --left-right --count master...HEAD`. Board is se pehle do baar basi
-  mila (09-01 ne 45 likha, 09-02 ko 50 tha). Item 9 se
-  pehle **nahi**. ⚠ Merge ke waqt `master` par `fix/persist-batch-learning-outcome`
-  (D60 ka fix) bhi shamil hona chahiye, warna wo ek line yahan nahi aayegi.
+  mila (09-01 ne 45 likha, 09-02 ko 50 tha). **Item 9 ab ho chuka hai, is liye ye rukawat
+  khatam** — merge ke raaste mein sirf item 8 ka tail bacha hai, jo §6 ke jawab par ruka
+  hai. ⚠ Merge ke waqt `master` par `fix/persist-batch-learning-outcome` (D60 ka fix) bhi
+  shamil hona chahiye, warna wo ek line yahan nahi aayegi.
 
 **4. ⚠ TARGET KA HISAAB TANG HAI — ye agle session ki pehli CSS baat hai.**
 

@@ -145,14 +145,24 @@
 
    D26 and D27 are two NAMED instances of mechanism 2, not the only ones.
 
-   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and it has
-   to. app.css carries `.icon { width:17px; height:17px }` for the <use> sprite
-   in the nav, and that rule has NO home in the new tree until the nav
-   component in Sprint 4 — 02-generic/fonts.css says so in its own header.
-   Without it the seven nav icons fall back to the SVG default of 300x150.
-   Being unlayered is also load-bearing right now: 99-legacy/landing.css:26
-   sets `.icon { width:22px }`, which arrives layered on any page that imports
-   it, and app.css beats it. app.css dies in Sprint 6 (UI-064) with theme.css.
+   WHAT THIS PAGE LINKS BESIDES THIS FILE: NOTHING. This file is its only
+   stylesheet. ~~static/app.css, and it has to~~ — app.css was DELETED on
+   2026-09-02 (UI-075, item 9); `.icon { width:17px; height:17px }` now lives in
+   05-components/icon.css in layer(components). Without that rule the eight nav
+   icons fall back to the SVG default of 300x150, which is why the move was
+   probed and not argued.
+
+   ⚠ THIS HEADER USED TO NAME THE RISK IN THAT MOVE, AND THE RISK HAD EXPIRED.
+   It said app.css being UNLAYERED was load-bearing, because
+   99-legacy/landing.css set `.icon { width:22px }` and only an unlayered rule
+   could outrank it. `UI-060` deleted that rule as dead on 2026-08-16 —
+   `grep -c "\.icon" static/css/99-legacy/landing.css` is 0 — so by the time
+   item 9 ran, `.icon` had no competitor at all and 05-components/icon.css is
+   its only declaration. Measured after the move on all nine icon-bearing pages:
+   17x17 / flex-shrink 0, and css_type_probe reports 0 element x property deltas
+   across ten pages and five viewports. **A header that describes a cascade goes
+   stale exactly like a carried number does; this one outlived its rule by
+   seventeen days and was quoted twice in the meantime.**
    ========================================================================= */
 
 @import url("../main.css");

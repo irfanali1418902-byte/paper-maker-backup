@@ -120,11 +120,19 @@
    reviewer can check them, which is the rule three review rounds wrote onto
    UI-031b.
 
-   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and here it
-   is load-bearing for Urdu specifically — app.css:45-54 carries the two
-   @font-face rules for Noto Nastaliq Urdu, and nothing in the new tree
-   declares them. app.css dies in Sprint 6 (UI-064); those @font-face rules
-   need a home before it does.
+   WHAT THIS PAGE LINKS BESIDES THIS FILE: NOTHING. app.css was DELETED on
+   2026-09-02 (UI-075, item 9).
+
+   ⚠ AND THE CLAIM THIS HEADER MADE FOR IT WAS ALREADY FALSE WHEN IT WAS
+   WRITTEN. It said app.css was "load-bearing for Urdu specifically … the two
+   @font-face rules for Noto Nastaliq Urdu, and NOTHING IN THE NEW TREE DECLARES
+   THEM." 02-generic/fonts.css has declared both since UI-021 — measured face by
+   face on 2026-09-02 before the delete: nine @font-face rules on each side,
+   same three families, same weights, same nine woff2 files. So this page's
+   Urdu never depended on app.css after UI-021; the only rule that genuinely
+   did was `.icon`, and that is now 05-components/icon.css. **A header that
+   asserts a dependency is worth exactly as much as the day someone last
+   measured it.**
    ========================================================================= */
 
 @import url("../main.css");

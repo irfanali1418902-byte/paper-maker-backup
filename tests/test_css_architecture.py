@@ -21,6 +21,7 @@ from scripts import css_baseline
 from scripts.css_baseline import (
     BASELINE_PATH,
     INFORMATIONAL_METRICS,
+    PROJECT_ROOT,
     RATCHETED_METRICS,
     compare,
     compare_inventory,
@@ -77,10 +78,29 @@ def test_measures_the_ten_real_pages():
     file aur BASELINE.json mein entry chahiye hogi."* It is also the first page
     with NO 99-legacy file, so it is the first one whose arrival left
     `legacy_css_lines` unchanged -- see pages/plan.css's header.
+
+    2026-09-02 (UI-075, item 9): BOTH mockups moved to docs/design/ (D5 closed),
+    so `not in names` would now pass for a second reason -- the file is not in
+    static/ at all. A test that passes for the wrong reason is the shape this
+    repo keeps getting bitten by, so the destinations are asserted too: that
+    keeps this test measuring something, and it pins D5's resolution where a
+    future session will trip over it rather than re-deriving it.
+
+    D5 named two files and only one was ever served: mockup-modern.html sat in
+    static/, papermaker-mockup.html sat in the REPO ROOT, which is not mounted.
+    Both are in docs/design/ now, so neither can drift back into a page count.
     """
     names = [p.name for p in page_paths()]
     assert len(names) == 10, f"expected 10 real pages, found {len(names)}: {names}"
     assert "mockup-modern.html" not in names
+    for mockup in ("mockup-modern.html", "papermaker-mockup.html"):
+        assert (PROJECT_ROOT / "docs" / "design" / mockup).exists(), (
+            f"{mockup} moved to docs/design/ in item 9 (D5) -- if it moved again, say where"
+        )
+    assert not (PROJECT_ROOT / "static" / "app.css").exists(), (
+        "static/app.css was deleted in item 9; its @font-face rules live in "
+        "02-generic/fonts.css and its .icon rule in 05-components/icon.css"
+    )
 
 
 # ── the ratchet ───────────────────────────────────────────────────────────────

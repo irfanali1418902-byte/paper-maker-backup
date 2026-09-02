@@ -93,7 +93,8 @@ dd {
 
 /* Media defaults. `max-width` only, deliberately: `display: block` on img/svg is
    the usual companion to this rule and it would break the inline icon sprite
-   (static/app.css `.icon`, static/theme.css:211 `svg.ic`) and bank.css:171
+   (05-components/icon.css `.icon` — this cited static/app.css and
+   static/theme.css:211 `svg.ic`, both since deleted) and bank.css:171
    `.topic-img-thumb`, all of which sit inline inside flex rows.
 
    The selector list is WIDER than the design target's, which is `img` alone

@@ -23,13 +23,18 @@
        as `.o-shell` and `.o-shell__spacer` — UI-030 shipped the grid and the
        flex spacer in full. Repeating them here would duplicate the layout this
        epic exists to de-duplicate.
-     · `.nav a .icon` is DEAD and is deliberately absent. static/app.css:57
-       sets a bare `.icon` UNLAYERED, and an unlayered rule sits outside the
-       layer order entirely (main.css:73-74), so it beats every @layer
-       regardless of specificity. Specificity would suggest otherwise —
-       `.nav a .icon` is 0,2,0 against a bare 0,1,0 — and that reading is
-       wrong. This is the same finding landing's icon decision turned on.
-       theme.css:84 also spells it `.nav a .ic, .nav a .icon`; the `.ic` half
+     · `.nav a .icon` is DEAD and is deliberately absent. ⚠ THE REASON CHANGED
+       ON 2026-09-02 (UI-075, item 9) EVEN THOUGH THE VERDICT DID NOT.
+       Previously: static/app.css:57 set a bare `.icon` UNLAYERED, and an
+       unlayered rule sits outside the layer order entirely (main.css:73-74), so
+       it beat every @layer regardless of specificity. app.css is now deleted and
+       that rule lives in 05-components/icon.css, in THIS layer. So a
+       `.nav a .icon` here would no longer lose to an unlayered rule — it would
+       win on specificity (0,2,0 against a bare 0,1,0) and change the icons. It
+       stays absent because there is nothing for it to say: every icon in the app
+       is the same 17x17 box, which is exactly what icon.css declares once.
+       theme.css:84 also spelled it `.nav a .ic, .nav a .icon` (that file was
+       deleted at UI-064); the `.ic` half
        is dead for the same reason and the board records only `.icon`.
 
    `.top` AND `.nav` SHRINK TO TWO DECLARATIONS EACH. shell.css already owns

@@ -2,18 +2,18 @@
    main.css — the cascade, declared in one place
    ITCSS layer order + BEM components + a small utility layer (ADR-001).
    -------------------------------------------------------------------------
-   THIS FILE IS LIVE AS OF UI-031, on slo.html — the first page in the epic
-   whose stylesheet is the new tree, and the first time any browser has parsed
-   the @layer statement below. It is reached INDIRECTLY: the page links
-   static/css/pages/slo.css, which imports this file and then its own legacy
-   file (see that file's header for why the indirection exists — D19). The
-   other eight pages still carry their own app.css + theme.css +
-   99-legacy/<page>.css links and are untouched by anything here; they migrate
-   in the rest of UI-031 and in UI-032.
-
+   THIS FILE IS LIVE ON ALL TEN PAGES (UI-075, 2026-09-02). Reached INDIRECTLY
+   on every one: the page links its own static/css/pages/<page>.css, which
+   imports this file and then, on the nine that have one, its legacy file (see
+   pages/slo.css's header — D19). EVERY PAGE LINKS EXACTLY ONE STYLESHEET.
+   ⚠ THE LINES HERE WERE STALE FOR WEEKS — D30's disease, a fourth time. They
+   said "the other eight pages still carry their own app.css + theme.css +
+   99-legacy/<page>.css … they migrate in the rest of UI-031 and in UI-032."
+   All nine migrated by 2026-08-13; theme.css died at UI-064, app.css at item 9;
+   plan.html arrived 2026-08-23 with no legacy file at all.
    (This block read "NOTHING LINKS THIS FILE YET" through UI-020..UI-030, which
    is what made those tasks no-visual-change by construction. That is over.
-   Editing this file now changes what a teacher sees on slo.html.)
+   Editing this file now changes what a teacher sees on every page.)
 
    No build step, no bundler, no npm (ADR-001): the app is launched by school
    staff via start.bat, and a stale build artifact is a mystery bug nobody on
@@ -206,6 +206,13 @@
    loads, unlike the two above: `.status-bar` is in all three pages' markup.
    It unifies two palettes that were both live. Read its header. */
 @import url("05-components/status.css")    layer(components);
+/* UI-075 (item 9) — the `<use>` sprite's box, absorbed from static/app.css as
+   that file was deleted. LOAD-BEARING on nine pages: an inline <svg> with no
+   width/height falls back to the SVG default 300x150, so this is not cosmetic.
+   It is `.icon`'s ONLY declaration in the cascade — the 22px competitor its
+   first draft named was deleted by UI-060 on 2026-08-16. Probed: 17x17 on all
+   nine icon-bearing pages, 0 deltas. Read its header. */
+@import url("05-components/icon.css")      layer(components);
 /* @import url("05-components/table-data.css") layer(components); */
 
 /* UI-050..052 */

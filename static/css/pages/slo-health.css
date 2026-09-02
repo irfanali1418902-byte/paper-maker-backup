@@ -38,11 +38,14 @@
    whole Modern palette. A Network panel prints only the basename, so a
    correctly migrated page reads as though the dropped link is still there.
 
-   IT ALSO STILL LINKS static/app.css, and has to: app.css owns
-   `.icon { width:17px; height:17px }` for the <use> sprite, and that rule has
-   no home in the new tree until Sprint 4's nav component. This page has 7 nav
-   icons; without it they fall back to the SVG default of 300x150. app.css dies
-   in Sprint 6 (UI-064) with /static/theme.css.
+   ~~IT ALSO STILL LINKS static/app.css, and has to~~ — app.css was DELETED on
+   2026-09-02 (UI-075, item 9). The rule it was kept alive for,
+   `.icon { width:17px; height:17px }`, now lives in 05-components/icon.css in
+   layer(components). **The consequence this header recorded is the reason that
+   move was probed rather than assumed:** this page has 8 `.icon` elements
+   (7 nav + 1), and without the rule an inline <svg> falls back to the SVG
+   default of 300x150. Measured after the move: 17x17 here and on all nine
+   pages that carry icons. This file is now the page's ONLY stylesheet link.
    ========================================================================= */
 
 @import url("../main.css");

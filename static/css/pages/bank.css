@@ -5,8 +5,9 @@
    LIVE since UI-047e. It was written at UI-032 and HELD by Irfan on
    2026-08-04, parked in docs/ui/ so its lines could not count toward
    shared_css_lines while nothing linked them. The migration itself is the
-   link block and nothing else: bank.html's three <link>s become two,
-   /static/app.css + this file, dropping /static/theme.css.
+   link block and nothing else: bank.html's three <link>s became two,
+   /static/app.css + this file, dropping /static/theme.css. (Item 9 later took
+   it to ONE — app.css is deleted; see the app.css note further down.)
 
    WHY IT WAS HELD, AND WHY IT NO LONGER IS. Neither orphan check held it —
    both pass, and the page's exposure is zero on both halves: bank borrows
@@ -108,9 +109,12 @@
    migrated page reads as though the dropped link is still there. D29 has the
    file sizes that tell them apart.
 
-   IT ALSO STILL LINKS static/app.css, which owns the `.icon` sprite rule
-   until Sprint 4's nav component. This page's legacy file declares no `.icon`
-   rule of its own, so it has nothing to lose there.
+   ~~IT ALSO STILL LINKS static/app.css~~ — NOT ANY MORE. app.css was deleted
+   on 2026-09-02 (UI-075, item 9) and the `.icon` sprite rule it owned now lives
+   in 05-components/icon.css, which main.css imports into layer(components).
+   This page's legacy file declares no `.icon` rule of its own, so it had
+   nothing to lose in either arrangement. This file is now the page's ONLY
+   stylesheet link.
 
    WHAT THE MIGRATION ACTUALLY DID, measured before vs after in headless Edge
    151 while it was applied. None of it is a surprise, and all of it will be

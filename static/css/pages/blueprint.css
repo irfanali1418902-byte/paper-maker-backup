@@ -42,9 +42,12 @@
    component wearing the same name (a standing block there, a flat pill here).
    Measured 2026-08-12/13; the evidence is in NEXT-SESSION.md §📐.
 
-   `.nav a .icon` IS ABSENT AND IS DEAD. static/app.css:57 sets a bare `.icon`
-   unlayered, and unlayered beats every @layer regardless of specificity
-   (main.css:73-74). theme.css:85 also spells it `.nav a .ic`; both are dead.
+   `.nav a .icon` IS ABSENT AND IS DEAD. ⚠ Its reason changed on 2026-09-02
+   (UI-075, item 9): static/app.css:57 used to set a bare `.icon` unlayered, and
+   unlayered beats every @layer regardless of specificity (main.css:73-74). That
+   file is deleted and the rule is now 05-components/icon.css in
+   layer(components) — see nav.css's header for what that does to a would-be
+   `.nav a .icon`. theme.css:85 also spelled it `.nav a .ic`; both are dead.
 
    WHAT THIS MIGRATION DOES NOT FIX — say it out loud. theme.css carries two
    `@media (max-width: 760px)` rules for `.app` and `.nav` that NOTHING

@@ -25,9 +25,11 @@
    migrated page reads as though the dropped link is still there. D29 has the
    file sizes that tell them apart.
 
-   IT ALSO STILL LINKS static/app.css, which owns the `.icon` sprite rule
-   until Sprint 4's nav component. This page's legacy file declares no `.icon`
-   rule, so it has nothing to lose there.
+   ~~IT ALSO STILL LINKS static/app.css~~ — NOT ANY MORE. app.css was deleted
+   on 2026-09-02 (UI-075, item 9); its `.icon` sprite rule now lives in
+   05-components/icon.css. This page's legacy file declares no `.icon` rule, so
+   it had nothing to lose either way. This file is now the page's ONLY
+   stylesheet link.
 
    THE MEASUREMENTS FOR THIS MIGRATION LIVE IN STATUS.md's UI-031b task-log
    row, not here. That is deliberate: three review rounds failed this task on

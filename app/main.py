@@ -109,7 +109,7 @@ app.include_router(topic_plan.router, dependencies=_api_auth)
 # Static frontend ka absolute path lete hain taake uvicorn kahin se bhi
 # launch ho, file resolve ho jaye.
 _STATIC_DIR = Path(__file__).parent.parent / "static"
-# Naye organized assets (app.css, fonts, icons.svg, brand/, js/) `/static/...` par
+# Naye organized assets (css/, fonts, icons.svg, brand/, js/) `/static/...` par
 # serve hote hain. Ye `/` catch-all se PEHLE register hota hai warna root-mount
 # `/static/x` ko khud handle karne ki koshish karta. Legacy `/apiClient.js` waghera
 # root mount se aate rehte hain.

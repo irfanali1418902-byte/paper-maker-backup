@@ -36,6 +36,16 @@
       app.css being unlayered is load-bearing "right now" precisely because of
       landing.css:26. It is the first time the epic has cashed that cheque.
 
+      ⚠ EVERYTHING ABOVE IS HISTORY, NOT THE LIVE CASCADE — TWICE OVER.
+      (a) `UI-060` deleted `99-legacy/landing.css`'s `.icon { width: 22px }` as
+      a dead rule on 2026-08-16; `grep -c "\.icon"` on that file is now 0.
+      (b) `static/app.css` was deleted on 2026-09-02 (UI-075, item 9) and its
+      17px rule moved to 05-components/icon.css in layer(components).
+      So there is no contest left: icon.css is `.icon`'s ONLY declaration in the
+      whole cascade, and 17px wins because nothing competes — not by document
+      order, not by being unlayered, and not by layer order. Re-probed on this
+      page: 12 `.icon` elements at 17x17, 0 deltas.
+
    3. NO D20 EXPOSURE. Measured before writing: landing.css declares 12 custom
       properties and reads 10, and the set it reads but does not declare is
       EMPTY — so unlinking theme.css orphans nothing, which on this page was
@@ -79,13 +89,21 @@
    files, and one heading's optical nudge on one page is not a scale. Only the
    size is a scale step — --font-size-8 / --text-display, added in UI-045.
 
-   WHAT THIS DOES NOT FIX: the icons. See point 2 in the header above — 11
-   icons are 17px now, and no rule in the new tree can restore 22px, because
-   static/app.css:57 is unlayered and unlayered beats every @layer. Restoring
-   22px would need an UNLAYERED rule in this file. That is Irfan's decision,
-   recorded in docs/ui/DECISIONS-FOR-IRFAN.md item 1, and it is deliberately
-   NOT taken here. An earlier version of this comment said the icons belonged
-   to UI-046; that was measured false and corrected on 2026-08-09.
+   WHAT THIS DOES NOT FIX: the icons. See point 2 in the header above — the
+   icons are 17px, and Irfan ANSWERED that on 2026-08-10: option A, accept 17px
+   (docs/ui/DECISIONS-FOR-IRFAN.md item 1). So nothing here needs restoring;
+   what follows is only about how a future session WOULD do it if that answer
+   ever changed.
+
+   ⚠ AND THAT RECIPE CHANGED ON 2026-09-02 (UI-075, item 9). This paragraph
+   used to say restoring 22px "would need an UNLAYERED rule in this file,
+   because static/app.css:57 is unlayered". app.css is deleted and the 17px rule
+   is now 05-components/icon.css in layer(components), which is `.icon`'s only
+   declaration anywhere. So restoring 22px is now the ordinary thing rather than
+   the awkward one: a rule in layer(utilities) wins, and so does a page-scoped
+   override in this file's own layer block. An earlier version of this comment
+   said the icons belonged to UI-046; that was measured false and corrected on
+   2026-08-09.
    ========================================================================= */
 
 @layer components {

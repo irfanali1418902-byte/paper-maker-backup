@@ -23,11 +23,13 @@
    MIGRATE hui hai; ye page shuru se us jagah khara hai jahan wo pahunch rahi
    hai.
 
-   YE FILE app.css BHI LINK KARTI HAI (page ke <head> mein), aur ye majboori
-   hai na ke bhool: app.css:57 ka bare `.icon` sprite ko 17x17 rakhta hai aur
-   us rule ka naye tree mein abhi ghar nahi. Us ke baghair saat nav icons SVG
-   ke default 300x150 par chale jate hain. Wahi wajah jo pages/slo-health.css
-   ke header mein likhi hai.
+   ~~YE FILE app.css BHI LINK KARTI HAI~~ — AB NAHI. `static/app.css`
+   2026-09-02 (UI-075, item 9) ko delete ho gayi, aur us ka bare `.icon` rule ab
+   05-components/icon.css mein hai jise main.css layer(components) mein import
+   karti hai. Wajah wohi hai jo pehle likhi thi aur ab bhi qaim hai: us rule ke
+   baghair aath nav icons SVG ke default 300x150 par chale jate hain — isi liye
+   ye move naapa gaya, farz nahi kiya. **Ab ye file is page ka WAAHID stylesheet
+   hai** (pehle bhi thi, sirf app.css saath thi).
 
    IS FILE MEIN EK BHI HEX NAHI — comment mein bhi nahi (nav.css:72 wala sabaq;
    ratchet wahan saat dafa comment par hi phata hai). Har rang Tier 2 role se
