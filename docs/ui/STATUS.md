@@ -72,7 +72,9 @@
 > — is repo ki sab se baar-baar aane wali bimari yehi hai.** D60 khuli hai (fix
 > `master`-wali branch par, is branch par nahi).
 >
-> **Browser check phir nahi hua** (ab chaar sessions se khula).
+> ~~**Browser check phir nahi hua** (ab chaar sessions se khula).~~ ✅ **09-03 KO BAND HO
+> GAYA — aath mein se aath.** Chaar khud naape jate hain, baqi chaar Irfan ne aankh se
+> dekhe aur chaaron theek. Ye row `2026-08-28` se latki hui thi.
 >
 > ~~Do commit bane, **dono un-pushed**.~~ → **09-02 ko chhe commit bane** (`566d722` …
 > `38256b2`), **sab un-pushed**; `master` se ~~56~~ **59 aage, 0 peechhe** (09-03 ke apne
@@ -233,7 +235,9 @@ KUL              310     238    72     996
 options 0, MCQ ka jawab options mein 68/68, Urdu 164/164, tashreeh 164/164. Dohraav:
 poori PY3 348 mein se 2, PY2 164 mein se 1.
 
-**2. BROWSER CHECK — aath mein se CHAAR naap liye gaye, CHAAR ab bhi khule.**
+**2. BROWSER CHECK — ✅ BAND, 2026-09-03. AATH MEIN SE AATH.**
+Chaar khud naape jate hain; baqi chaar Irfan ne **2026-09-03 ko aankh se dekhe aur
+chaaron THEEK** — wo row jo `2026-08-28` se latki hui thi aur paanch session khuli rahi.
 Server: `python -m uvicorn app.main:app --port 8000`, phir kholo:
 
 ### 👉 `http://127.0.0.1:8000/static/dev/ui-check.html`
@@ -241,18 +245,25 @@ Server: `python -m uvicorn app.main:app --port 8000`, phir kholo:
 `static/dev/ui-check.html` (banai 2026-09-01) har page ko **iframe mein kholti hai — same
 origin, is liye andar dekh sakti hai** — aur jo naapa ja sakta hai khud naap kar THEEK /
 KHARAB likh deti hai. Jo click ke baghair nahi banta, us par **AANKH** likhti hai aur
-neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi honge.**
+neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi honge** —
+un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
 
-| dekho | kahan | halat 2026-09-01 |
+> ⚠ **YE ✅ EK LAMHE KA HAI, HAMESHA KA NAHI.** Chaar khud-naape rows har run par dobara
+> naap lete hain; **chaar aankh wale nahi**. Jo bhi CSS chhue, wo ye chaar dobara khulwa
+> deta hai — 09-03 ko item 8 isi liye pehle chalaya gaya aur phir aankh maangi gayi.
+> **Agar aap ne aankh se dekhe baghair CSS badli, to in chaar ka ✅ ab aap ka daawa hai,
+> naap nahi.**
+
+| dekho | kahan | halat (chaar khud-naape 09-01, chaar aankh se 09-03) |
 |---|---|---|
 | do SLO boxes ka border (add / edit) | `bank.html` — UI-072 ki waahid pixel tabdeeli | ✅ dono par `1px solid rgb(234,237,243)` |
 | pagination buttons ka rang | `library.html` — **kaala dikhe to `color: inherit` fail hai** | ✅ `rgb(15,23,42)`, body ke barabar — kaala nahi |
 | disabled **button** par 🚫 cursor | `bank.html` | ✅ `not-allowed` |
 | heading ke neeche subtitle | `bank` · `library` · `slo-health` — saath ek line par aaya to bug | ✅ teenon par `p` ka top 65.4px, `h1` ka bottom 62.4px |
-| import counters styled hain | `slo.html` (Excel import ke baad) | ⬜ **AANKH** |
-| chips column mein | `taqseem.html` (class + subject chuno) | ⬜ **AANKH** |
-| shortfall warning ka andar ka text | `blueprint.html` (paper banao) | ⬜ **AANKH** |
-| **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi | ⬜ **AANKH** |
+| import counters styled hain | `slo.html` (Excel import ke baad) | ✅ **Irfan, 09-03** |
+| chips column mein | `taqseem.html` (class + subject chuno) | ✅ **Irfan, 09-03** |
+| shortfall warning ka andar ka text | `blueprint.html` (paper banao) | ✅ **Irfan, 09-03** |
+| **paper theek chhapta hai** | `print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93` — **UI-073 ka asar**, Ctrl+P preview bhi | ✅ **Irfan, 09-03**, screen + Ctrl+P dono |
 
 > ⚠ **`disabled` wala row ab saaf likha gaya hai: sirf `button`.** Pehli chalaayi mein
 > check ne pehla disabled element uthaya, jo `<select>` tha, aur **jhoota KHARAB** de
