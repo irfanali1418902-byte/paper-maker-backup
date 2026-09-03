@@ -188,3 +188,39 @@
     padding: 0;
   }
 }
+
+/* UI-076 — item 8 ka tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+   `.options-grid`, `.strip-empty`, `.list-empty` ki mushtarka declarations
+   05-components/ mein chali gayin (field.css aur empty.css). BANK KA APNA FARQ
+   yahan hai, aur QADREIN BILKUL WAHI HAIN jo pehle 99-legacy/bank.css mein thin —
+   is commit ka maqsad dohraav khatam karna tha, shakl badalna nahi.
+
+   ⚠ @760 WALA OVERRIDE YAHAN HONA LAZMI HAI, WAHAN NAHI JAHAN PEHLE THA. Wo
+   `99-legacy/bank.css` ke @media block mein tha, yani layer(legacy) mein, aur
+   field.css ka `grid-template-columns: 1fr 1fr` layer(components) mein hai.
+   Layer order specificity se pehle tay hota hai aur media query us ko nahi
+   badalti — wahan chhorne par narrow bank do column par phans jata. Yahan wo
+   usi layer mein hai aur source order se jeetta hai (ye file main.css ke baad
+   aati hai). Naapa gaya: paanchon viewports par 0 deltas. */
+@layer components {
+  .options-grid {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* bank ka `--muted2` apna hex hai, blueprint ka var(--muted). Colour isi liye
+     empty.css mein `.strip-empty` ke liye nahi rakha ja saka — print apne hex par hai. */
+  .strip-empty {
+    color: var(--muted2);
+  }
+
+  .list-empty {
+    padding: 40px 20px;
+  }
+
+  @media (max-width: 760px) {
+    .options-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

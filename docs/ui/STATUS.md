@@ -267,8 +267,25 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
 > 301 → 302**, kyunke hex comment ke andar likha gaya tha aur counter use ginta hai.
 > **Wazahat PROGRESS.md mein likho, legacy file mein nahi.**
 
-* **Item 8 ka tail — ✅ FAISLA HO GAYA 2026-09-03: `A` (component banao, farq page par
-  chhoro).** ⛔ ab ye rukawat nahi, **kaam hai** — aur **pehla qadam CSS nahi:**
+* ~~**Item 8 ka tail**~~ ✅ **HO GAYA 2026-09-03 (UI-076) — faisla `A`, aur kaam bhi usi
+  din.** `.strip-empty` + `.list-empty` naye `05-components/empty.css` mein,
+  `.options-grid` `05-components/field.css` mein; har page ka farq us ke `pages/*.css`
+  ke `@layer components` mein. **Qadrein ek bhi nahi badli.**
+  **Gate dono chale: inject probe 0 deltas, aur `css_type_probe` das pages × paanch
+  viewports par 0 deltas (~24 lakh muqable).**
+  `legacy_css_lines` **1706 → 1704**, `unsanctioned_hex` **300 par barqarar**.
+  ⚠ **Do cheezein jo is kaam ne sikhayin aur agla session inhein na bhoole:**
+  1. **`grid-template-columns` component mein jate hi bank ka `@760` override MAR raha
+     tha** — wo `layer(legacy)` mein tha aur component `layer(components)` mein hai;
+     **media query layer order ko nahi badalti.** Us ko `pages/bank.css` mein uthana
+     para. Narrow viewport is kaam ka asal khatra tha, isi liye gate paanchon viewports
+     par chalaya gaya, sirf 1280 par nahi.
+  2. **Pehli koshish mein `legacy_css_lines` 1706 → 1708 BARH gayi aur `unsanctioned_hex`
+     300 → 306** — kyunke pointer comments do-do line ke thay aur un ke andar hex likhe
+     thay. Board ki apni tanbeeh (§3: "wazahat legacy file mein nahi") isi jagah lagti
+     hai, aur ratchet is se toot sakti thi. Comments ek-ek line ke kiye gaye aur hex
+     nikale gaye.
+  ~~Purana kaam ka nuqta:~~ ~~pehla qadam CSS nahi:~~
   1. **`css_inject_probe.mjs` ki fixtures** `.strip-empty` + `.list-empty` ke liye likho.
      Ye dono JS se bante hain, is liye `css_type_probe`/`css_state_probe` inhein **sifar**
      ginte hain aur **ghalat tabdeeli par bhi 0 deltas denge** (D45 ki shakl, `PROBES.md`

@@ -1,0 +1,46 @@
+/* =========================================================================
+   05-components/empty.css — .strip-empty, .list-empty (UI-076)
+
+   Do "kuch nahi mila" wale paighaam jo teen legacy files mein do-do baar likhe
+   hue thay. Faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan, 2026-09-03):
+   MUSHTARKA declarations yahan, aur har page ka apna FARQ us ke apne
+   `pages/*.css` mein — qadrein badalni nahi hain, sirf dohraav khatam karna hai.
+
+   Kya yahan hai aur kya jaan-boojh kar NAHI:
+
+     .strip-empty   yahan: font-size, padding      page par: colour
+                    bank var(--muted2) = rgb(138,147,164), print ek HARDCODED hex
+     .list-empty    yahan: text-align, font-size, colour
+                    page par: padding — bank 40px 20px, blueprint 30px
+
+   ⚠ `.list-empty` KA COLOUR YAHAN HAI AUR YE DEKHNE MEIN GHALAT LAGTA HAI, IS
+   LIYE WAJAH LIKHI JA RAHI HAI. Dono legacy files `color: var(--muted2)`
+   LAFZ-BA-LAFZ ek jaisa likhti thin, magar wo do ALAG rang deta hai —
+   `99-legacy/bank.css`:8 par `--muted2` ka apna hex hai aur
+   `99-legacy/blueprint.css`:9 par `--muted2: var(--muted)`. Naapa gaya
+   2026-09-03 (inject probe): bank rgb(138,147,164), blueprint rgb(100,116,139).
+   Custom property element se INHERIT hoti hai, layer se nahi — is liye ek hi
+   declaration yahan rakhne par dono pages apna apna rang barqarar rakhte hain.
+   `DECISIONS-FOR-IRFAN.md` §6 ka jumla "baqi teen declarations barabar" isi
+   wajah se ghalat tha aur wahan theek kar diya gaya hai.
+
+   ⚠ DONO RULES JS SE BANTI HAIN — `css_type_probe` inhein SIFAR elements ginta
+   hai. Is file ki har tabdeeli `scripts/css_inject_probe.mjs` se naapo, warna
+   ghalat tabdeeli par bhi 0 deltas milenge (PROBES.md rule 10 aur 11). Paanch
+   fixtures 2026-09-03 ko likhi gayin aur control se sabit hain.
+
+   Koi declaration murda nahi uthai gayi: teenon rules ki asal qadrein isi
+   inject probe se naapi gayi thin aur wo zinda thin — `field.css` ke header
+   wala 75-delta waqia isi jaanch ki kami se hua tha.
+   ========================================================================= */
+
+.strip-empty {
+  font-size: 11.5px;
+  padding: 4px 0;
+}
+
+.list-empty {
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted2);
+}

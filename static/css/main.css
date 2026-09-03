@@ -204,6 +204,13 @@
    css_type_probe reports 0 deltas whether this file is right or wrong. Verify
    with scripts/css_inject_probe.mjs. Read its header. */
 @import url("05-components/shortfall.css") layer(components);
+/* UI-076 (item 8 ka tail) — do "kuch nahi mila" paighaam. INHEIN BHI
+   css_type_probe NAHI DEKH SAKTA: dono JS se bante hain, bilkul shortfall ki
+   tarah, is liye inject probe ki paanch fixtures 2026-09-03 ko likhi gayin.
+   Sirf mushtarka declarations yahan hain — bank/print ka colour aur
+   bank/blueprint ka padding apne apne pages/*.css mein hai, jo faisla A ka
+   poora matlab hai. Read its header. */
+@import url("05-components/empty.css")     layer(components);
 /* UI-043 — status bar. LIVE on bank, blueprint and library the moment it
    loads, unlike the two above: `.status-bar` is in all three pages' markup.
    It unifies two palettes that were both live. Read its header. */

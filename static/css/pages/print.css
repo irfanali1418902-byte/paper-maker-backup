@@ -330,3 +330,29 @@
     font-weight: var(--font-weight-strong);
   }
 }
+
+/* UI-076 — item 8 ka tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+   PRINT KA APNA FARQ. Qadrein wahi hain jo 99-legacy/print.css mein thin.
+
+   `gap: 6px` bank ke 8px se jaan-boojh kar alag hai — print ki jagah tang hoti
+   hai, aur `A` ka poora maqsad yehi farq bachana tha. `.options-grid input` bhi
+   sirf print par tha aur sirf print par rehta hai.
+
+   ⚠ NEECHE WALA COLOUR HARDCODED HEX HAI AUR JAAN-BOOJH KAR ZINDA HAI. `unsanctioned_hex`
+   ise ginta hai. Ise `var(--muted2)` karna B ka faisla hota — Irfan ne A chuna,
+   jo har page ka farq barqarar rakhta hai, is liye rang ko chhua NAHI gaya. Jo
+   bhi ise token par le jaye wo pehle §6 dobara parhe: wo ek DIKHNE WALI tabdeeli
+   hai, drain nahi. */
+@layer components {
+  .options-grid {
+    gap: 6px;
+  }
+
+  .options-grid input {
+    width: 100%;
+  }
+
+  .strip-empty {
+    color: #999;
+  }
+}

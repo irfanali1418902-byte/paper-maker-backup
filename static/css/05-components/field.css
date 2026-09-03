@@ -118,3 +118,34 @@
 .strip-filter select {
   min-height: 30px;
 }
+
+/* ---------------------------------------------------------------------------
+   .options-grid — MCQ ke option inputs ka do-column grid. UI-076, item 8 ka
+   tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+
+   Chaar copies thin, do rule-blocks mein, aur wo aapas mein mel nahi khati thin:
+   bank `gap: 8px` + `margin-top: 8px`, print `gap: 6px` aur koi margin nahi.
+   Wohi do declarations page par rehti hain (`pages/bank.css`, `pages/print.css`);
+   yahan sirf wo hain jin par dono muttafiq thay. Print ka `.options-grid input
+   { width: 100% }` bhi page-only hai aur us ke apne page par gaya.
+
+   ⚠ `grid-template-columns` YAHAN AANE SE BANK KA @760 OVERRIDE MAR RAHA THA,
+   AUR YE PEHLE SE SOCHA GAYA, BAAD MEIN PAKRA NAHI GAYA. `99-legacy/bank.css`
+   mein `@media (max-width: 760px) { .options-grid { grid-template-columns: 1fr } }`
+   tha — layer(legacy) mein, jo layer(components) se HAARTA hai chahe media query
+   ho ya na ho. Us ko isi commit mein `pages/bank.css` ke `@layer components`
+   mein le jaya gaya hai, jahan wo source order se jeetta hai. Bank ka narrow
+   viewport is tabdeeli ka asal khatra tha, is liye gate `css_type_probe` ke
+   paanchon viewports par chalaya gaya, sirf 1280 par nahi.
+
+   Ye rule visible aur chhupi dono jagah hai — bank.html:134 khuli hai, magar
+   bank.html:476 aur print.html:139/:143 band modal ke andar. Naapa gaya
+   2026-09-03: band modal ke peechhe bhi `column-gap`, `margin-top` aur
+   `grid-template-columns` durust computed qadrein deti hain (sirf width/height
+   `auto` par girti hain), is liye is family ko inject fixture ki zaroorat NAHI
+   hai — css_type_probe ka gate is ke liye kaafi hai.
+   --------------------------------------------------------------------------- */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}

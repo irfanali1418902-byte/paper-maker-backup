@@ -182,7 +182,21 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
 | # | answer |
 |---|---|
 | 5 target | **A — ~1400. Answered 2026-08-31** ✅ |
-| 6 item-8 tail | **A — component banao, farq page par chhoro. Answered 2026-09-03** ✅ |
+| 6 item-8 tail | **A — component banao, farq page par chhoro. Answered 2026-09-03** ✅ **KAAM BHI HO GAYA usi din (UI-076)** |
+
+> **✅ HO GAYA — UI-076, 2026-09-03.** `.strip-empty` + `.list-empty` ki mushtarka
+> declarations naye `05-components/empty.css` mein; `.options-grid` ki
+> `05-components/field.css` mein. Har page ka farq us ke apne `pages/*.css` ke
+> `@layer components` mein: bank `gap 8px` + `margin-top 8px` + `.strip-empty` colour +
+> `.list-empty` 40px 20px, print `gap 6px` + `.options-grid input` + apna hex colour,
+> blueprint `.list-empty` 30px. **Qadrein ek bhi nahi badli.**
+> **Gate, dono:** inject probe **0 deltas**, aur `css_type_probe` **das pages × paanch
+> viewports, ~24 lakh element × property muqable, 0 deltas**.
+> `legacy_css_lines` **1706 → 1704**, `unsanctioned_hex` **300 par barqarar**.
+> **Faasla sirf 2 lines ka hai aur ye na-kaami nahi:** teenon rules single-line thin aur
+> un ki jagah single-line pointer comments aaye — asal faida dohraav ka khatma hai,
+> line count ka nahi. §4 ka andesha (target rules delete karne se nahi aayega) isi se
+> aur pukhta hota hai.
 
 **6 ka jawab A hai — aur A ka matlab yehi hai ke qadrein NAHI badleen.** Mushtarka
 declarations `05-components/` mein jayengi; `.options-grid` ka `gap`/`margin-top`,

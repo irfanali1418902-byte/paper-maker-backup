@@ -74,7 +74,7 @@
   .urdu-toggle-row small { font-size: 11.5px; color: var(--muted); font-weight: 400; }
 
   /* ---- MCQ options grid ---- */
-  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  /* .options-grid: 05-components/field.css; farq + @760: pages/bank.css (UI-076). */
   .opt-input-wrap { display: flex; align-items: center; gap: 8px; }
   .opt-label { font-size: 12px; font-weight: 700; color: var(--muted); width: 20px; flex-shrink: 0; }
   .opt-input-wrap input[type="radio"] { width: auto; min-height: 0; margin: 0; cursor: pointer; accent-color: var(--primary); }
@@ -103,7 +103,7 @@
   .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  .strip-empty { font-size: 11.5px; color: var(--muted2); padding: 4px 0; }
+  /* .strip-empty: 05-components/empty.css (UI-076); colour pages/bank.css mein. */
   .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 180px; overflow-y: auto; }
   .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
   .topic-img-thumb {
@@ -160,7 +160,7 @@
   .q-marks { font-size: 12.5px; font-weight: 700; color: var(--muted); white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
   .q-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 1px; }
 
-  .list-empty { text-align: center; color: var(--muted2); padding: 40px 20px; font-size: 14px; }
+  /* .list-empty: 05-components/empty.css (UI-076); padding pages/bank.css mein. */
   #listStatus { font-size: 13px; color: var(--muted); margin-bottom: 10px; min-height: 20px; }
 
   /* ---- Edit Modal ---- */
@@ -274,5 +274,4 @@
   @media (max-width: 760px) {
     body { flex-direction: column; }
     .bank-main { padding: 16px 14px; }
-    .options-grid { grid-template-columns: 1fr; }
   }

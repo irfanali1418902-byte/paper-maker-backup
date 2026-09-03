@@ -187,3 +187,18 @@
     font-weight: var(--font-weight-strong);
   }
 }
+
+/* UI-076 — item 8 ka tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+   BLUEPRINT KA APNA FARQ: `.list-empty` ka padding 30px, jab ke bank par
+   40px 20px hai. Qadr wahi hai jo 99-legacy/blueprint.css mein thi.
+
+   Colour yahan NAHI hai aur ye ghalti nahi: dono pages `color: var(--muted2)`
+   lafz-ba-lafz ek jaisa likhte thay, is liye wo empty.css mein ek dafa hai —
+   aur phir bhi dono ka rang alag rehta hai, kyunke is page ka `--muted2`
+   `var(--muted)` hai (99-legacy/blueprint.css:9) jab ke bank ka apna hex.
+   Custom property element se inherit hoti hai, layer se nahi. Naapa gaya. */
+@layer components {
+  .list-empty {
+    padding: 30px;
+  }
+}
