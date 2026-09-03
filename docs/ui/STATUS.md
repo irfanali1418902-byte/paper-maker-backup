@@ -21,6 +21,14 @@
 > 1706 lines, scope 276, 1075 pass — sab dobara naape gaye aur sab barabar), sirf
 > commit-count basi tha (45 likha, **50** tha).
 >
+> ⚠ **Ye is paragraph ke adad us lamhe ke hain jab audit chali — seeding aur D57 se
+> PEHLE — is liye ye basi nahi, "us waqt ka" hain. Aaj ke adad khulase ke aakhir mein
+> hain (naapa 09-03).** Do farq jaan-boojh kar chhore gaye aur dono ka hisaab poora hai:
+> **1075 → 1078 pass** = D57 ke teen naye test (`tests/test_brand_hooks.py`, `7868fdf`);
+> **214/96 → 217/93 seeded/baqi** aur **1030 → 1042 sawal** = usi din ki seeding (PY2 ke
+> teen topics). **Adad yahan se mat quote karo — §1 ki bank table aur khulase ka aakhri
+> paragraph parho.**
+>
 > **Seeding:** PY2 ke 42 topics maange, **quota chauthe topic par lag gaya** — sirf
 > **12 sawal, 3/7 topics**, 35 topics chhue hi nahi gaye. Bank **1030 → 1042**,
 > PY2 45 → **48/87**. **Baqi ba-ikhtiyar 49 topics: PY2 ke 39, PY1 ke 10.**
