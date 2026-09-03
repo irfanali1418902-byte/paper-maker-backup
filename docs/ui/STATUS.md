@@ -90,9 +90,22 @@ nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phi
 >
 > **Output hamesha file mein bhejo** (`> seed.log 2>&1`) — do baar ye tail sirf is liye
 > nahi parha ja saka ke wo kahin mehfooz hi nahi hua tha.
+>
+> ⚠ **`python -u` LAZMI hai, aur ye 2026-09-03 ko naapa gaya.** Sirf redirect kaafi nahi:
+> file par Python ka stdout **block-buffered** hota hai. Us din 10 topics ho chuke thay
+> (DB mein 1082 sawal) aur `seed_20260903.log` phir bhi **0 bytes** tha — poora output
+> aakhir mein ek saath gira. Yani **agar run beech mein maar di jaye ya crash ho, tail
+> buffer ke saath ghayab ho jata hai** — 09-01 ki khali log file ki qareeb-yaqeeni wajah
+> yehi hai, redirect ki kami nahi. `-u` ke saath har topic foran file mein likha jayega,
+> aur chalte hue `tail -f` bhi kaam karega.
+>
+> **Chalte hue progress dekhne ka doosra (aur zyada qabil-e-aitmad) tareeqa DB hai** —
+> script har topic ke baad commit karti hai, is liye ye read-only ginti buffering se
+> bilkul mutassir nahi hoti:
+> `select count(*) from questions` — 09-03 ko isi se pata chala ke run zinda hai.
 
 ```
-python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write
+python -u -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --types "multiple-choice,short-answer,true-false" --bloom foundational   --max-topics 87 --write > seed.log 2>&1
 ```
 
 > ⚠ **PY1 ke 10 topics ko purana plan ginta hi nahi tha** (wo "baqi 87" kehta tha, jo
@@ -211,7 +224,20 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
 > 301 → 302**, kyunke hex comment ke andar likha gaya tha aur counter use ginta hai.
 > **Wazahat PROGRESS.md mein likho, legacy file mein nahi.**
 
-* **Item 8 ka tail — ⛔ ab FAISLA-TALAB hai, "6 lines delete" nahi.**
+* **Item 8 ka tail — ✅ FAISLA HO GAYA 2026-09-03: `A` (component banao, farq page par
+  chhoro).** ⛔ ab ye rukawat nahi, **kaam hai** — aur **pehla qadam CSS nahi:**
+  1. **`css_inject_probe.mjs` ki fixtures** `.strip-empty` + `.list-empty` ke liye likho.
+     Ye dono JS se bante hain, is liye `css_type_probe`/`css_state_probe` inhein **sifar**
+     ginte hain aur **ghalat tabdeeli par bhi 0 deltas denge** (D45 ki shakl, `PROBES.md`
+     rule 10). Fixtures ke baghair gate jhoota "theek hai" dega.
+  2. Mushtarka declarations `05-components/` mein; `bank` 8px/8px, `print` 6px/0,
+     `blueprint` 30px padding — **har page apna farq apni `pages/*.css` mein**, qadrein
+     nahi badleen, **koi dikhne wali tabdeeli nahi.**
+  3. `.options-grid` ka `@760` wala `1fr` override **sirf `bank`** par hai — wahin rahe.
+  ⚠ **`unsanctioned_hex` is se NAHI ghatega:** wo faida `B` ka tha (print ka hardcoded hex
+  `var(--muted2)` ke haq mein marta), aur `A` page ka farq qaim rakhta hai. Target ka
+  hisaab likhte waqt ye line parho. Tafseel: `DECISIONS-FOR-IRFAN.md` §6.
+  ~~Purana row:~~ ~~**⛔ ab FAISLA-TALAB hai, "6 lines delete" nahi.**~~
   `.options-grid`, `.strip-empty`, `.list-empty` — **teenon ki do-do copies hain aur har
   jodi mein qadrein alag hain** (naapa 2026-09-01: `.options-grid` gap **8px** banaam
   **6px**; `.list-empty` padding **40px 20px** banaam **30px**; `.strip-empty` mein
@@ -251,8 +277,9 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
   ⚠ **Ye adad har commit par badalta hai — isay yahan se mat quote karo, naapo:**
   `git rev-list --left-right --count master...HEAD`. Board is se pehle do baar basi
   mila (09-01 ne 45 likha, 09-02 ko 50 tha). **Item 9 ab ho chuka hai, is liye ye rukawat
-  khatam** — merge ke raaste mein sirf item 8 ka tail bacha hai, jo §6 ke jawab par ruka
-  hai. ⚠ Merge ke waqt `master` par `fix/persist-batch-learning-outcome` (D60 ka fix) bhi
+  khatam** — ~~merge ke raaste mein sirf item 8 ka tail bacha hai, jo §6 ke jawab par ruka
+  hai~~ **(09-03: §6 ka jawab `A` aa gaya, is liye item 8 ka tail ab RUKAWAT nahi, KAAM
+  hai — dekhein ooper). Merge se pehle wo kaam aur `body`/`.tag` ka tail hona chahiye.** ⚠ Merge ke waqt `master` par `fix/persist-batch-learning-outcome` (D60 ka fix) bhi
   shamil hona chahiye, warna wo ek line yahan nahi aayegi.
 
 **4. ⚠ TARGET KA HISAAB TANG HAI — ye agle session ki pehli CSS baat hai.**

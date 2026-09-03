@@ -154,4 +154,24 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
 | # | answer |
 |---|---|
 | 5 target | **A — ~1400. Answered 2026-08-31** ✅ |
-| 6 item-8 tail | ⬜ **khula — 2026-09-01 ko naapa aur likha gaya** |
+| 6 item-8 tail | **A — component banao, farq page par chhoro. Answered 2026-09-03** ✅ |
+
+**6 ka jawab A hai — aur A ka matlab yehi hai ke qadrein NAHI badleen.** Mushtarka
+declarations `05-components/` mein jayengi; `.options-grid` ka `gap`/`margin-top`,
+`.list-empty` ka `padding`, `.strip-empty` ka rang — har page apna farq apni
+`pages/*.css` mein rakhega. Yani `bank` 8px/8px, `print` 6px/0, `blueprint` 30px
+padding — **sab jyun ke tyun, koi dikhne wali tabdeeli nahi.**
+
+**Do sharten jo isi faisle ka hissa hain (dono §6 ke jism mein naapi ja chuki hain):**
+
+* **Pehla qadam CSS nahi, fixtures hain.** `.strip-empty` aur `.list-empty` JS se bante
+  hain, is liye `css_type_probe` / `css_state_probe` inhein **sifar elements** ginte hain
+  aur ghalat tabdeeli par bhi **0 deltas** denge (D45 ki shakl, `PROBES.md` rule 10).
+  `css_inject_probe.mjs` ki fixtures pehle likho, warna gate jhoota "theek hai" dega.
+* **`.options-grid` ka `@760` wala `1fr` override sirf `bank` par hai** — wo bank hi ki
+  file mein rehna chahiye, component mein nahi.
+
+⚠ **B ka jo "muft faida" likha tha wo A ke saath nahi aata:** `.strip-empty` ka print wala
+hardcoded hex `var(--muted2)` ke haq mein nahi marta, kyunke A page ka farq qaim rakhta
+hai. Yani **`unsanctioned_hex` is kaam se nahi ghatega** — jo bhi target ka hisaab likhe,
+ye ek line yahan se parhe.
