@@ -27,9 +27,7 @@
   /* `.app-sidebar` -> `.sidenav__panel`. Its mobile `display: none` could not
      stay in this layer; it is in pages/index.css and must not come back here. */
   /* UI-068: `.brand` padding -> `.sidenav__brand`; flex/gap + `.logo` ->
-     pages/index.css. `.brand .tag`'s size and colour were DEAD — pages/index.css
-     `.tag` wins on layer, not specificity. Only the tracking was ever live. */
-  .brand .tag { letter-spacing: .04em; }
+     pages/index.css. `.brand .tag` ka bacha hua tracking -> pages/index.css (UI-078). */
   .nav-label {
     font-size: 10.5px; color: #6E84AD; letter-spacing: .1em;
     padding: 6px 22px; text-transform: uppercase;

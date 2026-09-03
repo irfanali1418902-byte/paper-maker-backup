@@ -318,7 +318,20 @@ un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
   ⚠ **`.strip-empty` aur `.list-empty` JS se bante hain** — `css_type_probe` inhein sifar
   ginta hai, yani **ghalat tabdeeli par bhi 0 deltas dega.** `css_inject_probe.mjs` ke
   fixtures mein ye do nahi hain; kaam se pehle fixtures likhni parengi.
-* ~~**`index` ki do murda `.tag` declarations**~~ — **✅ UI-074, magar row GHALAT thi.**
+* ~~**`index` ki do murda `.tag` declarations**~~ — **✅ UI-074, aur ab UI-078 (2026-09-03)
+  se poori tarah band.** Jo ek declaration zinda thi (`.brand .tag` ka `letter-spacing`)
+  wo delete nahi, **`pages/index.css` mein uthai gayi**; saath hi `landing` ki
+  `.brand .tag` bhi uthai — **us ki chaaron declarations zinda thin**, kyunke landing ki
+  apni file mein koi `.tag` rule hai hi nahi. `legacy_css_lines` **1699 → 1697**,
+  `unsanctioned_hex` 300 par barqarar, **probe 0 deltas** (das pages × paanch viewports).
+  **`pages/index.css` ka jhoota jumla theek ho gaya:** wo kehta tha *"Both legacy `.tag`
+  declarations can go"* jab ke usi comment ki agli line kehti thi *"only `letter-spacing`
+  ever survived"* — do line mein apne aap se ulat. Ab strike ke saath wajah likhi hai.
+  ⚠ **Naapte waqt ek naya farq nikla: `index` par ek hi tagline do jagah likha hai
+  (`index.html`:16 aur `:50`) aur DO ALAG TARAH paint hota hai** — `.brand` wale par
+  `letter-spacing` 0.44px, doosre par `normal`. Ye aaj ka bug nahi; **`DEFERRED.md` D62**,
+  faisla Irfan ka.
+  ~~Purana row:~~
   09-01 ko dono alag alag naapi gayin: **`.topbar .tag` (`:288`) waqai murda thi —
   delete ho gayi** (0 deltas, das pages × paanch viewports). **Magar `.brand .tag`
   (`:32`) ZINDA hai** — 0.44px letter-spacing, jo kahin aur declare nahi hota. **Wo

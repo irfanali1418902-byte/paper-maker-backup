@@ -242,7 +242,12 @@
      survived from legacy, and 99-legacy/index.css:32 is now that one
      declaration. `.topbar .tag` IS dead the same way — measured by review
      2026-08-29: it computes 11px / --color-action, i.e. this rule, not
-     legacy's 10.5px. Both legacy `.tag` declarations can go. NOT a
+     legacy's 10.5px. ~~Both legacy `.tag` declarations can go.~~ ⚠ **YE JUMLA
+     GHALAT THA AUR US NE EK ZINDA DECLARATION KO MURDA BATAYA.** `.topbar .tag`
+     waqai gayi (UI-074), magar `.brand .tag` ka `letter-spacing` KABHI murda nahi
+     tha — yehi is comment ki apni agli line kehti hai ("only `letter-spacing` ever
+     survived"), aur do line baad wo khud us se ulat gaya. Wo declaration ab niche
+     `.brand .tag` mein hai (UI-078), delete nahi hui. NOT a
      component — `.tag` is live on landing as the hero tagline and on
      slo-health as a JS-rendered SLO code badge, three different things
      wearing one class, which is why UI-043 could not own it
@@ -255,6 +260,17 @@
     border-radius: 5px;
     background: var(--color-accent-soft);
     color: var(--color-action);
+  }
+
+  /* UI-078 — `99-legacy/index.css`:32 ki aakhri zinda declaration, yahan uthai gayi.
+     ⚠ YE JAAN-BOOJH KAR `.brand .tag` HAI, ooper wali `.tag` MEIN NAHI DAALI GAYI.
+     Is page par DO `.tag` elements hain (index.html:16 aur :50) aur naapa gaya
+     2026-09-03 ke inhein alag alag paint kiya jata hai: jo `.brand` ke andar hai us
+     ka letter-spacing 0.44px hai, doosre ka `normal`. Ooper wali `.tag` rule mein
+     daalne se doosra bhi track ho jata — ek dikhne wali tabdeeli jo kisi ne nahi
+     maangi. Ke dono ko ek jaisa hona chahiye ya nahi, wo apna faisla hai: DEFERRED D62. */
+  .brand .tag {
+    letter-spacing: .04em;
   }
 
   /* `.row` — a flex row. `.topbar .row` exists in the legacy file but only

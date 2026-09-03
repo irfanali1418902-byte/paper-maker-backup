@@ -112,4 +112,22 @@
     line-height: 1.2;
     margin-bottom: 12px;
   }
+
+  /* UI-078 — hero ka tagline, `99-legacy/landing.css`:32 se uthaya gaya.
+     ⚠ INDEX SE ULT: yahan CHAARON declarations ZINDA thin, ek nahi. Naapa gaya
+     2026-09-03: font-size 12px, colour rgb(157,176,208), letter-spacing 0.48px,
+     margin-top 2px — sab isi rule se. Wajah saaf hai: is page ki apni file mein
+     koi `.tag` rule hai hi nahi, is liye index wali `pages/index.css` `.tag`
+     (jo layer par jeetti hai) yahan mojood nahi. `.tag` teen pages par teen alag
+     cheezein hain — is liye ye page-scoped hai, component nahi.
+
+     Colour hardcoded hai aur wahi hai jo pehle tha; `unsanctioned_hex` ka hisaab
+     nahi hila, wo sirf ek file se doosri mein gaya. Use token par le jana ek alag
+     faisla hai. */
+  .brand .tag {
+    font-size: 12px;
+    color: #9DB0D0;
+    letter-spacing: .04em;
+    margin-top: 2px;
+  }
 }
