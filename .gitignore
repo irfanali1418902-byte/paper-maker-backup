@@ -46,3 +46,9 @@ scripts/*.xlsx
 # these are not repo artefacts; this line is what makes that true under `git add -A`.
 .probe-*/
 docs/ui/probe/
+
+# Seeding run logs. STATUS.md §1 kehta hai output hamesha file mein bhejo (aur
+# `python -u` ke saath, warna beech mein marne par tail buffer ke saath ghayab
+# hota hai) -- wo log ek run ka nishan hai, repo ka artefact nahi. Us ka khulasa
+# PROGRESS.md/STATUS.md mein likha jata hai, file khud nahi.
+seed*.log

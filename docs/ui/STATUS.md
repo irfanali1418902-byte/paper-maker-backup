@@ -16,6 +16,22 @@
 > kaam us mein nahi tha — **2026-09-03 ko dobara naap kar theek kiya gaya**, purane alfaz
 > ~~strike~~ ke saath mojood hain. Plan ke qadam (§1–§4) us waqt bhi durust thay.)*
 >
+> **2026-09-03 ka natija — seeding chali, backfill chali, aur poora board dobara naapa gaya.**
+> **Seeding:** PY2 ke 39 topics maange; **exit code 0, magar run beech mein ruki** — 25
+> topics chhue, **21 bane (84 sawal)**, 4 par HTTP 429, **14 topics chhue hi nahi gaye**.
+> Bank **1042 → 1126**, PY2 **48 → 69/87**. **Baqi ab 28: PY2 ke 18, PY1 ke 10.**
+> **Dhaancha saaf** (84 par naapa): khaali sawal/jawab/tashreeh/Urdu **0**, MCQ bina
+> options **0**, MCQ ka jawab options mein **37/37**, har topic par poore 4 — 21/21.
+> **D60 ka backfill chal gaya:** 84 rows, backup se row-by-row diff —
+> *rows pehle 1126 ab 1126, gayab 0, naye 0, badle hue columns `{learning_outcome: 84}`*,
+> `integrity_check` ok. Khaali `learning_outcome` phir **130** (wohi manual/topic-NULL wale).
+> **Audit ka natija:** board ke **11 daawe naape gaye aur sab sach nikle** (item 8 ke
+> teenon rules ki qadrein, `.brand .tag`, `body` ke 6/7, item 9, 1706/300, scope 276,
+> jaali jode, D60, tests, `f547f21` master par nahi) — **chhe jagah farq nikla**, sab
+> neeche apni apni jagah theek kar diya gaya.
+>
+> ⚠ **Sab se ahem farq — PY2 ka dohraav-khatra ULTA ho gaya hai. §1 dekho.**
+>
 > **2026-09-02 ka natija — din audit par gaya, seeding quota par mari gayi.**
 > Irfan ne audit maanga; **board pehli baar poora sach nikla** (310/214/96, 1030 sawal,
 > 1706 lines, scope 276, 1075 pass — sab dobara naape gaye aur sab barabar), sirf
@@ -59,12 +75,14 @@
 > **Browser check phir nahi hua** (ab chaar sessions se khula).
 >
 > ~~Do commit bane, **dono un-pushed**.~~ → **09-02 ko chhe commit bane** (`566d722` …
-> `38256b2`), **sab un-pushed**; `master` se **56 aage, 0 peechhe** (naapa 2026-09-03).
-> Tests **1078 pass** (2026-09-03 ko chalaye), ruff aur ratchet saaf; bank **1042**, khaali
-> `learning_outcome` **130** (sab `syllabus_topic_id` NULL) — teenon dobara naape gaye.
+> `38256b2`), **sab un-pushed**; `master` se ~~56~~ **59 aage, 0 peechhe** (09-03 ke apne
+> docs commits mila kar — **is adad ko yahan se mat quote karo, naapo**).
+> Tests **1078 pass** (2026-09-03 ko chalaye), ruff saaf; bank ~~1042~~ **1126**, khaali
+> `learning_outcome` **130** (sab `syllabus_topic_id` NULL) — sab dobara naape gaye.
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
-nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phir PY1 ke 10.**
+nahi chala to din ka quota zaya. ~~**Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phir PY1 ke
+10.**~~ **Naapa 2026-09-03: baqi ab 28 — PY2 ke 18, phir PY1 ke 10.**
 
 > **Quota ka anjaam aankhon se dekha gaya, dono din:** `FAIL: Gemini ka quota/rate-limit
 > lag gaya (HTTP 429)`. **Output ka tail parho, sirf exit code par mat jao** — 09-02 ko
@@ -127,33 +145,48 @@ python -u -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --ty
 > 1. **Jaali syllabus** — 2026-08-21 ko paanch rows ek jaisi nikleen, 44 ghalat sawal
 >    delete karne pare. Chaar jaali jode (G5, G6, Science G7, Geography G8) **seed karna
 >    mana hai** jab tak asal syllabus import na ho. 09-02 ko naapa: chaaron ab bhi **0**.
-> 2. **Dohraya hua title** — 09-02 ko baqi topics par naapa gaya, aur **PY1 sab se
->    khatarnaak nikla, PY2 nahi**:
+> 2. **Dohraya hua title** — ⚠ **09-03 ko dobara naapa aur ye tasveer PALAT gayi. Ab
+>    DONO khatarnaak hain, sirf PY1 nahi:**
 >
 >    ```
 >    baqi topics   alag titles   LO == title
->    PY2   39          ~30           41/42
->    PY1   10           3            10/10   <- "Practice and Review of number and
->                                                 value" SAAT baar
+>    PY2   18          10           18/18   <- "Practice of subtraction" PAANCH baar
+>    PY1   10           3           10/10   <- "Practice and Review of number and
+>                                                value" SAAT baar
 >    ```
 >
->    Yani PY1 ke das mein se **saat qareeb-yaksan prompt** hain. PY3 par yehi shakl thi
->    aur natija phir bhi mauzoon nikla tha (16 sawal, 16 ke 16 alag) — **magar wo PY1 ka
->    saboot nahi hai. Un ke banne ke baad dohraav zaroor naapo.**
+>    ~~09-02: PY2 39 baqi, ~30 alag titles, 41/42 — yani "PY1 sab se khatarnaak nikla,
+>    PY2 nahi"~~. **Wo jumla ab ghalat hai, aur wajah samajhna zaroori hai: 09-03 ki run
+>    ne 21 topics banaye aur wo zyadatar ALAG titles wale thay — is liye jo bache hain wo
+>    dohre hain.** Yani har run ke baad ye ginti **kharab hoti jayegi**, behtar nahi.
+>    **Agli PY2 run ab PY1 jitni khatarnaak hai — dono ke baad dohraav zaroor naapo.**
+>    PY3 par yehi shakl thi aur natija phir bhi mauzoon nikla tha (16 sawal, 16 ke 16
+>    alag) — **magar wo saboot nahi hai.**
+>
+>    **09-03 ki run par dohraav naapa gaya, aur natija mauzoon tha:** naye 84 ke andar
+>    **0** dohre; poore bank ke khilaf **2** — dono **do alag grades** mein (*"Which of
+>    these shapes is a triangle?"* PY2 banaam PY3, aur *"If you have 3 red flowers…"*
+>    PY2 banaam PY3). 2/84 pichhle batches ke barabar hai. **Faisla Irfan ka, maine kuch
+>    delete nahi kiya.**
 
-**BANK KA HISAAB — 2026-09-02 ko naapa gaya (adad yahan se parho, yaad se nahi):**
+**BANK KA HISAAB — 2026-09-03 ko naapa gaya (adad yahan se parho, yaad se nahi):**
 
 ```
 grade         topics  seeded  baqi   sawal
 Pre Year 1        81      71    10     329
-Pre Year 2        87      48    39     192
+Pre Year 2        87      69    18     276
 Pre Year 3        87      87     0     348   <- mukammal
 Grade 4           11      11     0      43
 G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
-KUL              310     217    93     912
+KUL              310     238    72     996
 ```
 
-> **`912` topic-se-jure sawal hain; `questions` table mein kul 1042 hain.** Farq wo
+> ~~09-02: PY2 48/39/192, KUL 217/93/912~~ — 09-03 ki seeding ke baad badal gaya.
+> **Jaali chaar jode ka poora naam (09-03 ko naapa, board pehle sirf "G5/G6" likhta tha):
+> Grade 5 Mathematics, Grade 6 Mathematics, Grade 7 Science, Grade 8 Geography — 11-11
+> topics, chaaron par sawal `0`.**
+
+> **`996` topic-se-jure sawal hain; `questions` table mein kul 1126 hain.** Farq wo
 > **130 English sawal** hain jin ka `syllabus_topic_id` NULL hai (bulk Excel import) —
 > un ke liye koi syllabus row hai hi nahi. **Dono adad theek hain, bas alag cheez
 > ginte hain** — jo bhi "bank ka size" likhe, batae ke kaun sa.
@@ -181,6 +214,16 @@ KUL              310     217    93     912
    > aur unhein syllabus se nahi bhara ja sakta; wo Excel ya manual ka kaam hai.
    > ⚠ **Har seeding ke baad ise dobara chalana parega** jab tak `master` merge na ho —
    > wo ek line is branch par nahi hai.
+   > **✅ DOBARA CHAL GAYA 2026-09-03, aur is ne wo tanbeeh sahi sabit ki:** 09-03 ki
+   > seeding ke **84/84** naye sawal khaali `learning_outcome` ke saath likhe gaye —
+   > yani surakh is branch par bilkul zinda hai. Backfill ne **84 rows** bhari; backup se
+   > row-by-row diff — *rows pehle 1126 ab 1126, gayab 0, naye 0, badle hue columns
+   > `{learning_outcome: 84}`*, `integrity_check` ok. Khaali phir **130** (wohi manual).
+   > **84/84 bhari hui qadr apne topic ke barabar hai** — sirf "khaali nahi" nahi naapa.
+   > ⚠ **Magar ek baat jo backfill se nahi banti:** in topics ka apna `learning_outcome`
+   > akser **title hi hota hai** (baqi PY2 ke 18 mein **18/18**, PY1 ke 10 mein **10/10**),
+   > is liye bhara hua khana asal maloomat nahi, **sirf title ki nakal** hai. Ye syllabus
+   > ke data ki kharabi hai, is bug ki nahi — aur `master` merge is ko theek nahi karega.
 2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
    mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
    batch (4.4 / 4.55) pichhle sab AI batches ke barabar hai — **behkaav aaj nahi aaya**,
@@ -288,17 +331,21 @@ Target `~1400` **Irfan ka faisla hai aur qaim hai** (§5 / `DECISIONS-FOR-IRFAN.
 Magar UI-073 ke baad audit dobara chali aur scope **ghat gaya**:
 
 ```
-             faisle ke waqt      2026-09-01
-rule-block        1359              1327
-page-only         1051 (77%)        1051 (79%)
-agree               76               86
-disagree           232              190
-scope mein         308              276
+             faisle ke waqt      2026-09-01      2026-09-03
+rule-block        1359              1327            1326
+page-only         1051 (77%)        1051 (79%)      1050 (79%)
+agree               76               86              86
+disagree           232              190             190
+scope mein         308              276             276
 ```
+
+> **09-03 ko dobara chalayi gayi: rule-block aur page-only DONO ek-ek kam nikle** (1327 →
+> 1326, 1051 → 1050). **`agree`/`disagree`/`scope` bilkul barabar**, is liye neeche wala
+> `1706 − 276 = 1430` wala hisaab nahi hila. Farq page-only mein hai, scope mein nahi.
 
 **`1706 − 276 = 1430`** — yani sirf rules delete karne se **1400 nahi aata, ~30 lines
 reh jati hain.** Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
-**1707** poori file ginta hai, jab ke audit ka 1327 sirf rule-block lines hai — beech ka
+**1706** poori file ginta hai, jab ke audit ka **1326** sirf rule-block lines hai — beech ka
 farq comments, blank lines aur `@media` ke bracket hain, **jo apni rules ke saath khud
 jate hain** (UI-073 mein 34 rule-lines ke saath 8 comment-lines bhi gayin, magar naye
 comment 6 wapas aaye). Yani 1400 **ban sakta hai, magar khud-ba-khud nahi**.
