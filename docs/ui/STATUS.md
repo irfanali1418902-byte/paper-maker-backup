@@ -381,7 +381,16 @@ un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
   basi hota hai jitna carried number** — ye wala apni rule se sattrah din zyada jiya.
   D59 (jo item 9 ki rukawat thi) usi din band hua: `css_orphans.py` + `css_rules_probe.mjs`
   delete, 1039 lines — us row ki apni dalil bhi naapne par ghalat nikli.
-* **Phir `master` merge** — ~~09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**~~
+* ~~**Phir `master` merge**~~ ✅ **HO GAYA 2026-09-03 — `dc9436a`.** Tarteeb jaan-boojh kar
+  ye rakhi gayi: **pehle `f547f21` `master` mein fast-forward** (D60 ki wo ek line), **phir
+  epic us ke ooper `--no-ff` merge**. Ulta karne se wo line epic ke saath na aati.
+  **Naapa gaya merge se PEHLE:** epic ne `question_service.py` aur `test_persist_batch.py`
+  chhui hi nahi thin, is liye conflict mumkin nahi tha — aur merge waqai bila-conflict hua.
+  **Naapa gaya merge ke BAAD:** `1083 pass` (epic ke 1078 + fix ke 5), ruff saaf,
+  `legacy_css_lines` **1697**, `unsanctioned_hex` **300**, aur `question_service.py`:65 par
+  wo khana mojood hai jis ki kami D60 thi. **D60 band.**
+  ⚠ **Push NAHI kiya gaya** — wo Irfan GitHub Desktop se khud karta hai.
+  ~~Purana row:~~ ~~09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**~~
   **(09-03 ko 56 tha — yani ye adad yahan likhte hi basi ho gaya, jo isi row ki apni tanbeeh
   ka saboot hai. Ab yahan koi adad nahi; command chalao):**
   ⚠ **Ye adad har commit par badalta hai — isay yahan se mat quote karo, naapo:**
