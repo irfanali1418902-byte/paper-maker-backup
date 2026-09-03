@@ -46,7 +46,7 @@ A feature is DONE only when ALL are true:
 | Tech lead / reviewer | Claude (chat) — reviews plans, risks, order |
 | Developer | Claude Code — implements on branch, plan-first |
 | QA | Shared: automated suite + Irfan's browser checklist |
-| DevOps | Railway auto-deploy; env vars in dashboard only |
+| DevOps | ~~Railway auto-deploy; env vars in dashboard only~~ **Koi deploy nahi — O1 band, 2026-08-31.** App local chalti hai; Irfan GitHub Desktop se `backup` remote par push karta hai. Env vars local `.env` mein |
 
 ## 5. Security Rules (standing)
 
@@ -60,9 +60,19 @@ A feature is DONE only when ALL are true:
 | Env | Where | DB | Auth |
 |-----|-------|----|------|
 | Local dev | localhost:8000 | local paper_maker.db | off (no key set) |
-| Production | Railway (→ future: Render) | volume DB (separate!) | on (key set) |
+| ~~Production~~ | ~~Railway (→ future: Render)~~ | ~~volume DB (separate!)~~ | ~~on (key set)~~ |
 
-Rule: **never assume local data exists in prod.** Seed prod deliberately.
+⛔ **2026-08-31 — "Production" row band. Koi prod environment hai hi nahi**, aur ye
+row us ke hone ka farz karati thi (`docs/ROADMAP.md` ki pehli chetawni ne 2026-08-25 ko
+yehi naapa tha). Aaj **ek hi environment hai: local**, aur ek `backup` git remote — jo
+hosting nahi, backup hai. Cloud plan band hai (O1) aur `docs/MIGRATION.md` par ⛔ banner
+laga hai. Aage ki simt **school PC / Docker package** hai; jab wo aaye to yahan uski apni
+row banegi — Railway/Render ki nahi.
+
+~~Rule: **never assume local data exists in prod.** Seed prod deliberately.~~
+**Ab is ka ulta laazim hai: ek hi DB hai, `paper_maker.db`, aur wohi teacher ka asal
+data hai.** Seeding se pehle backup lo — `paper_maker_backup_before_*.db` ka namoona
+repo root mein mojood hai.
 
 ## 7. Session Discipline (Claude Code)
 

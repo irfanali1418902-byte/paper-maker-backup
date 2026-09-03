@@ -1,0 +1,54 @@
+/* =========================================================================
+   05-components/icon.css — the `<use>` sprite's box
+   Absorbs the last rule of static/app.css (UI-075, item 9). One selector,
+   three declarations, and it is load-bearing on nine pages.
+   -------------------------------------------------------------------------
+   WHAT IT IS. Every icon in this app is `<svg class="icon"><use href="…"></svg>`
+   pointing at static/icons.svg. An inline `<svg>` with no width/height falls
+   back to the SVG default of 300x150 — not to zero, and not to the sprite's own
+   viewBox. So this rule is not cosmetic: without it the sidebars fill with
+   300x150 boxes. `pages/slo-health.css`'s header recorded that consequence
+   before this file existed.
+
+   WHY IT WAS THE LAST THING IN app.css. app.css carried two unrelated halves:
+   nine @font-face rules, absorbed by 02-generic/fonts.css at UI-021, and this.
+   The fonts moved years-of-the-epic ago in one step because @font-face is
+   layer-neutral; this could not follow, because it is a component and there was
+   no component layer to put it in until Sprint 4.
+
+   ⚠ THE RISK THIS MOVE WAS EXPECTED TO CARRY DOES NOT EXIST, AND FINDING THAT
+   OUT COST A REVIEW ROUND. In app.css this rule was UNLAYERED, and an unlayered
+   rule beats every @layer; the headers of pages/slo.css and pages/landing.css
+   both said that was load-bearing, because 99-legacy/landing.css set
+   `.icon { width: 22px }` and 17px had to outrank it. The first draft of this
+   file repeated that, and it was FALSE: `UI-060` deleted that rule as dead on
+   2026-08-16, seventeen days before this task.
+
+     $ grep -c "\.icon" static/css/99-legacy/landing.css
+     0
+
+   So `.icon` is now UNCONTESTED — this file is its only declaration anywhere in
+   the cascade. 17px does not win by layer order; it wins because nothing
+   competes. **The pixels were measured and are right (17x17 / flex-shrink 0 on
+   all nine icon-bearing pages, 0 element x property deltas across ten pages and
+   five viewports); the mechanism first offered as the reason for them was
+   fiction.** That is this repo's signature failure — a claim true for the wrong
+   reason — committed in the very paragraph written to guard against it. The
+   lesson is not "measure the pixels", which was done; it is that a HEADER
+   DESCRIBING A CASCADE IS AS STALE AS ANY OTHER CARRIED NUMBER.
+
+   WHAT WOULD BREAK IT: any `.icon` rule anywhere except this file — in
+   layer(utilities), unlayered in a page's <head>, or an inline style. There is
+   none today, on any of the ten pages. If one appears, this file stops being
+   the answer and the cascade has to be measured again.
+
+   NOT A TOKEN. 17px is a literal here on purpose — it is the sprite's drawn
+   size, not a type step, and no Tier 2 role means "icon box". `DEFERRED.md` D54
+   is the same argument for `.card`'s padding.
+   ========================================================================= */
+
+.icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}

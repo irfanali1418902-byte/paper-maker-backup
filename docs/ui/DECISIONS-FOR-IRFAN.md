@@ -1,7 +1,11 @@
-# Four things only Irfan can settle — 2026-08-09
+# Things only Irfan can settle — 2026-08-09, §5 added 2026-08-31
 
-**Every number below is the board's own measured figure, copied with its source. None of it was
-re-measured while writing this page. No review agent read it — Irfan reads it himself.**
+**Every number in §1–§4 is the board's own measured figure, copied with its source. None of it
+was re-measured while writing this page. No review agent read it — Irfan reads it himself.**
+
+**⚠ §5 is different and says so: its figures were re-measured on the day** (`css_baseline.py`
+aur `css_duplication_audit.py` dobara chalayi gayin), kyunke sawal hi ye tha ke board ka
+purana adad ab bhi sach hai ya nahi — aur nahi tha.
 
 **Answer 1, 2 and 3 and three pages open with no new CSS.**
 
@@ -90,3 +94,126 @@ inline `style` with the Nastaliq stack, and inline beats every layer. `bank` and
 not affected: their `urdu-toggle-row`, `qtext-ur`, `school-ur` and `urdu-input` are different
 class names that `.urdu` does not match. A first grep said otherwise and was wrong — ``
 treats the hyphen as a word boundary, the same trap this epic hit on `app-nav` a day earlier.
+
+---
+
+### 5. Target — `legacy_css_lines` ka aakhri adad · **ANSWERED: ~1400, 2026-08-31**
+
+**Irfan ne range khatam ki: ek adad, `~1400`.** Purana `1,200–1,400` mansookh.
+
+Sawal kyun uthana para: **`1,200` riyazi taur par pohanch se bahar tha.** 2026-08-31 ko
+`css_duplication_audit.py` dobara chali — `agree` **76** + `disagree` **232** = **308 lines
+scope mein**, aur us waqt `legacy_css_lines` **1729** tha. Baqi 1,051 lines page-only hain,
+jo 2026-08-19 ko jaan-boojh kar scope se bahar ki gayi thin.
+
+| | | |
+|---|---|---|
+| **A** | target **~1400** | scope waise hi rahe; bacha kaam kar ke epic band |
+| **B** | page-only ki 1,051 lines mein se kuch scope mein lao | sirf `99-legacy/<page>.css` → `pages/<page>.css` shift — na duplication ghatti hai, na CSS |
+
+**A liya gaya.** Aaj ka faasla: **1707 − 1400 = 307 lines**, yani lag-bhag utna hi jitna
+scope mein bacha hai — target pohanch mein hai magar har bacha hua tukda chahiye.
+
+### 6. Item 8 ka tail — teen rules jo do-do files mein hain **aur aapas mein mel nahi khatin**
+
+**Ye "chhe lines delete karo" wala kaam nahi nikla.** `STATUS.md` ka row in teen rules ko
+6 lines kehta tha; 2026-09-01 ko grep aur probe se naapa gaya to **teenon ki do-do copies
+hain aur har jodi mein qadrein alag hain.** Isi liye audit ne inhein `disagree` mein rakha
+hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti hain, is liye
+**pehle faisla, phir component.**
+
+**Naapa gaya (probe, 1280px):**
+
+```
+.options-grid   bank    gap=8px  margin-top=8px
+                print   gap=6px  margin-top=0px
+```
+
+| rule | kahan | ikhtilaf |
+|---|---|---|
+| `.options-grid` | `bank.css:77`, `print.css:257` | gap **8px** banaam **6px**; bank par `margin-top: 8px`, print par nahi. Print ke paas `.options-grid input { width:100% }` bhi hai, bank ke paas nahi. Bank ke paas `@760` ka `1fr` override bhi hai. |
+| `.strip-empty` | `bank.css:106`, `print.css:306` | sirf rang: `var(--muted2)` banaam **ek hardcoded hex**. Wo hex `unsanctioned_hex` mein ginta hai. |
+| `.list-empty` | `bank.css:163`, `blueprint.css:117` | padding **40px 20px** banaam **30px**. ~~Baqi teen declarations barabar.~~ ⚠ **Ye aakhri jumla 2026-09-03 ko naapne par GHALAT nikla — RANG bhi alag hai.** Dono `color: var(--muted2)` likhti hain, magar `--muted2` har page apna declare karta hai: `bank.css:8` par `#8A93A4`, `blueprint.css:9` par `var(--muted)`. Naapa (inject probe): bank **rgb(138,147,164)**, blueprint **rgb(100,116,139)**. Yani declaration lafz-ba-lafz barabar hai aur natija barabar nahi — **do farq hain, ek nahi.** |
+
+| | |
+|---|---|
+| **A** | **Component banao, farq page par chhoro** — mushtarka declarations `05-components/` mein, aur har page apna farq (`gap`, `margin-top`, `padding`) `pages/*.css` mein rakhe. Sab se zyada lines bachti hain, magar teen chhoti page-overrides banti hain. |
+| **B** | **Ek qadar par muttafiq ho jao** — yani `gap` dono jagah 8px (ya 6px), `padding` dono jagah ek. Sab se saaf CSS, **magar ye dikhne wali tabdeeli hai** aur bank/print ka farq jaan-boojh kar bhi ho sakta hai (print ki jagah tang hoti hai). |
+| **C** | **Haath na lagao** — page-only samjho, aur target ka faasla kahin aur se poora karo. |
+
+**Do baatein jo faisle se pehle jaan lena zaroori hai:**
+
+* ✅ **FIXTURES LIKHI JA CHUKI HAIN — 2026-09-03, `css_inject_probe.mjs` mein paanch entries**
+  (bank ke teen, blueprint aur print ka ek ek). **Control se sabit:** blueprint ka
+  `.list-empty` padding `30px → 40px 20px` karne par diff ne **theek 4 deltas usi element
+  par** diye aur baqi har jagah 0, aur revert ke baad phir 0. Yani `A` ka kaam ab naapa
+  ja sakta hai. Tafseel `PROBES.md` rule 11.
+  ⚠ **Line-hawale neeche EK-EK ZYADA thay** — asal `bank.html:843`/`:1006`/`:1255`,
+  `print.html:353`, `blueprint.html:1062`.
+* **`.strip-empty` aur `.list-empty` dono JS se bante hain** (`innerHTML`, `bank.html:844`,
+  `:1007`, `print.html:354`, `bank.html:1256`, `blueprint.html:1063`). **`css_type_probe`
+  aur `css_state_probe` inhein sifar elements ginte hain, yani ghalat tabdeeli par bhi
+  0 deltas denge** (D45 ki shakl, PROBES.md rule 10). `css_inject_probe.mjs` ke fixtures
+  mein ye do abhi **nahi** hain — B ya A par jane se pehle **fixtures likhni parengi.**
+* **B ka ek muft faida hai:** `.strip-empty` ka print wala hardcoded hex `var(--muted2)`
+  ke haq mein khatam ho jayega, yani `unsanctioned_hex` ek aur ghatega.
+* ⚠ **TEESRA RULE — `.options-grid` — ka gate BHI shak ke daire mein hai, aur ye 2026-09-03
+  ko nikla. Ise step 2 se PEHLE naapna hai.** Ye rule JS se nahi banti (markup mein mojood
+  hai: `bank.html:134`, `:476`, `print.html:139`, `:143`) — is liye `css_type_probe` ke
+  liye ye sifar-element wala maamla **nahi** hai aur is ki fixture nahi likhi gayi. Magar
+  chaar mein se **teen** copies aaram se nazar aane wali jagah par nahi hain:
+
+  | kahan | parda |
+  |---|---|
+  | `bank.html:134` (`#sec-mcq`) | khula — naapa gaya, koi chhupa ancestor nahi ✅ |
+  | `bank.html:476` | `#ef-opts-sec` `display:none`, **aur** us ke ooper `#editBackdrop` `.modal-backdrop` |
+  | `print.html:139`, `:143` | `#editModalBackdrop` `.modal-backdrop` |
+
+  `99-legacy/print.css:220` par `.modal-backdrop { display: none }` hai aur `open` class
+  hi use kholti hai (`modal.css:42`). **Jo abhi tak naapa NAHI gaya wo ye hai ke is soorat
+  mein `css_type_probe` ki apni property list mein se kitni qadrein bharosay ke laiq
+  rehti hain** — `gap` jaisi computed qadrein `display:none` ke neeche bhi theek aati
+  hain, magar layout se nikalne wali (used) qadrein nahi (D53 ka doosra hissa).
+  **Step 2 mein `.options-grid` ko haath lagane se pehle ye naapo**, warna us rule ka
+  natija ek aisi run par khara hoga jis ka aadha matlab hai. Agar kamzor nikle to isi
+  file mein `.options-grid` ki bhi fixture likhni paregi — modal wahi `open` class se
+  khulegi jo dono strip fixtures pehle se istemal karti hain.
+
+| # | answer |
+|---|---|
+| 5 target | **A — ~1400. Answered 2026-08-31** ✅ |
+| 6 item-8 tail | **A — component banao, farq page par chhoro. Answered 2026-09-03** ✅ **KAAM BHI HO GAYA usi din (UI-076)** |
+
+> **✅ HO GAYA — UI-076, 2026-09-03.** `.strip-empty` + `.list-empty` ki mushtarka
+> declarations naye `05-components/empty.css` mein; `.options-grid` ki
+> `05-components/field.css` mein. Har page ka farq us ke apne `pages/*.css` ke
+> `@layer components` mein: bank `gap 8px` + `margin-top 8px` + `.strip-empty` colour +
+> `.list-empty` 40px 20px, print `gap 6px` + `.options-grid input` + apna hex colour,
+> blueprint `.list-empty` 30px. **Qadrein ek bhi nahi badli.**
+> **Gate, dono:** inject probe **0 deltas**, aur `css_type_probe` **das pages × paanch
+> viewports, ~24 lakh element × property muqable, 0 deltas**.
+> `legacy_css_lines` **1706 → 1704**, `unsanctioned_hex` **300 par barqarar**.
+> **Faasla sirf 2 lines ka hai aur ye na-kaami nahi:** teenon rules single-line thin aur
+> un ki jagah single-line pointer comments aaye — asal faida dohraav ka khatma hai,
+> line count ka nahi. §4 ka andesha (target rules delete karne se nahi aayega) isi se
+> aur pukhta hota hai.
+
+**6 ka jawab A hai — aur A ka matlab yehi hai ke qadrein NAHI badleen.** Mushtarka
+declarations `05-components/` mein jayengi; `.options-grid` ka `gap`/`margin-top`,
+`.list-empty` ka `padding`, `.strip-empty` ka rang — har page apna farq apni
+`pages/*.css` mein rakhega. Yani `bank` 8px/8px, `print` 6px/0, `blueprint` 30px
+padding — **sab jyun ke tyun, koi dikhne wali tabdeeli nahi.**
+
+**Do sharten jo isi faisle ka hissa hain (dono §6 ke jism mein naapi ja chuki hain):**
+
+* **Pehla qadam CSS nahi, fixtures hain.** `.strip-empty` aur `.list-empty` JS se bante
+  hain, is liye `css_type_probe` / `css_state_probe` inhein **sifar elements** ginte hain
+  aur ghalat tabdeeli par bhi **0 deltas** denge (D45 ki shakl, `PROBES.md` rule 10).
+  `css_inject_probe.mjs` ki fixtures pehle likho, warna gate jhoota "theek hai" dega.
+* **`.options-grid` ka `@760` wala `1fr` override sirf `bank` par hai** — wo bank hi ki
+  file mein rehna chahiye, component mein nahi.
+
+⚠ **B ka jo "muft faida" likha tha wo A ke saath nahi aata:** `.strip-empty` ka print wala
+hardcoded hex `var(--muted2)` ke haq mein nahi marta, kyunke A page ka farq qaim rakhta
+hai. Yani **`unsanctioned_hex` is kaam se nahi ghatega** — jo bhi target ka hisaab likhe,
+ye ek line yahan se parhe.

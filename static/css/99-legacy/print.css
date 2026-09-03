@@ -4,14 +4,13 @@
 
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
     --muted: #5B6678;
     --border: #E3E8F1;
     --bg: #F5F7FB;
-    --radius-btn: 8px;
+    --radius-btn: var(--radius-control);
     /* Print knobs (Marhala 4A). Defaults = purani hardcoded values, isliye
        koi class-override na ho to output bilkul waisa. JS in par per-class
        settings apply karta hai (loadPaper mein). */
@@ -20,42 +19,19 @@
     --q-gap: 14px;
   }
 
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: #1a1a1a;
-    margin: 0;
-    background: var(--bg);
-    display: flex;
-    min-height: 100vh;
-  }
+  /* UI-073: dekho bank.css ka wohi note. `margin` 02-generic/reset.css deti hai,
+     aur is page ka apna `color` (rgb(26,26,26)) bhi murda tha — nau ke nau pages
+     ek hi qeemat compute karte hain. */
+  /* body: pages/print.css ka @layer objects (UI-077). */
 
-  /* ---- Sidebar (screen only, hidden in print) ---- */
-  .app-sidebar {
-    width: 248px;
-    flex-shrink: 0;
-    background: var(--navy);
-    color: #fff;
-    padding: 24px 18px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;  /* print-settings panel khule to clip na ho */
-  }
+  /* ---- Sidebar (screen only, hidden in print) ----
+     UI-065: panel + nav + links moved to 05-components/nav.css; print.html now carries
+     `sidenav__panel` / `sidenav` / `sidenav__link` / `sidenav__foot`. One shell —
+     Irfan, 2026-08-27. UI-068 ne `sidenav__brand` bhi de diya — us se pehle is page ka
+     brand padding 0 par tha (UI-065 ka bug). Baqi teen declarations page-only hain:
+     is markup mein `.name` element hai hi nahi. Tafseel PROGRESS.md 2026-08-28. */
   .brand { font-weight: 700; font-size: 18px; line-height: 1.3; }
-  .brand small { display: block; font-weight: 400; font-size: 12px; color: #A9B6CE; margin-top: 4px; }
-  .app-nav { margin-top: 24px; display: flex; flex-direction: column; gap: 2px; }
-  /* No `color` here, and no hover colour: both were dead — beaten by
-     03-elements/typography.css's `a { color: inherit }` in layer(elements) —
-     and pages/print.css owns them now. Putting either back arms rule 2: a dead
-     legacy declaration comes alive the moment someone lifts this rule into a
-     component. */
-  .app-nav a {
-    text-decoration: none; font-size: 14px;
-    padding: 9px 12px; border-radius: 8px; font-weight: 500;
-  }
-  .app-nav a:hover { background: rgba(255,255,255,.08); }
+  .brand small { font-weight: 400; }
   .side-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
   .side-actions button {
     padding: 10px 16px; border: none; border-radius: var(--radius-btn);
@@ -90,7 +66,7 @@
     font-family: inherit; display: flex; align-items: center; justify-content: center;
   }
   .ps-stepper button:hover { background: #38507f; }
-  .ps-stepper button:disabled { opacity: .4; cursor: not-allowed; }
+  .ps-stepper button:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   .ps-value { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #fff; }
   .ps-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
   .ps-save {
@@ -99,7 +75,7 @@
     font-family: inherit; cursor: pointer;
   }
   .ps-save:hover { background: var(--tint); }
-  .ps-save:disabled { opacity: .5; cursor: not-allowed; }
+  .ps-save:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
   .ps-reset {
     padding: 7px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius-btn);
     background: none; color: #C7D2E6; font-size: 12.5px; font-family: inherit; cursor: pointer;
@@ -217,7 +193,8 @@
   #status { text-align: center; padding: 40px; color: var(--muted); }
 
   @media print {
-    body { background: #fff; display: block; }
+    /* display: block -> pages/print.css @layer objects (UI-077); background yahin. */
+    body { background: #fff; }
     .app-sidebar { display: none !important; }
     .no-print { display: none !important; }
     .print-main { padding: 0; }
@@ -225,9 +202,6 @@
   }
 
   @media (max-width: 760px) {
-    body { flex-direction: column; }
-    .app-sidebar { width: 100%; height: auto; position: static; }
-    .sidebar-foot { display: none; }
     .print-main { padding: 16px; }
   }
 
@@ -243,23 +217,22 @@
   .edit-btn:hover { background: var(--tint); color: var(--primary); border-color: var(--primary); }
 
   /* ---- Edit modal ---- */
+  /* scrim, radius, shadow, close size: modal.css (UI-067). */
   .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.45); z-index: 999;
+    display: none; position: fixed; inset: 0; z-index: 999;
     align-items: center; justify-content: center;
   }
   /* .modal-backdrop.open: 05-components/modal.css (UI-042) */
 
   .modal {
-    background: #fff; border-radius: 10px; padding: 24px 28px;
+    background: #fff; padding: 24px 28px;
     width: min(600px, 94vw); max-height: 90vh; overflow-y: auto;
-    box-shadow: 0 16px 48px rgba(0,0,0,.22);
   }
-  /* .modal-header: 05-components/modal.css (UI-042). The h3 stays — only its
-     colour is live; see that file's header. */
-  .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
+  /* .modal-header: 05-components/modal.css (UI-042). UI-062 dropped the two
+     dead declarations; only the colour was ever live. */
+  .modal-header h3 { color: var(--navy); }
   .modal-close {
-    background: none; border: none; font-size: 20px; cursor: pointer;
+    background: none; border: none; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;
   }
   .modal-close:hover { color: var(--ink); }
@@ -281,8 +254,7 @@
     direction: rtl; font-family: "Noto Nastaliq Urdu", serif;
     font-size: 15px; line-height: 1.8;
   }
-  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .options-grid input { width: 100%; }
+  /* .options-grid: 05-components/field.css; gap + input: pages/print.css (UI-076). */
 
   .modal-section-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -294,19 +266,8 @@
     padding: 8px 12px; font-size: 13px; color: #c00; margin-bottom: 12px;
     display: none;
   }
-  /* .modal-footer: 05-components/modal.css (UI-042) */
-  .btn-cancel {
-    padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
-    background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;
-  }
-  .btn-cancel:hover { background: var(--bg); }
-  .btn-save {
-    padding: 8px 20px; border: none; border-radius: var(--radius-btn);
-    background: var(--primary); color: #fff; cursor: pointer;
-    font-size: 14px; font-weight: 600; font-family: inherit;
-  }
-  .btn-save:hover { background: var(--primary-hover); }
-  .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+  /* .modal-footer: 05-components/modal.css (UI-042).
+     .btn-cancel / .btn-save + states: 05-components/btn.css (UI-062). */
 
   /* ---- Question image ---- */
   .q-image { margin: 10px 0 8px; }
@@ -339,14 +300,9 @@
   /* ---- Topic image strip (inside edit modal) ---- */
   .topic-strip { margin-bottom: 14px; }
   .topic-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-  .strip-filter input, .strip-filter select {
-    min-height: 30px; padding: 4px 9px; font-size: 12px;
-    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit; background: #fff;
-  }
+  /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
-  .strip-empty { font-size: 11.5px; color: #999; padding: 4px 0; }
+  /* .strip-empty: 05-components/empty.css (UI-076); colour pages/print.css mein. */
   .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 160px; overflow-y: auto; }
   /* ---- Library picker search bar ---- */
   .lib-picker-search {
@@ -389,11 +345,12 @@
   }
   .suggest-badge b { color: #1a4d8a; }
   .suggest-btn {
-    background: var(--primary); color: #fff; border: none;
+    /* radius stays 6px — a chip, not a CTA (UI-063 covers action buttons) */
+    background: var(--color-action); color: #fff; border: none;
     border-radius: 6px; padding: 4px 11px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer;
   }
-  .suggest-btn:hover { background: var(--primary-hover); }
+  .suggest-btn:hover { background: var(--color-action-hover); }
   .suggest-dismiss {
     background: none; border: 1px solid #ccc; color: var(--muted);
     border-radius: 6px; padding: 4px 10px; font-size: 12px;
@@ -412,23 +369,18 @@
     background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px;
     padding: 8px 12px; color: #7b5c00; margin: 0 0 10px; display: block;
   }
-  .shortfall-panel .sf-head { font-size: 12.5px; font-weight: 700; }
-  .shortfall-panel .sf-reason { font-size: 12.5px; margin-top: 3px; }
-  .shortfall-panel .sf-q { font-size: 12.5px; font-weight: 600; margin-top: 7px; }
-  .shortfall-panel .sf-options { list-style: disc; margin: 3px 0 0; padding-left: 20px; font-size: 12.5px; }
-  .shortfall-panel .sf-options li { margin-top: 2px; }
-  .shortfall-panel .sf-gain { font-weight: 600; }
+  /* .sf-* -> 05-components/shortfall.css (UI-071). Box yahin rehta hai. */
 
   /* ---- Library picker modal ---- */
+  /* The app's 8th modal, page-only so no audit bucket listed it. modal.css, UI-067. */
   .lib-picker-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+    position: fixed; inset: 0; z-index: 1000;
     display: none; align-items: center; justify-content: center; padding: 16px;
   }
   .lib-picker-overlay.open { display: flex; }
   .lib-picker-modal {
-    background: #fff; border-radius: 12px; width: min(700px, 96vw);
+    background: #fff; width: min(700px, 96vw);
     max-height: 88vh; display: flex; flex-direction: column;
-    box-shadow: 0 16px 56px rgba(0,0,0,.3);
   }
   .lib-picker-head {
     padding: 14px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0;

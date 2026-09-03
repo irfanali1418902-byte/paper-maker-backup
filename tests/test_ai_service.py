@@ -150,14 +150,30 @@ class _FakeResponse:
 
 def test_provider_error_message_maps_status_and_never_leaks():
     busy = ai_service._provider_error_message("Gemini", _err_with_status(503))
+    quota = ai_service._provider_error_message("Gemini", _err_with_status(429))
     generic = ai_service._provider_error_message("Claude", _err_with_status(400))
     network = ai_service._provider_error_message("Gemini", _err_with_status(None))
 
     assert "503" in busy and "busy" in busy.lower()
     assert "400" in generic
     assert "network" in network.lower()
-    for m in (busy, generic, network):
+    for m in (busy, quota, generic, network):
         assert "googleapis" not in m and "anthropic.com" not in m
+
+
+def test_rate_limit_message_says_quota_not_busy():
+    """429 ko "busy hai, thodi der baad" kehna ghalat rasta dikhata hai --
+    free-tier par ye aksar rozana quota hota hai aur thodi der baad kabhi
+    nahi chalta. 503 par wahi purana "busy" matn rehna chahiye."""
+    quota = ai_service._provider_error_message("Gemini", _err_with_status(429))
+    busy = ai_service._provider_error_message("Gemini", _err_with_status(503))
+
+    assert "quota" in quota.lower()
+    assert "busy" not in quota.lower()
+    assert "kal" in quota.lower()
+    # seed_bank.py apne auto-stop ke liye is matn mein "429" dhoondta hai
+    assert "429" in quota
+    assert "quota" not in busy.lower()
 
 
 # ---- _with_retry — temporary errors par retry, permanent par seedha raise ----

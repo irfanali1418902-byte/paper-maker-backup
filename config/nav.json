@@ -6,7 +6,7 @@
     "versions of it (measured at UI-030: bank/blueprint/library/print carry 5 items,",
     "index 10, slo/slo-health/taqseem 7, and landing has no nav at all).",
     "",
-    "Group names, order and item set are the design target's (static/mockup-modern.html",
+    "Group names, order and item set are the design target's (docs/design/mockup-modern.html",
     "nav block). Labels, urls, icons and i18n keys are the LIVE app's, not the mockup's —",
     "e.g. the mockup says 'Generate paper', the pages say 'Generator'. Every icon id was",
     "verified present in static/icons.svg (all 11) and every url returns 200.",

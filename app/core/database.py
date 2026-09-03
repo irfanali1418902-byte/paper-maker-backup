@@ -282,6 +282,14 @@ def init_db() -> None:
         cur.execute("ALTER TABLE school_settings ADD COLUMN session_start_month INTEGER DEFAULT 3")
     if "exam_count" not in settings_cols:
         cur.execute("ALTER TABLE school_settings ADD COLUMN exam_count INTEGER DEFAULT 8")
+    # R7 — hafta-war plan ka N (topic_week_plan). exam_count ka aaina, default 36.
+    # JAAN-BOOJH KAR sirf column: `SchoolSettings` model aur save_settings() abhi
+    # nahi chhue gaye. Wajah -- /api/school-settings ka partial POST baqi fields
+    # wipe kar deta hai, to us surface ko chherna apna alag gate maangta hai
+    # (Marhala 4, jab UI ise edit karega). Tab tak column apni default par rehta
+    # hai aur _week_count() column na hone par bhi 36 par chalti hai.
+    if "week_count" not in settings_cols:
+        cur.execute("ALTER TABLE school_settings ADD COLUMN week_count INTEGER DEFAULT 36")
 
     # Existing DBs: add name_normalized column and back-fill from name.
     lib_cols = {row[1] for row in cur.execute("PRAGMA table_info(image_library)").fetchall()}
@@ -395,6 +403,25 @@ def init_db() -> None:
         )
         """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_slo_exam_plan_exam ON slo_exam_plan(exam_no)")
+
+    # R7 Marhala 1 — syllabus topic → hafta (hafta-war plan). Upar wali
+    # slo_exam_plan ka jaan-boojh kar aaina: ek row per topic, week_no 1..N,
+    # 0 = Unassigned. subject/grade syllabus_topics se JOIN par milte hain
+    # (topic id globally ek hi subject+grade ka), is liye yahan denormalize nahi.
+    # N global hai (school_settings.week_count, default 36).
+    #
+    # "Hafta" ginti hai, tareekh NAHI -- tareekh se timezone/chhuttiyan/"saal kab
+    # shuru hua" ke sawal aate hain, aur exam_no bhi ginti hi hai. Tafseel:
+    # docs/TOPIC_WEEK_PLAN.md
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS topic_week_plan (
+            syllabus_topic_id TEXT PRIMARY KEY REFERENCES syllabus_topics(id),
+            week_no           INTEGER NOT NULL,
+            position          INTEGER,
+            updated_at        TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_topic_week_plan_week ON topic_week_plan(week_no)")
 
     conn.commit()
     conn.close()

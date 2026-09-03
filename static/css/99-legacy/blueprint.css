@@ -1,44 +1,32 @@
   :root {
-    /* Local semantic aliases → theme.css tokens (ek source of truth; koi hardcoded
-       hex nahi). --primary = navy brand, --tint = light navy chip, status = traffic-
-       light tokens. --muted yahan se hata diya — theme.css --muted istemal hota hai. */
+    /* Local semantic aliases. UI-072 ne --ok-bg/--ok-tx delete kiye (koi nahi parhta
+       tha), to status ab traffic-light nahi — sirf err aur warn bache. `theme.css`
+       ka hawala tareekhi hai: wo file 2026-08-13 ko delete ho chuki. */
     --primary: var(--brand);
-    --primary-hover: var(--brand-2);
-    --navy: var(--brand);
     --tint: var(--chip-bg);
     --ink: var(--fg);
     --ink2: var(--fg);
     --muted2: var(--muted);
     --border: var(--line);
     --surface: var(--panel);
-    --bg: var(--app-bg);
     --err-bg: var(--red-bg);     --err-tx: var(--red);
-    --ok-bg: var(--green-bg);    --ok-tx: var(--green);
     --warn-bg: var(--yellow-bg); --warn-tx: var(--yellow);
-    --radius-btn: 10px;
-    --shadow: 0 2px 12px rgba(22,33,58,.06);
+    --radius-btn: var(--radius-control);
   }
 
   /* Chrome (.app grid · .brand · .top · .nav · .main) theme.css se aata hai.
      Yahan sirf blueprint-specific content width. */
   .main { max-width: 1080px; margin: 0 auto; }
 
-  /* ---- Cards ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+  /* ---- Cards ---- UI-068: bare `.card` -> 05-components/card.css. */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; color: var(--ink2); }
 
   /* ---- Form elements ---- */
-  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
+  label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  input[type="text"], input[type="number"], select {
-    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid var(--line); border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; background: var(--panel); color: var(--ink);
-  }
-  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+  /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; UI-066 note there. */
+  input[type="text"], input[type="number"], select { width: 100%; min-height: 44px; margin-top: 6px; }
 
   /* .field-row: 05-components/field.css (UI-042) */
 
@@ -52,7 +40,7 @@
     font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer;
   }
   .btn-secondary:hover { background: var(--tint); }
-  .btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
 
 
   .btn-danger-sm {
@@ -126,7 +114,7 @@
   .bp-name { font-size: 14px; font-weight: 600; }
   .bp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .bp-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  .list-empty { text-align: center; color: var(--muted2); padding: 30px; font-size: 14px; }
+  /* .list-empty: 05-components/empty.css (UI-076); padding pages/blueprint.css mein. */
 
   /* ---- Shortfall warnings ---- */
   .shortfall-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
@@ -140,12 +128,7 @@
     background: var(--surface); border-left: 3px solid var(--warn-tx);
     color: var(--warn-tx); padding: 8px 11px; border-radius: 6px;
   }
-  .shortfall-panel .sf-head { font-size: 12.5px; font-weight: 700; }
-  .shortfall-panel .sf-reason { font-size: 12.5px; margin-top: 3px; }
-  .shortfall-panel .sf-q { font-size: 12.5px; font-weight: 600; margin-top: 7px; }
-  .shortfall-panel .sf-options { list-style: disc; margin: 3px 0 0; padding-left: 20px; font-size: 12.5px; }
-  .shortfall-panel .sf-options li { margin-top: 2px; }
-  .shortfall-panel .sf-gain { font-weight: 600; }
+  /* .sf-* -> 05-components/shortfall.css (UI-071). Box yahin rehta hai. */
 
   /* ---- Bloom guidance panel (Marhala 2B — soft) ---- */
   .bloom-guide {
@@ -200,11 +183,8 @@
      pehle se theme.css mein hain — yahan sirf blueprint-specific naye.
      ======================================================================== */
 
-  /* ---- Card with header/body (.ch/.cb from theme.css) ----
-     Marker class (NOT :has() — purane browsers/print reliability ke liye explicit).
-     blueprint ka apna .card padding/radius sirf yahan neutral; .cb khud pad deta hai.
-     Baaki (bina has-ch) cards apna purana look rakhte hain jab tak unka step na aaye. */
-  .card.has-ch { padding: 0; border-radius: var(--radius); overflow: hidden; }
+  /* ---- Card with header/body (.ch/.cb) ---- UI-068: dead, deleted.
+     card.css owns padding + overflow, and its radius is now the same 16px. */
 
   /* ---- Page header: 05-components/card.css owns .pagehead (UI-040) ---- */
 
@@ -227,12 +207,15 @@
   }
   .pin.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
-  /* ---- Responsive ---- */
+  /* ---- Responsive ----
+     UI-065: three sidebar rules deleted — blueprint.html has NO `.app-sidebar`,
+     `.app-nav` or `.sidebar-foot` element (it is the one page on `o-shell`, a top bar).
+     Dead, never applied. Undetectable until UI-064 gave the probes narrow bands: at
+     1280 a dead rule in this block and a live one both read 0.
+     UI-068: `.brand { padding: 0 }` bhi gayi — element to maujood hai, magar
+     pages/blueprint.css ka `.o-shell__brand` layer(components) mein hai aur ye
+     legacy mein, to paanchon bands par 18px/16px hi naapa gaya. Murda thi. */
   @media (max-width: 760px) {
-    body { flex-direction: column; }
-    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
-    .brand { padding: 0; }
-    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
-    .sidebar-foot { display: none; }
+    /* body ki murda flex-direction delete (UI-077) — is page ki body block hai. */
     .bp-main { padding: 16px 14px; }
   }

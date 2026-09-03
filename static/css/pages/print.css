@@ -110,7 +110,7 @@
 
    -------------------------------------------------------------------------
    ONE CHECK THAT CAME BACK CLEAN, measured rather than assumed: the
-   03-elements/forms.css:101 `button { font-family: inherit }` rule that took
+   03-elements/forms.css:154 `button { font-family: inherit }` rule that took
    index.html's Urdu language toggle has no print-visible target here. All
    40 buttons on this page sit inside .no-print chrome, and every one of them
    already resolves to the body sans except two that are on Arial.
@@ -120,11 +120,19 @@
    reviewer can check them, which is the rule three review rounds wrote onto
    UI-031b.
 
-   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and here it
-   is load-bearing for Urdu specifically — app.css:45-54 carries the two
-   @font-face rules for Noto Nastaliq Urdu, and nothing in the new tree
-   declares them. app.css dies in Sprint 6 (UI-064); those @font-face rules
-   need a home before it does.
+   WHAT THIS PAGE LINKS BESIDES THIS FILE: NOTHING. app.css was DELETED on
+   2026-09-02 (UI-075, item 9).
+
+   ⚠ AND THE CLAIM THIS HEADER MADE FOR IT WAS ALREADY FALSE WHEN IT WAS
+   WRITTEN. It said app.css was "load-bearing for Urdu specifically … the two
+   @font-face rules for Noto Nastaliq Urdu, and NOTHING IN THE NEW TREE DECLARES
+   THEM." 02-generic/fonts.css has declared both since UI-021 — measured face by
+   face on 2026-09-02 before the delete: nine @font-face rules on each side,
+   same three families, same weights, same nine woff2 files. So this page's
+   Urdu never depended on app.css after UI-021; the only rule that genuinely
+   did was `.icon`, and that is now 05-components/icon.css. **A header that
+   asserts a dependency is worth exactly as much as the day someone last
+   measured it.**
    ========================================================================= */
 
 @import url("../main.css");
@@ -320,5 +328,77 @@
   .ps-range-info.is-error {
     color: rgb(255, 179, 179);
     font-weight: var(--font-weight-strong);
+  }
+}
+
+/* UI-076 — item 8 ka tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+   PRINT KA APNA FARQ. Qadrein wahi hain jo 99-legacy/print.css mein thin.
+
+   `gap: 6px` bank ke 8px se jaan-boojh kar alag hai — print ki jagah tang hoti
+   hai, aur `A` ka poora maqsad yehi farq bachana tha. `.options-grid input` bhi
+   sirf print par tha aur sirf print par rehta hai.
+
+   ⚠ NEECHE WALA COLOUR HARDCODED HEX HAI AUR JAAN-BOOJH KAR ZINDA HAI. `unsanctioned_hex`
+   ise ginta hai. Ise `var(--muted2)` karna B ka faisla hota — Irfan ne A chuna,
+   jo har page ka farq barqarar rakhta hai, is liye rang ko chhua NAHI gaya. Jo
+   bhi ise token par le jaye wo pehle §6 dobara parhe: wo ek DIKHNE WALI tabdeeli
+   hai, drain nahi. */
+@layer components {
+  .options-grid {
+    gap: 6px;
+  }
+
+  .options-grid input {
+    width: 100%;
+  }
+
+  .strip-empty {
+    color: #999;
+  }
+}
+
+/* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
+   2026-09-03). Ye rule `99-legacy/print.css` mein thi; wahan se nikli aur yahan
+   `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta
+   tha. QADREIN NAHI BADLIN.
+
+   Ye har page ki APNI file mein hai, kisi mushtarka file mein NAHI — aur ye jaan-boojh
+   kar hai. `body` ek bare selector hai: agar ye `04-objects/` ki koi shared file
+   deti, to `index`, `landing`, `blueprint` aur `plan` — jin ki body aaj `block` hai —
+   sab flex ho jatin. Naapa gaya 2026-09-03: das mein se sirf CHHE pages ki body flex
+   hai. Shared rule is family ke liye ghalat auzaar hai jab tak body par koi class na ho.
+
+   Breakpoint 760px is page ka apna hai. Teen pages 760 par hain aur teen 720 par —
+   board inhein "byte-identical" kehta tha, jo RULE ke baare mein sach hai magar media
+   query ke baare mein nahi. Unhein barabar karna ek dikhne wali tabdeeli hoti, jo kisi
+   ne nahi maangi. */
+@layer objects {
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 760px) {
+    body {
+      flex-direction: column;
+    }
+  }
+
+  /* ⚠ YE RULE IS FILE KI SAB SE AHEM LINE HAI. Ye `99-legacy/print.css` ke
+     `@media print` se yahan aayi, aur usay aana HI PADA: ooper wali
+     `body { display: flex }` ab layer(objects) mein hai, aur wahan chhorne par wo
+     legacy ki `display: block` ko harati — yani teacher ka paper flex layout mein
+     chhapta, jo is app ka sab se ahem kaam hai. Yahan ye usi layer mein hai aur
+     source order se jeetti hai (ye block ooper wale ke BAAD hai — tarteeb badalna
+     is ko tor dega).
+
+     Us rule ka `background` saath NAHI aaya aur ye bhool nahi hai: use upar le jana ek
+     mumkina murda declaration ko zinda kar deta (05-components/field.css ke header
+     wala 75-delta waqia), aur wo is faisle ka hissa nahi tha. Wo apni jagah
+     legacy mein hai. */
+  @media print {
+    body {
+      display: block;
+    }
   }
 }

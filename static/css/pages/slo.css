@@ -35,8 +35,11 @@
 
    ⚠ QUOTE FULL PATHS WHEN YOU HAND THIS OVER — TWO FILES ARE NAMED theme.css.
    This page drops /static/theme.css (the old live stylesheet: --fg, --brand,
-   --app-bg, --sidebar-bg; 13787 bytes; still linked by the six unmigrated
-   pages, deleted in UI-064). It KEEPS /static/css/01-settings/theme.css (the
+   --app-bg, --sidebar-bg; 13787 bytes; ~~still linked by the six unmigrated
+   pages~~ — D30: that phrase conflated "links theme.css" with "unmigrated" and
+   was wrong every time it was written; the file was DELETED at UI-064 and no
+   page links anything but its own entry file since item 9, 2026-09-02).
+   It KEEPS /static/css/01-settings/theme.css (the
    Tier 2 semantic tokens authored in UI-020: --color-canvas, --color-surface,
    --color-text; 8682 bytes), which main.css:87 imports into layer(settings)
    and which carries the entire Modern palette — remove that one and the page
@@ -111,7 +114,7 @@
                        D23's FIRST LIVE APPEARANCE: no @font-face declares that
                        family and no woff2 in the repo provides it, so it falls
                        through to ui-monospace. Pre-existing, now visible.
-     forms.css:101-102 font-family: inherit takes <button class="btn-ghost">
+     forms.css:154-155 font-family: inherit takes <button class="btn-ghost">
                        x2 from ARIAL -> IBM Plex Sans. NOTE the selector: :58
                        carries the same declaration but its rule is
                        input/select/textarea and does NOT match a button — an
@@ -119,8 +122,8 @@
                        This is the exact declaration UI-021's review corrected
                        from the `font` shorthand; D22 parks the rest of that
                        reset for UI-041.
-     forms.css:63      --radius-control on select/input  x5  9px -> 11px
-     forms.css:62      border colour goes from slo.css's own literal to
+     forms.css:92      --radius-control on select/input  x5  9px -> 11px
+     forms.css:91      border colour goes from slo.css's own literal to
                        --color-border, one step lighter. NOTE: the two hex
                        values are deliberately NOT quoted here. Writing them
                        took unsanctioned_hex 429 -> 431 and the ratchet caught
@@ -145,14 +148,24 @@
 
    D26 and D27 are two NAMED instances of mechanism 2, not the only ones.
 
-   WHAT THIS PAGE STILL LINKS BESIDES THIS FILE: static/app.css, and it has
-   to. app.css carries `.icon { width:17px; height:17px }` for the <use> sprite
-   in the nav, and that rule has NO home in the new tree until the nav
-   component in Sprint 4 — 02-generic/fonts.css says so in its own header.
-   Without it the seven nav icons fall back to the SVG default of 300x150.
-   Being unlayered is also load-bearing right now: 99-legacy/landing.css:26
-   sets `.icon { width:22px }`, which arrives layered on any page that imports
-   it, and app.css beats it. app.css dies in Sprint 6 (UI-064) with theme.css.
+   WHAT THIS PAGE LINKS BESIDES THIS FILE: NOTHING. This file is its only
+   stylesheet. ~~static/app.css, and it has to~~ — app.css was DELETED on
+   2026-09-02 (UI-075, item 9); `.icon { width:17px; height:17px }` now lives in
+   05-components/icon.css in layer(components). Without that rule the eight nav
+   icons fall back to the SVG default of 300x150, which is why the move was
+   probed and not argued.
+
+   ⚠ THIS HEADER USED TO NAME THE RISK IN THAT MOVE, AND THE RISK HAD EXPIRED.
+   It said app.css being UNLAYERED was load-bearing, because
+   99-legacy/landing.css set `.icon { width:22px }` and only an unlayered rule
+   could outrank it. `UI-060` deleted that rule as dead on 2026-08-16 —
+   `grep -c "\.icon" static/css/99-legacy/landing.css` is 0 — so by the time
+   item 9 ran, `.icon` had no competitor at all and 05-components/icon.css is
+   its only declaration. Measured after the move on all nine icon-bearing pages:
+   17x17 / flex-shrink 0, and css_type_probe reports 0 element x property deltas
+   across ten pages and five viewports. **A header that describes a cascade goes
+   stale exactly like a carried number does; this one outlived its rule by
+   seventeen days and was quoted twice in the meantime.**
    ========================================================================= */
 
 @import url("../main.css");
@@ -166,5 +179,33 @@
 @layer components {
   .app-sidebar {
     overflow-y: auto;
+  }
+}
+
+/* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
+   2026-09-03). Ye rule `99-legacy/slo.css` mein thi; wahan se nikli aur yahan
+   `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta
+   tha. QADREIN NAHI BADLIN.
+
+   Ye har page ki APNI file mein hai, kisi mushtarka file mein NAHI — aur ye jaan-boojh
+   kar hai. `body` ek bare selector hai: agar ye `04-objects/` ki koi shared file
+   deti, to `index`, `landing`, `blueprint` aur `plan` — jin ki body aaj `block` hai —
+   sab flex ho jatin. Naapa gaya 2026-09-03: das mein se sirf CHHE pages ki body flex
+   hai. Shared rule is family ke liye ghalat auzaar hai jab tak body par koi class na ho.
+
+   Breakpoint 720px is page ka apna hai. Teen pages 760 par hain aur teen 720 par —
+   board inhein "byte-identical" kehta tha, jo RULE ke baare mein sach hai magar media
+   query ke baare mein nahi. Unhein barabar karna ek dikhne wali tabdeeli hoti, jo kisi
+   ne nahi maangi. */
+@layer objects {
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
   }
 }

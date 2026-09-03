@@ -14,20 +14,90 @@
  *
  * Edge gets its own --user-data-dir and is killed by the pid we spawned (UI-031a hazard).
  *
- *   node type_probe.mjs <label> <outdir>
+ *   node scripts/css_type_probe.mjs <label> <outdir> [--viewports 1280,700]
+ *
+ * UI-064, 2026-08-26 — IT NO LONGER READS ONE WIDTH. Until this change every probe in the
+ * repo ran at 1280x900, so of the fifteen screen `@media` queries in static/css/ exactly
+ * ONE was ever observed; the other fourteen sat in bands nothing measured. See the
+ * VIEWPORTS block below for the band list and `css_breakpoints.mjs` for how it is derived.
+ *
+ * AND THE WIDTHS WERE ONLY HALF OF IT. The property list below was blind to what those
+ * rules set — flex-direction appears 22 times inside them and was not measured at all,
+ * likewise flex-wrap, position and grid-template-columns. Adding viewports without adding
+ * those properties would have produced a probe that visits the band and still sees
+ * nothing, which is the failure this task exists to end rather than repeat.
  */
 
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { uncoveredLines } from './css_breakpoints.mjs';
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const VIEWPORT = { width: 1280, height: 900 };
 const BASE = 'http://127.0.0.1:8000/static';
 
-const label = process.argv[2];
-const outdir = process.argv[3];
+/* THE VIEWPORT LIST — UI-064, and it is derived, not chosen.
+ *
+ * 1280x900 was the only width this probe ever ran at, so fourteen of the tree's fifteen
+ * screen `@media` queries were never observed by anything. `css_breakpoints.mjs` computes
+ * the BANDS — ranges of width within which the set of matching rules cannot change — and
+ * one width per band is both necessary and sufficient. On 2026-08-26 the tree's bands and
+ * their rule counts are:
+ *
+ *     1025+      1 rule    1280   <- the historical viewport, kept FIRST and unchanged
+ *     761-1024   2 rules    900
+ *     721-760   10 rules    740
+ *     561-720   13 rules    700
+ *     1-560     14 rules    520
+ *
+ * Add a width here only when `css_breakpoints.mjs` reports a band as UNOBSERVED — which
+ * this probe prints in its own summary every run, so a new breakpoint cannot go unmeasured
+ * quietly. That printing is the point: D45, D49 and this task are all the same failure,
+ * a gate that could not see the thing it was gating, and the fix that lasts is a gate that
+ * says out loud what it is not looking at.
+ *
+ * KEYS. The reference viewport's keys are UNSUFFIXED and byte-identical to what this probe
+ * has always written; every other width appends `@<width>`. So `css_type_diff.mjs` reads
+ * this file unchanged, old paths still paste into a state diff (css_state_probe's
+ * `<path>::<state>` promise survives), and a suffix in a diff line tells you at a glance
+ * that the delta is a narrow-width one. */
+const VIEWPORTS = [
+  { width: 1280, height: 900, ref: true },
+  { width: 900, height: 900 },
+  { width: 740, height: 900 },
+  { width: 700, height: 900 },
+  { width: 520, height: 900 },
+];
+
+const argv = process.argv.slice(2);
+
+/* FLAG VALUES ARE CONSUMED, NOT FILTERED, and the naive version was wrong in a way that
+   fails silently. `argv.filter((a) => !a.startsWith('--'))` leaves the VALUE `1280,700`
+   in the positional list, so `--viewports 1280,700 before out` sets label='1280,700' and
+   outdir='before' and creates a garbage directory without an error. Caught at review.
+   css_state_probe.mjs had the same shape already, for --page as well, and is fixed the
+   same way below. */
+const FLAGS_WITH_VALUE = new Set(['--viewports', '--page']);
+const positional = [];
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i].startsWith('--')) { if (FLAGS_WITH_VALUE.has(argv[i])) i++; continue; }
+  positional.push(argv[i]);
+}
+const label = positional[0];
+const outdir = positional[1];
+
+/* --viewports 1280,700 — for a quick single-band re-check while iterating. The first
+   width given is the reference (unsuffixed), matching the default list's shape. */
+const vpIdx = argv.indexOf('--viewports');
+const viewports = vpIdx >= 0
+  ? argv[vpIdx + 1].split(',').map(Number).map((width, i) => ({ width, height: 900, ref: i === 0 }))
+  : VIEWPORTS;
+
+if (!label || !outdir) {
+  console.error('usage: node scripts/css_type_probe.mjs <label> <outdir> [--viewports 1280,700]');
+  process.exit(2);
+}
 mkdirSync(outdir, { recursive: true });
 
 // The live pages are the gate. Only index is held now. landing added 2026-08-10 for
@@ -75,13 +145,21 @@ const PAGES = [
   { page: 'landing', url: `${BASE}/landing.html`, role: 'subject — UI-047d migration' },
   { page: 'index', url: `${BASE}/index.html`, role: 'subject — UI-047c migration' },
   { page: 'print', url: `${BASE}/print.html`, role: 'LIVE — shell only, no paper_id' },
+  /* D56, added UI-072. plan was in NO probe's list until 2026-08-29 — and it is the
+     one page whose ONLY stylesheet is the new tree (no 99-legacy file at all), so
+     every component change reached it unmeasured. It carries 4 `.card.has-ch` and
+     the .ch/.cb rules, so it is not a cheap addition; it is the page that most
+     needed watching. */
+  { page: 'plan', url: `${BASE}/plan.html`, role: 'LIVE — new tree only, no legacy file' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const userDataDir = mkdtempSync(join(tmpdir(), 'type-edge-'));
 const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--no-first-run',
   '--no-default-browser-check', '--disable-extensions', '--remote-debugging-port=0',
-  `--user-data-dir=${userDataDir}`, `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
+  // Window size is the reference viewport's; every other band is reached with
+  // Emulation.setDeviceMetricsOverride, which is what decides the media query anyway.
+  `--user-data-dir=${userDataDir}`, `--window-size=${viewports[0].width},${viewports[0].height}`,
   'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const stderrChunks = [];
 edge.stderr.on('data', (b) => stderrChunks.push(b.toString()));
@@ -162,6 +240,31 @@ const SNAP = String.raw`(() => {
     'border-bottom-right-radius','border-bottom-left-radius',
     'box-shadow','cursor','opacity','min-height','min-width','white-space',
     'column-gap','row-gap','align-items','justify-content',
+    // UI-064 — WHAT THE @media RULES ACTUALLY SET, and the list was blind to most of it.
+    // Adding narrow viewports alone would NOT have made those rules measurable: the
+    // properties inside them were largely absent here. Counted across the fifteen screen
+    // @media blocks in static/css/ on 2026-08-26: flex-direction x22, flex-wrap x9,
+    // position x9, grid-template-columns x3, z-index x2, and one each of
+    // top/bottom/max-height/flex-shrink/border-top. Already covered before this change:
+    // display, width, height, padding, gap, align-items, justify-content, font-size,
+    // font-weight, line-height, color, background, border-radius, box-shadow, cursor,
+    // min-width. So a rule flipping flex-direction to column could be deleted at any
+    // width and read as zero deltas.
+    // (No backticks in this comment: it lives inside a template literal, and the first
+    // draft ended the literal mid-sentence. The error pointed at the word "flex".)
+    //
+    // WARNING, THREE OF THESE ARE SYMMETRY AND NOT EVIDENCE: right, left and max-width
+    // have ZERO uses inside any media block. An earlier draft of this comment ended
+    // "nothing speculative added", which review showed was simply false. They complete
+    // the pairs whose partners are used (top/bottom, min-width); their cost is possible
+    // noise on positioned elements. Named so the next reader need not re-derive which of
+    // these were earned and which were assumed.
+    //
+    // flex-grow and flex-basis are NOT redundant with flex-shrink: the flex shorthand
+    // appears twice inside media blocks and resolves to all three longhands.
+    'flex-direction','flex-wrap','flex-grow','flex-shrink','flex-basis',
+    'position','top','right','bottom','left','z-index',
+    'max-height','max-width','grid-template-columns',
   ];
   const path = (el) => {
     const parts = [];
@@ -177,7 +280,13 @@ const SNAP = String.raw`(() => {
     return el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + cls;
   };
   const all = {};
+  /* The probe's own KILL_MOTION <style> is excluded, so the gate does not measure an
+     element it injected: without this, the elements count reads 935 where the page has
+     934 and a stray key appears in every snapshot. It is a style tag in head, so nothing
+     else about the page shifts. (No backticks — template literal. Third time.) */
+  const SELF = '__probe_kill_motion';
   for (const el of document.querySelectorAll('*')) {
+    if (el.id === SELF) continue;
     const cs = getComputedStyle(el);
     const rec = { '@': desc(el) };
     for (const p of PROPS) rec[p] = cs.getPropertyValue(p);
@@ -205,7 +314,7 @@ const SNAP = String.raw`(() => {
 
   return {
     all, urdu,
-    elements: document.querySelectorAll('*').length,
+    elements: document.querySelectorAll('*').length - (document.getElementById(SELF) ? 1 : 0),
     bodyLineHeight: getComputedStyle(document.body).lineHeight,
     bodyFontSize: getComputedStyle(document.body).fontSize,
     links: [...document.querySelectorAll('link[rel=stylesheet]')].map((l) => l.getAttribute('href')),
@@ -225,7 +334,12 @@ async function main() {
   const v = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
   ws = await connect(v.webSocketDebuggerUrl);
 
-  const out = { label, browser: v.Browser, viewport: VIEWPORT, pages: {} };
+  const out = {
+    label, browser: v.Browser,
+    viewport: viewports.find((vp) => vp.ref),      // kept: old readers expect one
+    viewports: viewports.map(({ width, height }) => ({ width, height })),
+    pages: {},
+  };
 
   for (const spec of PAGES) {
     const rec = { role: spec.role, errors: [] };
@@ -235,8 +349,9 @@ async function main() {
       const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
       await send('Page.enable', {}, sessionId);
       await send('Runtime.enable', {}, sessionId);
+      const ref = viewports.find((vp) => vp.ref) ?? viewports[0];
       await send('Emulation.setDeviceMetricsOverride', {
-        width: VIEWPORT.width, height: VIEWPORT.height, deviceScaleFactor: 1, mobile: false,
+        width: ref.width, height: ref.height, deviceScaleFactor: 1, mobile: false,
       }, sessionId);
       const loaded = onceEvent('Page.loadEventFired', sessionId);
       await send('Page.navigate', { url: spec.url }, sessionId);
@@ -253,18 +368,90 @@ async function main() {
       await evaluate(sessionId, `document.fonts.ready.then(() => true)`);
       await sleep(500);
 
-      // Determinism before any delta is believed.
-      const first = await evaluate(sessionId, SNAP);
-      const second = await evaluate(sessionId, SNAP);
+      /* Motion off for the length of the probe — see the resize note below for why this
+         probe now needs it and css_state_probe.mjs's KILL_MOTION header for the cascade
+         detail (an unlayered !important sheet wins over normal declarations, NOT because
+         it is unlayered). Injected before the first snapshot, never removed, and the
+         target is closed straight after. */
+      await evaluate(sessionId, `(() => {
+        const s = document.createElement('style');
+        s.id = '__probe_kill_motion';
+        s.textContent = '*,*::before,*::after{transition:none !important;animation:none !important}';
+        document.head.appendChild(s);
+        return true;
+      })()`);
+
+      /* ONE PAGE LOAD, EVERY BAND — the page is loaded once at the reference width and
+         then RESIZED, rather than reloaded per width. Reloading would be slower and, on
+         these JS-rendered pages, would re-run every fetch and re-race every listener for
+         no gain. Resizing changes which @media rules match, which is the whole question.
+
+         WHAT THE 300 ms IS ACTUALLY FOR, corrected at review. The first version of this
+         comment said the sleep guards against reading mid-reflow and that the
+         determinism check proves it was long enough. BOTH HALVES WERE WRONG:
+         getComputedStyle forces a synchronous style+layout flush in Blink, so a
+         mid-reflow read is not reachable and the sleep was never guarding that. What a
+         resize really starts is CSS TRANSITIONS, and the longest transition-duration in
+         this tree is 0.2 s (99-legacy/library.css:131 on `bottom`, 99-legacy/bank.css:260
+         on `transform`), so 300 ms clears the worst case — today.
+
+         "Today" is not good enough for a gate, so motion is switched off outright below,
+         the same way css_state_probe.mjs does it. With transitions dead the sleep is
+         belt-and-braces rather than the thing correctness rests on. This matters more
+         than it did: `bottom` is one of the properties UI-064 ADDED, so this probe is
+         newly exposed to exactly that 0.2 s transition. */
       const drift = [];
-      for (const [p, a] of Object.entries(first.all)) {
-        const b = second.all[p];
-        if (!b) { drift.push(`${p} missing in 2nd`); continue; }
-        for (const k of Object.keys(a)) if (a[k] !== b[k]) drift.push(`${p}:${k} ${a[k]} -> ${b[k]}`);
+      let refSnap = null;
+      // Reference first, always — the page is already at that width from the load above,
+      // and refSnap must exist before any suffixed keys are merged into it.
+      const ordered = [ref, ...viewports.filter((vp) => vp !== ref)];
+      for (const vp of ordered) {
+        if (vp !== ref) {
+          await send('Emulation.setDeviceMetricsOverride', {
+            width: vp.width, height: vp.height, deviceScaleFactor: 1, mobile: false,
+          }, sessionId);
+          await sleep(300);
+        }
+        const first = await evaluate(sessionId, SNAP);
+        const second = await evaluate(sessionId, SNAP);
+        for (const [p, a] of Object.entries(first.all)) {
+          const b = second.all[p];
+          if (!b) { drift.push(`@${vp.width} ${p} missing in 2nd`); continue; }
+          for (const k of Object.keys(a)) {
+            if (a[k] !== b[k]) drift.push(`@${vp.width} ${p}:${k} ${a[k]} -> ${b[k]}`);
+          }
+        }
+        if (vp === ref) {
+          // The scalar fields (elements, bodyLineHeight, links, urdu) are the reference
+          // viewport's. They describe the page, not the band, and the Urdu line box this
+          // probe was built for is a desktop measurement.
+          refSnap = first;
+        } else {
+          for (const [p, styles] of Object.entries(first.all)) {
+            refSnap.all[`${p}@${vp.width}`] = styles;
+          }
+        }
       }
       rec.driftCount = drift.length;
       rec.drift = drift.slice(0, 10);
-      rec.snapshot = first;
+      rec.snapshot = refSnap;
+      rec.keysPerViewport = Object.fromEntries(viewports.map((vp) => [
+        vp.width,
+        Object.keys(refSnap.all).filter((k) => (vp === ref ? !k.includes('@') : k.endsWith(`@${vp.width}`))).length,
+      ]));
+      /* AND IT IS COMPARED, NOT JUST PRINTED. Review's finding: this count is exactly the
+         instrument that detects the bands having measured different DOMs — a late fetch
+         resolving after the reference snapshot gives later bands extra keys — and the
+         first version only displayed it. An unequal count is a broken run, so it goes
+         into `drift`, which is the field a reader already checks. (Measured 2026-08-26:
+         no page in static/ reads width in JS at all — no resize/ResizeObserver/matchMedia
+         listener exists — so this should never fire. That is why it is cheap to assert.) */
+      const counts = new Set(Object.values(rec.keysPerViewport));
+      if (counts.size > 1) {
+        drift.push(`key count differs across viewports: ${JSON.stringify(rec.keysPerViewport)}`);
+        rec.driftCount = drift.length;
+        rec.drift = drift.slice(0, 10);
+      }
       await send('Target.closeTarget', { targetId });
     } catch (e) {
       rec.errors.push(String(e.message ?? e));
@@ -272,10 +459,21 @@ async function main() {
   }
 
   writeFileSync(join(outdir, `${label}.json`), JSON.stringify(out, null, 1));
+
+  /* THE PROBE REPORTS ITS OWN BLIND SPOTS. Printed before the payload so it is not lost
+     at the bottom of a long JSON dump. If this says UNOBSERVED, a rule in that band can
+     change by any amount and this run will report zero deltas. */
+  console.log(`viewports: ${viewports.map((vp) => vp.width).join(', ')}  (reference ${viewports.find((vp) => vp.ref)?.width ?? viewports[0].width})`);
+  const gaps = uncoveredLines(viewports.map((vp) => vp.width));
+  console.log(gaps.length
+    ? `${gaps.length} BAND(S) NOT MEASURED BY THIS RUN:\n${gaps.join('\n')}`
+    : 'every @media width band in static/css is observed by this run');
+
   console.log(JSON.stringify({
     label, browser: out.browser,
     pages: Object.fromEntries(Object.entries(out.pages).map(([k, v]) => [k, {
       role: v.role, elements: v.snapshot?.elements, drift: v.driftCount,
+      keysPerViewport: v.keysPerViewport,
       bodyLineHeight: v.snapshot?.bodyLineHeight, bodyFontSize: v.snapshot?.bodyFontSize,
       links: v.snapshot?.links, urduCount: v.snapshot?.urdu?.length,
       urduLineHeights: [...new Set((v.snapshot?.urdu ?? []).map((u) => u.lineHeight))],

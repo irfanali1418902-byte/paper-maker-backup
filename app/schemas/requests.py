@@ -715,6 +715,17 @@ class TaqseemMoveRequest(BaseModel):
     position: Optional[int] = None
 
 
+class TopicWeekMoveRequest(BaseModel):
+    """PATCH /api/topic-plan/{topic_id} — ek syllabus topic ka hafta badlo. R7.
+
+    week_no 0 = Unassigned. Range (0..N) check service karta hai (N global,
+    school_settings.week_count) — yahan sirf shape. TaqseemMoveRequest ka aaina
+    minus `position`: hafta badalne par purani tarteeb be-maani hoti hai, is liye
+    service use khud clear kar deti hai."""
+
+    week_no: int
+
+
 class ClassPrintSettingsSave(BaseModel):
     """POST /api/print-settings — ek class ke print knobs mehfooz karna (Marhala 4B).
     Bounds UI ki hadd ka mirror hain: out-of-range value 422 de deti hai, DB tak

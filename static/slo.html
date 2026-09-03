@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Learning Outcomes (SLO) — Parcha Paper Maker</title>
-<link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/css/pages/slo.css">
 </head>
 <body data-page="Learning Outcomes (SLO)">
@@ -39,6 +38,10 @@
       <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
       Exam Taqseem
     </a>
+    <a href="/plan.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-plan"></use></svg>
+      Hafta-war Plan
+    </a>
     <a href="/slo-health.html" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
       SLO Health
@@ -48,9 +51,15 @@
 </aside>
 
 <main class="slo-main">
-  <div class="page-head">
-    <h1>Student Learning Outcomes (SLO)</h1>
-    <p>Excel se SLO import karo. Same <code>slo_code</code> dobara import = update (draft correction). Bloom khali ho to text ke verb se auto-suggest.</p>
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side, which is what blueprint.html did until 2026-08-15. Same pattern as
+       blueprint.html:56. -->
+  <div class="pagehead">
+    <div>
+      <h1>Student Learning Outcomes (SLO)</h1>
+      <p>Excel se SLO import karo. Same <code>slo_code</code> dobara import = update (draft correction). Bloom khali ho to text ke verb se auto-suggest.</p>
+    </div>
   </div>
 
   <!-- Import card -->
@@ -167,9 +176,9 @@
 
   function renderSummary(data) {
     $("pills").innerHTML =
-      '<span class="pill add">Added: ' + data.added + '</span>' +
-      '<span class="pill upd">Updated: ' + data.updated + '</span>' +
-      '<span class="pill err">Errors: ' + data.errors + '</span>';
+      '<span class="sum-pill add">Added: ' + data.added + '</span>' +
+      '<span class="sum-pill upd">Updated: ' + data.updated + '</span>' +
+      '<span class="sum-pill err">Errors: ' + data.errors + '</span>';
     $("summaryBody").innerHTML = (data.results || []).map((r) =>
       '<tr><td>' + esc(r.row) + '</td>' +
       '<td class="code">' + esc(r.slo_code) + '</td>' +
@@ -225,9 +234,9 @@
 
   function renderAssignSummary(data) {
     $("assignPills").innerHTML =
-      '<span class="pill upd">Updated: ' + (data.updated || 0) + '</span>' +
-      '<span class="pill err">Errors: ' + (data.errors || []).length + '</span>' +
-      '<span class="pill add" style="background:var(--warn-bg);color:var(--warn-tx);">Warnings: ' + (data.warnings || []).length + '</span>';
+      '<span class="sum-pill upd">Updated: ' + (data.updated || 0) + '</span>' +
+      '<span class="sum-pill err">Errors: ' + (data.errors || []).length + '</span>' +
+      '<span class="sum-pill add" style="background:var(--warn-bg);color:var(--warn-tx);">Warnings: ' + (data.warnings || []).length + '</span>';
     const rows = []
       .concat((data.errors || []).map((e) => ['error', e]))
       .concat((data.warnings || []).map((w) => ['warning', w]));

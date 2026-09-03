@@ -1,25 +1,42 @@
 /* =========================================================================
-   05-components/modal.css — modal chrome, shared by bank and print only
+   05-components/modal.css — modal chrome
 
    ⚠ THIS APP HAS THREE MODAL SYSTEMS. `.modal-backdrop`/`-header`/`-footer`
    (bank, print), `.modal-overlay`/`-head`/`-title` (index, library), and
    `.modal h3`/`.modal-actions` (taqseem). `.modal` names four different boxes
-   and `.modal-close` four different buttons. Only system 1's shared chrome is
-   here, and nothing below assumes the three will ever be unified.
+   and `.modal-close` four different buttons.
+
+   The three are still three — UI-067 unified their SCRIM, RADIUS and SHADOW
+   without merging them, and the block at the bottom of this file is where that
+   happens. Everything between here and there is system 1's chrome only, which
+   is what the two sentences that used to end this paragraph were describing
+   ("shared by bank and print only", "nothing below assumes the three will ever
+   be unified"). Both were true until 2026-08-28 and are struck rather than
+   deleted, because the split they describe is still how the file reads.
 
    ⚠ WHAT WAS LEFT BEHIND, so it is not mistaken for an oversight:
-   · `.btn-cancel` / `.btn-save` and their states LOOK identical in both files
-     and are not — bank's --radius-btn is 10px, print's is 8px, and their --bg
-     greys differ. They are also buttons, and .btn-primary / .btn-ghost /
-     .btn-danger are duplicated across three to five files. One button task
-     next to btn.css decides the radius once instead of three times.
+   · ~~`.btn-cancel` / `.btn-save` and their states LOOK identical in both
+     files and are not — bank's --radius-btn is 10px, print's is 8px, and
+     their --bg greys differ. One button task next to btn.css decides the
+     radius once instead of three times.~~ BOTH DONE: UI-062 moved the pair
+     into btn.css, and UI-063 was that button task — one radius
+     (--radius-control) for every filled light-surface action button, D44 and
+     D46 closed. The on-dark family is the carve-out, DEFERRED.md D48.
    · `.modal-header h3` — two of its three declarations are already dead
      (reset.css zeroes the margin; typography.css beats the 16px). Only a
      colour survives, and that navy has no Tier 2 role yet.
    · `.modal-backdrop` itself differs — bank pads 16px, print pads 0.
 
-   ⚠ ALL OF THIS IS display:none AT REST, so css_type_probe cannot see it. Add
-   .open to the backdrop to measure. Numbers: PROGRESS.md 2026-08-16.
+   ⚠ "ALL OF THIS IS display:none AT REST, so css_type_probe CANNOT SEE IT" —
+   THAT SENTENCE WAS HERE FROM 2026-08-16 AND IT IS WRONG. Checked in the probe's
+   own JSON on 2026-08-28: css_type_probe.mjs:282 walks querySelectorAll('*') with
+   no visibility filter, and getComputedStyle resolves colour, radius, padding and
+   font on a display:none element perfectly well. Every modal box in this app is in
+   the snapshot with its real values — bank's div.modal at radius 12px, print's at
+   10px, index's at 16px. What a hidden element CANNOT give is a USED value: height
+   and width read as if unlaid-out. So this family's colours and shape are gated;
+   only its layout is not. Adding .open to measure is still useful, but it is not
+   required and the drain did not wait for it. Numbers: PROGRESS.md 2026-08-16.
    ========================================================================= */
 
 .modal-backdrop.open {
@@ -38,4 +55,59 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* =========================================================================
+   UI-067 — ONE LOOK ACROSS ALL THREE SYSTEMS, WITHOUT MERGING THEM.
+
+   Irfan's decision, 2026-08-28: leave the class names alone and unify the
+   VALUES. Renaming classes means editing markup and JS on five pages and
+   removes no CSS; the inconsistency people can actually see is the shape and
+   the colour, and that is pure CSS. So the three systems stay three, and the
+   selector lists below simply name all of them.
+
+   THE CENSUS THIS IS BUILT ON, measured 2026-08-28 from the markup, not from
+   the header above — which undercounted. EIGHT modals, FOUR wrapper names:
+
+     .modal-backdrop      bank, print                 2 modals
+     .modal-overlay       index (1), library (3)      4 modals
+     .overlay             taqseem                     1 modal
+     .lib-picker-overlay  print's library picker      1 modal   <- not in the
+                                                                  58-line audit
+                                                                  bucket; it is
+                                                                  page-only, and
+                                                                  leaving it out
+                                                                  would have left
+                                                                  one modal odd
+   Box names: .modal (bank, print, index, taqseem), .modal-box (library),
+   .lib-picker-modal (print). SIX radius declarations between them — 10, 12, 12,
+   14, 16, and taqseem's var(--radius) — but only FOUR distinct computed values,
+   because index's 16 and taqseem's var(--radius) both resolved to 16px already.
+   Those two are why the diff below shows no radius delta on either page.
+   ========================================================================= */
+
+.modal-backdrop,
+.modal-overlay,
+.overlay,
+.lib-picker-overlay {
+  background: var(--color-scrim);
+}
+
+/* --radius-container already said "cards, panels, modals" (theme.css:183) and no
+   modal had ever adopted it except index's, by coincidence. This is not a new
+   decision — it is the role finally being consumed. */
+.modal,
+.modal-box,
+.lib-picker-modal {
+  border-radius: var(--radius-container);
+  box-shadow: var(--shadow-modal);
+}
+
+/* 20px is the majority (library, print); bank ran 22 and index 24. Padding is
+   deliberately NOT unified: bank and print 2px 6px, index 0 4px, library
+   2px 8px — 2px of vertical spread and 4px of horizontal. It is a hit area
+   around a 20px glyph, not a visible box, so nothing about it reads as
+   inconsistent on screen. Left as measured rather than called identical. */
+.modal-close {
+  font-size: 20px;
 }

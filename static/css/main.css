@@ -2,18 +2,18 @@
    main.css — the cascade, declared in one place
    ITCSS layer order + BEM components + a small utility layer (ADR-001).
    -------------------------------------------------------------------------
-   THIS FILE IS LIVE AS OF UI-031, on slo.html — the first page in the epic
-   whose stylesheet is the new tree, and the first time any browser has parsed
-   the @layer statement below. It is reached INDIRECTLY: the page links
-   static/css/pages/slo.css, which imports this file and then its own legacy
-   file (see that file's header for why the indirection exists — D19). The
-   other eight pages still carry their own app.css + theme.css +
-   99-legacy/<page>.css links and are untouched by anything here; they migrate
-   in the rest of UI-031 and in UI-032.
-
+   THIS FILE IS LIVE ON ALL TEN PAGES (UI-075, 2026-09-02). Reached INDIRECTLY
+   on every one: the page links its own static/css/pages/<page>.css, which
+   imports this file and then, on the nine that have one, its legacy file (see
+   pages/slo.css's header — D19). EVERY PAGE LINKS EXACTLY ONE STYLESHEET.
+   ⚠ THE LINES HERE WERE STALE FOR WEEKS — D30's disease, a fourth time. They
+   said "the other eight pages still carry their own app.css + theme.css +
+   99-legacy/<page>.css … they migrate in the rest of UI-031 and in UI-032."
+   All nine migrated by 2026-08-13; theme.css died at UI-064, app.css at item 9;
+   plan.html arrived 2026-08-23 with no legacy file at all.
    (This block read "NOTHING LINKS THIS FILE YET" through UI-020..UI-030, which
    is what made those tasks no-visual-change by construction. That is over.
-   Editing this file now changes what a teacher sees on slo.html.)
+   Editing this file now changes what a teacher sees on every page.)
 
    No build step, no bundler, no npm (ADR-001): the app is launched by school
    staff via start.bat, and a stale build artifact is a mystery bug nobody on
@@ -113,11 +113,13 @@
    too, since a layer decides the contest before specificity is consulted. Each
    file's header states what it deliberately does NOT reset for that reason.
 
-   NOT over static/theme.css, though — and the distinction matters for Sprint 3.
-   That file is still a plain <link> on 6 pages, so it is UNLAYERED and beats
-   every @layer here, exactly as the legacy note above says. `.tbl` lives there,
-   not in layer(legacy), so for as long as a page keeps its theme.css <link> that
-   class wins over `table` below; once main.css is a page's only stylesheet,
+   NOT over static/theme.css, though — and the distinction mattered for Sprint 3.
+   ~~That file is still a plain <link> on 6 pages~~ — D30 again: the count was a
+   timestamp, not a fact. static/theme.css was DELETED at UI-064, so nothing
+   below is contested by it any more. While it lived it was UNLAYERED and beat
+   every @layer here, exactly as the legacy note above says. `.tbl` lived there,
+   not in layer(legacy), so for as long as a page kept its theme.css <link> that
+   class won over `table` below; now that main.css is every page's only stylesheet,
    theme.css is not loaded at all and `.tbl` simply stops existing. BOTH HALVES
    ARE NOW LIVE, on different pages: slo.html dropped its theme.css link in
    UI-031 and takes `table` from tables.css below, the other six still keep it.
@@ -177,10 +179,14 @@
 /* UI-040..043 */
 /* UI-040 — card chrome + pagehead. PREPARED, NOT LIVE, and for a reason worth
    knowing before editing it: there is deliberately no bare `.card { }` rule in
-   that file, because `.card` is carried by 13 elements across the three live
-   pages. Four of its seven rules stay inert only because `.ch`, `.cb` and
-   `.has-ch` are absent from live markup, and the three `.pagehead` rules only
-   because the live pages spell it `.page-head`. Read its header first. */
+   that file. ⚠ ALL THREE CLAIMS THAT USED TO BE HERE HAVE EXPIRED, and they
+   expired in the same way card.css's own header did — quietly, while the
+   markup moved. It said `.card` was on "13 elements across the three live
+   pages" (UI-068: 42 in the DOM, 46 in markup, on eight pages), that the
+   `.ch`/`.cb`/`.has-ch` rules were inert (three pages carry them), and that
+   the `.pagehead` rules were inert because pages spelled it `.page-head`
+   (UI-070 renamed the last three; all seven wear it). **Nothing in this file
+   is inert any more.** Read card.css's header first. */
 @import url("05-components/card.css")      layer(components);
 /* UI-042 — modal chrome. LIVE on bank and print only, and only the three
    rules those two share AND actually paint. Read its header: this app has
@@ -191,10 +197,31 @@
 @import url("05-components/field.css")     layer(components);
 /* @import url("05-components/badge.css")     layer(components); */
 @import url("05-components/nav.css")       layer(components);
+/* UI-071 — the shortfall note's INSIDES, on blueprint and print. The box is
+   NOT here: the two pages keep different panels by decision, and only the six
+   identical inner rules moved. ⚠ Neither snapshot probe can see this family —
+   both panels are built in JS, so `.shortfall-panel` is 0 elements at rest and
+   css_type_probe reports 0 deltas whether this file is right or wrong. Verify
+   with scripts/css_inject_probe.mjs. Read its header. */
+@import url("05-components/shortfall.css") layer(components);
+/* UI-076 (item 8 ka tail) — do "kuch nahi mila" paighaam. INHEIN BHI
+   css_type_probe NAHI DEKH SAKTA: dono JS se bante hain, bilkul shortfall ki
+   tarah, is liye inject probe ki paanch fixtures 2026-09-03 ko likhi gayin.
+   Sirf mushtarka declarations yahan hain — bank/print ka colour aur
+   bank/blueprint ka padding apne apne pages/*.css mein hai, jo faisla A ka
+   poora matlab hai. Read its header. */
+@import url("05-components/empty.css")     layer(components);
 /* UI-043 — status bar. LIVE on bank, blueprint and library the moment it
    loads, unlike the two above: `.status-bar` is in all three pages' markup.
    It unifies two palettes that were both live. Read its header. */
 @import url("05-components/status.css")    layer(components);
+/* UI-075 (item 9) — the `<use>` sprite's box, absorbed from static/app.css as
+   that file was deleted. LOAD-BEARING on nine pages: an inline <svg> with no
+   width/height falls back to the SVG default 300x150, so this is not cosmetic.
+   It is `.icon`'s ONLY declaration in the cascade — the 22px competitor its
+   first draft named was deleted by UI-060 on 2026-08-16. Probed: 17x17 on all
+   nine icon-bearing pages, 0 deltas. Read its header. */
+@import url("05-components/icon.css")      layer(components);
 /* @import url("05-components/table-data.css") layer(components); */
 
 /* UI-050..052 */

@@ -43,7 +43,12 @@
 
    WHAT A ZERO DOES NOT MEAN. Four limits, all of them real:
 
-     · VIEWPORT. One size, 1280x900, same as css_type_probe. Every
+     · VIEWPORT. One size, 1280x900. ⚠ "same as css_type_probe" USED TO FOLLOW HERE AND
+       IS NO LONGER TRUE: UI-064 gave css_type_probe five width bands (1280/900/740/700/
+       520) and left this probe at one, so this limit is now THIS probe's alone. If a
+       drain candidate lives inside an @media block, confirm it with css_type_probe at
+       the relevant band before deleting — the zero here means less than it used to.
+       Every
        @media rule outside that range reports 0 because it is not applying,
        not because it is dead. slo.css:86's `@media (max-width: 720px)` is
        the example. Treat media blocks as UNMEASURED, not dead.

@@ -87,30 +87,26 @@
     --red:             var(--color-danger);
     --red-bg:          var(--color-danger-soft);
 
-    /* shape + elevation */
-    --radius:          var(--radius-container);
+    /* shape + elevation.
+       `--radius` was here too and is DELETED — UI-067 took its one consumer,
+       99-legacy/taqseem.css's `.modal` border-radius, onto modal.css. It
+       resolved to --radius-container (16px), which is what the component now
+       gives that modal, so this removes a name and changes no pixel.
+       --radius-sm (2 consumers) and --shadow (1) are still live; counted, not
+       assumed. blueprint declares its own --radius and keeps it. */
     --radius-sm:       var(--radius-control);
     --shadow:          var(--shadow-card);
   }
 }
 
-/* THE BARE `.card`, PAGE-SCOPED — see the header. card.css cannot ship this
-   rule without repainting 13 live elements, and the four descendants it DOES
-   ship (.card.has-ch, .card > .ch, .card > .ch h3, .card > .cb) do not draw
-   the box: background, border, radius and shadow all live on the bare
-   selector. Values are theme.css:103's, read through Tier 2 roles rather than
-   through the compat block above, because card.css spells them that way and
-   this rule is card chrome that happens to be scoped, not legacy debt.
-   It follows landing.css:89's precedent — an entry file is two @imports and
-   nothing else, and a page-scoped rule buys that deviation by naming why. */
+/* THE BARE `.card` THAT WAS HERE WENT HOME IN UI-068. This block used to
+   carry background / border / radius / shadow, with a header explaining that
+   card.css "cannot ship this rule without repainting 13 live elements". The
+   13 was measured 2026-08-08 and was 42 by 2026-08-28; the repaint is now the
+   task rather than the objection, and 05-components/card.css:.card ships it
+   for all eight pages. This page renders it identically — its values were
+   already the new tree's. */
 @layer components {
-  .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-container);
-    box-shadow: var(--shadow-card);
-  }
-
   /* `.app-sidebar` is height:100vh with no overflow (99-legacy/taqseem.css:19),
      so content taller than the viewport spills out of the painted box instead
      of scrolling. Same fix as pages/index.css:114, where Irfan found it in the
@@ -151,3 +147,67 @@
    reports as lost is not automatically a partial worth restoring — four
    pages had already ruled on this one, and the ruling was in a sibling entry
    file that was never read. */
+
+/* THE BRAND ROW, page-scoped, UI-068. taqseem joined `.sidenav__brand*` on
+   2026-08-28. Only these two stay here, and for the same reason as
+   pages/index.css: five of the seven pages on that class have no logo and
+   render the brand as a block, so `display: flex` cannot go to the component.
+   `--accent` is kept verbatim rather than read as a Tier 2 role — it is this
+   page's gold, and the compat block above owns that mapping.
+
+   THREE DECLARATIONS WERE DROPPED, NOT MOVED, and that was Irfan's call on
+   2026-08-28: the brand's `border-bottom` divider, its `margin-bottom: 10px`,
+   and the subtitle's `letter-spacing`/`text-transform: uppercase`/`opacity`.
+   taqseem was the only page of seven with any of them. The question put was
+   "keep taqseem's variant or accept the shared values" and the answer was the
+   shared values — the same answer UI-065 and UI-067 got, for the same reason.
+   Padding moves 18px -> 22px with it. */
+@layer components {
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .brand .logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #12181f;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    flex: none;
+  }
+}
+
+/* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
+   2026-09-03). Ye rule `99-legacy/taqseem.css` mein thi; wahan se nikli aur yahan
+   `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta
+   tha. QADREIN NAHI BADLIN.
+
+   Ye har page ki APNI file mein hai, kisi mushtarka file mein NAHI — aur ye jaan-boojh
+   kar hai. `body` ek bare selector hai: agar ye `04-objects/` ki koi shared file
+   deti, to `index`, `landing`, `blueprint` aur `plan` — jin ki body aaj `block` hai —
+   sab flex ho jatin. Naapa gaya 2026-09-03: das mein se sirf CHHE pages ki body flex
+   hai. Shared rule is family ke liye ghalat auzaar hai jab tak body par koi class na ho.
+
+   Breakpoint 720px is page ka apna hai. Teen pages 760 par hain aur teen 720 par —
+   board inhein "byte-identical" kehta tha, jo RULE ke baare mein sach hai magar media
+   query ke baare mein nahi. Unhein barabar karna ek dikhne wali tabdeeli hoti, jo kisi
+   ne nahi maangi. */
+@layer objects {
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+  }
+}

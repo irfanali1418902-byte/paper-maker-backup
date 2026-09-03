@@ -378,7 +378,50 @@ icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEA
 > in `mockup-modern.html`:28's non-Modern theme. Nobody has chosen between them.
 | ID | Task |
 |---|---|
-| UI-060..063 | Per page: drain `99-legacy/<page>.css` to zero, delete it, apply mockup screen fidelity **EXCEPT the sidebar, which stays navy — Irfan 2026-08-13**. **STARTED**: `slo.css` 45 rules → 35 (`legacy_css_lines` 2,115 → 2,105, the first movement in that number), all nine files surveyed, and `nav.css` recoloured so blueprint is navy again. **~2,105 lines across nine files remain — this is the epic's work** |
+| UI-060..063 | ~~Per page: drain `99-legacy/<page>.css` to zero, delete it~~ — **THIS ROW'S SHAPE AND ITS NUMBER ARE BOTH SUPERSEDED. See the two decisions below before planning anything from it.** Still true: mockup screen fidelity, **except the sidebar, which stays navy (Irfan 2026-08-13)** |
+
+> #### ⚠ 2026-08-25 — the row above says "per page, to zero" and neither half survives
+>
+> **The number first.** The row says ~2,105 lines. Measured 2026-08-25 with
+> `python scripts/css_baseline.py`: `legacy_css_lines` = **1,842**. It has moved seven times
+> since that row was written and the row was never touched. **Re-measure before quoting it.**
+>
+> **"To zero" was cancelled on 2026-08-19**, by Irfan, and `ROADMAP.md` holds the reasoning.
+> `scripts/css_duplication_audit.py` re-run 2026-08-25 over the 1,545 rule-block lines:
+>
+> | | lines | | |
+> |---|--:|--:|---|
+> | **page-only** — one file, no component possible | 1,055 | 68% | **SKIPPED, deliberately** |
+> | **agree** — component, no decision needed | 68 | 4% | do it |
+> | **disagree** — a decision, then a component | 422 | 27% | do it |
+>
+> Draining the 1,055 moves a rule from `99-legacy/<page>.css` into `pages/<page>.css`. **Both
+> are already one file per page**, so it removes no duplication, no CSS and no lookup step —
+> `legacy_css_lines` would fall to ~0 and nothing else would change. ~~**The target is
+> `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**~~ **⚠ SUPERSEDED
+> 2026-08-31 — one number now: `legacy_css_lines` ~1400** (Irfan). The 1,200 end was
+> unreachable; see `docs/ui/STATUS.md` §5. "Not 0" is unchanged.
+>
+> **"Per page" was replaced by "per family" on 2026-08-25**, by Irfan, and it follows from the
+> line above: once 68% of a file is deliberately skipped, no file can reach zero, so a per-page
+> task has no finish line. The work is now organised by *what the rule is* — modal, field,
+> shell/nav — across the pages that carry it. Two have shipped this way:
+>
+> | task | what | result |
+> |---|---|---|
+> | **UI-061** | `field/filter` | `legacy` 1,873 → 1,864 · **0 deltas on all 9 pages** |
+> | **UI-062** | `modal` | `legacy` 1,864 → 1,842 · 34 deltas, **all four changes pre-approved** |
+>
+> **UI-061's real finding, because it changes how the remaining families should be read:** the
+> `agree` bucket is largely **not** shared CSS awaiting a component — it is **dead** CSS
+> awaiting deletion. `main.css`:42 puts `legacy` at the bottom and layer order is decided
+> before specificity, so a legacy rule loses to `03-elements/forms.css` even at higher
+> specificity. Measure what a declaration computes to before planning to move it.
+>
+> **Next is NOT another drain.** UI-062 left three rows that all point at one place —
+> `DEFERRED.md` **D44** (two button radii), **D45** (nothing here can measure a hover, focus or
+> disabled state), **D46** (two disabled opacities). D45 first: the button task is entirely
+> hover and disabled surfaces, and UI-062's hover change passed every gate unnoticed.
 | UI-064 | ~~Delete `theme.css`~~ ✅ **part 1 DONE 2026-08-13** — 212 lines, 0 deltas on all nine pages, `unsanctioned_hex` 429 → 400. Remaining: delete `app.css` (57 lines, still linked by all nine for `@font-face` + the `.icon` sprite); move mockups to `docs/design/`; final sweep |
 
 ### Sprint 7 — Optional

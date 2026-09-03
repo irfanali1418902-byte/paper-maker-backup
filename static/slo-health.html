@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SLO Health — Parcha Paper Maker</title>
-<link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/css/pages/slo-health.css">
 </head>
 <body data-page="SLO Health">
@@ -39,6 +38,10 @@
       <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
       Exam Taqseem
     </a>
+    <a href="/plan.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-plan"></use></svg>
+      Hafta-war Plan
+    </a>
     <a href="/slo-health.html" class="active sidenav__link sidenav__link--active">
       <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
       SLO Health
@@ -48,10 +51,17 @@
 </aside>
 
 <main class="slo-main">
-  <div class="page-head">
-    <h1>SLO Health</h1>
-    <p>Kahan gap hai — SLO jinke paas koi question nahi, aur questions jinke paas koi SLO tag nahi. Live compute (JOIN), koi stored snapshot nahi.</p>
-    <div class="draft-note" id="draftNote"></div>
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title,
+       subtitle AND #draftNote stacked. Without it all three become flex items
+       and sit side by side. UI-070 adopted this class here and hit exactly
+       that on the first attempt — this page was the worst of the three,
+       because it has a third child. See mockup-modern.html:279. -->
+  <div class="pagehead">
+    <div>
+      <h1>SLO Health</h1>
+      <p>Kahan gap hai — SLO jinke paas koi question nahi, aur questions jinke paas koi SLO tag nahi. Live compute (JOIN), koi stored snapshot nahi.</p>
+      <div class="draft-note" id="draftNote"></div>
+    </div>
   </div>
 
   <!-- Filter -->

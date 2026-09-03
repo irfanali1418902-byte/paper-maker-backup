@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Question Bank — Parcha Paper Maker</title>
-<link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/css/pages/bank.css">
 </head>
 <body data-page="Question Bank">
@@ -40,9 +39,15 @@
 </aside>
 
 <main class="bank-main">
-  <div class="page-head">
-    <h1>Question Bank</h1>
-    <p>Apne questions khud likho — subject, class aur topic se link karo, phir paper mein use karo.</p>
+  <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
+       subtitle stacked. Without it h1 and p become flex items and sit side by
+       side. UI-070 adopted this class here and hit exactly that on the first
+       attempt; the probe caught it. See mockup-modern.html:279. -->
+  <div class="pagehead">
+    <div>
+      <h1>Question Bank</h1>
+      <p>Apne questions khud likho — subject, class aur topic se link karo, phir paper mein use karo.</p>
+    </div>
   </div>
 
   <!-- ===== ADD QUESTION FORM ===== -->
@@ -95,7 +100,7 @@
 
     <!-- Add-form SLO picker (optional) -->
     <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
-    <div id="addSloBox" style="border:1px solid var(--line,#e2e8f0);border-radius:8px;padding:10px;background:#fafbfc;">
+    <div id="addSloBox" style="border:1px solid var(--color-border);border-radius:8px;padding:10px;background:#fafbfc;">
       <div id="addSloHint" style="font-size:13px;color:var(--muted,#64748b);">Pehle upar subject, class aur topic chuno — phir usi ke SLO yahan aayenge.</div>
       <input type="text" id="addSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('add')"
              style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />
@@ -592,7 +597,7 @@
 
     <!-- Edit modal: SLO picker (optional) -->
     <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
-    <div id="efSloBox" style="border:1px solid var(--line,#e2e8f0);border-radius:8px;padding:10px;background:#fafbfc;">
+    <div id="efSloBox" style="border:1px solid var(--color-border);border-radius:8px;padding:10px;background:#fafbfc;">
       <div id="efSloHint" style="font-size:13px;color:var(--muted,#64748b);">SLO load ho rahe hain...</div>
       <input type="text" id="efSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('ef')"
              style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />

@@ -33,13 +33,12 @@
  *
  * Usage:
  *   node scripts/css_type_diff.mjs <before.json> <after.json> [--names] [--page <p>]
- *   --names   list every changed property (capped, see LIST_CAP)
+ *   --names   list every changed property (capped at LIST_CAP; the list says what it dropped)
+ *   --all     lift the cap
  *   --page    restrict output to one page
  */
 
 import { readFileSync } from 'node:fs';
-
-const LIST_CAP = 60;
 
 const args = process.argv.slice(2);
 const files = args.filter((a) => !a.startsWith('--'));
@@ -47,8 +46,15 @@ const wantNames = args.includes('--names');
 const pageIdx = args.indexOf('--page');
 const onlyPage = pageIdx === -1 ? null : args[pageIdx + 1];
 
+/* D53: the cap is fine; SILENCE about it was not. A reading was once taken from a
+ * truncated list and written into the board as "0 deltas" when the count said 30.
+ * The list now says what it dropped, and --all lifts it.
+ * (Must come AFTER `args` — `node --check` passes a use-before-init and only running
+ *  the tool catches it. It did, on 2026-08-29.) */
+const LIST_CAP = args.includes('--all') ? Infinity : 60;
+
 if (files.length < 2) {
-  console.error('usage: node scripts/css_type_diff.mjs <before.json> <after.json> [--names] [--page <p>]');
+  console.error('usage: node scripts/css_type_diff.mjs <before.json> <after.json> [--names] [--all] [--page <p>]');
   process.exit(2);
 }
 
@@ -58,6 +64,30 @@ const after = JSON.parse(readFileSync(files[1], 'utf8'));
 console.log(`before: ${before.label}  ${files[0]}`);
 console.log(`after : ${after.label}  ${files[1]}`);
 console.log(`browser: ${before.browser}${before.browser === after.browser ? '' : ` -> ${after.browser}`}`);
+
+/* VIEWPORT LISTS ARE COMPARED, LOUDLY — UI-064.
+ *
+ * Both probes now write `viewports`, and the reference width's keys are UNSUFFIXED while
+ * every other band carries `@<width>`. That asymmetry is convenient and it is a trap:
+ * diff a `--viewports 1280` run against the 5-band default and the four extra bands land
+ * in `afterOnly`, which this file's own reading rule ("the only acceptable answer is 0
+ * deltas, 0 beforeOnly, 0 afterOnly") reports as a failure that is not one. Change WHICH
+ * width is the reference and it is worse: every bare key silently changes meaning and the
+ * whole page reads as beforeOnly + afterOnly with no stated cause.
+ *
+ * Neither case is detectable from the numbers, so it is stated before them. Old snapshots
+ * that predate this field print nothing extra. */
+const vpList = (d) => (d.viewports ?? (d.viewport ? [d.viewport] : [])).map((v) => v.width).join(',');
+const vpB = vpList(before);
+const vpA = vpList(after);
+if (vpB || vpA) {
+  console.log(`viewports: ${vpB || '?'}${vpB === vpA ? '' : ` -> ${vpA || '?'}`}`);
+  if (vpB !== vpA) {
+    console.log('⚠ THE TWO RUNS DID NOT MEASURE THE SAME WIDTHS. beforeOnly/afterOnly keys');
+    console.log('  below are expected and are NOT a regression; the reference viewport is the');
+    console.log('  unsuffixed one, so if it differs the bare keys are not comparable at all.');
+  }
+}
 console.log('');
 
 const pages = [...new Set([...Object.keys(before.pages), ...Object.keys(after.pages)])]
@@ -139,6 +169,9 @@ if (wantNames) {
     console.log(`--- ${r.page}: ${r.deltas} delta(s)${r.deltas > LIST_CAP ? `, first ${LIST_CAP}` : ''}`);
     for (const c of r.changed) {
       console.log(`  ${c.path} <${c.tag}>  ${c.prop}: ${c.from}  ->  ${c.to}`);
+    }
+    if (r.deltas > r.changed.length) {
+      console.log(`  … and ${r.deltas - r.changed.length} more — re-run with --all to see them`);
     }
   }
 }

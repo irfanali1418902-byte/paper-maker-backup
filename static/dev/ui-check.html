@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UI check — 2026-09-01</title>
+<style>
+  :root { color-scheme: light; }
+  body { font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+         margin: 0; padding: 24px; background: #f6f8fb; color: #16213a; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .lede { color: #5b6678; margin: 0 0 20px; max-width: 70ch; }
+  .row { background: #fff; border: 1px solid #e3e8f1; border-radius: 10px;
+         padding: 14px 16px; margin-bottom: 10px; }
+  .row h2 { font-size: 15px; margin: 0 0 4px; display: flex; gap: 8px; align-items: baseline; }
+  .where { font-weight: 400; color: #5b6678; font-size: 13px; }
+  .tag { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+         letter-spacing: .04em; text-transform: uppercase; }
+  .t-run  { background: #eef3fc; color: #2e5aac; }
+  .t-pass { background: #e6f4ec; color: #2e7d5b; }
+  .t-fail { background: #fbe9e7; color: #c0392b; }
+  .t-eye  { background: #fbf1df; color: #b5760e; }
+  .detail { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px;
+            color: #16213a; background: #f6f8fb; border-radius: 6px;
+            padding: 8px 10px; margin-top: 8px; white-space: pre-wrap; }
+  .why { color: #5b6678; font-size: 13px; margin-top: 6px; }
+  a { color: #2e5aac; }
+  iframe { width: 100%; height: 460px; border: 1px solid #e3e8f1; border-radius: 8px;
+           margin-top: 10px; background: #fff; }
+  .frames { position: absolute; left: -9999px; top: 0; width: 1280px; height: 900px; }
+  #summary { font-weight: 600; margin: 0 0 18px; }
+</style>
+</head>
+<body>
+
+<h1>UI check — 2026-09-01</h1>
+<p class="lede">
+  Jo cheezein naapi ja sakti hain, ye safha khud naapta hai — aap ke apne browser mein,
+  asli page ko iframe mein khol kar. Jo cheezein sirf aankh se dekhi ja sakti hain
+  (ya jin ke liye click karna parta hai), un par <b>AANKH</b> ka nishan hai aur
+  neeche likha hai ke kya karna hai.
+</p>
+<p id="summary">chal raha hai…</p>
+
+<div id="rows"></div>
+<div class="frames" id="frames"></div>
+
+<script>
+/* Har check: asli page ko iframe mein kholo (same origin, is liye andar dekha ja
+   sakta hai), page ke apne JS ko chalne do, phir naapo. Jo cheez na mile us ko
+   PASS mat likho — "AANKH" likho aur wajah batao. Ye is repo ka apna qaida hai:
+   jo gate cheez dekh hi nahi sakta, wo guzar jata hai chahe cheez ghalat ho. */
+
+const CHECKS = [
+  {
+    id: 'slo-boxes',
+    title: 'Do SLO boxes ka border',
+    where: 'bank.html — add form aur edit modal',
+    page: 'bank',
+    run: (doc) => {
+      const out = [];
+      for (const id of ['addSloBox', 'efSloBox']) {
+        const el = doc.getElementById(id);
+        if (!el) return { eye: true, detail: `#${id} mila hi nahi` };
+        const cs = doc.defaultView.getComputedStyle(el);
+        out.push(`#${id}  ${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`);
+      }
+      const bad = out.some(l => /0px|none/.test(l));
+      return { pass: !bad, detail: out.join('\n'),
+               why: bad ? 'Border ghaayab hai — UI-072 ki waahid pixel tabdeeli yehi thi.'
+                        : 'Dono boxes par 1px solid border mojood hai.' };
+    }
+  },
+  {
+    id: 'pg-btn',
+    title: 'Pagination buttons ka rang',
+    where: 'library.html — kaala mile to color:inherit fail hai',
+    page: 'library',
+    settle: 2500,
+    run: (doc) => {
+      const btns = doc.querySelectorAll('.pg-btn');
+      if (!btns.length) return { eye: true,
+        detail: 'ek bhi .pg-btn nahi mila',
+        why: 'Pagination sirf tab banta hai jab ek se zyada safha ho. Server chal raha hai to ye khud aa jana chahiye tha — agar nahi aaya to library page khud khol kar neeche dekhen.' };
+      const cs = doc.defaultView.getComputedStyle(btns[0]);
+      const body = doc.defaultView.getComputedStyle(doc.body).color;
+      const isBlack = /^rgba?\(0, 0, 0/.test(cs.color);
+      return { pass: !isBlack,
+               detail: `.pg-btn color = ${cs.color}\nbody   color = ${body}\nbuttons mile = ${btns.length}`,
+               why: isBlack ? 'Bilkul kaala hai — yani color:inherit kaam nahi kar raha.'
+                            : 'Kaala nahi — page ka apna rang le raha hai, yani inherit theek hai.' };
+    }
+  },
+  {
+    id: 'cursor',
+    title: 'Disabled BUTTON par 🚫 cursor',
+    where: 'bank.html — sirf button, select jaan-boojh kar bahar hai',
+    page: 'bank',
+    run: (doc) => {
+      /* forms.css:211 ka rule `button:disabled` hai — SIRF button. Disabled
+         <select> ka `default` cursor bug NAHI hai. Pehli baar is check ne
+         pehla disabled element uthaya (jo select tha) aur jhoota FAIL diya. */
+      const btn = doc.querySelector('button:disabled');
+      const sel = doc.querySelector('select[disabled]');
+      if (!btn) return { eye: true, detail: 'koi disabled <button> nahi mila' };
+      const view = doc.defaultView;
+      const c = view.getComputedStyle(btn).cursor;
+      const cSel = sel ? view.getComputedStyle(sel).cursor : '—';
+      const ok = c === 'not-allowed';
+      return { pass: ok,
+               detail: `button:disabled   cursor = ${c}\nselect[disabled]  cursor = ${cSel}   (bahar hai, isay nahi ginte)`,
+               why: ok ? 'not-allowed — yani 🚫 dikhega.'
+                       : `not-allowed hona chahiye tha, mila "${c}".` };
+    }
+  },
+  {
+    id: 'subtitle',
+    title: 'Heading ke neeche subtitle (saath aaya to bug)',
+    where: 'bank · library · slo-health',
+    page: 'bank',
+    alsoPages: ['library', 'slo-health'],
+    run: (doc, name) => {
+      const head = doc.querySelector('.pagehead');
+      if (!head) return { eye: true, detail: `${name}: .pagehead nahi mila` };
+      const h1 = head.querySelector('h1'), p = head.querySelector('p');
+      if (!h1 || !p) return { eye: true, detail: `${name}: h1 ya p nahi mila` };
+      const a = h1.getBoundingClientRect(), b = p.getBoundingClientRect();
+      const stacked = b.top >= a.bottom - 2;
+      return { pass: stacked,
+               detail: `${name}:  h1 bottom = ${a.bottom.toFixed(1)}px,  p top = ${b.top.toFixed(1)}px`,
+               why: stacked ? 'p, h1 ke NEECHE hai — theek.'
+                            : 'p, h1 ke SAATH ek line par hai — yehi wo bug hai jo UI-070 mein pakra gaya tha.' };
+    }
+  },
+  {
+    id: 'import-counters',
+    title: 'Import counters styled hain',
+    where: 'slo.html — Excel import ke baad',
+    page: 'slo',
+    manual: true,
+    why: 'Ye counters sirf Excel import ke BAAD bante hain. Koi bhi khud-kar naap inhein nahi dekh sakti — page par jaa kar ek Excel import karen, phir counters ka rang/box dekhen.'
+  },
+  {
+    id: 'chips',
+    title: 'Chips column mein hain (side by side nahi)',
+    where: 'taqseem.html — class + subject chunne ke baad',
+    page: 'taqseem',
+    manual: true,
+    why: 'Chips JS se tab bante hain jab aap class aur subject chunte hain. Page khol kar dono chunen, phir dekhen ke chips neeche ki taraf column mein hain.'
+  },
+  {
+    id: 'shortfall',
+    title: 'Shortfall warning ka andar ka text',
+    where: 'blueprint.html — paper banane ke baad',
+    page: 'blueprint',
+    manual: true,
+    why: 'Warning tab banti hai jab maange gaye sawal bank mein pooray na hon. Paper banayen aur warning ke ANDAR ka text dekhen — sirf dabba nahi, andar ki likhaayi.'
+  },
+  {
+    id: 'print',
+    title: 'Paper theek chhapta hai (UI-073 ka asar)',
+    where: 'print.html + Ctrl+P preview',
+    page: 'print',
+    manual: true,
+    href: '/static/print.html?paper_id=1cec8e77-2c1b-490e-babe-758bdef53f93',
+    why: 'Ye sirf aankh se hoga: link kholen, paper dekhen, phir Ctrl+P daba kar print preview bhi dekhen. UI-073 ne body ka murda hissa liya tha — agar layout tootа to yahin dikhega.'
+  }
+];
+
+const rowsEl = document.getElementById('rows');
+const framesEl = document.getElementById('frames');
+let done = 0, passed = 0, failed = 0, eyes = 0;
+
+function tag(kind, text) { return `<span class="tag t-${kind}">${text}</span>`; }
+
+/* Naapi hui qadar mein `<select …>` jaise tukre aate hain — bina escape kiye
+   innerHTML mein daalne se browser unhein tag samajh kar nigal jata hai, aur
+   natija khali dikhta hai. Pehli chalaayi mein yehi hua tha. */
+const esc = (s) => String(s).replace(/[&<>]/g, (ch) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch]);
+
+function paint(c, state, detail, why) {
+  const el = document.getElementById('row-' + c.id);
+  const link = c.href || ('/static/' + c.page + '.html');
+  el.innerHTML =
+    `<h2>${tag(state.kind, state.label)} ${esc(c.title)}` +
+    `<span class="where">— ${esc(c.where)}</span></h2>` +
+    (detail ? `<div class="detail">${esc(detail)}</div>` : '') +
+    (why ? `<div class="why">${esc(why)}</div>` : '') +
+    `<div class="why"><a href="${link}" target="_blank">page khud kholen ↗</a></div>` +
+    (state.kind === 'fail' || c.manual
+      ? `<iframe src="${link}" loading="lazy"></iframe>` : '');
+}
+
+function summarise() {
+  document.getElementById('summary').textContent =
+    `${passed} theek · ${failed} kharab · ${eyes} aap ki aankh ka muntazir` +
+    (done === CHECKS.length ? '' : ' — abhi chal raha hai…');
+}
+
+function loadPage(name) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe');
+    f.src = '/static/' + name + '.html';
+    f.onload = () => resolve(f);
+    framesEl.appendChild(f);
+  });
+}
+
+(async function main() {
+  for (const c of CHECKS) {
+    const d = document.createElement('div');
+    d.className = 'row'; d.id = 'row-' + c.id;
+    d.innerHTML = `<h2>${tag('run', 'naap raha hai')} ${c.title}<span class="where">— ${c.where}</span></h2>`;
+    rowsEl.appendChild(d);
+  }
+  summarise();
+
+  for (const c of CHECKS) {
+    if (c.manual) {
+      done++; eyes++;
+      paint(c, { kind: 'eye', label: 'aankh' }, '', c.why);
+      summarise();
+      continue;
+    }
+    try {
+      const pages = [c.page].concat(c.alsoPages || []);
+      const lines = [], whys = [];
+      let allPass = true, anyEye = false;
+      for (const name of pages) {
+        const f = await loadPage(name);
+        if (c.settle) await new Promise(r => setTimeout(r, c.settle));
+        const r = c.run(f.contentDocument, name);
+        lines.push(r.detail || '');
+        if (r.why) whys.push(r.why);
+        if (r.eye) anyEye = true; else if (!r.pass) allPass = false;
+      }
+      done++;
+      if (anyEye) { eyes++; paint(c, { kind: 'eye', label: 'aankh' }, lines.join('\n'), whys.join(' ')); }
+      else if (allPass) { passed++; paint(c, { kind: 'pass', label: 'theek' }, lines.join('\n'), whys.join(' ')); }
+      else { failed++; paint(c, { kind: 'fail', label: 'kharab' }, lines.join('\n'), whys.join(' ')); }
+    } catch (err) {
+      done++; eyes++;
+      paint(c, { kind: 'eye', label: 'aankh' }, String(err),
+            'Naap chal hi nahi saki — ye PASS nahi hai. Page khud kholen.');
+    }
+    summarise();
+  }
+})();
+</script>
+</body>
+</html>

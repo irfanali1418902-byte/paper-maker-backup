@@ -1,16 +1,13 @@
   /* Palette index.html se — same brand system (koi naya color nahi). */
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
     --muted: #5B6678;
     --border: #E3E8F1;
     --surface: #FFFFFF;
-    --bg: #EEF1F6;
     --radius-card: 16px;
-    --radius-btn: 12px;
     --shadow: 0 2px 12px rgba(22,33,58,.05);
   }
 
@@ -32,7 +29,7 @@
   }
   .brand .logo img { width: 34px; height: 34px; }
   .brand .name { font-weight: 700; font-size: 20px; line-height: 1.15; }
-  .brand .tag { font-size: 12px; color: #9DB0D0; letter-spacing: .04em; margin-top: 2px; }
+  /* .brand .tag -> pages/landing.css (UI-078); chaaron declarations zinda thin. */
   .hero h1 {
     font-size: 30px; font-weight: 700; line-height: 1.2; margin: 0 0 12px;
     max-width: 640px;

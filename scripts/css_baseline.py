@@ -28,10 +28,11 @@ and ``99-legacy/`` is free to absorb the difference in between — which is the 
 the plan.
 
 **Read ``total_css_lines`` narrowly: it is page CSS + legacy CSS, not all the CSS in
-the tree.** It deliberately excludes ``app.css``, ``theme.css`` and the new ITCSS tree,
+the tree.** It deliberately excludes the shared stylesheets and the new ITCSS tree,
 because those are supposed to *grow* during Sprint 2 and ratcheting them downward would
 fail the migration. That leaves one way to cheat the ratchet — move a page's ``<style>``
-block into ``app.css`` rather than ``99-legacy/``, and both page-CSS metrics fall while
+block into a shared stylesheet rather than ``99-legacy/``, and both page-CSS metrics fall
+while
 nothing is actually removed. ``shared_css_lines`` exists to make that visible: it is
 reported every run, and a page shrinking while it jumps by the same amount is debt being
 relocated, not repaid. No automated check can distinguish the two, so this one is on the
@@ -54,8 +55,8 @@ is reachable; 0 for ``total_hardcoded_hex`` never was. ``total_hardcoded_hex`` k
 exact definition and is still reported every run, so every number in the task log stays
 comparable; it is simply informational now.
 
-**This creates one new hiding place, and it is the same shape as the ``app.css`` one
-above.** Hex laundered *into* ``tokens.css`` leaves ``unsanctioned_hex`` while nothing was
+**This creates one new hiding place, and it is the same shape as the shared-stylesheet
+one above.** Hex laundered *into* ``tokens.css`` leaves ``unsanctioned_hex`` while nothing was
 repaid. Two different moves look identical to the arithmetic:
 
 - *authoring* new primitives — ``total_hardcoded_hex`` and ``token_hex`` rise together,
@@ -91,6 +92,12 @@ BASELINE_PATH = PROJECT_ROOT / "docs" / "ui" / "BASELINE.json"
 
 # mockup-modern.html is the design reference, not a served page. Counting it would
 # make the metrics move when nobody touched the app.
+#
+# 2026-09-02 (UI-075, item 9): the file MOVED to docs/design/ (D5), so it is no
+# longer under static/ and page_paths() cannot see it anyway. This set is kept
+# deliberately, downgraded from the live mechanism to a belt-and-braces guard: it
+# is what catches a mockup being dropped back into static/, which is exactly how
+# ui-check.html briefly became "the eleventh page" and broke seven tests.
 EXCLUDED_PAGES = frozenset({"mockup-modern.html"})
 
 # ── how each metric is measured ───────────────────────────────────────────────
@@ -122,7 +129,29 @@ DISPLAY_DECL_RE = re.compile(r"\bdisplay\s*:", re.I)
 
 # The frozen inventory (CLAUDE.md §12.7). A renamed id breaks a handler silently —
 # nothing throws, the button just stops working.
-FROZEN_ATTR_RE = re.compile(r'\b(?:id|onclick|name)="[^"]*"|\bdata-[a-z0-9-]+="[^"]*"')
+#
+# D39: this listed `onclick` only, which left 39% of the inline handlers it exists to
+# protect outside the guard — `onchange` (61) and `oninput` (20) across static/*.html.
+# That gap is not theoretical: UI-046's own `oninput="setPrintRange()"` went in unguarded
+# on 2026-08-20 and the ratchet said nothing. `onchange`/`oninput` sit on dropdowns and
+# search boxes, so the gap was widest on exactly the filter-heavy pages.
+# `onsubmit`/`onkey*`/`onblur`/`onfocus` have zero occurrences today and add zero
+# entries; they are listed so the next page that grows one is guarded from its first
+# commit rather than after the next silent breakage.
+FROZEN_HANDLERS = (
+    "onclick",
+    "onchange",
+    "oninput",
+    "onsubmit",
+    "onkeyup",
+    "onkeydown",
+    "onkeypress",
+    "onblur",
+    "onfocus",
+)
+FROZEN_ATTR_RE = re.compile(
+    r'\b(?:id|name|' + "|".join(FROZEN_HANDLERS) + r')="[^"]*"|\bdata-[a-z0-9-]+="[^"]*"'
+)
 
 # Metrics the ratchet enforces. Everything else in the report is informational.
 RATCHETED_METRICS = (
@@ -227,9 +256,12 @@ def token_hex_count() -> int:
 def shared_css_line_count() -> int:
     """Lines in every stylesheet under ``static/`` that is *not* ``99-legacy/``.
 
-    Today that is ``app.css`` + ``theme.css``; from Sprint 2 it is also the new
-    ITCSS tree. **Informational, never ratcheted** — the new tree is supposed to
-    grow, so ratcheting this downward would fail the migration it is measuring.
+    Today that is the ITCSS tree under ``static/css/`` and nothing else. It used
+    to read ``app.css`` + ``theme.css`` too; ``static/theme.css`` was deleted at
+    UI-064 and ``static/app.css`` at item 9 (2026-09-02), so the whole of this
+    count is now the new tree. **Informational, never ratcheted** — the new tree
+    is supposed to grow, so ratcheting this downward would fail the migration it
+    is measuring.
 
     It is reported anyway because it is the one place CSS debt can hide: without
     it, a session could move a page's ``<style>`` block into ``app.css`` instead of

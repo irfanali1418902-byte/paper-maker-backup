@@ -16,13 +16,14 @@
    tree self-contained, so these paths hold if /static is ever mounted elsewhere.
    Verified this task by resolving each path on disk, all nine present.
 
-   THIS FILE DOES NOT REPLACE static/app.css YET, and app.css must not be
-   deleted. Two reasons: every one of the nine pages still links it (main.css is
-   linked by none of them until Sprint 3), and app.css also carries the `.icon`
-   sprite rule, which is a component and has no home in the new tree until
-   Sprint 4. Both stylesheets loading at once is harmless — duplicate @font-face
-   rules for the same family/weight resolve to the same file, and a browser only
-   downloads the faces a page actually paints. app.css dies in Sprint 6.
+   ✅ THIS FILE NOW REPLACES static/app.css OUTRIGHT — app.css was DELETED on
+   2026-09-02 (UI-075, item 9). Both of the reasons it had to stay are gone:
+   every page now reaches main.css through its pages/<page>.css entry file, and
+   the `.icon` sprite rule finally got its home in 05-components/icon.css.
+   Verified before the delete, face by face: nine @font-face rules on each side,
+   same three families, same weights, same nine woff2 files — the only difference
+   is that app.css wrote its src as /static/fonts/… and this file writes the
+   relative ../../fonts/… form (see the url() warning above).
 
    The stacks that USE these families are tokens, not rules: --font-sans,
    --font-mono, --font-serif and --font-nastaliq in 01-settings/tokens.css. This

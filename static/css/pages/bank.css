@@ -5,8 +5,9 @@
    LIVE since UI-047e. It was written at UI-032 and HELD by Irfan on
    2026-08-04, parked in docs/ui/ so its lines could not count toward
    shared_css_lines while nothing linked them. The migration itself is the
-   link block and nothing else: bank.html's three <link>s become two,
-   /static/app.css + this file, dropping /static/theme.css.
+   link block and nothing else: bank.html's three <link>s became two,
+   /static/app.css + this file, dropping /static/theme.css. (Item 9 later took
+   it to ONE — app.css is deleted; see the app.css note further down.)
 
    WHY IT WAS HELD, AND WHY IT NO LONGER IS. Neither orphan check held it —
    both pass, and the page's exposure is zero on both halves: bank borrows
@@ -54,19 +55,30 @@
    99-legacy/bank.css reads is declared in that file's own :root as a literal,
    and none of those names collide with 01-settings/.
 
-   THE MARKUP IS A DIFFERENT QUESTION, AND THE ANSWER IS NOT ZERO. bank.html:98
-   and :593 set a border colour inline as `var(--line, <fallback>)` — the
-   literal is in the markup and is deliberately NOT copied here, because a
-   copy-pasteable hex counts toward `unsanctioned_hex` even inside a comment
-   and the ratchet caught exactly that while this file was being written, for
-   the fourth time in this epic. `--line` is declared only by
-   /static/theme.css — 99-legacy/bank.css declares it zero times. Measured on
-   those two elements: the border goes from theme.css's value to that inline
-   fallback. It is harmless BECAUSE the fallback is there, which is the same
-   shape D9 records for print's --accent —
-   not because nothing was orphaned. `scripts/css_orphans.py` parses
+   THE MARKUP WAS A DIFFERENT QUESTION, AND UI-072 CLOSED IT — 2026-08-29.
+   ⚠ THIS PARAGRAPH DESCRIBED A CASCADE THAT NO LONGER EXISTS, and it was the
+   commit closing D58 that made it stale, which is D58's own defect repeated.
+   Kept and corrected rather than deleted, because the reasoning is still the
+   reason the sweep happened.
+
+   As written: bank.html's two inline borders read `var(--line, <fallback>)`,
+   `--line` was declared only by /static/theme.css and never by
+   99-legacy/bank.css, so the fallback always painted and the read was called
+   "harmless BECAUSE the fallback is there" — the same shape D9 records for
+   print's --accent. Harmless, but it meant bank quietly carried a THIRD border
+   grey, belonging to neither of the app's two. UI-072 pointed both at
+   `var(--color-border)`; `grep "var(--line" static/*.html` now returns
+   nothing, and /static/theme.css itself was deleted on 2026-08-13.
+
+   The literal is still deliberately not copied into this comment: a
+   copy-pasteable hex counts toward `unsanctioned_hex` even inside a comment,
+   and the ratchet caught exactly that while this file was being written — and
+   twice more since, in UI-069 and UI-070.
+
+   `scripts/css_orphans.py` parses
    99-legacy/*.css and never reads the markup, so it cannot see this class of
-   read at all — that blind spot is D32. All nine pages were then swept rather
+   read at all — that blind spot is D32, and the script has since gone stale
+   in its own right (D59). All nine pages were then swept rather
    than this one argued about: nothing already shipped is affected, `index` is
    clean despite holding most of the project's inline style attributes, and the
    one page it changes is `blueprint`, which reads nine theme.css-only tokens
@@ -97,9 +109,12 @@
    migrated page reads as though the dropped link is still there. D29 has the
    file sizes that tell them apart.
 
-   IT ALSO STILL LINKS static/app.css, which owns the `.icon` sprite rule
-   until Sprint 4's nav component. This page's legacy file declares no `.icon`
-   rule of its own, so it has nothing to lose there.
+   ~~IT ALSO STILL LINKS static/app.css~~ — NOT ANY MORE. app.css was deleted
+   on 2026-09-02 (UI-075, item 9) and the `.icon` sprite rule it owned now lives
+   in 05-components/icon.css, which main.css imports into layer(components).
+   This page's legacy file declares no `.icon` rule of its own, so it had
+   nothing to lose in either arrangement. This file is now the page's ONLY
+   stylesheet link.
 
    WHAT THE MIGRATION ACTUALLY DID, measured before vs after in headless Edge
    151 while it was applied. None of it is a surprise, and all of it will be
@@ -143,5 +158,97 @@
 @layer components {
   .app-sidebar {
     overflow-y: auto;
+  }
+}
+
+/* THREE `.card` MODIFIERS LIFTED OUT OF layer(legacy) BY UI-068, AND THE
+   REASON IS D51. card.css now ships a bare `.card` in layer(components).
+   Layer order is decided before specificity, so these three — all 0,1,0 and
+   all in the app's weakest layer — lost to it outright the moment it landed:
+   the two blue borders flattened to the shared 1px slate, and the collapsible
+   add-question card gained 22px of padding on top of the 18px 22px its own
+   summary already sets. Measured, not predicted; the before/after pair is in
+   PROGRESS.md 2026-08-28.
+
+   They are spelled `.card.<mod>` rather than `.<mod>` so they win on
+   specificity (0,2,0) and do not depend on this file being imported after
+   main.css. Nothing here is new CSS — the declarations are 99-legacy/bank.css's
+   verbatim, including the hex, which is why the ratchet does not move.
+
+   These go home when bank's cards get real variants. They are not a component
+   yet because "the card with a blue border" is two different meanings on this
+   page (a blueprint picker and a bulk-import panel) wearing one colour. */
+@layer components {
+  .card.bp-card,
+  .card.bulk-card {
+    border: 2px solid #c7d8f7;
+  }
+
+  .card.add-q-collapse {
+    padding: 0;
+  }
+}
+
+/* UI-076 — item 8 ka tail, faisla A (DECISIONS-FOR-IRFAN.md §6, Irfan 2026-09-03).
+   `.options-grid`, `.strip-empty`, `.list-empty` ki mushtarka declarations
+   05-components/ mein chali gayin (field.css aur empty.css). BANK KA APNA FARQ
+   yahan hai, aur QADREIN BILKUL WAHI HAIN jo pehle 99-legacy/bank.css mein thin —
+   is commit ka maqsad dohraav khatam karna tha, shakl badalna nahi.
+
+   ⚠ @760 WALA OVERRIDE YAHAN HONA LAZMI HAI, WAHAN NAHI JAHAN PEHLE THA. Wo
+   `99-legacy/bank.css` ke @media block mein tha, yani layer(legacy) mein, aur
+   field.css ka `grid-template-columns: 1fr 1fr` layer(components) mein hai.
+   Layer order specificity se pehle tay hota hai aur media query us ko nahi
+   badalti — wahan chhorne par narrow bank do column par phans jata. Yahan wo
+   usi layer mein hai aur source order se jeetta hai (ye file main.css ke baad
+   aati hai). Naapa gaya: paanchon viewports par 0 deltas. */
+@layer components {
+  .options-grid {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* bank ka `--muted2` apna hex hai, blueprint ka var(--muted). Colour isi liye
+     empty.css mein `.strip-empty` ke liye nahi rakha ja saka — print apne hex par hai. */
+  .strip-empty {
+    color: var(--muted2);
+  }
+
+  .list-empty {
+    padding: 40px 20px;
+  }
+
+  @media (max-width: 760px) {
+    .options-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
+   2026-09-03). Ye rule `99-legacy/bank.css` mein thi; wahan se nikli aur yahan
+   `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta
+   tha. QADREIN NAHI BADLIN.
+
+   Ye har page ki APNI file mein hai, kisi mushtarka file mein NAHI — aur ye jaan-boojh
+   kar hai. `body` ek bare selector hai: agar ye `04-objects/` ki koi shared file
+   deti, to `index`, `landing`, `blueprint` aur `plan` — jin ki body aaj `block` hai —
+   sab flex ho jatin. Naapa gaya 2026-09-03: das mein se sirf CHHE pages ki body flex
+   hai. Shared rule is family ke liye ghalat auzaar hai jab tak body par koi class na ho.
+
+   Breakpoint 760px is page ka apna hai. Teen pages 760 par hain aur teen 720 par —
+   board inhein "byte-identical" kehta tha, jo RULE ke baare mein sach hai magar media
+   query ke baare mein nahi. Unhein barabar karna ek dikhne wali tabdeeli hoti, jo kisi
+   ne nahi maangi. */
+@layer objects {
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 760px) {
+    body {
+      flex-direction: column;
+    }
   }
 }

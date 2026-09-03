@@ -181,3 +181,41 @@ def covered_pairs_all_exams(subject: str, class_name: str) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def covered_topic_pairs(subject: str, grade: str) -> list[dict]:
+    """Distinct (syllabus_topic_id, paper_id) jodiyan -- kaunsa topic kis paper mein
+    aaya. R7 Marhala 3 (hafta-war coverage) ka data.
+
+    DO CHEEZEIN JAAN-BOOJH KAR UPAR WALE DONO SE MUKHTALIF HAIN, aur donon ki wajah
+    ek hi hai: subject+grade TOPIC par hai, paper par nahi.
+
+    1. `p.class_name` ka LOWER(TRIM(...)) match YAHAN NAHI HAI, aur us ki
+       ghairmojoodgi galti nahi. SLO ke raaste par wo normalize laazmi hai kyunke
+       wahan class paper ki apni free-text field se aati hai. Yahan filter
+       `syllabus_topics.subject/grade` par lagta hai -- aur ek topic id pehle se
+       theek ek (subject, grade) ki hai. Paper ka gandaa `class_name` is hisaab
+       mein aata hi nahi, is liye normalize karne ko kuch hai hi nahi.
+
+    2. `exam_no` ki koi shart NAHI. `papers` mein `week_no` column hai hi nahi
+       (naapa 2026-08-23), to "is hafte ke paper" jaisi koi cheez wujood mein nahi.
+       Irfan ka faisla: topic kisi BHI paper mein aa gaya to covered. Jis sawal ka
+       jawab report deti hai wo ye hai -- "jo maine hafta 3 mein parhaya, us ka
+       imtihan kabhi liya bhi?" -- na ke "hafta 3 ke paper mein aaya?".
+
+    question_ids (JSON) json_each se expand -> questions JOIN -> syllabus_topic_id
+    -> syllabus_topics JOIN (yehi subject+grade ka gate hai). Jin sawalon par
+    syllabus_topic_id NULL hai (594 mein se 130, sab English) wo INNER JOIN se khud
+    bahar -- un ka syllabus hai hi nahi, to wo kabhi coverage mein aa hi nahi sakte.
+    Ye is module ki kami nahi, data ki soorat hai (docs/TOPIC_WEEK_PLAN.md sec 9.2)."""
+    conn = get_connection()
+    rows = conn.execute(
+        """SELECT DISTINCT t.id AS syllabus_topic_id, p.id AS paper_id
+           FROM papers p, json_each(p.question_ids) je
+           JOIN questions q ON q.id = je.value
+           JOIN syllabus_topics t ON t.id = q.syllabus_topic_id
+           WHERE t.subject = ? AND t.grade = ?""",
+        (subject, grade),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]

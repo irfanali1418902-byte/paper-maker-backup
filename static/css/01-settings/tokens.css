@@ -215,8 +215,30 @@
   --radius-3: 16px;
   --radius-pill: 999px;
 
+  /* ── scrim ────────────────────────────────────────────────────────────────
+     Its own section on purpose: this is NOT a sidebar overlay. The two
+     --overlay-white-* above are white-on-navy for nav hover/active, and the
+     block they live in says so; a modal scrim is dark-on-page and shares
+     nothing with them but the word "overlay".
+
+     UI-067 — Irfan chose navy at .45 over black at .45 on 2026-08-28. The
+     channels are --slate-900's, NOT library's rgba(22,33,58,.45) that the
+     choice was quoted from: at 45% alpha a seven-per-channel difference is
+     invisible, and minting a third navy is the drift this epic exists to
+     remove. The four values it replaces, one per wrapper family:
+     rgba(0,0,0,.45), rgba(22,33,58,.5), rgba(22,33,58,.45), rgba(19,34,68,.55). */
+  --overlay-navy-45: rgba(15, 23, 42, 0.45);
+
   /* ── elevation ────────────────────────────────────────────────────────────
      rgba(), not hex, because these carry alpha — the ratchet's HEX_RE does not
      match them and that is correct: they are not palette entries. */
   --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px rgba(15, 23, 42, 0.06);
+  /* UI-067 — the modal lift. FIVE different values were in play, and they did not
+     line up with the three systems: 0 16px 48px rgba(0,0,0,.22) (bank AND print),
+     0 20px 60px rgba(0,0,0,.3) (index), 0 8px 40px rgba(22,33,58,.18) (library) —
+     index and library are the SAME system and still disagreed — 0 14px 44px
+     rgba(19,34,68,.28) (taqseem), and 0 16px 56px rgba(0,0,0,.3) on print's
+     library picker. This is the two most common numbers (16/48) on --slate-900,
+     so it tints the same navy --shadow-1 does instead of adding a third black. */
+  --shadow-2: 0 16px 48px rgba(15, 23, 42, 0.22);
 }

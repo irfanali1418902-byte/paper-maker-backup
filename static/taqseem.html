@@ -4,17 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Exam Taqseem — Parcha Paper Maker</title>
-<link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/css/pages/taqseem.css">
 </head>
 <body data-page="Exam Taqseem">
 
-<aside class="app-sidebar">
-  <div class="brand">
+<aside class="app-sidebar sidenav__panel">
+  <div class="brand sidenav__brand">
     <div class="logo">P</div>
     <div>
-      <div class="name">Parcha Paper Maker</div>
-      <small>Exam Taqseem</small>
+      <div class="name sidenav__brand-name">Parcha Paper Maker</div>
+      <small class="sidenav__brand-sub">Exam Taqseem</small>
     </div>
   </div>
   <nav class="app-nav sidenav">
@@ -42,12 +41,16 @@
       <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
       Exam Taqseem
     </a>
+    <a class="sidenav__link" href="/plan.html">
+      <svg class="icon"><use href="/static/icons.svg#i-plan"></use></svg>
+      Hafta-war Plan
+    </a>
     <a class="sidenav__link" href="/slo-health.html">
       <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
       SLO Health
     </a>
   </nav>
-  <div class="sidebar-foot">SLO ko N exams mein baanto. Auto-generate sequence ke hisaab se; phir chip par "move to exam" se hath se theek karo.</div>
+  <div class="sidebar-foot sidenav__foot">SLO ko N exams mein baanto. Auto-generate sequence ke hisaab se; phir chip par "move to exam" se hath se theek karo.</div>
 </aside>
 
 <main class="tq-main">
@@ -143,7 +146,7 @@
       '<div class="col' + (extraClass ? " " + extraClass : "") + '" data-exam="' + examNo + '">' +
       '<div class="col-head"><span class="title">' + esc(title) +
       '</span><span class="count">' + slos.length + "</span></div>" +
-      '<div class="chips">' + chips + "</div></div>"
+      '<div class="col-chips">' + chips + "</div></div>"
     );
   }
 

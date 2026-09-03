@@ -235,7 +235,19 @@ def _provider_error_message(provider: str, err: Exception) -> str:
     show a teacher. Never include the URL or response body — the Gemini URL
     used to carry the API key, and provider error bodies can echo it back."""
     status = getattr(getattr(err, "response", None), "status_code", None)
-    if status in (429, 503):
+    # 429 aur 503 ko alag rakhna zaroori hai. 503 waqai "abhi busy" hai —
+    # thodi der baad chalta hai. 429 quota/rate-limit hai, aur free-tier par
+    # aksar ROZANA quota hota hai: 2026-08-22 ko sirf 26 calls ke baad aaya
+    # aur "thodi der baad" kabhi na chalta. Provider dono ke liye 429 deta hai
+    # aur farq sirf response body mein hai, jo yahan jaan-boojh kar nahi
+    # parhte (us mein key echo ho sakti hai) -- is liye paighaam dono suraton
+    # ka ehaata karta hai.
+    if status == 429:
+        return (
+            f"{provider} ka quota/rate-limit lag gaya (HTTP {status}). Agar dobara "
+            "chalane par foran yehi aaye to rozana quota khatam hai -- kal try karen."
+        )
+    if status == 503:
         return (
             f"{provider} abhi busy/overloaded hai (HTTP {status}). Thodi der baad dobara try karen."
         )

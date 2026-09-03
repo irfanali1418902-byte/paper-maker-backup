@@ -1,5 +1,3081 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-02 — Audit: board pehli baar poora sach nikla, aur `persist_batch` ka chhupa surakh
+
+Irfan: *"audit kar lo aur phir plan do kya zaroori hai."* Sab kuch **khud naapa gaya**,
+board par bharosa nahi kiya — aur is baar board **theek nikla**, jo is repo mein pehli
+dafa hai. Sirf ek adad basi tha aur do adad ghalat, aur teenon neeche darj hain.
+
+**Naap (2026-09-02):** 1075 pass · ruff saaf · working tree saaf · DB `integrity_check` ok ·
+bank **310 topics, 214 seeded, 96 baqi, 1030 sawal** · PY1 71/81 · PY2 45/87 · PY3 **87/87** ·
+chaaron jaali jode (G5, G6, Science G7, Geography G8) **ab bhi 0** — qaida nahi toota ·
+`legacy_css_lines` **1706** · scope (agree 86 + disagree 190) = **276**.
+
+**Board ka waahid basi adad:** `master` se aage **50** commits, board kehta tha 45 —
+wo 09-01 ko din ke beech likha gaya tha.
+
+### `persist_batch()` ne `learning_outcome` kabhi save nahi kiya
+
+Board ise "faisla-talab" kehta tha aur ilzaam `seed_bank.py` par tha. **Dono ghalat.**
+Script to `:146` par theek bhejti hai; surakh
+`app/services/question_service.py` ke `persist_batch()` mein hai — insert-dict banta hai
+aur us mein ye khana daala hi nahi jata, halanke wohi function `:30` par usi `req` se use
+prompt ke liye parhta hai. Aur khamoshi ki wajah ek line ka farq hai:
+
+```
+questions_repository.py:44   question_row.get("source", "gemini")   <- default hai
+questions_repository.py:45   question_row.get("learning_outcome")   <- default nahi -> NULL
+```
+
+Column `INSERT` mein mojood hai, is liye na error aaya na koi test toota. **Kisi gate ne is
+liye nahi pakra ke `persist_batch` par ek bhi test nahi tha.**
+
+**Ye sirf seeding ka masla nahi:** `app/api/questions.py:61` bhi ise bulata hai, yani
+`/api/generate` se bana har sawal bhi khaali aata tha — **aur us raaste par koi backfill
+nahi chalti.** `save_manual_question()` (`:105`) ye khana theek bharta hai; usi ka mojood
+hona batata hai ke ye bhoolna tha, faisla nahi.
+
+**Fix `master` se kaati gayi branch par gayi, is epic par nahi** — `PLAN.md` §6 yahan
+`service/repository` tabdeeli mana karta hai aur kehta hai ke backend findings `DEFERRED.md`
+mein jayen. Bandish mutlaq nahi (D40 ne 08-21 ko manzoori se `requests.py` chhua tha), magar
+Irfan ne saaf `master` wala raasta chuna. Branch `fix/persist-batch-learning-outcome`,
+commit `f547f21`: **ek line + paanch tests, 980 pass, ruff saaf.**
+
+### Do adad jo board se ghalat chale — aur review ne pakre, main ne nahi
+
+Pehli commit message mein **"701 khaali"** likha tha aur **"har seed batch 07-30 se 09-01"**.
+Review ne dono par shak kiya aur naapne par dono ghalat nikle:
+
+```
+source   kul    khaali
+gemini   571    571      <- is bug ka asal daira
+manual   459    130
+```
+
+Wo 130 rows `Happy Birds - English Pre Year 1` ka **bulk Excel import** hain (`source='manual'`,
+`syllabus_topic_id` NULL, 07-30) — aur `bulk_import_service.py:334` ye khana **bharta** hai;
+wo is liye khaali hain ke **Excel ka column khaali tha**. Yani `07-30` seed batch hai hi nahi,
+aur ye fix un 130 mein se ek bhi nahi badlegi. **701 bank ke kul khaali sawal hain, is bug ke
+nahi** — bug ka daira **571** hai. Dono adad `STATUS.md` ke board se aaye the aur maine bina
+naape aage chala diye. **Wahi purani bimari: row ka adad naapo, us par bharosa mat karo.**
+
+### Teen sabaq jo is session ne diye
+
+1. **Control `git stash` se mat lo agar fix commit ho chuki ho.** Ek control run **jhoota
+   PASS** de gaya — 5/5 — kyunke stash ke paas hatane ko kuch tha hi nahi. Sahi tareeqa
+   `git checkout <commit>~1 -- <file>` hai; us se teen tests waqai fail hueen.
+2. **`black --diff` ki lines ginte waqt `---`/`+++` header bhi gin liye the** — "23" likha,
+   asal **21**. `grep -c "^[+-][^+-]"` sahi ginti deta hai.
+3. **Backfill muft hai, aur maine pehle ulta bataya tha.** `learning_outcome` AI se nahi,
+   syllabus row se aata hai: 571 khaali rows mein se **571 ke topic ka outcome bhara hua hai**,
+   yani seedha SQL `UPDATE`, koi AI call nahi. Is se ye dalil kamzor hui ke "seeding se pehle
+   fix zaroori hai" — asal wajah `/api/generate` ka live raasta hai, jahan koi backfill nahi
+   chalti.
+
+**Ek amali natija jo agla session zaroor parhe:** wo line **is branch par nahi hai**, is liye
+`feat/ui-architecture` se chalayi gayi seeding ab bhi khaali `learning_outcome` likhegi.
+Aaj ki baqi seeding ke baad **backfill chalani hogi**, jo naye rows ko bhi utha legi.
+Tafseel `docs/ui/DEFERRED.md` **D60** mein.
+
+### Seeding: quota chauthe topic par lag gayi — 168 maange, 12 mile
+
+PY2 ke 42 topics ka run (backup + dry run pehle, `paper_maker_backup_before_preyear2_seed_20260902.db`).
+Dry run ne 42 topic × 4 = 168 kaha. Asal natija:
+
+```
+Kul mehfooz: 12 sawal, 3/7 topics
+Run beech mein ruki -- 35 topics chhu-e bhi nahi gaye.
+```
+
+**Exit code 0 tha.** Ye board ka sabaq hai aur aaj phir sach nikla: **tail parho, exit code
+par mat jao.** 09-01 ko ~180 sawal ke baad quota lagi thi, aaj **chauthe topic par** —
+yani quota ki hadd din-ba-din alag hai aur us par plan nahi bandha ja sakta.
+
+**Bank 1030 → 1042. PY2 45 → 48/87. Baqi ba-ikhtiyar ab 49 topics** (PY2 ke 39, PY1 ke 10).
+
+**DB saaf nikli, naapi gayi:** `integrity_check` ok, teenon chhue gaye topics mein **poore
+4-4 sawal** (koi adhoora topic nahi — script har topic ke baad commit karti hai), aur aaj ke
+12 ka dhaancha saaf: khaali sawal 0, khaali jawab 0, Urdu 12/12, tashreeh 12/12.
+
+#### Board ka ek daawa ghalat nikla — aur us se 09-01 ka muamma hal ho gaya
+
+Board kehta tha: *"Script rukti nahi, **har baqi topic par yehi FAIL deti hai**."*
+Naapa gaya — `seed_bank.py`:59 par `MAX_CONSECUTIVE_RATE_LIMITS = 3` hai, aur script
+musalsal teen 429 par **jaan-boojh kar rukti hai**:
+
+```
+  RUK GAYE: musalsal 3 dafa rate limit.
+```
+
+**Board ki nasihat (tail parho) bilkul sahi thi; us ke saath likhi wajah ghalat thi.**
+Aur isi se wo muamma hal hota hai jise board "**kyun kata, maloom nahi — output file khali
+thi**" kehta hai: 09-01 ko bhi qareeb yaqeenan yehi stop tha, jo sirf is liye nazar nahi
+aaya ke output kahin mehfooz nahi hua tha. **Is liye ab output hamesha file mein
+(`> seed.log 2>&1`)** — aaj yehi kiya gaya aur isi wajah se ye baat maloom hui.
+
+### Backfill: 583 rows, koi AI call nahi
+
+`learning_outcome` AI se nahi, syllabus row se aata hai — is liye khaali rows ki qeemat
+**pehle se DB mein mojood thi**. Backup (`paper_maker_backup_before_lo_backfill_20260902.db`),
+phir preview, phir `--write`:
+
+```
+khaali LO       713 -> 130
+likhi gayin     583
+kul sawal      1042 (badla nahi)
+integrity_check  ok
+```
+
+**Script ke apne daawe par bharosa nahi kiya — backup se row-by-row diff liya gaya:**
+
+```
+rows: pehle 1042, ab 1042, gayab 0, naye 0
+badle hue columns: {'learning_outcome': 583}
+```
+
+Yani **theek ek column, theek 583 rows**. Alag se naapa: bache hue **130 ke 130 wahi English
+rows hain jin ka `syllabus_topic_id` NULL hai**, aur bhare hue **583 ke 583 apne topic se
+hu-ba-hu** mel khate hain. Purane 329 rows (07-15/07-19 wale) **chhue hi nahi gaye** — un ka
+outcome alag raaste se aaya tha aur topic se mukhtalif hai, jo theek hai.
+
+### PY1 ke baqi das topics — aik tanbeeh jo naapne par nikli
+
+Baqi topics ke titles aankh se dekhe gaye (board ka qaida). **Khatra PY2 mein nahi, PY1 mein
+hai:**
+
+```
+       baqi topics   alag titles   LO == title
+PY2         39           ~30          41/42
+PY1         10            3           10/10
+```
+
+PY1 ke das mein `Practice and Review of number and value` **saat baar** hai, aur har topic ka
+`learning_outcome` bilkul title ke barabar — yani **saat qareeb-yaksan prompt**. PY3 par yehi
+shakl thi aur natija mauzoon nikla tha, **magar wo PY1 ka saboot nahi**. Un ke banne ke baad
+dohraav naapna zaroori hai.
+
+### D29 aur D30 band — aur ek row jo apni hi peshgoi par mari
+
+**D30** kehti thi: *"a single docs-only sweep, cheapest as its own small task."* Wo sweep ho
+gayi. Row **teen** mauqe ginti thi; **chautha** usi row ke apne 08-04 wale update mein darj
+tha:
+
+```
+pages/slo.css         "still linked by the six unmigrated pages"
+pages/slo-health.css  "still linked by the five unmigrated pages"
+main.css:10-12        "the other eight pages still carry their own app.css…"   (item 9 mein)
+main.css:117          "That file is still a plain <link> on 6 pages"
+```
+
+Bimari yeh thi ke **"theme.css link karta hai" aur "unmigrated" do alag set hain**, aur har
+dafa inhein mila diya gaya — ginti har baar theek, isim har baar ghalat.
+
+**Sweep ka jawab pehle se saaf tha, is liye nayi ginti likhni hi nahi pari:**
+`/static/theme.css` UI-064 mein delete ho chuki hai, aur item 9 ke baad **har page sirf apni
+entry file link karta hai** — yani "kitne pages ise link karte hain" ab **hamesha sifar** hai
+aur ye jumla dobara basi ho hi nahi sakta. Row ki apni hidayat (*"give the count **and** name
+the pages"*) is soorat mein la-yaani ho gayi — **aur yehi is ka behtareen anjaam tha: aisa
+jumla jise dobara naapna hi na pare.**
+
+Har jagah asal alfaz `~~strike~~` ke saath chhore gaye aur wajah likhi gayi — record chupke
+se nahi badla (§12 rule 11).
+
+**D29 apni hi peshgoi par band hua.** Us ka aakhri khana kehta tha: *"the collision dies on
+its own in UI-064 when `static/theme.css` is deleted."* Wo file ja chuki hai, aur ab repo
+mein `theme.css` naam ki **ek hi** file hai — is liye Network panel mein basename dekh kar
+wo galat-fehmi mumkin hi nahi rahi jis ne epic ka pehla browser check zaya kiya tha. Rename
+(`roles.css`/`semantic.css`) ki zaroorat bhi khatam, wo sirf isi takraav ka hal thi.
+
+`main.css` ke line-citations **jaan-boojh kar mehfooz** rakhe gaye — `@layer` 42 par,
+`theme.css` import 87 par, `:73-74` apni jagah. Ye aaj ka apna sabaq hai.
+
+**1078 pass, ruff saaf, ratchet OK**, aur CSS ka parse bhi naapa (`.icon` 17px).
+
+### D57 — row ka symptom mojood nahi, us ka fix nuqsan-deh, aur asal khatra ab test se guarded
+
+Board D57 ko "item 9 se pehle" schedule karta tha, to item 9 ke baad ye uthai gayi.
+**Teen mein se do baatein naapne par ghalat nikleen.**
+
+**1. "sets the school name" ghalat hai.** `/api/brand` school ka naam deta hi nahi:
+
+```
+{"name":"Parcha","full_name":"Parcha Paper Maker","tagline":"Exam paper generator"}
+```
+
+School ka naam school-settings mein hai aur sirf **chhape hue letterhead** par aata hai
+(`print.html`:1036–37, `#schoolNameEn` / `#schoolNameUr`) — jise `brand.js` chhoota hi
+nahi. **Chhapa hua parcha kabhi khatre mein tha hi nahi**, aur ye baat is session mein
+maine pehle khud ulta bayan ki thi (kaha tha "teacher ke chhape parche par naam ghalat");
+naapne par wo ghalat nikla aur usi waqt durust kar diya gaya.
+
+**2. "print's sidebar shows the hardcoded string while the other pages show the configured
+school name" — koi farq hai hi nahi.** `brand.js` `.brand .name` mein `full_name` likhta
+hai = `"Parcha Paper Maker"`, aur **wohi string pehle se har page ke markup mein mojood
+hai** (`slo.html`:13, `print.html`:12, `plan.html`:16). Yani aaj daswon pages bilkul ek
+jaisa dikhate hain, script pohanche ya na pohanche.
+
+**3. Row ka rukh ulta nuqsan karta.** Wo kehti thi print par bhi brand.js chalao.
+`print.html` ke `<body>` par `data-page` hai hi nahi, aur script title ko
+`data-page ? "<page> — <full_name>" : "<full_name>"` set karti hai — yani title
+**`Exam Paper — Print` se ghat kar sirf `Parcha Paper Maker`** reh jata. **Maloomat kam
+karne wala "fix".**
+
+#### Jo sach hai: khatra aaj ka farq nahi, kal ki khamoshi hai
+
+`brand.js` presentational classes par chalta hai (`CLAUDE.md` §11 isi ko mana karta hai),
+aur drain `.brand` ko lay ja raha hai. Jis din wo class markup se jayegi, **na error aayega,
+na koi test toote ga — bas naam update hona band ho jayega.**
+
+**Aur ye ho chuka hai.** Naapa gaya, har page par alag alag:
+
+```
+.brand .name   ->  bank blueprint index landing library slo slo-health taqseem : n=1
+                   plan, print : no match
+```
+
+`plan.html` brand.js load karti hai aur us ke **dono** selectors sifar element chhoote hain
+— yani wo khamoshi jis se baqi ko bachana hai, wahan pehle se mojood hai.
+
+#### `tests/test_brand_hooks.py` — teen tests, aur guard control se sabit
+
+Regex ke bajaye stdlib `html.parser` (class attribute ki tarteeb aur nesting regex se theek
+nahi parhi jati; koi nayi dependency nahi). Tests:
+
+1. `print` hi waahid page hai jo brand.js load nahi karti — **aur karni bhi nahi chahiye**,
+   wajah docstring mein (title ghat jata).
+2. Jo bhi page brand.js load karti hai, us par hook mojood ho.
+3. **Ulta test:** `plan` waahid page hai jahan hook pehle se gaayab hai — **agar plan theek
+   ho jaye to ye FAIL karega** aur agle session ko batayega ke D57 band karo. Ek known gap
+   ko khamoshi se exempt karna wahi bimari hoti jo D57 khud hai.
+
+**Guard chalta hai ye control se sabit kiya, daawe se nahi:** `slo.html` se `.name` class
+hata kar (drain ki naqal) test chalaya — `assert not {'slo.html'}` par fail hua, theek us
+page ka naam le kar. File bahal, `git status` khali.
+
+**1078 pass** (1075 + teen), ruff aur black saaf, ratchet OK. Markup ka ek byte nahi badla,
+is liye frozen inventory bhi jyun ka tyun.
+
+### UI-075 — item 9: `app.css` khatam, dono mockups docs mein, har page ab EK stylesheet
+
+Item 9 board par teen cheezein kehta tha: `app.css` delete, mockups move, final sweep.
+
+**`static/app.css` ke do hisse thay aur dono ka intezam alag tha.** Nau `@font-face` rules —
+`02-generic/fonts.css` ne UI-021 mein hi absorb kar liye thay; **face-ba-face naapa gaya**
+(family, weight, style, aur woff2 ka naam): **9 ke 9 barabar**, koi kami nahi. Aur ek
+`.icon` rule, jis ka naye tree mein ghar nahi tha — ab `05-components/icon.css`,
+`main.css` se `layer(components)` mein import.
+
+**Ye rule cosmetic nahi hai:** bina width/height ke inline `<svg>` SVG ke default
+**300×150** par girta hai, sifar par nahi. `pages/slo-health.css` ka header ye anjaam
+pehle se likh chuka tha.
+
+**Das pages ke `<link>` do se EK ho gaye.** `<link>` byte-level par hataya gaya (koi
+encoding tabdeeli nahi), aur frozen inventory ka diff **khali** raha.
+
+**Dono mockups `docs/design/` mein — D5 band.**
+
+**Gates:** `css_type_probe` — das pages × paanch viewports, **`total element x property
+deltas: 0`**. Har page par `b-only 5` aaya; naam le kar naapa gaya ke wo sirf
+`HTML[0]>HEAD[0]>LINK[4]` hai — hataya gaya `<link>` khud, paanch viewports par —
+aur `only-after` har jagah khali. `.icon` nau icon-wale pages par **17×17 / flex-shrink 0**
+(`print` par sifar icons hain, wo theek hai). **1075 pass, ruff saaf, ratchet OK**,
+`legacy_css_lines` **1706 par jyun ka tyun** — koi legacy file nahi chhui.
+`shared_css_lines` 4746 → 4807 (app.css ki 57 lines gayin, icon.css aur durust-shuda
+comments aaye).
+
+#### Review ne FAIL diya, aur wo bilkul theek tha
+
+Maine `icon.css` mein "is move ka waahid asal khatra" ke unwan se likha tha ke 17px ab
+`layer(components)` se `99-legacy/landing.css` ki 22px ko harata hai. **Wo rule mojood hi
+nahi:**
+
+```
+$ grep -c "\.icon" static/css/99-legacy/landing.css
+0
+```
+
+`UI-060` ne use **2026-08-16 ko dead keh kar delete** kar diya tha — is task se sattrah din
+pehle. Yani `.icon` ab **be-muqabla** hai aur 17px is liye jeetta hai ke koi larta hi nahi.
+**Pixels naape gaye thay aur sahi thay; un ki jo wajah pesh ki gayi wo farzi thi** — aur ye
+ghalti usi paragraph mein hui jo likha hi is bimari se bachne ko tha.
+
+Wajah ye thi ke maine `pages/slo.css` aur `pages/landing.css` ke **headers par bharosa kiya
+aur cascade khud nahi naapa**. Sabaq, aur ye is repo ke liye naya hai: **ek header jo cascade
+bayan karta hai theek waise basi hota hai jaise carried number** — ye wala apni rule se
+sattrah din zyada jiya aur us dauran do baar quote hua. Chaaron jagah durust kiya.
+
+#### Do aur ghaltiyan, dono meri, dono line-numbers ki
+
+1. **`main.css` ke header mein 5 lines barhane se chaar in-repo citations toot gayin**
+   (`main.css:42` wala `@layer` 47 par chala gaya). Header ko **line-neutral** likh kar
+   theek kiya — `@layer` wapas 42 par, `:73-74` wapas apni jagah.
+2. **Mockup ke naye comment ne (2 lines ki jagah 7) us ki apni paanch references torh dein**
+   (`bank/blueprint/library/slo-health` ka `mockup-modern.html:279`, `taqseem` ka `:345`,
+   `reset.css` ka `:20`). Comment 2 lines ka kar diya: file phir se 435 lines, paanchon
+   references bahal.
+
+**Sabaq:** jis file ko doosri files line-number se quote karti hain, us ka header
+line-neutral rakho — warna ek wazahat likhne ki qeemat paanch toote hue pointers hai.
+
+#### Aur ek cheez jo maine ghalat batayi thi
+
+Maine kaha tha ke D5 "aadhi basi" hai kyunke `papermaker-mockup.html` mojood nahi.
+**Wo mojood thi — repo ki jar par**, aur maine sirf `static/` mein dekha tha.
+**`ls <ek jagah>` "mojood nahi" ka saboot nahi hai.** (Us row ka doosra nisf waqai ghalat
+tha, magar alag wajah se: wo file kabhi *serve* nahi hoti thi, kyunke `/static` mount jar
+tak pohanchta hi nahi.) Ab dono `docs/design/` mein hain.
+
+Saath hi `CLAUDE.md` ka wo hukm bhi theek kiya jo aaj tak kehta tha ke `app.css` migrated
+pages par doosra link hai, aur `css_baseline.py` ke wo docstrings jo `app.css`/`theme.css`
+ko zinda batate thay.
+
+**Irfan ne browser mein dekh kar OK kiya** (incognito, Ctrl+Shift+R — purani `app.css`
+cached thi).
+
+### D59 band — 1039 lines delete, aur row ki apni dalil ghalat nikli
+
+`STATUS.md` kehta tha *"Item 9 — ... **D59 pehle** (`css_orphans.py` basi hai)"*, yani ye
+waahid CSS kaam tha jo Irfan ke kisi faisle par nahi ruka hua tha.
+
+**D59 ka bayan sach nikla:** `css_orphans.py` har run ke shuru mein
+`WARNING: static/theme.css not found` deta hai aur `supplied`/`covered`/`compat`/`fallbk`/
+`collide` — paanchon column — nau ke nau pages par **0**.
+
+**Magar us ki dalil sach nahi nikli.** Row kehti thi:
+
+> *"Deleting it is tempting and wrong: its `--rules` mode does a job nothing else does."*
+
+Chala kar dekha:
+
+```
+static/theme.css: 0 rules probed (0 selectors; 0 token rule(s) excluded)
+browser: Edg/152.0.4191.53
+
+page        theme?  elems  match  redecl  partial  orphan  state  EXPOSURE  media  drift
+bank            no     54      0       0        0       0      0         0      0      0
+...  (nau ke nau pages, har column 0)
+```
+
+`--rules` bhi usi deleted file par khara hai (`:89` ka `OLD_THEME`) — aur ye **sifar naapne
+ke liye asli browser bhi chalata hai**. Yani **dono halves murda thay, ek nahi.**
+
+**Delete:** `scripts/css_orphans.py` (822) + `scripts/css_rules_probe.mjs` (217, sirf us ke
+`--rules` ka DOM half, `PROBES.md`:28) = **1039 lines**. Pehle naapa gaya ke koi cheez in par
+khari nahi: **kisi test mein nahi, kisi script mein nahi** — sirf docs ke hawale.
+
+**Rakhne ke bajaye delete kyun:** poore aitmad ke saath, saaf-suthri table mein sifar
+chhapne wala auzaar na-mojood auzaar se **bura** hai. Saboot khud D59 hai — use likhna para
+tha *"do not quote its table before then"*, aur aisi tanbeeh sirf us par kaam karti hai jo
+pehle `DEFERRED.md` parhe. Naap git history mein aur `PROBES.md` mein mehfooz hai.
+
+**Kisi ne is ki jagah nahi li, kyunke sawal band hua hai, muntaqil nahi.** Wo poochta tha
+*"`static/theme.css` unlink hone par page kya khota hai"* — wo file mojood nahi aur koi page
+use link nahi karta. Qareeb-tareen zinda sawal (*"koi `var()` hal hone se reh to nahi
+gayi?"*) **UI-072 / D14** band kar chuka hai: poore repo mein zero. Sprint 6 ka drain sawal
+`css_drain_probe.mjs` hai — wo **ulta** sawal hai aur mutassir nahi hua.
+
+**Item 9 ab khula hai.** 1075 pass, ruff saaf, ratchet OK (CSS ki ek line bhi nahi chhui —
+ye auzaar the, app ka code nahi).
+
+## 2026-09-01 — `ui-check.html`: browser check ka aadha hissa ab naapa jata hai
+
+Browser check **teen sessions se ⬜ par khara tha** — is liye nahi ke mushkil tha, is liye
+ke har session use "aap dekh len" keh kar chhor deta tha. Ab aath mein se **chaar naap
+liye jate hain**, aur baqi chaar ke liye saaf hidayat likhi hai.
+
+**Tareeqa:** `static/dev/ui-check.html` har page ko **iframe mein kholti hai**. Dono same
+origin par hain (`127.0.0.1:8000`), is liye safha andar ke DOM aur computed styles parh
+sakta hai — koi extension, koi headless runner, koi nayi dependency nahi. Teacher ke apne
+browser mein, asli rendering par.
+
+**Chaar jo ab khud naapte hain (2026-09-01 ka natija):**
+
+| check | naapa |
+|---|---|
+| do SLO boxes ka border | `#addSloBox` / `#efSloBox` — dono `1px solid rgb(234,237,243)` |
+| pagination ka rang | `.pg-btn` = `rgb(15,23,42)` = body ka rang, **kaala nahi** |
+| disabled button ka cursor | `button:disabled` → `not-allowed` |
+| subtitle heading ke neeche | teen pages, `p` top **65.4px** > `h1` bottom **62.4px** |
+
+**Chaar jo AANKH par chhore gaye, aur ye jaan-boojh kar hai:** slo ke import counters,
+taqseem ke chips, blueprint ka shortfall text, aur print ka paper + Ctrl+P. **Ye chaaron
+sirf click ke baad bante hain.** Safha inhein `AANKH` likhta hai, `THEEK` nahi — kyunke
+is repo ka apna sabaq yehi hai (D45, PROBES.md rule 10): **jo gate cheez dekh hi nahi
+sakta, wo guzar jata hai chahe cheez ghalat ho.**
+
+### Pehli chalaayi ne ek JHOOTA FAIL diya — aur galti check ki thi, app ki nahi
+
+Check `select[disabled], button:disabled, input:disabled` poochhta tha aur **pehla**
+element uthata tha — jo `<select>` nikla, aur `default` cursor par KHARAB likh diya.
+Naapne par: `button:disabled` → `not-allowed`, `select[disabled]` → `default`.
+**`forms.css:211` ka rule `button:disabled` hai — sirf button**, aur usi file ka comment
+(`:189–202`) likhta hai ke ye har disabled control tak jaan-boojh kar nahi pohanchta.
+Yani `<select>` ka `default` **theek hai**. Check ab sirf button dekhta hai aur select ki
+qadar alag se dikhata hai taake koi dobara ye ghalti na kare.
+
+**Doosri chhoti ghalti usi chalaayi mein:** natija `innerHTML` se likha ja raha tha, aur
+`<select …>` wali line ko browser ne **tag samajh kar nigal liya** — KHARAB to dikha
+magar tafseel khali thi. Ab escape hota hai.
+
+### Aur teesri, jo repo ke apne gate ne pakri — is liye file `static/dev/` mein hai
+
+Pehle ye safha `static/ui-check.html` par rakha tha. **`pytest` ne saat test tore:**
+
+```
+expected 10 real pages, found 11: [... 'ui-check.html']
+style_blocks went UP: 0 -> 1
+css_lines_in_html went UP: 0 -> 26
+```
+
+`page_paths()` `static/*.html` ko glob karta hai, is liye **ek dev-auzaar gyarhwan asli
+page gin liya gaya**, aur us ke apne `<style>` block ne ratchet tor diya. Test ka apna
+comment kehta hai ke naya page jorna "ek test-edit ka kharch" hona chahiye — **bilkul
+theek, magar ye app ka page hai hi nahi.**
+
+`page_paths()` recursive **nahi** hai. Is liye file `static/dev/ui-check.html` mein chali
+gayi: **same origin barqarar** (iframe wali poori tarkeeb isi par khari hai), aur **na
+koi test badla, na koi metric, na re-baseline.** `mockup-modern.html` ko `EXCLUDED_PAGES`
+mein daal kar chhora gaya tha; wo raasta bhi khula tha, magar us mein metric ki tareef
+chhoona parti — ye sasta hal hai. Baad mein: `style_blocks` 0, `css_lines_in_html` 0,
+`test_css_architecture.py` ke **32/32 pass**.
+
+**Sabaq:** dev-auzaar `static/` ki jar mein mat rakho — wahan jo bhi `.html` girega, wo
+app ka page gina jayega.
+
+## 2026-09-01 — UI-074: `.topbar .tag` — "do murda declarations" mein se ek zinda nikla
+
+STATUS.md ka row kehta tha **"`index` ki do murda `.tag` declarations"**, aur
+`pages/index.css:245` ka comment bhi: *"Both legacy `.tag` declarations can go."*
+**Naapne par ek zinda nikli.** Agar row par bharosa kar ke dono delete ho jatin to
+index ka brand tagline apni tracking kho deta.
+
+**Naap (`css_selector_probe.mjs`, 2026-09-01), dono alag alag:**
+
+```
+.brand .tag    index   font-size=11px  color=rgb(79,70,229)  letter-spacing=0.44px
+.topbar .tag   index   font-size=11px  color=rgb(79,70,229)  letter-spacing=normal
+```
+
+* **`.brand .tag` (`99-legacy/index.css:32`) ZINDA hai.** 11px × `.04em` = **0.44px** —
+  wo `letter-spacing` kahin aur se nahi aa raha, `pages/index.css` ka `.tag` letter-spacing
+  declare hi nahi karta. **Chhora gaya, aur `:30–31` ka mojood comment** (*"Only the
+  tracking was ever live"*) **is ki hifazat pehle se karta hai.**
+* **`.topbar .tag` (`:288`) MURDA nikli** — 10.5px / hex ke bajaye 11px / `--color-action`
+  compute karti hai, yani `pages/index.css` ka `.tag`. **Delete ki gayi.**
+
+**Kyun murda, aur kyun `@media` ne use nahi bachaya:** `main.css:42` ka layer order
+`legacy, settings, generic, elements, objects, components, utilities` hai — **`legacy`
+sab se pehla, yani sab se kam wazan.** Layer ka faisla specificity se pehle hota hai
+**aur `@media` se bhi pehle** — is liye `max-width: 760px` block ke andar hone se us ko
+koi panaah nahi mili. Wo har width par murda thi.
+
+**Tasdeeq — `css_type_probe` ka poora snapshot, pehle aur baad (stash → naap → pop →
+naap):** das pages, paanch viewports (**1280, 900, 740, 700, 520** — yani wo mobile band
+bhi jahan ye rule waqai lagti hai), **kul element × property deltas: 0.**
+
+**Adad:** `unsanctioned_hex` **301 → 300** (rule apne saath ek ghair-manzoor hex le gayi),
+`legacy_css_lines` **1707 → 1706**, audit ka rule-block 1327 → 1326.
+
+### Ek sabaq jo naapne se mila: comment ki apni qeemat hai
+
+Pehli koshish mein maine 7-line ka wazahati comment likha. Naapne par
+`legacy_css_lines` **1707 → 1713** ho gaya **aur `unsanctioned_hex` 301 → 302** — kyunke
+**maine hex ko comment ke andar likh diya tha aur counter use ginta hai.** Yani ek murda
+rule hatane ke baad bhi dono adad ulti simt gaye. Comment chhota kiya, phir bilkul hataya:
+tab jaa kar 1706 / 300 mila. **`legacy_css_lines` sirf rules nahi, comments bhi ginta hai
+— wazahat PROGRESS.md mein likho, legacy file mein nahi.** (STATUS.md pehle se aagah
+karti thi: UI-073 mein 34 rule-lines ke saath 8 comment-lines gayi thin magar **naye
+comment 6 wapas aa gaye thay.**)
+
+**Scope par asar nahi:** deleted rule `page-only` thi (1051 → 1050), is liye `agree` 86 +
+`disagree` 190 = **276 jyun ka tyun**. Target ka faasla ab **1706 − 276 = 1430**.
+
+## 2026-09-01 — Seeding: PY3 mukammal, PY2 aadha — aur do kharabiyan jo naapne par nikleen
+
+**Bank 850 → 1014 (+164).** Pre Year 3 ab **87/87 — mukammal**. Pre Year 2 23/87 →
+**41/87**. Din poora seeding par gaya: **CSS par kuch nahi hua, browser check phir nahi
+hua** (ab teen sessions se khula).
+
+**Do run, dono `--types "multiple-choice,short-answer,true-false" --bloom foundational`,
+dono se pehle backup aur dry run** (`paper_maker_backup_before_preyear3_seed_20260901.db`,
+`..._preyear2_...`):
+
+* **PY3** — 23 topics × 4 = **92 sawal, 23/23 topics**, poora chala.
+* **PY2** — 64 topics maange the; run **18 topics ke baad kat gaya** (72 sawal).
+  **Kyun kata, maloom nahi — output file khali thi**, na error mila na wo line jahan ruki.
+
+**Kata hua run DB ko toorta nahi, aur ye naapa gaya, farz nahi kiya:** `integrity_check`
+= ok, aaj chhue gaye 18 topics mein se **har ek mein poore 4 sawal** — yani script har
+topic ke baad commit karti hai, beech mein kata hua koi topic nahi. Dobara chalana bhi
+mehfooz hai: `--include-seeded` ke baghair wo pehle se seeded topics chhorti hai, is liye
+agla run seedha baqi **46** par jayega — na dohraav, na quota zaya.
+
+**Dohraye-hue title wala khatra dobara naapa gaya (2026-08-31 ka sabaq):** PY3 ke baqi
+23 mein se 8 topics ke title dohraye hue thay (`Concept of subtraction` 4x) aur **23/23
+ka `learning_outcome` bilkul title ke barabar** — yani ek jaisa prompt. Natija phir bhi
+mauzoon: un chaar topics ke **16 sawal, 16 ke 16 alag**. PY2 ke baqi 64 mein bhi yehi
+shakl hai — **64 topics magar sirf 52 alag titles** (`Practice of subtraction` 5x,
+`Concept of addition` 4x) — is liye agla run bhi naap kar dekha jaye.
+
+**Dhaancha saaf nikla** (aaj ke 164 par naapa): khaali sawal 0, khaali jawab 0, MCQ bina
+options 0, **MCQ ka jawab options mein 68/68**, Urdu 164/164, tashreeh 164/164. Dohraav
+kam: poori PY3 348 mein se **2**, PY2 164 mein se **1**.
+
+### Do cheezein jo theek nahi hain — dono aaj ki paida-kardah NAHI
+
+1. **`learning_outcome` har seed-shuda sawal mein khaali hai.** Aaj ke 164 mein se 164
+   khaali. Magar tareekh-war naapne par: 08-31, 08-26, 08-23, 08-22, 08-21, 07-30 —
+   **har batch 100% khaali**. Sirf 07-15 / 07-19 wale (329 sawal, alag raste se aaye)
+   bhare hue hain. Yani **`seed_bank.py` ye khana kabhi nahi bharta** — ye khamoshi se
+   chal raha tha aur ab tak kisi ne naapa nahi tha.
+2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
+   mark** (240 sawal, sab ke sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7 tak).
+   Aaj ka batch (4.4 / 4.55) pichhle **sab** AI batches ke barabar hai — **behkaav aaj
+   nahi aaya** — magar bank ke andar do paimane mojood hain, aur mile-jule paper ka total
+   ajeeb banega.
+
+**Dono par koi tabdeeli nahi ki gayi — faisla Irfan ka.** Dono `docs/ui/STATUS.md` ke
+board par darj hain taake agla session inhein dobara dhoondne mein waqt zaya na kare.
+
+### Aur ek surakh jo plan mein tha
+
+Purana plan kehta tha **"baqi 87 topics — PY3 ke 23, phir PY2 ke 64"**, aur bas. Naapne
+par nikla ke **Pre Year 1 ke 10 topics bhi khaali hain** (71/81) — unhein **koi row
+schedule nahi kar rahi thi**. Asal ba-ikhtiyar kaam 46 nahi, **56 topics** hai. Ye wohi
+census wali bimari hai jo is repo mein baar baar fire hoti hai: **row ka adad naapo, us
+par bharosa mat karo.**
+
+**Bank ka poora hisaab (2026-09-01):** 310 topics, 210 seeded, **100 baqi**, 1014 sawal.
+In 100 mein se **44 wo jaali jode hain jinhein seed karna mana hai** (G5, G6, Science G7,
+Geography G8) — naapa gaya, chaaron ab bhi **0** par hain, qaida nahi toota.
+
+**1075 pass, ruff saaf** (dono aaj chalaye). `master` se 45 commits aage, 0 peechhe —
+merge item 9 se pehle nahi.
+
+## 2026-08-31 — LibreOffice ka daawa: ek row samjha gaya tha, **satrah** nikla
+
+Irfan: *"README ka LibreOffice wala daawa bhi dekh lo."* Naapne par ye ek row nahi,
+**saat files** thin — aur do jagah wo mehaz ghalat nahi, **nuqsan-deh** thi.
+
+**Pehle saboot, phir tabdeeli.** `e2bdcc4` (2026-08-13) ne `app/api/export.py`,
+`app/services/export_service.py`, un ke tests aur `python-docx` dependency delete ki
+thi. Aaj naapa: `app/` aur `scripts/` mein **`soffice` / `docx` / `LibreOffice` ka ek
+bhi zikr nahi**, aur `requirements.txt` mein `python-docx` nahi. **Ye daawa 18 din se
+jhoota tha.**
+
+| file | kya kehti thi |
+|---|---|
+| `README.md` | **aath jagah** — feature bullet, tech table ki do rows, prerequisites, `SOFFICE_PATH` env row, step 4 "Export as Word or PDF", **poora `### PDF export (LibreOffice)` install guide**, aur phase table |
+| `ARCHITECTURE.md` | **do API routes** (`export.docx` / `export.pdf` — 404 dete), 502 ki wajah, folder-tree mein **do na-mojood files**, aur **`## 7. Export flow` ka poora ~40-line section** — `build_paper_docx`, `_find_soffice`, LibreOffice profile cache, warm/cold timings (~13s vs ~50s) |
+| `docs/SETUP-LOCAL.md` | **prerequisites table LibreOffice install karwati thi**, troubleshooting row, offline-list, aur distribution plan |
+| `Dockerfile` | pehla comment: "Northflank deploy image … PDF export baad ke PR mein" |
+| `docs/PRD.md` | F8 row: "Word export + PDF via LibreOffice" **✅ Live** |
+| `docs/SRS.md` | FR-6, external interfaces, aur `SOFFICE_PATH` ka contract |
+| `PROJECT.md` | intro, tech stack, done-list, do API routes, aur **ek khula TODO: "README mein LibreOffice install step add karo"** |
+
+**Do sab se buri:**
+
+* **`SETUP-LOCAL.md` wo file hai jise insaan follow karta hai.** Wo school PC par
+  LibreOffice install karwa rahi thi — ek aisi cheez jis ki app ko zaroorat hi nahi.
+  Us mein ab saaf likha hai ke agar aap ne install kar liya hai to koi harj nahi, magar
+  zaroorat nahi thi.
+* **`PROJECT.md` ka TODO is jhoot ko wapas README mein daalne ko keh raha tha.** Yani
+  README theek karne ke baad bhi ek row us ko dobara torhne ke liye khari thi.
+
+**Do jagah jaan-boojh kar chhori:** `docs/MIGRATION.md` (poori file band aur ⛔
+banner-shuda hai) aur `docs/CLAUDE-CODE-PROMPTS.md` (purane session prompts — tareekh
+hai, hidayat nahi).
+
+**Saath mein `Dockerfile` ka doosra jhoot bhi gaya:** wo khud ko "Northflank deploy
+image" kehta tha aur LibreOffice ki ghair-mojoodgi ko *"PDF export baad ke PR mein"*
+bata kar **aarzi** dikhata tha. Wo PR kabhi nahi aayega, aur cloud plan bhi aaj band
+hua — comment ab dono baatein saaf kehta hai, aur ye ke image ka maqsad **school PC /
+distribution package** hai.
+
+**Ye row is liye ahem hai:** kal is ko "README ki ek row" samajh kar ✅ kar diya jata,
+aur baqi chhe files aaj bhi jhoot bol rahi hotin. **Daawa dhoondte waqt poore repo mein
+grep karo, us file mein nahi jahan wo nazar aaya.** 1075 pass, ruff saaf.
+
+## 2026-08-31 — FAISLA: O1 band — cloud migration ka plan khatam (Irfan)
+
+`docs/MIGRATION.md` (Railway → Northflank) **ab kaam nahi, tareekh hai.** Row
+`docs/ROADMAP.md` §B mein band, aur us ke saath **D3** bhi.
+
+**Faisla naye maloomat par nahi hua — wo baat mahine bhar se naapi hui thi aur row phir
+bhi ⏸ par khari thi:** repo mein sirf **ek remote** hai (`backup`), koi hosting remote
+nahi, koi auto-deploy nahi. App local chalti hai. Aage ki simt school PC / Docker hai.
+
+**Kahan kahan laga (paanch jagah, kyunke daawa paanch jagah bikhra hua tha):**
+
+* `docs/ROADMAP.md` — O1 row band, wajah aur natija ke saath.
+* `docs/MIGRATION.md` — ⛔ banner. File record ke taur par rakhi gayi (market research
+  aur §8 ke locked decisions kaam ke hain agar cloud ka sawal dobara uthe), magar amal
+  mana hai. Us ka apna "Author basis" bhi jhoota tha — *"261 tests · prod live &
+  verified on Railway"*; aaj **1,075 tests** hain aur prod hai hi nahi.
+* `docs/SDLC-WORKFLOW.md` — §4 ki DevOps row aur §6 ki **poori "Production" row** kaati
+  gayi. **Aur us ka qaida ulta kar diya gaya:** wo kehti thi *"never assume local data
+  exists in prod — seed prod deliberately"*, jo do DB farz karta hai. **Ek hi DB hai aur
+  wohi teacher ka asal data hai**, to qaida ab ye hai: seeding se pehle backup lo.
+* `README.md` — Deployment section aur tech table ki row.
+* `docs/ui/DEFERRED.md` — D3 band.
+
+**Do cheezein jaan-boojh kar nahi ki gayin, aur donon darj hain:**
+
+✅ **`railway.toml` DELETE ho gayi** (Irfan ne usi din kaha). Us ke saath teen aur
+jagah durust hueen: `ARCHITECTURE.md` ka file-tree, `README.md` ka Deployment section
+(ab "How it actually runs" — local command + wo teen cheezein jo host-specific hain),
+aur `PORT` wali env row.
+
+**`PORT` ka daawa likhne se pehle naapa gaya, aur achha hua:** row kehti thi *"Railway
+injects it automatically"*. `app/`, `scripts/`, `Dockerfile` aur `.bat` — **kahin `PORT`
+parha hi nahi jata**; jo grep hits aaye wo sab `IMPORT` / `EXPORT` / `REPORT` ke andar
+thay. Yani wo variable pehle bhi be-kaar tha, sirf deploy command ke saath likha gaya
+tha. Row ab yehi kehti hai.
+
+⚠ **`README.md` ka ek daawa purana hai aur O1 band karte hue naapa NAHI gaya** — tech
+table ka *"PDF export — headless LibreOffice"*. DOCX/PDF export `e2bdcc4` mein delete ho
+chuka. README mein us jagah tanbeeh laga di gayi hai — **theek karna alag kaam hai, aur
+ise "ho gaya" mat ginna.** (Deployment checklist ka PDF/Word bullet ab mojood nahi —
+poora purana section chala gaya.)
+
+## 2026-08-31 — FAISLA: CSS epic ka target `legacy_css_lines` ~1400 (Irfan)
+
+Purani range **`1,200–1,400` mansookh**. Ab ek adad hai: **~1400**.
+
+**Wajah ye nahi ke kaam mushkil hai — wajah ye hai ke 1,200 riyazi taur par pohanch se
+bahar tha.** Usi din `css_duplication_audit.py` dobara chali:
+
+```
+rule-block lines  1359
+page-only         1051  (77%)  <- 2026-08-19 ka faisla, barqarar
+agree                76  (6%)
+disagree            232  (17%)
+```
+
+**Scope mein kul 308 lines.** Us waqt `legacy_css_lines` 1729 tha, to floor `≈1420`.
+Range ka neecha sira sirf tab milta jab page-only ki 1,051 lines scope mein aatin — aur
+wo **rad kar diya gaya**, kyunke wo mehaz `99-legacy/<page>.css` → `pages/<page>.css`
+shift hai: na duplication ghatti hai, na CSS.
+
+**Ye adad chaar files mein alag alag likha hua tha** (`HANDOFF.md`, `PLAN.md`,
+`docs/ui/ROADMAP.md`, `STATUS.md`). Chaaron par nishan lagaya gaya, aur faisla
+`DECISIONS-FOR-IRFAN.md` §5 mein apni jagah darj hua — us file ka header ab ye bhi
+kehta hai ke §5 ke adad **usi din dobara naape gaye** (§1–§4 board se copy kiye gaye
+thay). Warna wohi bimari: ek file mein faisla, teen mein purana number.
+
+**Aaj ka faasla: 1707 − 1400 = 307 lines** — lag-bhag utna hi jitna scope mein bacha
+hai. Yani target pohanch mein hai, magar item 8 ka tail, item 9 aur `body` ka bacha hua
+hissa **teenon** chahiyen.
+
+## 2026-08-31 — UI-073: `body` — jise "sab se bara bacha hua kaam" kaha gaya tha, wo zyada tar murda tha
+
+`legacy_css_lines` **1729 → 1707 (−22)** · `unsanctioned_hex` **308 → 301 (−7)** ·
+**type probe 0 deltas, state probe 0 deltas**, dono 10 pages par. 1075 pass, ruff saaf.
+
+### Board ne ise "38 lines, `other` ke baad sab se bara `disagree` item" kaha. Dono baatein ghalat thin.
+
+Ginti pehle: `99-legacy` ke `body` rules **50 lines** hain, 38 nahi — board `@media`
+wale nahi ginta.
+
+Aur "disagree" ka matlab hota hai *har ek par faisla chahiye*. Naapa gaya —
+`css_selector_probe` `body` par, nau pages:
+
+```
+font-family  "IBM Plex Sans", system-ui, sans-serif   nau ke nau par
+color        rgb(15,23,42)                            nau ke nau par
+background   rgb(247,248,251)                         nau ke nau par
+smoothing    antialiased                              nau ke nau par
+```
+
+**Nau ke nau pages ek hi qeemat compute karte hain — is ke bawajood ke chhe files
+ne ye chaar cheezein apne apne tareeqe se likhi hui thin.** `print` `color: #1a1a1a`
+(rgb(26,26,26)) likhta hai aur rgb(15,23,42) paint karta hai; `taqseem` teen alag
+token naam (`--font-body`/`--fg`/`--app-bg`) likhta hai aur wohi qeemat paint karta
+hai. Wajah `css_page_rule_probe` se: **`03-elements/typography.css` ka `body`
+`layer(elements)` mein hai aur `margin` `02-generic/reset.css` deta hai** — layer
+order legacy ko harata hai, to ye sab **migration ke din se murda** hain.
+
+**Yani ye faislon ka khandan nahi tha, deletion tha.** Chhe files ke `body` blocks se
+sirf do zinda declarations bachi hain — `display: flex` aur `min-height: 100vh` —
+kyunke typography ye do deti hi nahi.
+
+**Do gates, 0 deltas:** type probe **2,450,110 element×property** (10 pages × 5
+viewports) aur state probe **368,620** (paanch states) — dono par **0**.
+
+### Review ne pakda: is task ne khud chhe declarations murda kar dein
+
+`body` hi wo aakhri jagah thi jahan chaar pages ka `--bg` parha jata tha, aur `slo`/
+`slo-health` ka `--ink` bhi. Hataate hi wo be-consumer ho gaye — **yani task ne apne
+peechhe wohi kachra chhora jo UI-072 saaf karne baitha tha.** Chhe declarations
+(`--bg` × 4, `--ink` × 2) delete; JS ka `setProperty` bhi dekha (sirf `--accent` aur
+print knobs set karta hai, ye do nahi). **Gate dobara: 0 deltas.** Isi se `unsanctioned_hex`
+307 → **301**.
+
+### Aur wohi trap, terhvin dafa
+
+Pehle draft mein maine `print` ke murde rang ko comment mein `#1a1a1a` likh diya.
+`unsanctioned_hex` **308 par khara raha** jab ke ek hex delete hua tha — kyunke
+**comment ke andar ka raw hex bhi ginta hai** (`HANDOFF.md` trap 1, "baarah dafa fail
+ho chuka" — ab terah). `rgb(26,26,26)` likhne par ginti 307 par aa gayi.
+**Ginti ne pakda, meri nazar ne nahi.**
+
+### Jo `body` par ab bhi zinda hai (agle session ke liye)
+
+* `display: flex` + `min-height: 100vh` — chhe pages par. `pages/plan.css` pehle se
+  `@layer objects { body { display: flex } }` ka namoona rakhti hai. **Faisla Irfan
+  ka:** shared objects rule, ya per-page rehne do.
+* `@media (max-width:760px) body { flex-direction: column }` — **saat files mein
+  byte-identical**, magar media query + layer order milkar wohi shakal banate hain
+  jis ne UI-05x mein 75 deltas diye the. Uthane se pehle naapna laazmi.
+* `html, body { margin: 0; height: 100% }` — chaar files. `margin` reset se murda
+  hai; **`height: 100%` aur `html` ka hissa naapa nahi gaya** — is round mein chhua
+  nahi.
+* `index` ke teen `body.lang-ur` rules — `05-components/urdu.css` mojood hai, magar
+  ye khandan badalna apna faisla hai.
+
+⬜ **Browser check nahi hua** (aaj ka bakaya pehle se khula hai).
+
+## 2026-08-31 — R2 seeding: Pre Year 3 — 43/87 se 64/87
+
+Backup: `paper_maker_backup_before_preyear3_seed_20260831.db` (run se pehle).
+
+| | pehle | ab |
+|---|---:|---:|
+| bank kul | 766 | **850** |
+| PY3 topics | 43/87 | **64/87** |
+| PY3 sawal | 172 | **256** |
+
+PY1 (71/81, 329) aur PY2 (23/87, 92) chhue nahi gaye. Wohi command jo `ROADMAP.md`
+mein darj hai (defaults NAHI):
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+**Quota:** 21 topics ke baad HTTP 429, phir musalsal 3 par script khud ruki —
+`[25/44]` tak pohanch kar 19 topics chhu-e bhi nahi gaye. Andaza "~20/din" tha,
+aaj **21** mile. **Baqi: PY3 ke 23 + PY2 ke 64 = 87 topics**, lag-bhag **chaar
+aur din**.
+
+### `--write` se pehle jo dekha gaya — aur jo pehli nazar mein khatra laga
+
+44 unseeded rows aankh se parhi gayeen: sab asli pre-school Math hain, wo jaali
+Grade-4 duplicate rows nahi. **Magar title khud dohraye hue thay** —
+`Concept of subtraction` **13 dafa**, `Practice of addition` 4, `Addition` 3 —
+aur un ka `learning_outcome` bhi bilkul title ke barabar hai. Sirf `page_no`
+farq karta hai, jo prompt mein jata hi nahi. Yani 13 topics ko **ek jaisa prompt**
+milna tha.
+
+Kharch karne se pehle naapa gaya: PY3 ke pehle se seeded topics mein
+`Activity of missing number` **3 dafa** isi shakal mein seed ho chuka tha, aur us
+ke 12 sawal alag alag hain; poore 172 sawal mein **bilkul ek jaisa matn sifar**.
+Is bunyaad par run kiya gaya. **Baad ki tasdeeq: 36 subtraction sawal, 36 ke 36
+alag**, aur PY3 mein ab bhi duplicate matn **0**. Yani ek jaisa prompt duplicate
+sawal nahi deta — mazmoon ka overlap hai, naql nahi.
+
+⬜ Sawalon ka **matn** nazar se nahi parha gaya (sirf ginti aur duplicate-check).
+
+## 2026-08-29 — UI-072: audit — jo baqi kaam nahi, ghalti thi
+
+Irfan: *"ache tarah audit karlo, jaha jo kaam baqi hai aur ghalti ke zumre mein hai use
+theek karlo."* Ye us ka nateeja — **baqi kaam se alag kar ke sirf ghaltiyan**.
+
+`legacy_css_lines` **1751 → 1732 (−19)** · `unsanctioned_hex` **333 → 308 (−25)** ·
+`hardcoded_hex_inline` **76 → 74** · **unresolvable `var()` bina fallback ke 1 → 0** (do
+aur jo fallback rakhte thay wo bhi gaye — alag cheez, alag ginti) · 1075 pass, ruff saaf,
+frozen yaksan · type probe **sirf 40** (maqsood), state **0**, inject **0**.
+
+### Sab se ahem: D14 kehti thi ye "already inert" hai. Wo inert nahi thi.
+
+`99-legacy/library.css` ka `.pg-btn { color: var(--text) }` — `--text` kahin declare hi
+nahi hota. **D14 ise 2026-07-28 se "already inert" keh kar parked rakhe hue thi.** Maine
+usi bunyaad par declaration delete ki, "zero-delta" samajh kar.
+
+**Probe ne 25 deltas dikhaye: `rgb(15,23,42)` → `rgb(0,0,0)`.**
+
+Wajah — aur ye poore epic ke liye kaam ki hai: **ek `var()` jo resolve na ho, wo "kuch
+nahi" ke barabar NAHI hai.** Wo declaration ko *invalid at computed-value time* banata
+hai, aur `color` jaisi **inherited** property par us ka natija `inherit` hota hai.
+`<button>` par yehi cheez UA ke `color: buttontext` (kaala) ko harati thi. Declaration
+hatate hi UA ka kaala rang wapas aa gaya.
+
+Yani **toota hua `var()` teen hafte se kaam kar raha tha.** Ab wo `color: inherit` hai —
+sahi qeemat, sahi tareeqe se, aur repo mein ab **koi unresolved `var()` nahi bacha**.
+
+### `bank` par teen border grey thay, aur teesra sirf ghalat token naam se tha
+
+`bank.html`:104 aur :601 ke do inline boxes `var(--line, #e2e8f0)` parhte thay. **`--line`
+bank par declare hi nahi hota** (wo `theme.css`/blueprint/taqseem ka naam hai), to hamesha
+fallback `#e2e8f0` paint hota tha — jab ke usi page ke cards `#EAEDF3` aur legacy `--border`
+`#E3E8F1` hai. Ab dono `var(--color-border)` par; **do inline hex kam**, aur ye D55 ki
+fehrist mein teesra rang tha jo kisi faisle se nahi, ek typo se aaya tha.
+
+### 44 murda token declarations — nau pages, sifar deltas
+
+`99-legacy` ke nau `:root` blocks mein **150 tokens declare** hote hain. Har page ke liye
+alag naapa — us ki apni legacy file, us ka entry file, **aur us ka HTML (inline `var()` +
+JS ka `setProperty`)**, kyunke D12 ka sabaq yehi hai:
+
+```
+taqseem   12 murda    index 7    slo 5    blueprint 6    slo-health 6
+bank       3          landing 2  library 2               print 1        = 44
+```
+
+**`--primary-hover` nau ke nau files mein declare hota hai aur sifar dafa parha jata hai**
+— chhe jagah apni poori line par, `#244a90` ke saath. Us ke saath `--easy`/`--medium`/
+`--hard`/`--prog-bg`/`--prog-tx` bhi poore repo mein be-consumer hain.
+
+**44 declarations (150 declare thay, 106 bache), 21 poori lines, aur teeno probes par 0 deltas** — yani wo waqai murda
+thin. `taqseem` ka `:root` 15 se **3** par aa gaya; us ke upar ka comment ("purane naam
+barqarar taake page-specific rules na tootein") ab jhoot tha, wo bhi durust.
+
+### Teen deferred rows band, dono tools mein
+
+* **D56** — `plan.html` kisi probe ki page list mein nahi tha, aur wohi **ek page hai jis
+  ka koi legacy file hai hi nahi** (sirf naya tree), yani har component tabdeeli us tak
+  bina naape pohanchti thi. Ab dono probes mein hai.
+* **D53** — `css_type_diff` ka 60-delta cap khamosh tha. Ab list aakhir mein
+  `… and N more` likhti hai aur `--all` cap uthata hai. *(Isi khamoshi se ek dafa board
+  par "0 deltas" likha gaya tha jab ginti 30 keh rahi thi.)*
+* **D58** — `pages/index.css` ka comment kehta tha legacy ka `.brand .tag`
+  *"already wins at 0,2,0"*. Layer order specificity se pehle chalta hai; durust.
+
+### Do cheezein jo aage kaam aayengi
+
+**`node --check` kaafi nahi.** D53 ke fix mein maine `LIST_CAP` ko `args` se pehle rakh
+diya — syntax bilkul theek, magar chalane par `Cannot access 'args' before initialization`.
+**Tool ko chala kar hi pakda gaya**, check se nahi.
+
+**`scripts/css_orphans.py` ab khud basi hai.** Wo `static/theme.css` ke against naapta hai,
+jo 2026-08-13 ko delete ho chuki. Chalane par khud warning deta hai ke *"'supplied' will
+read 0 for every page"* — aur us ke `orphan`/`dead`/`covered` columns isi wajah se bay-maani
+hain. Us ki jagah per-page `var()` resolution wali check hai jo is audit mein chali.
+**D59.**
+
+⬜ **Browser check nahi hua.** Sirf do cheezein nazar aane wali hain: `bank` ke do boxes ka
+border (halka farq), aur `library` ke pagination buttons ka rang (jo pehle jaisa hi hona
+chahiye — agar kaala dikhe to `color: inherit` kaam nahi kar raha).
+
+## 2026-08-29 — UI-071: item 7 ka doosra nisf — aur ek probe jo pehle mumkin hi nahi thi
+
+Item 7 mukammal. `legacy_css_lines` **1757 → 1751 (−6)** · `unsanctioned_hex` **333**
+(nahi hila) · **1075 pass**, ruff saaf · frozen inventory yaksan · type probe **36**,
+state probe **0**, **injection probe blueprint/print/index/slo/slo-health par 0**.
+
+### Pehle ye maloom hua ke is nisf ka zyada hissa naapa hi nahi ja sakta
+
+Probe se ginti, kaam shuru karne se pehle:
+
+```
+.shortfall-panel   blueprint 0   print 0        <- JS se banta hai
+.pill              har page  0                  <- JS se banta hai
+.chips             har page  0                  <- JS se banta hai
+.row               index 1 · slo 4 · slo-health 2 · taqseem 1
+.empty-state       slo 1 · slo-health 4   (display:none, JS kholta hai)
+```
+
+**31 lines mein se 26 aisi thin jin par dono gates har haal mein 0 deltas dete** — chahe
+main kuch bhi torh doon. Ye D45 wali shakal hai aur **D12 is ko 2026-07-28 se darj kar rahi
+thi**; `status.css` ka header bhi sessions ko *"verify colour by injecting the class"* keh
+raha tha, magar har session ye kaam haath se karta aur phenk deta.
+
+Irfan ka faisla: **harness banao.** `scripts/css_inject_probe.mjs` — har khandan ka apna
+builder-markup us **asal container** mein daalta hai jahan builder likhta hai, phir computed
+values naapta hai. Output `css_type_probe` ki shakal ka hai, to maujooda review-shuda
+`css_type_diff` bina kisi tabdeeli ke parh leta hai. `PROBES.md` rule 10.
+
+Ek cheez us ne foran pakdi: `print` ka `.section-block` **khud bhi JS-built hai**, to fixture
+ne container na milne par **report kiya, khamoshi se 0 nahi diya** — yehi design ka maqsad
+tha.
+
+### `shortfall` — chhe rules component par, do dabbe apni jagah
+
+Chhe andar wale rules (`.sf-head`, `.sf-reason`, `.sf-q`, `.sf-options`, `.sf-options li`,
+`.sf-gain`) dono files mein **byte-identical** thay → `05-components/shortfall.css`.
+`.shortfall-panel` ka dabba dono jagah apna rehta hai.
+
+⚠ **Layer upar le jaane se pehle naapa gaya (D51/UI-066).** `layer(components)` `generic`
+aur `elements` dono ko harata hai, to legacy mein murda declaration upar ja kar zinda ho
+jati. Naap: `.sf-options` `padding-left: 20px` aur `margin-top: 3px` **pehle se live** thay
+aur `list-style-type: disc` har element par — yani kuch resurrect nahi hua. (`reset.css` ka
+`* { margin: 0; padding: 0 }` comment ke andar hai, live rule nahi — wohi ek cheez thi jo
+inhein murda kar sakti thi.)
+
+**Injection probe: blueprint 0, print 0.** Yani chhe rules layer badalne ke bawajood bilkul
+waise hi paint karti hain. **Koi maujooda gate ye saboot de hi nahi sakta tha.**
+
+### ⚠ Aur wo wajah jo maine Irfan ko di thi, ghalat thi
+
+Maine likha tha *"print chhapta hai; amber fill toner kharch karta hai"*, aur usi bunyaad
+par do dabbe rakhne ka faisla hua. **Panel kabhi chhapta hi nahi:** `print.html`:993 use
+`no-print` ke saath banata hai aur `99-legacy/print.css`:203/:338 `@media print` mein
+`.no-print` ko chhupa dete hain. Us ka `display: block` bhi sirf `.no-print` ke
+`inline-flex` ko harane ke liye hai (`print.css`:373 khud kehta hai). Irfan ko durust
+haqeeqat batai gayi aur unhone **wohi faisla dobara diya, asal wajah par**: do jagah, do
+maqsad — blueprint ka panel `.status-bar.warn` ke andar baithta hai, print ka paper preview
+mein.
+
+### `.chips` aur `.pill` — ek naam, do cheezein
+
+Irfan: **dono rakho, alag naam do.**
+
+* `taqseem` ka `.chips` → **`.col-chips`** (us page ke apne `.col-head`/`.col-empty` ke
+  khandan mein). `slo-health` ka `wrap` hai, ye `column` — **sirf `display: flex` sanjha
+  tha**, baqi har cheez alag.
+* `slo` ka `.pill` → **`.sum-pill`** (import ka natija-counter). `index` ka `.pill` question
+  ka metadata chip hai jo **apna rang inline `style=` se leta hai**. *(Ye `.pill` wala faisla
+  poochha nahi gaya tha — maine `.chips` wala usool laga diya, kyunke haalat bilkul wohi
+  hai. Agar Irfan `.pill` ko alag rakhna chahein to ye ulta ho sakta hai.)*
+
+Injection probe se naapa: `.col-chips` aur `.sum-pill` **bilkul waise hi** paint karte hain
+jaise purane naam karte thay.
+
+⚠ **Aur rename ne ek break banaya jo maine khud paida kiya.** `slo.html` par `.pill` **do**
+jagah render hota hai — `:180` (`renderSummary`) aur `:238` (`renderAssignSummary`). Maine
+pehla rename kiya, doosra chhoot gaya; wo teen counters bilkul unstyled ho jate. Poore repo
+ka sweep chalane par pakda gaya. **Rename karte waqt ek call site kaafi nahi — sab gino**,
+aur JS template strings grep se hi milte hain.
+
+### Do chhoti qeematein majority par
+
+* `.row` gap — `taqseem` 12px → **10px** (`slo` 4 + `slo-health` 2 elements banaam 1)
+* `.empty-state` padding — `slo` 18px → **16px** (`slo-health` 4 banaam 1)
+
+Type probe ke 36 deltas theek yehi do hain, plus un ke height knock-ons. State probe 0.
+
+### Review ne naye gate ko hi FAIL kiya — aur wo theek tha
+
+**Rule 10 pehle hi din apne aap par laga.** Us ne likha tha *"fixtures are copies and they
+rot"*, aur teen fixtures pehle hi ghalat thay:
+
+* **`index` — container hi ghalat tha.** `#results` maujood hai, resolve bhi hota hai, aur
+  **`.pill` wahan kabhi render hota hi nahi**. Asal container `#replaceCandidates`
+  (`index.html`:592) hai, jo ek modal ke andar hai. Yani probe ek saaf, purevishwas
+  measurement de rahi thi aisi jagah se jahan app ye cheez rakhti hi nahi. **Jo fixture
+  resolve ho jaye zaroori nahi ke wafadar ho** — aur modal band hota hai, to ab
+  `data-open="1"` set kar ke pehle khola jata hai.
+* **`taqseem` — bachche ghalat thay.** Maine `.tag` daale; `.col-chips` ke andar asal mein
+  `.chip` cards hote hain (`chipHtml()`, `taqseem.html`:127). `.tag` taqseem ki class hai
+  hi nahi, to probe do be-style spans naap rahi thi aur **`.chip` ki koi bhi regression pass
+  kar deti.**
+* **`slo-health` — container ka ancestor** (`.slo-main`) diya tha, asal `#uncoveredBox` hai.
+
+Teeno theek. Ab naap: `taqseem` ke asal `.chip` cards (safed, 11px radius, `.code` badge),
+`slo-health` ke `.tag`, aur `index` ke `.pill` modal ke andar — sab styled.
+
+⚠ **Ratchet PAANCHWEEN dafa upar gaya (1751 → 1755)** — review ne `.row`/`.empty-state` par
+wajah likhne ko kaha, maine paanch line ke comment likh diye. Ab wajah **usi rule ki line ke
+aakhir mein** hai: wajah bhi darj, aur ek line bhi nahi barhi. **Ye is qaide ka hal hai jo
+pehle nahi likha gaya tha — legacy mein comment upar nahi, line par.**
+
+Aur ek chhoti: probe ka comment `String.raw` template ke andar tha aur us mein backtick
+likh diya — literal wahin khatam ho gaya. `node --check` ne pakda.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
+## 2026-08-28 — UI-070: item 7 ka pehla nisf — `btn` + `page-head`, aur do census ghaltiyan meri apni
+
+`legacy_css_lines` **1759 → 1757 (−2)** · `unsanctioned_hex` **334 → 333 (−1)** ·
+**1075 pass**, ruff saaf · type probe **2543**, state probe **1530** · frozen inventory
+das pages par yaksan.
+
+Item 7 ko do sessions mein baanta gaya — chaar families aur paanch faisle ek diff mein
+un-reviewable ho jate (`ROADMAP.md` ka apna qaida). Ye pehla nisf: `btn` + `page-head`.
+
+### 1. D49 ka nateeja ship hua — `cursor: not-allowed` pehli dafa zinda
+
+`03-elements/forms.css` ko `button:disabled { cursor: not-allowed }` mila. Yahan rakhne ki
+wajah ye hai ke **jise harana tha wo isi file mein us se teen satar upar hai** — bare
+`button { cursor: pointer }`. Ek hi layer, aur `(0,1,1)` banaam `(0,0,1)`, yani specificity
+se jeet — source order par bharosa nahi. Component file mein rakhna ghalat hota: ye disabled
+controls ke bare mein element-darja haqeeqat hai, `.btn--*` variant nahi.
+
+Chhe legacy declarations delete: `blueprint:48`, `index:96`, `library:185`, `print:74`,
+`print:83`, `slo:31`.
+
+**State probe: 1050 `cursor: pointer → not-allowed`** — bank 921, library 68, index 44,
+print 12, blueprint 3, slo 2. Ye adad hi is task ka nateeja hai: UI-063 ka faisla
+2026-08-26 ko hua tha aur **aaj tak ek bhi pixel par render nahi hua tha**.
+
+⚠ **Ab ye chhe se zyada buttons par lagta hai** — `button:disabled` un buttons ko bhi
+pakadta hai jin ki apni kabhi koi rule nahi thi. Ye maqsood hai (Irfan ka faisla "har
+disabled button" tha) magar likha ja raha hai kyunke scope chhe rules se bara hai.
+
+⚠ **Magar "har" bhi ghalat lafz hai, aur review ne naap kar pakda.** Ek bare-class
+`cursor: pointer` jo `layer(components)` mein ho wo is rule ko harata hai — layer upar
+hai, specificity ka koi dakhal nahi. **Yani wohi shakal jo bug ki thi, ulti taraf se.**
+Do aisi classes hain jin ka apna `:disabled` sathi nahi:
+
+```
+btn.css:380          .btn-save, .btn-cancel { cursor: pointer }
+                     .btn-save:disabled hai (:400), .btn-cancel ka nahi
+pages/print.css:291  .ps-range-all { cursor: pointer }, koi :disabled nahi
+```
+
+Naapa gaya: `.btn-cancel` disabled kar ke bhi `pointer` deta hai. Aaj ye dono kabhi
+disabled hote hi nahi (`bank.html`:605, `print.html`:223/257/66 — sab static), to kuch
+ghalat render nahi hota. **Aur yehi wajah hai ke `bank` par 921 deltas aaye jab ke us par
+928 buttons hain** — farq isi carve-out ka hai. `index` par 44 deltas banaam 36 buttons
+ulta sabab rakhta hai: `cursor` inherit hone wali property hai, to disabled button ke
+andar ke `<span>` bhi ginti mein aate hain.
+
+### 2. D47(a) band — jhoota comment durust
+
+`forms.css` khulа to D47(a) apni tehreer ke mutabiq due thi. Comment kehta tha
+`:focus-visible` "being later in the file it wins". **Nahi jeetta.** Dono `layer(elements)`
+mein hain, to source order ka koi dakhal nahi — **specificity faisla karti hai**, aur
+`input:focus` `(0,1,1)` hai jab ke `:focus-visible` `(0,1,0)`. Keyboard focus par dono
+match karte hain aur `outline: none` qaim rehta hai; field ka indicator teal border + 3px
+glow hai. **Rendering ghalat nahi — sirf comment ghalat tha.** D47(b) (ring ya glow) ab
+bhi khuli hai aur Irfan ki hai.
+
+### 3. `btn-danger` / `btn-edit` — aur meri census ghalti
+
+Maine Irfan ko bataya tha ke ye "dono pages par ek-ek button hain, barabari hai", aur usi
+bunyaad par unhone `library` wali size chuni. **Wo bunyaad ghalat thi.** Probe:
+
+```
+.btn-danger    bank n=459    library n=24
+.btn-edit      bank n=459    library n=24
+```
+
+Maine sirf static HTML ka template gina tha — **ye buttons JS se render hote hain**, har
+question row par ek jodi. 483 buttons, do nahi, aur `bank` un ka 95% rakhta hai. Faisla
+sahi ginti ke saath dobara liya gaya: **bank wali (12px / 4px 10px)**, yani 48 buttons
+hile, 918 nahi. `library` ka `.btn-edit` border `#c0d0ea` → `var(--border)` bhi gaya, jo
+bank pehle se paint karta tha — ek raw hex kam.
+
+**Teen session se yehi sabaq lag raha hai aur is dafa main hi us mein phansa.** Markup ginna
+kaafi nahi jab markup JS se banta ho — probe ka `n` hi asal ginti hai (D12).
+
+### 4. `page-head` → `.pagehead`, aur wo wrapper `<div>` jo faisle mein nahi tha
+
+`.pagehead` chaar pages par pehle se live tha (blueprint, slo, taqseem, plan). Teen baqi
+(bank, library, slo-health) `.page-head` par thay. Rename hua, 6 legacy lines gayin, aur ab
+**koi page `.page-head` nahi pehnta.**
+
+⚠ **Pehli koshish ghalat thi aur probe ne pakdi.** `.pagehead` `display: flex` hai. Maujooda
+chaar pages apne `<h1>` + `<p>` ko ek `<div>` mein lapetate hain, yani flex ka **ek hi
+child** hota hai aur andar sab kuch normal stack karta hai. Teen nayi pages par `<h1>` aur
+`<p>` **seedhe children** thay — flex ne unhein **saath saath** rakh diya, aur naapa gaya:
+
+```
+slo-health  h1        26.39px -> 52.78px     (do lines par wrap)
+slo-health  #draftNote 32.12px -> 86.50px    (teesra flex child, dab gaya)
+h1/p        min-height 0px -> auto           (flex item ban gaye)
+```
+
+`slo-health` par to ek **teesra** element bhi tha — `#draftNote` — jo faisle mein zikr hi
+nahi hua tha. Teeno par wrapper `<div>` daal kar shakal maujooda chaar jaisi kar di gayi;
+2798 deltas ghat kar 2543 reh gaye aur wrapping wale sab ghayab.
+
+⚠ **Aur ye trap pehle se likha hua tha — maine parha hi nahi.** Chaaron maujooda pages ke
+markup mein ek comment maujood hai: *".pagehead is display:flex — the inner `<div>` is
+what keeps the title and subtitle stacked… which is what this page did until
+2026-08-15."* Yani blueprint isi mein gir chuka tha aur warning chhod gaya tha. **Maine
+CSS parhi aur markup ka comment nahi** — wohi ek darja jo bachaata. Ab teeno nayi pages
+par bhi wohi comment hai (review ne yaad dilaya).
+
+**Jo preview maine Irfan ko dikhaya tha (h1 aur p ek line par) wo ghalat tha** — sahi
+adoption stack ko waisa hi rakhta hai. Asal tabdeeli sirf itni hai: container ka
+`margin` 0/24 → 6/22, aur `p` ka rang `--muted` → `--color-text-muted`, `margin-top` 3px,
+`max-width` 620px. Saaton pages ab hu-ba-hu ek jaise.
+
+### 5. `card.css` ka **teesra** basi dawa — jo UI-068 mein mujh se chhoot gaya
+
+Header kehta tha `.pagehead` rules "off every live page — **0 matches, measured**".
+`.pagehead` us waqt **chaar pages par live tha**. UI-068 ne isi header ke **do** basi dawe
+theek kiye (13-element census aur `.ch` wala) aur **yehi teesra chhod diya**. `main.css`
+:180 par bhi wohi teen dawe naql shuda thay — dono jagah durust.
+
+**Sabaq: jab ek comment block ka koi hissa ghalat nikle, poora block parho** — sirf wo
+jumla nahi jis par thokar lagi.
+
+### 6. Ratchet phir upar gaya — CHAUTHI dafa — aur phir mere comment se
+
+Pehli measurement par `legacy_css_lines` 1759 → **1760**. Maine `library.css` mein chaar
+line ka comment likh diya tha. Chhota kar ke **1757**.
+
+Aur usi comment mein **ek raw hex** (`#c0d0ea`) tha — **is session mein doosri dafa**
+(pehli `nav.css` mein, UI-069). `unsanctioned_hex` us ke nikalne par hi 334 se 333 hua.
+Qaida `card.css` ke header mein pehle se likha hai aur ab paanch nahi, **saat** dafa fail
+ho chuka hai — har dafa comment ke zariye.
+
+⬜ **Browser check nahi hua.** Fehrist HANDOVER mein.
+
+## 2026-08-28 — UI-069a: D49 — probe andha nahi tha, CSS murda thi
+
+Item 7 se pehle wala gate task, bilkul UI-064 wali shakal: pehle aala theek karo, phir us
+family ko haath lagao. **Koi CSS, markup ya test nahi chhua** — sirf `PROBES.md` (naya
+rule 9), `DEFERRED.md` (D49 → Resolved), `ROADMAP.md` ki item 7 row, aur ye entry.
+
+### Sawal
+
+`css_state_probe` ka `:disabled` pass `cursor` par khamosh tha. 2026-08-26 ko control
+chalaya gaya tha: `slo.css` ki `.btn:disabled` ka cursor `not-allowed` → `crosshair` kiya,
+probe dobara chalaya — **0 deltas**, jab ke **usi rule ki `opacity` theek 0.5 parhi ja rahi
+thi.** Ek hi rule, ek hi element, ek hi lamha. D49 ne do imkan likhe thay aur kaha tha
+andaza mat lagao — D45 isi tarah andha ship hone wala tha.
+
+### Naap — chaar buttons, sab disabled, farq sirf layer ka
+
+```
+:disabled rule ka layer          cursor          opacity
+  legacy    (sab se kamzor)      pointer         0.5     <- rule haar gayi
+  elements                       not-allowed     0.5
+  components                     not-allowed     0.5
+  unlayered                      not-allowed     0.5
+```
+
+**CDP disabled control par `cursor` bilkul theek parhta hai.** Farq *muqable* ka hai: is
+app mein kisi cheez ne button par `opacity` declare nahi ki, is liye wo sab se kamzor layer
+se bhi jeet jati hai; `cursor` ka harif maujood hai — `03-elements/forms.css:155` ka bare
+`button { cursor: pointer }`, `layer(elements)` mein, jo `layer(legacy)` ko specificity se
+qat'a nazar harata hai.
+
+**Probe sahi tha. CSS murda thi.**
+
+### Nateeja — jo is task ka asal hasil hai
+
+`99-legacy/` ki **chhe** `cursor: not-allowed` declarations inert hain, aur hamesha se
+thin: `blueprint:48`, `index:96`, `library:185`, `print:74`, `print:83`, `slo:31`. Chhon ke
+chhon `<button>` element par hain, yani `forms.css` un sab ko match karta hai.
+
+**Iska matlab UI-063 ka faisla kabhi render hi nahi hua.** 2026-08-26 ko Irfan ne har
+disabled button ke liye `not-allowed` chuna tha; wo aaj tak kisi page par nazar nahi aaya.
+Item 7 ke liye ye "chhe murda lines nikalo" nahi hai — **"faisla ab bhi chahiye ya nahi,
+aur agar chahiye to use `layer(legacy)` se upar dobara ship karna parega"** — aur upar
+uthana wohi D51 wala kaam hai jis ne UI-066 mein chhe pages tore thay.
+
+### Aur ek aam qaida jo is se nikla — `PROBES.md` rule 9
+
+*"Declaration hili nahi"* aur *"probe use dekh nahi sakta"* **do alag dawe hain**, aur
+inhein alag karne ka sasta tareeqa usi rule ki doosri declaration hai. **Agar ek hili, to
+reader kaam kar raha hai.** Do din ye row is liye khuli rahi ke ye sawal poochha nahi gaya.
+
+*(D49 kehti thi ye note "beside rules 10 and 11" likha jaye — `PROBES.md` mein aath rules
+hain. Wo hawala bhi basi tha; note rule 9 ban gaya.)*
+
+## 2026-08-28 — Audit: baqi kaam ka naya naap, aur teen cheezein jo plan se mail nahi khatin
+
+Item 6 ke baad poora naap dobara liya (`css_baseline.py` + `css_duplication_audit.py` +
+rule-by-rule dump). **Koi CSS, markup ya test nahi chhua** — sirf `ROADMAP.md` ki table,
+ye entry, aur `STATUS.md` ka pointer.
+
+```
+legacy_css_lines   1,759      available work   351  (69 agree + 282 disagree)
+unsanctioned_hex     334      rule-block     1,398
+                              page-only      1,047  (75%, jaan-boojh kar skip)
+```
+
+### 1. Jo hisaab plan ko "finishable" banata tha, wo ab band nahi hota
+
+`ROADMAP.md` khud likhti thi: *"1,806 − 461 = 1,345, so the target and the work still
+agree."* Aaj wohi hisaab **1,759 − 351 = 1,408** deta hai, target `~1,350` ke khilaf —
+**58 lines ka farq.**
+
+**Wajah ghalti nahi, do alag paimane hain.** Available work sirf **rule-block** lines par
+naapa jata hai (1,398). `legacy_css_lines` **har** line ginta hai (1,759). Beech ka
+**361 lines** ka farq `:root` blocks, `@media` wrappers, comments aur khali lines hai —
+aur **drain in mein se kisi ko target nahi karta**. Rules nikalte hain, ye baithi rehti
+hain, aur projected floor **neeche nahi, upar** khisakta hai. 27 tareekh ko 1,345 tha, aaj
+1,408, aur barhta rahega.
+
+Ye faisla hai, bug nahi: ya target ~1,408 ho jaye, ya 1,047 page-only lines mein se kuch
+scope mein aayen — magar page-only 2026-08-19 ko jaan-boojh kar nikala gaya tha, to wo
+doosra project hai.
+
+### 2. 351 mein se 156 un families mein hain jin par ✅ lagi hai
+
+| family | item | agree | disagree | baqi |
+|---|--:|--:|--:|--:|
+| `shell/nav` | 3 ✅ | 12 | 45 | 57 |
+| `modal` | 5 ✅ | 11 | 43 | 54 |
+| `field/filter` | 4 ✅ | 22 | 13 | 35 |
+| `card` | 6 ✅ | 2 | 4 | 6 |
+| `brand` | 6 ✅ | 0 | 4 | 4 |
+
+**44%.** Har session ne apna baqiya jaan-boojh kar chhora aur `PROGRESS.md` mein likha bhi
+— item 6 ne `.card-title` (4 lines, teen qeematein) aur `print` ka 18px brand (2 lines)
+is liye chhora ke wo Irfan se poochhe gaye faislon mein shamil nahi thay. **Masla chhorna
+nahi, ye hai ke board par tick nazar aati hai aur baqiya wahan se dikhta hi nahi.** Sirf
+us table se plan karne wala session samjhega ke items 3–6 ki qeemat 0 lines hai.
+
+### 3. Family labels khud bhi ghalat ho sakti hain
+
+`css_duplication_audit.py:98` `family()` selector par regex chalata hai. Dump se:
+
+```
+shell/nav  DISAGREE  38L   body       bank,library,print,slo,slo-health,taqseem
+modal      DISAGREE   2L   #status    index,print
+```
+
+**`body` nav nahi hai.** Chhe files mein 38 lines — `other` ke baad **repo ka sab se bada
+single disagree item** — aur kyunke regex use ✅ wali family mein daalta hai, koi row use
+shedyool nahi karti. `#status` modal nahi hai.
+
+**Census ka sabaq ab ek darja upar chala gaya hai.** Item 5 ne dekha bucket ne kam gina;
+item 6 ne dekha `card` mein kam aur `brand` mein zyada; ab maloom hua **naam bhi ghalat ho
+sakta hai**. Rules parho, family ka naam nahi.
+
+### Aur item 7 se pehle do cheezein jo pehle se likhi hui hain
+
+- **`D49` apni tehreer ke mutabiq yahin due hai** — *"before any decision that involves a
+  cursor"* — aur `btn` theek wohi jagah hai jahan UI-063 ka `cursor: not-allowed` wala
+  tehai bina naape reh gaya tha. **`D47` bhi khuli hai aur item 1 par band honi thi.**
+- **`card.css` ka aakhri jumla kehta hai `.btn` abhi safe nahi**: `slo.html` par do live
+  `class="btn"` buttons hain. Bare `.btn` un ko le lega — bilkul wohi harkat jo item 6 ne
+  `.card` ke saath ki, aur wo sirf is liye kaamyab hui ke pehle har legacy modifier gina
+  gaya tha.
+
+Item 7 ka asal size bhi **61 lines** hai, 39 nahi — row disagree-only quote karti thi.
+
+## 2026-08-28 — UI-068: card — bucket chhe kehta tha, markup ne aath dikhaye
+
+Finishing plan ka **item 6**, pehla nisf (`card`). `legacy_css_lines` **1798 → 1772 (−26)**,
+`unsanctioned_hex` **338 → 337 (−1)**. **1075 pass**, ruff saaf. Type probe **1284 deltas**,
+state probe **0** — har delta gina gaya, neeche.
+
+### Audit ne chhe files kahe. Aath thin, aur do naye tree mein chhupi thin
+
+Row kehti thi `card` = 28 lines, 6 files (bank, blueprint, index, library, slo, slo-health).
+Ginne par **`.card` aath pages par** — aur do total nikle, dono sahi:
+**markup mein 46, aaram ki halat ke DOM mein 42.**
+
+| page | bank | blueprint | index | library | slo | slo-health | taqseem | plan |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `.card` (markup) | 4 | 4 | 20 | 4 | 3 | 6 | 1 | 4 |
+
+Farq index ke **chaar** cards ka hai jo JS template strings se bante hain
+(`index.html`:876 / 2390 / 2404 / 2418), is liye kisi probe snapshot mein maujood nahi
+(`css_selector_probe` index par `n=16` deta hai). **Probe se moqabla karte waqt 42, HTML
+parhte waqt 46.** Review ne pakda ke pehli tehreer dono adad ko ek bana rahi thi.
+
+`taqseem` aur `plan` kisi bucket mein nahi thay **kyunke un ki `.card` rule `99-legacy/`
+mein hai hi nahi** — wo `pages/taqseem.css` aur `pages/plan.css` ke andar `@layer components`
+mein bare `.card` ship kar rahe thay, dono apne header ke saath jo samjhata tha ke card.css
+ye rule kyun nahi de sakta. `css_duplication_audit.py` sirf `99-legacy/` parhta hai, is liye
+us ne aath ko chhe gina. **UI-067 ka sabaq bilkul dobara: bucket par nahi, markup par gino.**
+
+### Aur ek adad jo teen hafte se ghalat tha, aur khud ko theek nahi kar sakta tha
+
+`05-components/card.css:8` likhta tha: *"`.card` is carried by 13 elements today — slo 3,
+slo-health 6, library 4, measured 2026-08-08"*, aur isi jumle ki bina par bare `.card` rule
+ko rok rakha tha. **Aaj 42 elements, 8 pages hain.** Adad 29 elements aur 5 pages kam tha —
+aur wo kabhi theek na hota, kyunke *dekhne se rokne ki wajah* usi paragraph mein likhi thi
+jis mein adad tha. Header ab naapi hui tafseel ke saath badal diya gaya.
+
+Usi file ka doosra dawa bhi expire ho chuka tha: *"the day a live page's markup gains a `.ch`
+child, these four rules activate"*. Teen pages ne le liya — blueprint 1, taqseem 1, plan 4.
+Rules haftôn se live hain aur theek chal rahi hain; note sahi tha, defect nahi.
+
+### Irfan ka faisla: naye tree ki qeematein
+
+Aath implementations sirf **teen** properties par ikhtelaf karti thin (`css_selector_probe`,
+2026-08-28) — baqi sab par pehle se muttafiq thin:
+
+| | radius | shadow | margin-bottom |
+|---|---|---|--:|
+| bank, blueprint, library, slo, slo-health | 14px | `rgba(22,33,58,.06)` | 22px |
+| index | 16px | `rgba(22,33,58,.05)` | 0 |
+| taqseem, plan | 16px | `--shadow-card` | 0 / 22px |
+
+Faisla: **`--radius-container` · `--shadow-card` · `--space-gap`**. Radius phir faisla nahi
+tha balke **parhna** tha — `theme.css:183` khud kehta hai *"cards, panels, modals"*, wohi
+be-istemal role jo UI-067 ne modals ke liye dhoonda tha.
+
+### Chauthi tabdeeli jo faisle mein NAHI thi, aur majboori thi
+
+**Border ka rang 620 deltas mein badla: `rgb(227,232,241)` → `rgb(234,237,243)`.** Legacy
+`--border` `#E3E8F1` hai, naye tree ka `--color-border` `#EAEDF3`. Ek component Tier 2 role
+hi parh sakta hai (CLAUDE.md §11), is liye ye tabdeeli component par jaane ka **lazmi**
+nateeja thi, alag intikhab nahi. Farq bohat halka hai magar 42 elements par hai —
+**browser check ki fehrist mein pehla item yehi hai.** Do border rang poori app mein hain,
+sirf cards mein nahi: **D55**.
+
+### D51 phir — teen rules layer badalne se mar rahi thin
+
+Bare `.card` `layer(components)` mein hai aur legacy sab se kamzor layer hai. Ye teen rules
+barabar specificity (0,1,0) par bhi **haar jatin**, is liye naapi aur upar uthai gayin:
+
+| rule | tha | agar na uthate |
+|---|---|---|
+| `bank` `.add-q-collapse { padding: 0 }` | legacy | collapsible add-question card ko 22px padding milti, jab ke summary ki apni `18px 22px` pehle se hai |
+| `bank` `.bp-card` / `.bulk-card { border: 2px solid #c7d8f7 }` | legacy | neela 2px border 1px slate ban jata |
+| `index` `@media(760) .card { padding: 18px }` | legacy | phone par 22px inset reh jata |
+
+Pehli do ab `pages/bank.css` mein `.card.bp-card` / `.card.add-q-collapse` (0,2,0) ke tor
+par hain — `.bp-card` nahi, taake import order par bharosa na karna pare. Teesri
+`pages/index.css` ke `@media` block mein. **Naapa gaya: probe mein `padding` ka ek bhi delta
+nahi aaya**, yani teeno lift kaam kar gaye.
+
+`.card.has-ch` (blueprint) poori tarah murda ho gayi — `card.css` padding aur overflow deta
+hai, aur radius ab dono taraf wohi 16px hai. Delete.
+
+### Padding literal 22px hai, aur ye bhool nahi
+
+`--space-inset` sab se zahir choice thi — `theme.css:176` khud use *"card / panel padding"*
+kehta hai — magar wo **24px** resolve karta hai, aur **kisi bhi page ka koi card 24px nahi
+padta**; chhon ke chhon bare cards 22px naapte hain. Yani role maujood hai, isi kaam ka naam
+lekar, aur ghalat adad rakhta hai. Us par rule point karna 42 elements ko token ki aar mein
+2px hila deta. `--space-inset` ko 22px karna `.card > .ch` aur `.card > .cb` ko hila deta, jo
+aaj waqai 24px chahte hain. **Ye token ka faisla hai, card ka nahi — D54.**
+
+### Naapa gaya — 1284 type deltas, poore, capped list se nahi
+
+Diff ki chhapi hui list 60 per page par cap hoti hai (D53), is liye ginti seedhi JSON se
+ki gayi. **Chhe qism ke ilawa kuch nahi:**
+
+```
+  620  border-*-color   rgb(227,232,241) -> rgb(234,237,243)   (--border -> --color-border)
+  400  border-radius    14px -> 16px
+  185  box-shadow       -> --shadow-card
+   75  margin-bottom    0px -> 22px        (index 70, taqseem 5)
+    4  height           taqseem 900 -> 915.156px  (upar wale margin ka nateeja)
+    0  padding          -- teeno lift kaam kar gaye
+```
+
+`landing` aur `print` par **0** — un par `.card` hai hi nahi. State probe **0**, sab pages.
+
+**`plan` kisi probe ki page list mein nahi hai** (na type, na state). Alag se
+`css_selector_probe` se naapa: 16px / padding 0 / `--shadow-card` / mb 22px /
+`rgb(234,237,243)` — **bilkul pehle jaisa, ek pixel nahi hila**. Probe ki ye khali jagah
+khud ek row hai: **D56**.
+
+✅ **Browser check ho gaya — Irfan, 2026-08-28.** `bank` aur `slo-health` par naya border
+rang aur 16px kone, `index` par cards ka naya 22px faasla, aur `landing`/`blueprint` par
+kuch na hilna — sab theek. **Border ke rang par khaas poochha gaya kyunke wo faisle mein
+shamil nahi tha; Irfan ne dekh kar qubool kiya**, is liye D55 defect nahi, consistency row
+hai.
+
+## 2026-08-28 — UI-069: brand — nau pages par ek naam, chhe alag cheezein
+
+Finishing plan ka **item 6**, doosra nisf (`brand`). `legacy_css_lines` **1772 → 1759 (−13)**,
+`unsanctioned_hex` **337 → 334 (−3)**. **1075 pass**, ruff saaf. Type probe **297 deltas**,
+state probe **0**. Frozen inventory (`id`/`onclick`/`name`/`for`/`data-*`) das pages par
+**bilkul yaksan** — naapa gaya, maana nahi.
+
+### `.brand` ek class hai, chhe cheezein hain
+
+ROADMAP:155 kehta tha `.brand` chhe tarah drift ho chuki hai. Markup se ginne par wo chhe
+**shakalein** nahi, chhe **mukhtalif dhaanche** nikle:
+
+| | dhaancha | kahan |
+|---|---|---|
+| bank, library, slo, slo-health | `.name` + `<small>`, logo nahi | sidebar — pehle se component par |
+| index | `.logo` + `.name` + `<div class="tag">` | sidebar |
+| taqseem | `.logo` + `.name` + `<small>` + divider | sidebar |
+| print | **naked text + `<small>` — `.name` element hai hi nahi** | sidebar |
+| blueprint | `o-shell__brand`, safed topbar, dark text | top bar |
+| landing | **hero header ke andar** — 52px safed logo, 20px naam, gradient par | sidebar nahi |
+
+**`landing` is family ka member hai hi nahi.** Audit ne use "brand" bucket mein daala kyunke
+selector ka naam ek hai; wo hero ka block hai, sidebar ka nahi. Chhoda nahi gaya — **nikala
+gaya**, aur wajah likh di gayi (`nav.css` header). UI-067 ka wohi sabaq, ulti simt se: bucket
+ne is dafa zyada gina, kam nahi.
+
+### `print` ka brand 27 ghante navy kinare se chipka raha
+
+`UI-065` ne print ka `.app-sidebar { padding: 24px 18px }` delete kiya aur `sidenav__panel`
+(`padding: 18px 0`) diya. `.sidenav__link` apni padding khud rakhta hai — magar **`.brand` ko
+kuch nahi mila**, aur us ki apni rule mein sirf font tha. Naapa gaya:
+
+```
+.brand padding-left   bank 22 · library 22 · slo 22 · slo-health 22 · index 22 · taqseem 18
+                      print 0        <- saat sidebar pages mein akela
+```
+
+Aankh se nahi, probe se pakda gaya, aur paanchon bands par. `sidenav__brand` dene se theek.
+
+### Subtitle ka rang — legacy ki ghalti nahi, ek na-chuna hua role tha
+
+`nav.css` ka purana comment kehta tha ke legacy ka `color: #9DB0D0` "already dead" hai, is
+liye component use na uthaye. **Dono baatein sahi thin, magar sawal adhoora tha: "murda" ne
+sirf itna kaha ke legacy haar gayi — ye kabhi nahi poochha ke JEETA KAUN.** Jeeta
+`03-elements/typography.css:88` — ek bare `small { color: var(--color-text-muted) }`,
+layer(elements) mein, body copy ke liye bilkul theek — aur wo **navy sidebar par slate-500
+paint kar raha tha, chhe pages par**. Contrast ~3.1:1, AA se neeche.
+
+Faisla (Irfan, 2026-08-28): **`--color-sidebar-fg-muted`** (`--navy-400`, ~4.5:1). Ye token
+`theme.css:131` par pehle se maujood tha, isi kaam ke liye likha gaya tha, aur us ka ek hi
+consumer tha — `.sidenav__foot`. **Phir wohi shakal jo UI-067 ne `--radius-container` ke
+saath dekhi thi: jawab design system ke paas pehle se tha, bas koi consumer nahi tha.**
+
+Purana pale-blue wapas nahi laya gaya: wo kisi Tier 1 role mein nahi hai, aur ab sirf
+`landing` us ka user hai — aur us ka hex `nav.css` ke comment se bhi nikal gaya, jahan wo
+purane note se chala aa raha tha. **Yehi teesra hex hai** (`#9DB0D0` index se, `#A9B6CE`
+print se, aur ye). Review ne pakda: mera pehla draft us hex ko comment mein dobara likh
+raha tha, aur usi paragraph ke aakhir mein daawa kar raha tha ke "no hex is spelled here".
+
+### Teen pages component par aaye
+
+`index`, `taqseem`, `print` → `.sidenav__brand*`. **`index` par 0 deltas** — us ki padding
+pehle se `2px 22px 20px` thi, yani component ki hu-ba-hu; jo nahi ja sakta tha wo flex row
+aur 40px logo hai, aur wo `pages/index.css` mein page-scoped hai. `taqseem` ka logo isi tarah
+`pages/taqseem.css` mein. **Component sirf padding deta hai** — `display: flex` wahan nahi ja
+sakta, kyunke saat mein se chaar pages ka brand logo-less block hai.
+
+`taqseem` ne shared values qubool kiye (Irfan): padding 18→22, divider gayi, `margin-bottom`
+10→0, sub ka uppercase/letter-spacing/opacity gaye, line-height 1.1→1.15.
+
+### Do murda cheezein naap kar nikleen
+
+- **`.brand { padding: 0 }` teeno @media blocks mein** (bank, library, blueprint) — "agree"
+  bucket ki poori teen lines. Paanchon bands par naapa: teeno jagah padding 22/22/18 hi
+  aata tha. bank aur library pehle se `.sidenav__brand` par thay; blueprint ka
+  `.o-shell__brand` `pages/blueprint.css` mein hai. **Legacy sab se kamzor layer hai, to
+  teeno kabhi lagi hi nahi.**
+- **`index` ka `.brand .tag`** — `font-size` aur `color` murda thay. Purana comment kehta tha
+  *"both are live at 0,2,0"*; specificity theek thi magar `pages/index.css` ka `.tag`
+  layer(components) mein hai aur ye legacy mein. **D51 phir.** Sirf `letter-spacing` zinda
+  thi, wohi rehne di.
+
+### Naapa gaya — 297 deltas, poore
+
+```
+  150  color + border-*-color   slate-500 -> navy-400   (6 pages ka subtitle; border
+                                zero-width hai, currentColor ka shor)
+   68  print                    padding 0 -> 2/22/20, sub ka margin-top 4 -> 3px,
+                                aur un ke layout knock-ons (widths/heights)
+   99  taqseem                  padding, divider, margin, letter-spacing, opacity,
+                                line-height + unki heights
+    0  index, blueprint, landing
+```
+
+`plan` (probe list mein nahi, D56) alag naapa gaya: us ka `.sidenav__brand-sub` naya rang
+qubool karta hai — maqsood, wo saatwan page hai jo component par hai. State probe **0**.
+
+### Do cheezein jo theek NAHI ki gayin
+
+1. **`print` ka brand ab bhi 18px/700 hai**, baqi chhe ka 15.5px. Us ke markup mein `.name`
+   element hai hi nahi, to `.sidenav__brand-name` bina markup badle nahi lag sakta. Ye ek
+   qeemat ka faisla hai jo poochha nahi gaya tha — is liye chhera nahi gaya. Agle session ka
+   sawal.
+2. **`brand.js` ka school-name feature do pages tak pohanchta hi nahi** — `print.html`
+   `brand.js` load hi nahi karta, aur `plan.html` karta hai magar us par `.brand`/`.name` hai
+   hi nahi. Dono pehle se aise thay. **D57**, aur wo `UI-070` se pehle due hai kyunke drain
+   `.brand` ko delete karega aur script khamoshi se toot jayegi.
+
+✅ **Browser check ho gaya — Irfan, 2026-08-28.** `print` ka sidebar ab links ke barabar
+andar hai (wo bug jo UI-065 se chala aa raha tha), `taqseem` ka brand bina divider ke
+theek lagta hai, aur `library` par subtitle ka naya rang theek. `blueprint` par kuch nahi
+hila — jo maqsood tha, kyunke wo `o-shell__brand` par hai.
+
+## 2026-08-28 — UI-067: modal — teen system rehne diye, shakal ek kar di
+
+Finishing plan ka **item 5**. `legacy_css_lines` **1799 → 1798**, `unsanctioned_hex` **338**
+(nahi hila — is family mein hex tha hi nahi, sab `rgba()` tha). **1075 pass**, ruff saaf.
+Type probe **220 deltas**, state probe **30** — har ek maqsood.
+
+### Irfan ka faisla: naam mat chhero, qeematein ek karo
+
+Row ka sawal tha "teen modal system — ek karein ya teen rehne dein". Faisla (2026-08-28):
+**class names bilkul na chhuein, sirf qeematein ek karein.** Wajah wazeh hai — naam badalne
+ka matlab paanch pages ka markup aur JS chhoona hai aur us se **ek line CSS kam nahi hoti**;
+jo be-yaksani nazar aati hai wo shakal aur rang hai, aur wo poori tarah CSS ka kaam hai.
+
+### Pehle audit ka adad ghalat tha — sat nahi, AATH modals hain
+
+`css_duplication_audit.py` ne is family ko 58 lines / 5 files kaha, aur `modal.css` ka header
+"teen system" likhta tha. **Markup se ginne par tasveer bari nikli — aath modals, chaar
+wrapper naam:**
+
+| wrapper | pages | modals |
+|---|---|--:|
+| `.modal-backdrop` | bank, print | 2 |
+| `.modal-overlay` | index (1), library (3) | 4 |
+| `.overlay` | taqseem | 1 |
+| `.lib-picker-overlay` | print ka library picker | **1 — kisi bucket mein nahi tha** |
+
+**Aathwan modal `print` ka library picker hai.** Wo page-only hai, is liye audit ne use
+"skipped 1056" mein daala tha aur item 5 ki 58 lines mein wo shamil hi nahi thi. Use chhorne
+ka matlab tha ke saat modals ek jaise ho jate aur aathwan alag khada rehta — yani faisla
+adhoora lagta. Shamil kar liya gaya.
+
+Box ke naam do nahi teen: `.modal` (bank, print, index, taqseem), `.modal-box` (library),
+`.lib-picker-modal` (print). **Radius ki chhe declaration** — 10, 12, 12, 14, 16, aur
+taqseem ka `var(--radius)` — **magar asal mein chaar hi mukhtalif qeematein**, kyunke index
+ka 16 aur taqseem ka `var(--radius)` dono pehle se 16px resolve karte the. Yehi wajah hai ke
+un do pages par radius ka koi delta nahi aaya.
+
+### Aik sawal ka jawab design system ke paas pehle se tha
+
+`theme.css`:183 par `--radius-container` likha hai: *"cards, panels, **modals**"* — 16px.
+Yani radius naya faisla nahi tha, **ek role tha jo kisi modal ne kabhi apnaya hi nahi**
+(siwaye index ke, aur wo bhi ittefaqan). Ab aathon us par hain.
+
+Do naye token bane, kyunke in ka koi role maujood nahi tha:
+* `--overlay-navy-45` → `--color-scrim`. Irfan ne navy .45 chuna. **Channels `--slate-900` ke
+  hain, library ke `rgba(22,33,58,.45)` ke nahi** jahan se chunao naqal hua tha: 45% alpha par
+  saat-per-channel ka farq nazar nahi aata, aur teesri navy banana wohi drift hai jo ye epic
+  mitane aaya hai.
+* `--shadow-2` → `--shadow-modal`. Paanch shadow ki jagah ek: `0 16px 48px` (do sab se aam
+  adad) `--slate-900` par, taake wo usi navy par tint ho jis par `--shadow-1` hai.
+
+### Naapa gaya — har delta maqsood
+
+| page | type | state | kya hila |
+|---|--:|--:|---|
+| `library` | 90 | 15 | scrim, radius 14→16, shadow (3 modals) |
+| `print` | 60 | 5 | scrim ×2, radius 10→16 aur 12→16, shadow ×2 |
+| `bank` | 40 | 5 | scrim, radius 12→16, shadow, close 22→20 |
+| `index` | 20 | 5 | scrim, shadow, close 24→20 |
+| `taqseem` | 10 | 0 | scrim, shadow |
+| `slo`, `slo-health`, `blueprint`, `landing` | **0** | **0** | in par modal hai hi nahi |
+
+**Do jagah radius delta NAHI aaya aur dono tasdeeq hain:** `index` pehle se 16px tha, aur
+`taqseem` ka `var(--radius)` bhi 16px resolve karta tha — yani wo do pehle se durust the.
+State probe ke saare 30 deltas sirf scrim ka `background-color` hain, paanch states par.
+
+`.modal-close` ki padding jaan-boojh kar ek nahi ki gayi (chaar files mein 2px ka farq,
+20px glyph par nazar nahi aata). `line-height` khud 22/24 → 20 hua kyunke wo `1` hai.
+
+⚠ **Ratchet phir upar gaya — 1799 → 1800 — aur phir wahi wajah:** legacy files mein comment.
+**Teesri dafa.** Comments ek-ek line par aaye aur number 1798 par gira. Is dafa lines kam
+honi thi hi nahi: kaam declarations hatane ka tha, aur wo dense lines ke andar baithi thin.
+**Is family ka faida lines mein nahi, shakal mein hai** — ROADMAP ne yehi likha tha.
+
+### Review ne saat durustiyan nikaleen — ek code par, chhe matn par
+
+**Cascade par kuch nahi mila:** blast radius sifar (app mein `modal`/`overlay` naam ka koi
+aisa element nahi jo modal na ho — JS template literals sameet dekha gaya), koi declaration
+kho nahi gayi, koi `pages/*.css` `@layer components` block in selectors ko chhoota nahi, aur
+`@media print` bhi mehfooz hai.
+
+**Code wali:** `pages/taqseem.css` ka `--radius` is commit ke baad **orphan** ho gaya tha —
+us ka ek hi consumer taqseem ka `.modal` border-radius tha, jo ab component ke paas hai.
+Delete kar diya. Us ke bhai `--radius-sm` (2 consumer) aur `--shadow` (1) zinda hain, gin kar
+tasdeeq kiya — **review ne `--shadow` ko murda kaha tha, wo durust nahi tha.**
+
+**Matn wali chhe, sab durust kar di gayin:** wrapper "paanch" likhe the, **chaar** hain (mera
+apna table chaar hi ginta tha); `.modal-close` ki padding ka farq "2px" likha tha, **amudi
+2px magar ufqi 4px** hai; `--overlay-navy-45` dark-sidebar wale section mein rakh diya tha
+jis ka apna header kehta hai "hover aur active **on this sidebar**" — ab us ka apna section
+hai; shadow ka comment "one per modal system" kehta tha, jabke **index aur library ek hi
+system hain aur phir bhi do alag shadow rakhte the**; `modal.css` ke header ki do purani
+satrein ("shared by bank and print only", "nothing below assumes the three will ever be
+unified") ab is file ke apne neeche wale block se takrati thin; aur "chhe radii" ki jagah
+chhe **declaration**, chaar qeematein.
+
+⬜ **Browser check — HUA NAHI.** Dekhne wali cheezein: koi bhi modal khol kar **peechay ka
+andhera** (ab har jagah ek navy), **kone** (ab har jagah 16px — `bank` aur `print` par sab se
+zyada farq, 12px aur 10px se), aur `print` ka **library picker** (wo aathwan modal).
+
+## 2026-08-27 — UI-066: field/filter disagree — 59 lines mein se 12 zinda thin, aur teen wahin rehni parin
+
+Finishing plan ka **item 4**. `legacy_css_lines` **1806 → 1799 (−7)**, `unsanctioned_hex`
+347 → **338 (−9)**. **1075 pass**, ruff saaf. Chhui gayi files: `03-elements/forms.css`, aur
+`99-legacy/` mein `bank`, `blueprint`, `index`, `library`, `slo`; plus review ke baad chhe
+files ke line refs.
+
+**Adad HEAD ke khilaf naape gaye, `BASELINE.json` ke khilaf nahi** — wo file ab bhi stale hai.
+
+### Row ki "one decision: which control sizing wins" adhoori tasveer thi
+
+Teen sizing waqai chal rahi thin — `bank`/`blueprint`/`library` 14.5px/44px/10px 13px/radius
+10px, `index` 15px/48px/11px 14px/radius 11px, `slo` 13.5px/9px 11px/radius 9px. **Magar in
+mein se saat properties har jagah pehle se murda thin.** `main.css`:42 `legacy` ko sab se
+neechi layer rakhta hai aur `forms.css` (layer `elements`) unhi controls par `font-family`,
+`font-size`, `color`, `background`, `border`, `border-radius`, `padding` khud declare karta
+hai — layer specificity se pehle tay hota hai, to legacy ka koi bhi hijja jeet nahi sakta.
+
+Zinda sirf teen thin, kyunke inhein `forms.css` declare nahi karta: **`width`, `min-height`,
+`margin-top`**. Yani 59 lines ka faisla teen declarations ka faisla tha.
+
+**`slo`:35 to poori tarah murda thi** — us ke paas ye teen thin hi nahi.
+
+### Do sooraakh jo naapne par nikle, aur dono live pages par thay
+
+**1. `forms.css` ka selector list attribute par hai, aur `index` ke 11 inputs par `type` hai
+hi nahi.** `#subject`, `#topic`, `#paperTitle`, `#schoolNameEn/Ur`, `#schoolAddress`,
+`#schoolPhone`, `#schoolPrincipal`, `#pdfSubject`, `#pdfGrade`, `#mpSearch` — sab asal mein
+text fields, aur `input[type="text"]` in mein se kisi ko match nahi karta. Unhein `index` ki
+bare `input, select` rule paint kar rahi thi. Us rule ko bina soche delete karna in 11 ko
+**UA ke default box par gira deta** — sizing ki tabdeeli nahi, saaf toot-phoot. Baqi aath
+pages par ye adad **sifar** hai (naapa gaya). `forms.css`:53 ab `input:not([type])` aur
+`input[type="email"]` (`#schoolEmail`) dono ko naam se bulata hai.
+
+**2. File inputs us set se jaan-boojh kar bahar hain** (`forms.css` ka apna header, :16–21) —
+to `library`, `index` aur `slo` par wo shared rule se poori tarah paint ho rahe the. Teenon
+ko apni box rule mili, ab tokens par, is liye dobara drift nahi kar saktin.
+
+### Aur ek ghalti jo probe ne pakdi — ye is session ka asal nateeja hai
+
+Pehle draft ne wo teen zinda properties `forms.css` mein rakhi thin. Ye theek lagta tha aur
+**chhe pages tor raha tha:**
+
+| page | kya hila |
+|---|---|
+| `bank` | `.opt-input-wrap input` `min-height` 38px → 44px (**16 elements**), `.float-bar` 34px → 44px |
+| `blueprint` | filter controls 38/36px → 44px |
+| `print` | modal controls `min-height` 0 → 44px, `width` auto → **100%** |
+| `slo-health` | selects `width` 157px → **903px**, rows reflow |
+| `slo` | file input `width` 300px → **903px**, us ki row 41px → 98px |
+
+**Wajah wohi hai jo UI-065 ne doosri simt se seekhi thi:** is app ka **har** compact override
+khud `layer(legacy)` mein hai — `.opt-input-wrap`, `.float-bar`, `print` ki modal rules — to
+ek base rule ek layer upar un sab ko **har specificity ke bawajood** haraati hai. UI-065 mein
+legacy ne us component ko haraya tha jo breakpoint bhool gaya tha; yahan element rule ne un
+legacy overrides ko haraya jo asal kaam kar rahe the.
+
+To teenon wapas har `99-legacy` file mein gayin, jahan specificity ab bhi faisla karti hai.
+Wo tab hi upar aa sakti hain jab stacked-field containers ka aik naam ho — aaj `.row`,
+`.field-row`, `.filter-row`, `.ps-row` chaar naam hain. Wo markup ka kaam hai, is ka nahi:
+**D51**.
+
+⚠ **Aur ratchet pehle UPAR gaya** — 1806 → **1821** — jabke rules delete ho rahi thin. Wajah
+bilkul wohi thi jo ROADMAP ne is hafte likhi thi: `99-legacy/*.css` mein lambe comments, aur
+`legacy_css_lines` har line ginta hai. Comments ek-ek line par aaye, dalail yahan aayin, aur
+number 1795 par gira. **Ye qaida do session mein do dafa toota hai.**
+
+### Jo naapa gaya — sirf teen pages hile, aur wohi teen jinhein hilna tha
+
+`css_type_probe` (paanch width bands) aur `css_state_probe`, dono before/after:
+
+| page | type deltas | state deltas |
+|---|--:|--:|
+| `index` | 1350 | 523 |
+| `slo` | 162 | 84 |
+| `library` | 150 | 126 |
+| `bank`, `blueprint`, `print`, `taqseem`, `slo-health`, `landing` | **0** | **0** |
+
+* **`index`** — 48px/7px → **44px/6px** (Irfan ka faisla), aur us ke controls ab `forms.css`
+  ka 13.5px/9px 11px parhte hain, 15px/11px 14px nahi.
+* **`slo`** — selects/text ko pehli dafa control height mili (40px → 44px). **`margin-top`
+  aur `width` nahi** — dono ki wajah review wale hissay mein.
+* **`library`** — sirf teen file inputs, aur sirf box tokens (14.5px → 13.5px, border/radius
+  ab `--color-border`/`--radius-control` par).
+* **`outline-color` ke 26 state deltas `currentColor` ka peechha hain**, focus ring ka nahi —
+  file inputs ka `color` `var(--ink)` se `--color-text` par gaya aur `outline-style` wahan
+  `none` hai (`forms.css`:79). Koi basri asar nahi.
+
+### Review ne chaar defect nikale, chaaron band — aur pehla gate ke andhe nuqte par tha
+
+**1. `index` ka colour input be-libaas ho gaya tha.** `index.html`:480 `#accentColor` bhi usi
+bare `input, select` rule par tha, aur `forms.css` `input[type="color"]` ko jaan-boojh kar
+bahar rakhta hai (file ki tarah, UA-drawn). Us ka border, radius aur background gayab ho
+chuke the — inline style sirf `min-height`, `cursor`, `padding` deti hai. Ab colour file ke
+saath ek hi box rule par hai (`index.css`:87).
+
+> ⚠ **YAHAN PEHLE LIKHA THA "type probe ne is par sifar delta diya … koi gate pakad nahi
+> sakta tha". WO GHALAT HAI, aur agle din naapne par pakda gaya.** Probe ne is par **30
+> deltas** diye the. `css_type_probe.mjs`:282 `querySelectorAll('*')` chalata hai, koi
+> visibility filter nahi, aur `getComputedStyle` chhupe element par bhi rang/radius/padding/
+> font theek deta hai — `#accentColor` snapshot mein apne border aur font-size ke saath
+> maujood hai, aur fix lagte hi `index` ke deltas **1380 → 1350** gaye: theek 6 properties ×
+> 5 bands. **Asal wajah `css_type_diff.mjs`:42 ka `LIST_CAP = 60` hai** — count poora hai,
+> chhapi hui list kati hui, aur raay kati hui list par bani. Nuqsan asli tha aur review ne
+> theek pakda; **gate ke andhepan wali wajah ghalat thi.** D53 durust kar di gayi.
+
+**2. `slo` par `margin-top: 6px` ki koi buniyad nahi thi.** `slo.html` mein **ek bhi `<label>`
+nahi** — baqi chaar pages `label { margin-top: 14px }` ke saath control ka 6px jora karte
+hain, `slo` ke paas dono mein se koi nahi. Aur us ke controls `.row { display: flex;
+align-items: center }` mein buttons ke saath baithe hain, to 6px unhein row-mates se neeche
+gira raha tha. Hata diya; `slo` ke deltas 187 → **162**.
+
+**Aur us rule ke saath likhi wajah bhi ghalat thi.** "width isliye nahi di ke file input
+903px ho gaya tha" — magar aakhri selector `select, input[type=text]` hai, jis mein file
+hai hi nahi; aur paanchon matched elements inline `width` carry karte hain, jo har layer se
+jeetti hai. Yani width ka faisla wahan sifar-delta tha. **Nateeja theek tha, dalil ghalat —
+aur agla session dalil hi wirse mein leta hai.**
+
+**3. Gyarah nahi, BAARA untyped inputs hain.** Baarhwan `.sec-row__heading`
+(`index.html`:1392) JS template literal ke andar hai, is liye id-sweep se chhoot gaya —
+**aur isi wajah se koi probe use naapta bhi nahi**, wohi blind spot jo UI-060 mein `.pill*`
+par tha. Wo naye selector se cover ho jata hai, aur us ki apni rule `layer(components)` mein
+hai (sirf `flex`/`min-width`), to koi takraav nahi.
+
+**4. Is commit ne `forms.css` mein 45 lines joreen aur us ke saare line refs khisak gaye.**
+Chhe naye comments ke ilawa `btn.css`:104/232, `field.css`:102, `pages/index.css`:32/65,
+`pages/print.css`:113, `pages/slo.css`:114/122/123 — sab purane number par ishara kar rahe
+the. Sab naap kar theek kiye gaye. `forms.css` ka apna header bhi ab `slo` ke bare mein sach
+bolta hai: wo "shared group" ab mojood nahi, isi task ne delete ki.
+
+⚠ **Aur ek framing durusti:** "saat properties pehle se murda thin" `index` ke 12 untyped +
+1 email inputs par **sach nahi tha** — un par wo zinda thin, aur `forms.css` ne selector isi
+commit mein liye. Un terah controls ki qeemat waqai badli (padding 11px 14px → 9px 11px,
+font 15px → 13.5px, border `#D6DEEA` → `--color-border`). `index` ke 1350 deltas ki asal
+wajah yehi hai. "Murda tha" sirf `bank`, `blueprint`, `library` aur `slo` par sach hai.
+
+### Do cheezein jo darj hui hain, chhupayi nahi gayin
+
+* **D52** — `index` ke teen `.qtype` checkbox `width: 100%` compute karte hain aur **pehle se
+  karte the**. Selector isi liye bare rakha gaya ke wo na badlein. Unhein theek karna alag
+  faisla hai.
+* **D51** — oopar wala, aur ye item 4 ka sab se qeemti nateeja hai.
+
+⬜ **Browser check — HUA NAHI.** Chrome extension is baar bhi connect nahi hui. Server chalta
+raha `http://127.0.0.1:8000/static/`. Dekhne wali cheezein: **`index`** ke fields (ab thore
+chhote — 44px, 13.5px), **`slo`** ke selects (ab 44px, pehle 40px) aur us ka file input,
+**`library`** ke teen file inputs. Aur D52 ke checkbox.
+
+## 2026-08-27 — UI-065: shell/nav — ek shell, aur mobile collapse jo do hafte se toota para tha
+
+Finishing plan ka **item 3**. `legacy_css_lines` **1841 → 1806 (−35)**, `unsanctioned_hex`
+349 → **347**. **1075 pass**, ruff saaf.
+
+### ROADMAP ki row ghalat thi, aur ye naap kar pata chala
+
+Row kehti thi *"there are three navies. Pick one shell, one navy."* **Navy par koi faisla
+darkar nahi tha:** saaton sidebar page `rgb(22,41,74)` hi paint karte hain. Teen **hijje**
+hain (`#16294A`, `var(--brand)`, `var(--sidebar-bg)`), teen rang nahi.
+
+Asal masla ye tha ke **kaun component par hai**: paanch page (`slo`, `slo-health`,
+`library`, `bank`, `index`) `sidenav__panel` carry karte the aur un ki legacy shell rules
+pehle se **mari hui** thin; `taqseem` aur `print` component par thay hi nahi. Irfan ka
+faisla, 2026-08-27: **dono ko component par lao.**
+
+Aur `blueprint` ke paas `.app-sidebar` **element hai hi nahi** (wo `o-shell` par hai, top
+bar) — us ki teen sidebar rules kabhi kisi cheez par lagi hi nahi.
+
+### Us ne aik purana bug benaqab kiya — aur wo is task ka asal nateeja hai
+
+`nav.css` mein **koi `@media` rule tha hi nahi**, aur layer order hai
+`@layer legacy, settings, …, components, utilities` — yani **`legacy` sab se kamzor**. To
+har page ka apna `@media { .app-sidebar { width: 100% } }` component ke `width: 248px` se
+**har baar harta tha**.
+
+**700px band par, kisi bhi tabdeeli se PEHLE naapa gaya:**
+
+| page | width | position | |
+|---|---|---|---|
+| slo, slo-health, library, bank, index | **248px** | sticky | **toota** |
+| taqseem, print | 700px | static | theek |
+
+Yani phone/tablet par paanch page ka sidebar top bar banta hi nahi tha — 248px ka sticky
+column khara rehta tha. **Theek wohi do page saheeh the jo component par nahi thay**, aur
+isi liye unhein component par laane wale task ne ise pakda.
+
+**Ye do hafte chhupa raha kyunke har probe 1280 par chalta tha.** Kal ka UI-064 isi ke liye
+tha. Irfan ka faisla: **jad se theek karo**, phailao mat.
+
+`nav.css` ko ab apna `@media (max-width: 760px)` block mila hai. Qeemat ke do intikhab, dono
+darj:
+* **760px, 720px nahi** — chaar file 760 kehti thin, teen 720. `slo`/`slo-health`/`taqseem`
+  ab 40px pehle collapse karenge (721–760 band ka asli delta).
+* **`flex-direction: row`** — 760 wala group bar banata tha, 720 wala column. Majority.
+
+### Naapa gaya — desktop bilkul nahi hila
+
+| page | 1280 | 900 | 740 | 700 | 520 |
+|---|---:|---:|---:|---:|---:|
+| bank, index, library | 0 | 0 | 15 | 15 | 15 |
+| blueprint, landing | 0 | 0 | 0 | 0 | 0 |
+| slo | 0 | 0 | 76 | 28 | 28 |
+| slo-health | 0 | 0 | 158 | 28 | 28 |
+| **taqseem** | **11** | **11** | 65 | 33 | 33 |
+| **print** | **74** | **74** | 80 | 80 | 80 |
+
+**Desktop (1280/900) par sirf wohi do page hile jin ka move manzoor hua tha.** Baqi saat
+par sifar. State probe: sirf `print` par 80 (rail ka 3px border + hover .08 → .07).
+
+### Do slip jo naap kar pakdi gayin, shipping se pehle
+
+* **Pehla `@media` rule `blueprint` ko tor raha tha.** Maine `.sidenav` likha tha, magar
+  blueprint `class="o-shell__nav sidenav"` carry karta hai — **wohi nav component, magar top
+  bar mein**. 18 deltas aik aise page par jis ke paas collapse karne ko sidebar hai hi nahi.
+  Ab rule `.sidenav__panel .sidenav` par scoped hai; blueprint **0**.
+* **`.brand` do dafa galat delete hui.** Ek dafa `print` se, ek dafa `blueprint` ke media
+  block se. Dono jagah element **maujood hai** (`blueprint` par `class="brand o-shell__brand"`),
+  aur brand **item 6 ki family** hai. Markup dekh kar pakdi gayi, andaze se nahi.
+
+### Aur aik cheez jo maine khud ghalat ki: comment ne file bara kar di
+
+Pehli koshish mein `legacy_css_lines` **1841 → 1861** ho gayi — **barh gayi**. Wajah: maine
+in files mein **44 lines ke comment** likh diye jabke rules **24 lines** ke gaye. Metric har
+line ginti hai. **Jin files ko drain karna hai un mein tafseel likhna drain ke khilaf hai** —
+tafseel ki jagah yehi file hai. Comments chhote kar ke 1841 → 1806.
+
+Aakhir mein 14 legacy `@media` rules (paanch file se) **naap kar** hatayin — component ke
+aane ke baad wo murda thin, aur hatane par **0 deltas**.
+
+⚠ **Browser check darj nahi hua.** Narrow-screen ka rawaiyya aaj badla hai (paanch page par
+behtar, teen par 40px pehle) — ye wo cheez hai jo browser window chhoti kar ke dekhni chahiye.
+
+## 2026-08-27 — UI-064: viewport pass — pandrah media queries mein se chaudah kabhi naapi hi nahi gayi thin
+
+Finishing plan ka **item 2**. **Auzaar hai, drain nahi:** kisi page ki CSS ka aik byte nahi
+badla, ratchet bilkul nahi hila (`legacy_css_lines` 1841 → 1841). **1075 pass**, ruff saaf.
+
+### Masla, adad mein
+
+Is repo ka har probe **1280×900** par chalta tha. `static/css/` mein **15 screen `@media`
+width queries** hain. 1280 par un mein se **sirf 1** ka mushahida hota tha:
+
+| band | rules | 1280 par |
+|---|---:|---|
+| 1–560 | 14 | **kuch nahi** |
+| 561–720 | 13 | **kuch nahi** |
+| 721–760 | 10 | **kuch nahi** |
+| 761–1024 | 2 | **kuch nahi** |
+| 1025+ | 1 | 1280 |
+
+### Aur aadha masla width tha hi nahi
+
+Sirf viewport barhane se kaam nahi banta tha: **jo properties ye rules set karte hain, wo
+property list mein thin hi nahi.** Media blocks ke andar `flex-direction` **22 dafa**,
+`flex-wrap` 9, `position` 9, `grid-template-columns` 3, `z-index` 2 aata hai — aur in mein
+se koi bhi naapa nahi jata tha. Yani probe band tak pahunch kar bhi andha rehta.
+
+### Control — daawe se nahi, do mutation se
+
+`slo` ke `@media (max-width: 720px)` block ke andar aik-aik declaration badal kar:
+
+| probe | control A (`display`) | control B (`flex-direction`) |
+|---|---|---|
+| HEAD ka probe, jaisa commit mein tha | **0** | **0** |
+| naya probe, sirf `--viewports 1280` | **0** | — |
+| naya probe, paanch band | **12** (sirf `@700`, `@520`) | **72** |
+
+**Aur aik nateeja jo mere andaze ke khilaf nikla, is liye darj ho raha hai:** control B ke 72
+deltas mein se **sirf 2** nayi properties par the — baqi 70 `width`/`height` ke natije the jo
+purani list pehle se ginti thi. **Yani asal andhapan width tha, property list nahi.**
+Properties ka faida ye hai ke diff ab **wajah ka naam** leta hai (`flex-direction: column ->
+row`) na ke 70 be-wajah box moves, aur `z-index` jaisi cheez cover hoti hai jo kisi box ko
+hilati hi nahi.
+
+### Naya auzaar: `scripts/css_breakpoints.mjs`
+
+Ye CSS parh kar **bands** nikalta hai — width ki wo range jis ke andar matching rules ka set
+badal hi nahi sakta — aur batata hai ke di hui viewport list kaunsa band **nahi** dekh rahi.
+Dono probe ise import karte hain aur **har run mein apne blind spots khud chhapte hain.**
+Ye asal sabaq hai: D45, D49 aur ye — teenon aik hi bimari hain (gate wo cheez nahi dekh sakta
+jis ki wo hifazat kar raha hai), aur us ka dawa ye hai ke gate khud bole ke wo kya nahi dekh raha.
+
+Paanch widths (1280/900/740/700/520) **chuni nahi gayin, nikali gayin** — har band se aik.
+
+### `css_state_probe` jaan-boojh kar 1280 par hi hai
+
+Wajah naapi hui hai: **kisi bhi `@media` block ke andar aik bhi `:hover`/`:focus`/`:active`/
+`:disabled` rule nahi hai** (pandrah ke pandrah blocks). Us par `--viewports` flag maujood
+hai magar default aik hi rahega. Refactor ke baad HEAD ke probe se muqabla: **0 deltas**.
+
+### Review ne chaar asal defect nikale — chaaron isi commit mein band
+
+* **336 MB.** `css_type_probe` ka aik run ab ~80 MB likhta hai (paanch band), aur probe ki
+  output directory `.gitignore` mein thi hi nahi. Aik `git add -A` aur wo history mein.
+  Directory delete, `.gitignore` mein `.probe-*/` aur `docs/ui/probe/`.
+* **Flag parsing chup-chaap tootti thi.** `argv.filter(a => !a.startsWith('--'))` flag ki
+  **value** ko positional samajh leta tha, to `--viewports 1280,700 before out` ka label
+  `1280,700` ban jata aur bina error ke kooda directory banti. Ab values consume hoti hain.
+  `css_state_probe` mein ye **pehle se** thi (`--page` par bhi), wahan bhi theek ki.
+* **`keysPerViewport` sirf chhapta tha, jaancha nahi jata tha** — jabke yehi wo cheez hai jo
+  pakde ke bands ne alag-alag DOM naapa. Ab ginti barabar na ho to `drift` mein jata hai.
+* **300 ms ki wajah galat likhi thi.** Maine likha tha ke sleep mid-reflow read se bachata hai
+  aur determinism check us ki tasdeeq karta hai. **Dono ghalat:** `getComputedStyle` Blink
+  mein synchronous layout flush karta hai, to mid-reflow read mumkin hi nahi. Sleep asal mein
+  **transitions** se bachata hai (tree ki sab se lambi 0.2s), aur ye ab ahem hai kyunke
+  `bottom` unhi properties mein hai jo **is task ne add ki**. Ab `css_type_probe` bhi
+  `css_state_probe` ki tarah motion band karta hai, to sleep par bharosa nahi rehta.
+
+Aur aik trap jis ka koi pehra nahi tha: reference viewport ki keys **bina suffix** hain. Do
+alag viewport list wale runs ka diff poore page ko `beforeOnly`/`afterOnly` dikhata, jise
+`css_type_diff` ka apna usool "0 deltas, 0 beforeOnly, 0 afterOnly" **regression samajh leta**.
+Ab `css_type_diff` dono runs ki viewport list parh kar farq par saaf warning deta hai.
+
+### Do choti ghaltiyan jo maine khud kin
+
+`css_breakpoints.mjs` ka CLI pehli dafa **kuch nahi** chhapa — Windows par
+`file://${argv[1]}` kabhi `import.meta.url` se match nahi karta (`file:///C:/…`, teen slash).
+`pathToFileURL` se theek. Aur **teen dafa** template literal ke andar comment mein backtick
+likh kar string tor di — teesri dafa comment mein hi likh diya ke aisa mat karna.
+
+Ye bhi: comment ke andar likha `@media` pehle asal query gina ja raha tha (**18** aata tha,
+asal **15** hai) — teen jagah ye tree apni hi media rules **prose mein** quote karta hai
+(`shell.css`:58, `pages/index.css`:207, `pages/blueprint.css`:50). Ab comments blank kar ke
+parhe jate hain. Over-report bhi utna hi bura hai jitna under-report.
+
+⚠ **Browser check darj nahi hua** — is task ne kisi page ka CSS badla hi nahi, aur probe ka
+apna determinism check (do run, **0 deltas, 0 drift**, nau ke nau page) wo cheez hai jo yahan
+naapi ja sakti thi.
+
+## 2026-08-26 — R7 adoption: hafta-war plan pehli dafa asal data se bhara — 4 rows se 91
+
+Backup: `paper_maker_backup_before_r7_import_20260826.db`.
+
+**Rukawat code nahi thi, aur file pehle se mojood thi.** `ROADMAP.md` ka order-4 row
+mahine bhar se keh raha tha: *"The remaining work is not code — it is one teacher filling
+in one Excel plan."* Aaj ka audit dekhta hai ke `namoona_plan_pre_year_3.xlsx` **root mein
+para hai, 2026-08-23 se, untracked, aur bhara hua hai** — 87 rows, weeks **1–36**, koi
+khali `week_no` nahi, aur saare `syllabus_topic_id` PY3 se milte hain. Yani jo kaam
+"baqi" darj tha, wo teen din pehle ho chuka tha aur **import nahi hua tha.**
+
+Import `POST /api/topic-plan/assign-import` se: `{"updated": 87, "cleared": 0,
+"errors": [], "warnings": []}`. `topic_week_plan` **4 → 91 rows** (PY3 ke 87 + PY1 ki
+wohi 4 purani browser-test rows).
+
+### `covered: 0` bug NAHI hai — aur ye galat-fehmi likhne layak hai
+
+Import ke baad PY3 ka coverage `covered_topics: 0` deta hai, jabke usi din seeding ne
+PY3 ke **43 topics par 172 sawal** bana diye. Ye ulta nahi lagna chahiye:
+`topic_coverage_service.py`:54 `covered` ko **`papers` se** nikalta hai, bank se nahi —
+topic tab covered hai jab wo kisi **asal paper** mein aa jaye. PY3 ka abhi koi paper bana
+hi nahi, is liye **0 durust hai.** Bank bharna aur topic cover hona do alag cheezein hain.
+
+Tasdeeq ke liye PY1 (jis ke papers bane hue hain) wohi purana adad deta hai:
+`81 topics, 49 covered, 60%` — yani import ne kuch toda nahi.
+
+| | pehle | ab |
+|---|---:|---:|
+| `topic_week_plan` rows | 4 | **91** |
+| PY3 planned topics | 0 | **87** (36 hafte) |
+| PY3 covered | — | **0** (koi paper nahi bana) |
+| PY1 coverage | 49/81, 60% | **49/81, 60%** (na hila) |
+
+**Ab `plan.html` par PY3 ka board pehli dafa asal hai.** Order-4 ki "Built ≠ adopted"
+warning ab PY3 ke liye khatam; PY2 aur PY1 ke liye ab bhi qaim hai.
+
+## 2026-08-26 — R1 seeding: Pre Year 3 ka doosra run — 23/87 se 43/87
+
+Backup: `paper_maker_backup_before_preyear3_seed_20260826.db` (run se pehle).
+
+| | pehle | ab |
+|---|---:|---:|
+| bank kul | 686 | **766** |
+| PY3 topics | 23/87 | **43/87** |
+| PY3 sawal | 92 | **172** |
+
+PY1 (71/81, 329) aur PY2 (23/87, 92) chhue nahi gaye — script seeded topics khud
+chhod deti hai, is liye sirf PY3 aage barha.
+
+**Quota wahi nikla jo naapa gaya tha:** 20 topics ke baad `[21/64]` par HTTP 429.
+`ROADMAP.md` ka andaza "~23–26 calls/din" tha; aaj **20** mile. Yani row ka paimana
+durust hai, aur **PY3 ke 44 + PY2 ke 64 = 108 topics** abhi baqi hain — mojooda raftaar
+par lag-bhag **paanch se chhe aur din ka rozana kaam**.
+
+Command wohi thi jo `ROADMAP.md` mein darj hai (defaults NAHI — pre-school par
+`fill-blank`/`essay`/`balanced` ghalat hain):
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Chaar jaali syllabi (Math G5, Math G6, Science G7, Geography G8) aaj bhi 0/11 par hain
+aur **jaan-boojh kar chhue nahi gaye** — un ka asal syllabus import hone tak seed karna
+mana hai.
+
+## 2026-08-26 — UI-063: button task — ek radius, ek disabled, aur do adad jo maine ghalat likhe the
+
+**1075 pass**, ruff saaf, ratchet chhua nahi. **D44 aur D46 band. D47 NAHI —
+aur ye ahem hai** (neeche).
+
+⚠ **Browser check DARJ NAHI HUA.** Server chala kar paanchon page ke URL Irfan ke
+saamne rakhe gaye (bank, index, slo, library, print) aur commit ka "go" mila — magar
+**"maine dekh liya, theek hai" alag se nahi kaha gaya**, is liye ise tasdeeq-shuda nahi
+likha ja raha. Gate list ise laazmi kehti hai. Agar kabhi in buttons par shak ho, ye row
+yaad rakhna: **rang aur radius naapi hui hain, nazar se dekhi hui nahi.**
+
+### Pehli baat: ye kaam pehle se working tree mein para tha, bina kisi gate ke
+
+Aaj ka audit is se shuru hua ke `git status` par das files modified thin aur **koi
+commit nahi tha, koi PROGRESS entry nahi thi, koi probe run nahi hua tha.** Yani
+finishing plan ka item 1 code ki tarah mukammal tha aur **darj ki tarah wujood hi nahi
+rakhta tha.** Ye is repo ki wohi purani bimari hai jo `ROADMAP.md` ki P0 rows mein
+mahinon chali — kaam ho gaya, row khuli rahi. Is entry ka aadha maqsad usay band karna hai.
+
+### Faisla (Irfan, 2026-08-25) — teen, aur teenon amal mein aaye
+
+| # | faisla | natija |
+|---|---|---|
+| radius | har filled action button ek radius par | `--radius-control` = **11px**. 8/10/12/13px sab gaye |
+| hover | ek simt | light-surface buttons ab **halka** karte hain (`--color-action-hover`) |
+| disabled | ek opacity | **`.5` + `not-allowed`**, har `:disabled` rule par |
+
+### Naapa gaya — dono probe, aur sirf TEEN property hili
+
+`css_state_probe` (paanch state) **1,054 deltas**, `css_type_probe` (rest) **206**.
+Poore data par property-wise ginti:
+
+| property | state | rest |
+|---|---:|---:|
+| `border-*-radius` (chaar kone) | 940 | 188 |
+| `background-color` | 75 | 15 |
+| `opacity` | 39 | 3 |
+
+**Aur kuch nahi.** `font-size`, `padding`, `min-height`, `box-shadow`, `outline-*`,
+`border-color` — sab sifar. Har chhua hua selector aik button hai. `slo-health`,
+`taqseem`, `landing` par **0 deltas** — kyunke un ki `--radius-btn` declaration pehle
+se **mari hui** thi (review ne `git show HEAD:` se paanchon ki tasdeeq ki).
+
+Transitions: `1054` adad qabil-e-aitbaar isi liye hai ke probe ab motion band karta hai.
+Us se pehle `landing` **apne aap se 197 deltas** deta tha.
+
+### ⚠ Do adad jo maine audit mein GHALAT diye
+
+Maine likha tha ke ye kaam `legacy_css_lines` **1873 → 1841 (−32)** aur
+`unsanctioned_hex` **356 → 349 (−7)** karta hai. **Dono ghalat attribution thi**, aur
+review ne pakda. Naapa gaya:
+
+* **`legacy_css_lines`: HEAD 1842 → 1841. Ye kaam kul `−1` line hai.** 1873 wala adad
+  `docs/ui/BASELINE.json` ka hai jo **31 lines purana** ho chuka hai.
+* **`unsanctioned_hex`: is diff mein net hex tabdeeli SIFAR hai** (`git diff -U0` par
+  sirf `#5B8DEF` ×2 aur `#fff` ×8, `+`/`−` par barabar). 349 sach hai, magar `−7` is
+  kaam ka nahi, purani drift hai.
+
+**Sabaq, aur wo bilkul D45 wala hai:** stale baseline ke khilaf naapna aur farq ko apne
+kaam ke naam likh dena — ye "kaamyabi jaisa dikhta hai". Aage se ratchet ka farq
+**HEAD ke khilaf** naapo, `BASELINE.json` ke khilaf nahi.
+
+### ⚠ D47 band nahi hua, aur item 1 ka daira teen-tihai adhoora raha
+
+`ROADMAP.md` item 1 ko "D44 + D46 + **D47(b)**" likhta hai. `forms.css` ko **haath tak
+nahi laga** — na jhoota comment theek hua, na ring-vs-glow ka faisla hua. Review ne
+pakda, kisi gate ne nahi. Aur `css_state_probe.mjs`:186-187 mein `outline-*` **isi liye**
+daala gaya tha ke (b) naapa ja sake — auzaar tayyar tha, istemaal nahi hua.
+
+### Naya masla, control se sabit: gate `cursor` dekh hi nahi sakta (D49)
+
+Faisle ka teesra hissa `cursor: not-allowed` tha. Us ka **aik bhi delta nahi bana**.
+Shak par control chalaya — `slo` ki `.btn:disabled` ka cursor `crosshair` kar ke probe
+dobara:
+
+| naap | natija |
+|---|---|
+| deltas | **0** |
+| record | `cursor: pointer` — yani **rest ki qeemat** |
+
+Jabke usi element par `opacity` `0.5` parhta hai (rest par `1`), yani `:disabled` **lag
+raha hai**, aur `cursor` `STATE_PROPS` mein **mojood hai**. Wohi khamoshi
+`library.css` ki `.pg-btn:disabled` par bhi — `opacity` `.4→.5` ka delta aaya, saath
+wala `default→not-allowed` gayab. **Sabab tay nahi hua aur andaza lagana mana hai:** ya
+to probe ki kami hai, ya Chromium disabled control par `:disabled` ka `cursor` lagata hi
+nahi — doosri soorat mein poore repo ki har `cursor: not-allowed` **mari hui CSS** hai
+aur faisla dobara dekhna parega, auzaar nahi. **D49.**
+
+### Jo jaan-boojh kar NAHI kiya, aur review ne mera daawa chhota karwaya
+
+Maine "har filled legacy button" likha tha. **Ye daawa bara tha.** Sach ye hai: **har
+filled _light-surface action_ button.** Bahar rahe:
+
+* **on-dark family** — `bank` ka `.btn-fb-save`/`.btn-fb-cancel`, `print` ka
+  `.ps-stepper`/`.ps-save`/`.ps-reset`. In ke paas jaane ke liye koi Tier 2 on-dark role
+  hai hi nahi. Isi liye `.btn-fb-save` **aaj bhi hover par gehra karta hai** — yani
+  darken/lighten ka mix **khatam nahi hua, sirf chhota hua**. **D48**
+* **do navy filled control** — `library` ka `.pg-btn.active`, `index` ka `.lang-toggle`
+  ka selected button. Ye segmented/pagination hain, CTA nahi, is liye un ka 6px/8px
+  radius durust hai aur chhua nahi gaya — magar un ka **fill** ab usi screen ke har
+  action button se nahi milta. Ye D27 ka bacha hua hissa hai. Recolour karna Irfan ke
+  teen faislon mein shamil **nahi** tha, is liye row bani, edit nahi. **D50**
+
+### Comments jo code se jhooth bolne lage the — wohi bimari, isi commit mein theek
+
+D47(a) ka sabaq ye hai ke is tree mein comment documentation ki tarah parha jata hai. Ye
+kaam khud paanch aise comment bana raha tha, review ne ginwaye, sab theek kiye:
+`btn.css`:210 (aik "range" jo ab mojood nahi + pehle se ghalat line number), `btn.css`:303
+(bank ab `--radius-btn` declare hi nahi karta), `btn.css`:349 aur :352 (apni hi rule ka
+ulta kehte the), `modal.css`:12, `pages/landing.css`:43.
+
+### Aur unhi comment edits ne aik rule maar di — probe ne pakda, warna ship ho jati
+
+Comments theek karte waqt is entry ke mussanif (main) ne aik **ziyada `*/`** chhor diya.
+Us ne `btn.css` ka bara comment block waqt se pehle band kar diya, baqi prose CSS ban gayi,
+aur us ne **`.btn-save, .btn-cancel` ki poori rule nigal li.** Nateeja: bank aur print ke
+modal ke dono buttons `border-radius: 0`, `font-size: 13.33px` — yani default `<button>`.
+
+**Kisi doosre gate ne aawaz nahi ki:** `pytest` 1075 pass tha, `ruff` saaf tha, aur
+**ratchet ne bhi kuch nahi kaha** kyunke line count aur hex ginti dono theek thin — CSS
+"maujood" thi, bas comment ke andar. Sirf `css_type_probe` ne **25 deltas** dikhaye.
+Theek karne ke baad dono probe **0/0**.
+
+**Sabaq:** "sirf comment badla hai" is repo mein probe skip karne ki wajah **nahi** hai.
+C-style comment ka aik ghalat token rule delete karne ke barabar hai, aur ratchet us
+qism ke nuqsan par khamosh hai kyunke wo lines ginta hai, matlab nahi.
+
+`css_state_probe.mjs` ka `KILL_MOTION` comment bhi ghalat wajah deta tha — kehta tha
+unlayered `<style>` "har @layer ko harata hai". **Ye `!important` par ulta hai:**
+important declarations par layer order **ulti** chalti hai, to layer ke andar ka
+`transition: … !important` is injection ko **harata**. Aaj kaam karta hai kyunke
+`static/css/` mein aisa koi declaration hai hi nahi (grep, 2026-08-26). Wajah durust
+likh di gayi, aur ye bhi ke `animation: none` wala hissa **aaj kuch nahi maarta**
+(repo mein `@keyframes` hai hi nahi) aur ye probe **motion regression bilkul nahi dekh
+sakta**.
+
+## 2026-08-25 — UI-065: state probe — jo gate rest par parhta hai wo state dekh hi nahi sakta
+
+`scripts/css_state_probe.mjs` — naya file, **D45 band.** Ye drain nahi, **auzaar** hai, aur
+jaan-boojh kar agle drain se pehle banaya gaya. Kisi page ka koi byte nahi badla.
+
+### Ye control se sabit hua, daawe se nahi
+
+Is repo ka har probe page ko **rest par** parhta tha. Yani `:hover`/`:focus-visible`/
+`:disabled` ki koi bhi declaration **0 deltas** deti thi — durust ho ya ghalat. Do din mein do
+task isi se kate, aur dono is file mein upar darj hain: UI-061 ne chaar pages se `input:focus`
+delete ki (sabot sirf layer-order ka istidlal), aur UI-062 ne `.btn-cancel:hover` ka grey badal
+diya jabke **pytest, ruff, ratchet aur 34 measured deltas sab paas ho gaye.**
+
+To auzaar banane ke baad us par wohi mutation chalayi gayi jo UI-062 mein chupke se guzri thi —
+`bank` par `.btn-cancel:hover` ka background badal kar:
+
+| probe | deltas |
+|---|---|
+| `css_type_probe.mjs` (rest), nau ke nau pages | **0** |
+| `css_state_probe.mjs`, akela `bank` | **1** — `button.btn-cancel::hover  background-color` |
+
+Ek hi mutation, ek hi browser. Iske baad `btn.css` HEAD ke barabar restore ki gayi
+(`git diff --quiet` saaf).
+
+### Do faisle jo qeemat tay karte hain
+
+**Wohi JSON shape jo `css_type_probe` likhta hai.** Nateeja: `css_type_diff.mjs` **bina badle**
+dono parhta hai, `--names` sameet — koi naya diff tool nahi. Keys `<path>::<state>` hain aur
+`<path>` byte-identical hai, to state diff ka path rest diff mein paste ho sakta hai.
+
+**`outline-*` shamil hai, jo `css_type_probe` mein bilkul nahi.** App ka focus ring
+`forms.css`:106 par `outline` hi hai — us ke baghair probe ring ka aana ya gayab hona dekh hi
+nahi sakta, yani UI-061 wala sooraakh khula reh jata.
+
+State CDP ke `CSS.forcePseudoState` se lagayi jati hai — wohi flag jo style engine khud parhta
+hai, to cascade waise hi hal hoti hai jaise asal pointer par. Koi synthetic mouse event nahi,
+kyunke ye pages JS se render hote hain aur asal mousemove un ke listeners se race karta.
+`:disabled` isteshna hai: wo forceable flag nahi, **attribute** hai — set, snapshot, phir
+bahaal, aur bahaali ka count output mein darj hota hai.
+
+### Review ne pehla version FAIL kiya — aur ghalti theek wahi thi jo auzaar rokne aaya tha
+
+Pehle version ne akela `focus-visible` force kiya. **`:focus-visible` kisi `:focus` rule ko
+match nahi karta**, is liye repo ki har `input:focus` rule — `forms.css`:79 sameet, aur wohi
+chaar jo **UI-061 ne delete ki thin** — rest ke barabar naapi gayi. Yani jo auzaar us sooraakh
+ko band karne bana tha, wo usi par andha tha.
+
+**Aur wo bilkul saaf natije jaisa dikhta tha:** koi error nahi, records poore, counts theek —
+bas har qeemat resting qeemat thi. Review ne ise output parh kar nahi, seedha CDP experiment
+chala kar pakda. **Yeh is auzaar ka apna sabaq hai: ghalat pseudo-class force karna kaamyabi
+jaisa lagta hai.**
+
+Ab focus **do pass** hai: `focus` (akela `:focus`, pointer focus) aur `focus-visible` (dono
+force, kyunke asal tab-stop dono ko match karta hai).
+
+### Auzaar bante hi paanch cheezein naap kar mil gayin
+
+* **Fields par focus ring `outline` nahi, GLOW hai.** `select#fSubject`: `border-top-color
+  rgb(14,165,164)`, `box-shadow rgb(220,245,244) 0 0 0 3px`, `outline-style: none` — kyunke
+  `input:focus` (0,1,1) usi layer mein `:focus-visible` (0,1,0) ko harata hai. **Is entry ke
+  pehle draft ne "ring = `outline: 2px solid`" likha tha; wo buttons ke liye sahi, fields ke
+  liye ghalat tha.** Aur `forms.css`:76 ka comment is ka ulta kehta hai — **D47**.
+* **`.btn-save:hover` indigo-500 hai jabke rest par indigo-600** — UI-062 ka "hover ab halka
+  karta hai" wala jumla ab naapa hua adad hai, raay nahi.
+* **`.btn-cancel:hover` = `rgb(250,251,254)`** — pehli dafa naapa. UI-062 mein ye "kisi tarah
+  tasdeeq-shuda nahi" darj hua tha; ab band.
+* **`.btn-save:disabled` opacity `0.6`, aur `.btn-cancel` ka koi disabled rule hai hi nahi** —
+  D46 ka maal, ab naapne ke qabil.
+* **`slo` ke table rows ka hover** — pehle daire se bahar tha, ab andar.
+
+### Daira chhota, magar review ke baad teen selector chaura
+
+Review ne `static/css/` ke 66 state selectors ginn kar teen **zinda `:hover` rules** dhoondein
+jo tag list kabhi pakad hi nahi sakti thi: `tbody tr:hover` (**slo — ek LIVE gate page**),
+`.q-row:hover` (bank), `.bp-row:hover` (blueprint). Daira jo zinda rule chhor de, wo daira
+nahi — sooraakh hai. `slo` 20 → **135**, `bank` 1,533 → **1,992**.
+
+Nau pages, paanch states, **~30 second, 13,100 records, 0 errors.**
+
+⚠ **Pehle "~41 second, 8,112 records" likha tha, aur review ne akele `bank` ko 445 second par
+naapa.** Dono adad asli the: pehla version har `forcePseudoState` ka alag round-trip awaited
+karta tha (bank par ~9,200 calls), aur wo latency par hai — machine ke bojh se das guna farq.
+Ab calls saath bheji jati hain aur ek dafa await hoti hain, is liye naya adad **zyada states
+aur zyada elements ke bawajood** kam hai.
+
+**Agla kaam D44 (button task) hai, aur wo is probe ka pehla asal istemaal hoga** — us se pehle
+aur baad mein chalana laazmi hai, kyunke wo task poora ka poora hover aur disabled surfaces
+par hai.
+
+## 2026-08-25 — UI-062: modal family — aur bank par do primary rang mile
+
+**1075 pass**, ruff saaf, `legacy_css_lines` **1864 → 1842 (−22)**, `unsanctioned_hex`
+**353 → 349 (−4)**. `css_type_diff`: **bank 13, print 21, baqi saat pages 0.**
+
+**Ye pehla drain hai jis mein deltas jaan-boojh kar sifar nahi rakhe gaye.**
+
+### Kyun ye family do din pehle nahi ho sakti thi
+
+`modal.css` ne ise 2026-08-16 ko park kiya tha, aur wajah naapne par aaj bhi zinda thi:
+`.btn-cancel`/`.btn-save` ka matn dono files mein byte-identical hai, magar bank apna
+`--radius-btn` 10px declare karta hai aur print 8px. Component tab hi ban sakta tha jab **ek
+radius jeete** — aur us se ek page nazar aane ki had tak badalta. Wo faisla mera nahi tha;
+Irfan ne `--radius-control` (11px) chuna.
+
+### Asal daryaft — aur ye poochhne se pehle naapi gayi
+
+Component banane se pehle ye dekha ke component ke rang legacy se milte bhi hain ya nahi.
+Nahi milte the, aur us se ek cheez benaqab hui jo kahin darj nahi thi:
+
+| bank par, us waqt | background |
+|---|---|
+| `.btn-primary` | `rgb(79,70,229)` — **indigo**, UI-041 mein `--color-action` le chuka |
+| `.btn-save` | `rgb(46,90,172)` — **navy**, legacy `--primary` par khada |
+
+**Bank ek hi screen par do mukhtalif filled action buttons paint kar raha tha.** Ye D27 ka
+wohi defect hai jis ke liye epic bana. Isi liye rang badalna is task ka maqsad bana, koi
+side-effect nahi — magar ye poori tasveer Irfan ke saamne rakh kar hi aage barha gaya,
+kyunke pehle sirf radius ki baat hui thi aur wo adhoori thi.
+
+### Jo jaan-boojh kar NAHI kiya gaya
+
+`.btn-save` ko seedha `.btn--primary` ke selector list mein jorna ek line ka kaam tha aur
+**ghalat hota**: us se `font-size` 14→15px, `font-weight` 600→700 aur `min-height` 44px bhi
+saath aate — teenon faisle se bahar. Us ki jagah `btn.css` ke apne `.btn-primary` block wala
+tareeqa apnaya: **legacy naam, component ke token, apni measured geometry.** Naap kar tasdeeq
+hui ke `font-size` aur `padding` ek bhi delta par nahi hile.
+
+### Deltas ginne ke qabil hain, is liye ginwaye ja rahe hain
+
+34 ke 34 `.btn-cancel` ya `.btn-save` par hain, aur har property teen mein se ek: border
+colour, radius, ya `.btn-save` ka background. Baqi saat pages par sifar.
+
+### Aur ek chauthi tabdeeli jo maine "teen" likh kar chhupa di — review ne pakdi
+
+Maine `btn.css`, `STATUS.md` aur yahan teenon jagah likha tha ke **teen** cheezein badlin aur
+teenon manzoor-shuda hain. **Wo ek closed-set daawa tha aur ghalat tha — chaar hain.**
+
+Chauthi hai `.btn-cancel:hover`. Legacy mein wo `var(--bg)` tha, jo **har page par alag** hai
+(bank `#EEF1F6`, print `#F5F7FB`); ab dono `--color-surface-sunken` par hain — ek teesri
+qeemat jo kisi page par nahi thi. Ye Irfan ke saamne rakhe gaye faisle ke preview mein darj
+tha, to manzoori maujood hai; **likhna ghalat tha, karna nahi.**
+
+**Aur wajah jo isay ahem banati hai:** `css_type_probe` **rest par** naapta hai, is liye hover
+ka **ek bhi delta nahi banta**. Yani ye 34 mein shamil nahi, aur har us gate se guzar gaya jo
+is task par chalaya gaya. Jo cheez sirf state par zahir hoti hai, us ka koi auzaar is repo
+mein nahi — UI-061 mein `:focus` par yehi kami darj hui thi, aur do din mein dobara kaat gayi.
+
+Ek aur nateeja jo faisle mein shamil nahi tha: `.btn-save:hover` `--primary-hover` se
+`--color-action-hover` par gaya, jo **simt ulat deta hai** — legacy hover par gehra karta tha,
+naya halka karta hai. Action role apnane ka lazmi nateeja hai, magar ab app mein kuch filled
+buttons gehre hote hain aur kuch halke. D44 ke saath.
+
+### Naya qarz jo isi waqt darj kiya — D44
+
+`btn.css`:275 `.btn-primary` ko jaan-boojh kar 10px par rakhta hai. Ab bank **10px primary
+aur 11px save** ek saath dikhayega; is se pehle dono 10px par mutafiq the. Ye radius ke
+faisle ka nateeja nahi, us purane 10px hold ka baqaya hai. **Agla button task pehle** —
+saare filled legacy buttons ek radius par, warna har agla drain yehi qarz barhata rahega.
+
+### Browser check hua — usi din, aur adhoora hone ke baad bhi kaam ka
+
+Extension is baar bhi connect nahi hui; Irfan ne khud incognito + hard refresh par dekha.
+
+**Confirmed:** `bank` ka Save button **indigo** hai (is task ki sab se bari nazar aane wali
+tabdeeli), `bank` par **focus ring aata hai**, aur `print` ka edit modal theek hai — wohi
+page jahan radius ka farq sab se bara tha (8px → 11px).
+
+**Nahi dekha, aur waise hi darj:** `index`/`library`/`blueprint` ke labels aur focus, strip
+filter ka box, aur `.btn-cancel:hover` ka naya grey. D44 par Irfan ki raay bhi baqi hai.
+
+**Focus ring ki tasdeeq asal mein UI-062 se zyada UI-061 ke kaam ki hai.** Us task ne chaar
+pages se `input:focus` ki rules delete ki thin aur us ka poora sabot layer-order ka istidlal
+plus rest par 0 deltas tha. Ab wo aankh se poora ho gaya.
+
+**Magar D45 isse band nahi hoti, aur ye nuqta chhoot jane wala hai:** gap is dafa **haath se**
+bhara gaya, auzaar se nahi. `.btn-cancel:hover` ka naya grey ab bhi kisi tarah tasdeeq-shuda
+nahi hai — na probe use naap sakta, na wo dekha gaya. Agli dafa jab hover ki koi rule chupke
+se badlegi, koi haath maujood na hoga.
+
+## 2026-08-24 — UI-061: `field/filter` drain — aur wo "duplication" nahi, murda code nikla
+
+**1075 pass**, ruff saaf, `legacy_css_lines` **1873 → 1864 (−9)**, `unsanctioned_hex`
+**356 → 353 (−3)**, aur `css_type_diff` par nau pages ke **367,048 element × property jode
+mein se sifar hile**.
+
+### Task kyun apni tareef se mukhtalif nikla
+
+Plan ye tha: `css_duplication_audit.py` ka `agree` bucket (119 lines, 34 rules) utha kar
+`field/filter` khandan ko component par le jao — "koi faisla darkar nahi". Script ke apne
+header ne pehle hi chetawni de rakhi thi:
+
+> ⚠ IT COMPARES DECLARATION TEXT, NOT PAINTED OUTPUT … `agree` here means "worth measuring
+> next", never "safe to extract".
+
+Naapa gaya, aur chetawni durust nikli — magar ulti simt mein. Rules "shared" isliye nahi
+thin ke unhein component chahiye tha; wo **teenon jagah barabar murda** thin:
+
+| rule | file kya likhti hai | probe kya kehta hai |
+|---|---|---|
+| `label` × 4 pages | `font-size: 12.5px` | **12px** |
+| `input:focus, select:focus` × 4 | apna ring | rule ka koi asar nahi |
+| `.strip-filter input/select` × 2 | `12px` / `4px 9px` / radius `7px` | **13.5px / 11px / 11px** |
+
+Wajah aik hi hai aur `main.css`:42 par likhi hai: layer order `legacy` ko sab se neeche
+rakhta hai, aur **layer specificity se pehle tay hota hai**. `.strip-filter input:focus` ki
+specificity `(0,2,1)` hai, `forms.css` ke `input:focus` ki `(0,1,1)` — phir bhi legacy
+haarti hai.
+
+### Ek asal cheez jo is se benaqab hui
+
+`bank` aur `print` par topic-image strip ka filter row **jaan-boojh kar chhota** design kiya
+gaya tha — 12px text, 4px 9px padding, radius 7px, thumbnail grid ke pehlu mein. **Wo look
+aaj mojood nahi hai** aur is task se pehle hi ja chuka tha: jis din page `main.css` par aaya,
+`forms.css` ne wo controls 13.5px par draw karna shuru kar diya. Kisi test ne ye nahi pakda
+kyunke koi test computed size nahi naapta.
+
+Ise **theek nahi kiya gaya** — wapas laana design ka faisla hai (kya dense picker ka filter
+form control se chhota hona chahiye?), aur drain ke parde mein do live pages badalna wohi
+ghalti hoti. `DEFERRED.md` **D43**.
+
+### Kya bana, kya jaan-boojh kar nahi bana
+
+`05-components/field.css` mein `.strip-filter` ka **container** gaya (dono pages par matn
+aur paint dono barabar), saath `min-height: 30px` — **sirf yehi ek declaration zinda thi.**
+Baqi (bank par saat, print par chhe) sath nahi layin: `layer(components)` mein copy karna
+unhein zinda kar deta, wohi jaal jo UI-042 mein 75 deltas hila chuka hai.
+
+Ek cheez darj karni chahiye: **`.strip-filter select` asal mein `agree` bucket mein thi hi
+nahi** — audit use `disagree` ginti hai, kyunke bank `color: var(--ink)` likhta hai aur print
+nahi. Ye scope se bahar thi aur review ne pakdi. Utha isliye li gayi ke saath wali container
+rule (jo waqai agree thi) ke jane ke baad ise chhorna be-maani tha, aur ikhtilaf ka hal
+mehfooz tareeqe se nikla: `color` sameet koi bhi cheez component mein nahi gayi, sirf wo ek
+declaration gayi jo zinda thi. **Faisla Irfan ka hai ke ye scope-breach qabool hai ya nahi.**
+
+Do rules pehle se tay-shuda hone ki wajah se chhui hi nahi gayin — `label:first-of-type`
+(`field.css`:66, warna print ke 11 labels tak pahunchti) aur
+`.type-checks input[type="checkbox"]` (`field.css`:18–24, blueprint par do checkbox shakal
+ban jatein).
+
+### Do baatein record ke liye
+
+**`PLAN.md`:381 aur asal kaam takra rahe hain.** Wo Sprint 6 ko per-page likhta hai
+(*"drain `99-legacy/<page>.css` to zero, delete it"*), jo 2026-08-19 ke faisle ke baad
+mumkin nahi — 66% lines page-only hain aur skip hain, to koi file zero par nahi jayegi.
+CLAUDE.md §12.11 ke tehat poochha gaya; **Irfan ka faisla: per-family.**
+
+**Probe ka raasta Chrome extension se azad hai.** `css_selector_probe.mjs` aur
+`css_type_probe.mjs` apna headless Edge khud chalate hain. Extension mahinon se connect nahi
+ho rahi, magar ye naap phir bhi mumkin hai — jo is task ka poora sabot hai. **Browser check
+phir bhi nahi hua**, aur 0 deltas "page dekhne mein theek hai" ka daawa nahi hai.
+
+## 2026-08-23 — Pre Year 3 seeding: 23/87 topics, quota phir raaste mein khatam
+
+Bank **594 → 686** (+92 sawal). Sirf DB badli — koi code nahi.
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 3" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Backup pehle: `paper_maker_backup_before_preyear3_seed_20260823.db`.
+
+### Syllabus pehle parha gaya, aur wo zaroori tha
+
+`seed_bank.py` ka apna header chetawni deta hai ke topic ka title jaisa likha hai waisa
+hi maan liya jata hai. Pre Year 3 ke 87 topics parhe: numbers 1–30, blocks se ginti,
+up/down, left/right, long/longer/longest. **Poori tarah pre-school** — chunanche
+ROADMAP wale `--types` (mcq/short-answer/true-false) aur `--bloom foundational` durust
+the. Default types (`fill-blank` + `essay` + `balanced`) yahan bilkul ghalat hote.
+
+### Kya bana
+
+| | |
+|---|---|
+| topics | **23 / 87** (61 chhu-e hi nahi gaye) |
+| sawal | **92 / 348** |
+| MCQ / short-answer / true-false | 35 / 30 / 27 |
+| khali `question_en` | **0** |
+| MCQ bina `correct_answer_en` | **0** |
+
+Teenon qismein barabar bani — ye dekhna zaroori tha, kyunke `seed_bank` ke pehle run
+(2026-08-21) ne yehi bug pakda tha ke AI maangne par bhi `essay` nahi banata tha.
+
+### Script ne theek wohi kiya jo design tha
+
+Topic 24 par HTTP 429 aaya, phir 25 aur 26 par bhi. **Musalsal 3 rate-limit par khud
+ruk gayi** — baqi 61 topics ko be-faida calls par zaya nahi kiya. Seeded topics skip
+hote hain, to wahi command dobara chalane se top-up ho jata hai.
+
+### Ek adad jo naapne par khatakta hai
+
+**Pre Year 2 bhi theek 23/87 topics aur 92 sawal par khada hai** (kal ka run). Yani
+dono din quota lag-bhag **23–26 AI calls** par khatam hua.
+
+Ye ROADMAP ki R1 row ke lehje ko badalta hai. Wahan likha hai *"Rukawat: Gemini
+free-tier ka rozana quota"* — jo sach hai magar chhota lagta hai. **Naap kar:** PY3 ke
+64 + PY2 ke 64 = **128 topics baqi**, aur ~23 per din ka matlab hai **~6 aur din ke
+run**. Ye "chhota tukda" nahi, ek hafte ka rozana kaam hai.
+
+### Bank ki nayi halat (DB se naapi, kisi row ke bharose nahi)
+
+```
+OK  Mathematics  Grade 4      11/11 topics    43 sawal
+..  Mathematics  Pre Year 1   71/81 topics   329 sawal
+..  Mathematics  Pre Year 2   23/87 topics    92 sawal
+..  Mathematics  Pre Year 3   23/87 topics    92 sawal   <- aaj
+--  Mathematics  Grade 5       0/11 topics     0 sawal   \
+--  Mathematics  Grade 6       0/11 topics     0 sawal    | chaar JAALI syllabi
+--  Science      Grade 7       0/11 topics     0 sawal    | (seed karna mana)
+--  Geography    Grade 8       0/11 topics     0 sawal   /
+```
+
+**Agla:** kal wahi command dobara (PY3), aur PY2 ke liye bhi wahi. Chaar jaali syllabi
+par seeding **mana** hai jab tak asal syllabus import na ho — ye code ka masla nahi,
+data ka hai.
+
+## 2026-08-23 — Coverage ab `plan.html` par dikhti hai (Marhala 3 ka frontend)
+
+**1075 pass**, ruff saaf, CSS ratchet ka har metric **+0**.
+
+Marhala 3 ne endpoint bana diya tha magar us ka koi frontend nahi tha — **bilkul wohi
+soorat jis ki is din ke shuru mein shikayat ki gayi thi** (82 routes mein se 6 orphan,
+un mein se 4 yehi module). Isi liye ye usi din jod diya gaya, "baad mein" nahi.
+
+### Kya dikhta hai
+
+* Har hafte ki chip par `covered/planned` badge, `taqseem.html` ke `.cov-badge` wale
+  **wohi thresholds** (100 / 60) — do reportein ek hi rang-zaban bolein.
+* Card ke upar ek line: *"Imtihan mein aa chuke: 49 / 81 topics (60%) — kisi bhi paper
+  mein, hafte se qat-e-nazar."* Aakhri fiqra laazmi hai: covered ka koi hafta hota hi
+  nahi, aur ye baat report parhne wale ko malum honi chahiye.
+* Call **alag aur optional** hai (taqseem ka usool) — fail ho to board pehle jaisa
+  render rehta hai. Idempotent bhi: purana badge hata kar inject hota hai.
+
+### "Tay nahi" wale chip par traffic-light NAHI lagti — ye asal data ne pakda
+
+Pehla live run: Unassigned bucket **46/78 = 59%**, jo threshold se **laal** ban gaya.
+Wo jhoot hai — un topics ka koi hafta tay hi nahi, to "hafta ka coverage fail hua"
+jaisi koi cheez wujood mein nahi. **Ginti kaam ki hai** (46 topics imtihan mein aa
+chuke magar plan mein kahin nahi) is liye dikhti hai; **faisla hata diya gaya.**
+
+Ye is baat ki misaal hai ke chhota UI faisla asal data par chala kar hi pakda jata
+hai — 59% ka theek threshold ke neeche girna kisi test mein nazar na aata.
+
+### Naapa gaya
+
+| metric | delta |
+|---|---|
+| har ratcheted metric | **+0** (`inline_style_attrs`, `unsanctioned_hex`, `legacy_css_lines` sameet) |
+| frozen inventory | +3 (`covSummary`, do `data-week`), koi MISSING nahi |
+
+JS ke 17 id ↔ markup ke 17 id, dono taraf sifar farq. 32/32 classes tree mein resolve.
+`node --check` saaf. Live server par asal data: `Pre Year 1` → H1/H2/H3 par 1/1 (100%,
+hara), Unassigned 46/78 (neutral), baqi 33 hafte khali (`—`).
+
+⚠ **Browser check phir bhi nahi hua** — Chrome extension is baar bhi connect nahi hui.
+
+## 2026-08-23 — R7 Marhala 3: hafta-war coverage — spec ne ghalat function ka naam diya tha
+
+**1075 pass** (1055 → 1075, **20 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md` §8.2.
+
+### Spec aur code takra gaye, aur poochh kar hi aage barha gaya
+
+Marhala 3 ki row kehti thi *"`_assemble_coverage` key parameterize"*. Kaam uthate waqt
+naapa gaya, aur teen cheezein us ke khilaf gayin:
+
+1. **`_assemble_coverage` ko aaj koi bahar se bulata hi nahi** — sirf `exam_coverage`,
+   usi file ke andar. Us ke docstring ka waada (*"Hissa 4 dobara istemal karega"*)
+   kabhi poora nahi hua.
+2. **Us ka maal report ko chahiye hi nahi** — wo drill-down deta hai
+   (`covered`/`remaining`/`strands` + `paper_ids`), report per-bucket ginti hai.
+3. **Jo waqai share hota hai wo `_summary_row` hai — aath lines**, aur wo pehle se
+   domain-neutral thi.
+
+`CLAUDE.md` §12.11 ke mutabiq ruk kar poochha gaya. **Irfan ka faisla: naya service,
+`_summary_row` share, `_assemble_coverage` bilkul haath na lagao.** Chunanche us ke SLO
+tests bina chhue green hain — wohi gate tha.
+
+| bana | |
+|---|---|
+| `papers_repository.covered_topic_pairs()` | (topic, paper) jodi — gate topic par |
+| `coverage_service.bucket_row()` | `_summary_row` se `exam_no` nikal kar public |
+| `topic_coverage_service.py` | naya (~90 lines) — wahi file jo spec §4 ne maangi thi |
+| `GET /api/topic-plan/coverage` | `/template` ki tarah PATCH `/{topic_id}` se **pehle** |
+
+### "covered" ki tareef — ye spec mein saaf nahi tha, aur ye faisla asal mein bara hai
+
+**`papers` mein `week_no` column HAI HI NAHI** (sirf `exam_no`). To "hafta 3 ka paper"
+wujood mein hi nahi. Irfan ne chuna: **topic kisi BHI paper mein aaya = covered.**
+Sawal jis ka jawab milta hai — *"jo maine hafta 3 mein parhaya, us ka imtihan kabhi
+liya bhi?"* Doosra raasta (hafta → exam mapping) rad hua kyunke wo mapping repo mein
+hai hi nahi.
+
+Is se teen cheezein `coverage_summary` se **ulat** ho jati hain, aur teenon ki apni
+test hai:
+
+* **`exam_no` ki koi shart nahi.** 30 mein se 10 papers par `exam_no` hai hi nahi; SLO
+  ka raasta unhe ginta hi nahi (`exam_no IS NOT NULL`), ye ginta hai.
+* **`class_name` ka `LOWER(TRIM(...))` match nahi, aur ye kami nahi.** Gate
+  `syllabus_topics.subject/grade` par hai — ek topic id pehle se theek ek (subject,
+  grade) ki hai, to paper ka ganda free-text `class_name` hisaab mein aata hi nahi.
+* **Unassigned ka `covered` asal ginti hai, forced 0 nahi.** "Hafta tay nahi magar
+  paper mein aa chuka" asal soorat hai; usay 0 dikhana maloomat chupana hoga.
+
+### `week_count()` public — magar alias jaan-boojh kar nahi
+
+PROGRESS.md ne 2026-08-22 ko yehi Marhala 3 ka kaam likha tha. Teen module ab ek hi N
+par chalte hain.
+
+**`_week_count = week_count` likh dena aasan tha aur khatarnak:** tests us naam ko
+monkeypatch karte hain, aur alias patch karne se andar ke caller (jo `week_count()`
+bulate) par koi asar na hota — **test green rehta hue bhi kuch guard na karta.** Teenon
+caller aur saaton test-line saath badle.
+
+### Asal data par chalaya
+
+`Mathematics / Pre Year 1` — **49 / 81 topics covered (60%)**, `paper_map` mein 49
+entries. Spec §5 ka daawa ("pehle din se asal data dikhayega") poora hua.
+`Pre Year 2` aur `Grade 4` par 0% — durust, un ke topics kisi paper mein aaye hi nahi.
+
+### `plan.html` ka browser check ho chuka hai — aur wo DB mein likha mila
+
+`topic_week_plan` mein **3 rows** milin (Pre Year 1, hafte 1/2/3), `plan.html` wale
+commit ke **56 second baad** — teen alag PATCH, 2–4 second ke faasle par. **Irfan ne
+tasdeeq ki: ye us ka browser test tha, aur rows rakhni hain.**
+
+Yani pichhle commit mein jo gap saaf likh kar chhoda gaya tha (*"browser check nahi
+hua, ye claim nahi kiya ja raha ke page dikhne mein theek hai"*) **ab band hai**:
+page load hua, subject/grade dropdown bhare, table render hui, aur hafta chunne se
+PATCH DB tak pahuncha — asal browser mein, asal data par.
+
+Qabil-e-zikr baat ye hai ke **ye khud kaam se pata chala, kisi report se nahi.**
+Coverage ka pehla run Pre Year 1 par `total=81` magar Unassigned `planned=78` dikha
+raha tha — teen ka farq. Agar wo farq na khatakta to ye rows kisi ko nazar hi na aatin.
+
+**Agla:** coverage ko `plan.html` par dikhana (abhi endpoint ka koi frontend nahi — wohi
+soorat jis ki shikayat aaj subah ki gayi thi).
+
+## 2026-08-23 — R7 Marhala 4: `plan.html` — hafta-war plan ab teacher tak pahunchta hai
+
+**1055 pass**, ruff saaf, CSS ratchet ka **har metric +0**. Spec:
+`docs/TOPIC_WEEK_PLAN.md` §8.1.
+
+Marhala 1 aur 2 ne 79 tests ke saath poora backend de diya tha, magar 2026-08-22 ko
+naapa gaya tha ke **`static/` mein in endpoints ka sifar zikr hai** — API zinda, koi
+button us se juda nahi. Aaj naye sire se naapa: **82 routes mein se sirf 6 aise the
+jin ka frontend nahi tha, aur un 6 mein se 4 yehi module tha.** Ab wo 4 jude hue hain.
+
+### Tarteeb badli gayi — Marhala 4 pehle, Marhala 3 baad mein
+
+Irfan ka faisla, aur bunyaad naapi hui thi: `topic_week_plan` mein **0 rows** thin.
+Coverage report ka koi matlab nahi jab plan mein data hi na ho. Pehle bharne ka
+zariya, phir report. **Marhala 3 ab bhi baqi hai.**
+
+### Spec se ek hatna, aur wo naap kar hua
+
+§4 kehta tha UI `taqseem.html` ka aaina ho — yani kanban board. Wo shakal yahan
+tootti hai: `exam_count` **8** hai magar `week_count` **36**. taqseem ka board 9
+columns ka hai; yahan wohi cheez **37 columns × 87 topics** hoti — na screen par
+aati, na us mein "hafta 7 khali hai" nazar aata.
+
+To page ek **table** hai (Unit / Topic / Page / Hafta-dropdown) aur upar har hafte ki
+ginti ka strip. Move ka raasta wohi hai jo taqseem par hai: ek `<select>`, drag nahi.
+Khali hafte strip mein **dikhte hain** (dabe hue), gayab nahi hote — "hafta 7 khali
+hai" wohi maloomat hai jo teacher dhoondh raha hai.
+
+### Ye pehla page hai jis ka koi `99-legacy` file nahi
+
+Baqi aath entry files do `@import` karti hain (`main.css` + apni legacy file);
+`pages/plan.css` sirf ek. Naya page purana qarz paida nahi karta — is epic ka maqsad
+hi `99-legacy/` ki line count girana hai.
+
+**Naap kar tasdeeq, dawa nahi** — poora naya page aane ke bawajood:
+
+| metric | delta |
+|---|---|
+| `legacy_css_lines` | **+0** |
+| `inline_style_attrs` | **+0** (page par ek bhi `style=""` nahi) |
+| `unsanctioned_hex` | **+0** (plan.css mein ek bhi hex nahi, comment mein bhi nahi) |
+| `style_blocks`, `css_lines_in_html`, `hardcoded_hex` | **+0** |
+| `shared_css_lines` | +197 (informational — naya tree barhta hai, yehi design hai) |
+
+Sidebar poora naye tree se hai: markup sirf `.sidenav__*` pehnta hai. `.app-sidebar` /
+`.brand` / `.app-nav` / `.sidebar-foot` is page par hain hi nahi. `slo.html` dono ek
+saath pehnti hai kyunke wo **migrate** hui; ye page shuru se us jagah khara hai jahan
+wo pahunch rahi hai. Qeemat ye hai ke teen rules (`body{display:flex}`, main ka box,
+bare `.card`) khud likhni pareen — teenon component tree se values leti hain.
+
+### Teen faisle jo `taqseem.html`/`slo.html` se mukhtalif hain
+
+**1. Template `apiFetch` se, `window.location` se nahi.** `slo.html` seedha `href`
+istemal karti hai; wo `x-api-key` header nahi bhejta, to jis deployment par key set
+hai wahan wo download **401** ho jata. Yahan blob bana kar diya jata hai, filename
+server ke `Content-Disposition` se.
+
+**2. Grade ki list subject par munhasir hai.** Do azaad dropdown aise jode bana dete
+jin ka koi topic nahi (Geography ke paas sirf Grade 8 hai).
+
+**3. Koi inline handler nahi** — sab `addEventListener`, aur 87 rows ke selects par
+ek listener `tbody` par, 87 nahi.
+
+### Test jo phata, aur phatna hi chahiye tha
+
+`test_measures_the_nine_real_pages` page-count 9 par guard karta tha. **Spec ne yehi
+peshgoi ki thi** (§9.3: *"plan.html daswan page hoga"*). 10 kar diya, aur wajah test
+ke docstring mein — ginti jaan-boojh kar hard-coded hai, kyunke naya page jodna aisa
+faisla hai jis ki qeemat ek test edit honi chahiye.
+
+### Verify — browser ka hissa BAQI hai
+
+- `--check` → ratchet OK; `--write` se naye page ki 19 frozen entries declare
+- **JS jo 16 id bulata hai, markup mein wohi 16 hain** — dono taraf sifar farq. Yehi
+  wo bug-qism hai jahan button chup-chaap kaam karna chhod deta hai
+- 30/30 CSS classes tree mein resolve hoti hain; `node --check` saaf
+- **Poora flow asal HTTP par chalaya** (template → sheet bhari → import → reload →
+  PATCH → range 400 → ghalat id 404 → khali cell se clear): 10/10 theek, aur DB wapas
+  asal halat mein (87/87 unassigned)
+- ⚠ **`CLAUDE.md` §12.10 ka browser check nahi hua** — Chrome extension connect nahi
+  hui. Ye claim NAHI kiya ja raha ke page browser mein theek dikhta hai
+
+### Nayi khuli row
+
+**D42** — nav har page par ek jaisi nahi hai. `bank`, `library`, `blueprint` sirf 5
+link rakhte hain (na SLO, na Taqseem, na Plan); `print` ke paas `.sidenav__link` hai
+hi nahi. Isi liye naya link sirf un 5 pages par laga jahan planning group pehle se
+tha. Teen aur jagah paste kar dena is epic ki bunyadi bimari (aik hi nav ki 5 copies)
+ko barha deta.
+
+**Agla:** Marhala 3 (coverage), ya browser check.
+
+## 2026-08-23 — D39: frozen inventory ke 81 handlers guard se bahar the
+
+**1055 pass**, ruff saaf, CSS ratchet green. Do file badlin: `scripts/css_baseline.py`
+aur `docs/ui/BASELINE.json`.
+
+Irfan ka faisla: frontend ka kaam pehle. Ye us se pehle ka qadam hai — hum jin pages
+par kaam karne wale hain (`plan.html`, `bank.html` ka form), guard theek unhi par sab
+se kamzor tha.
+
+### Masla
+
+`FROZEN_ATTR_RE` sirf `id`, `onclick`, `name`, `data-*` pakadta tha. `CLAUDE.md` §12.7
+ka poora maqsad ye hai ke handler ka naam badle to shor mache — magar `onchange` aur
+`oninput` us guard se bahar the, aur wo dropdowns/search boxes par lagte hain.
+
+Ye farzi khatra nahi tha: **UI-046 (print range) ka apna `oninput="setPrintRange()"`
+2026-08-20 ko bina guard ke chala gaya aur ratchet khamosh raha.** Feature ne khud
+apni hifazat ka soorakh dikhaya.
+
+### Adad — D39 row ke apne adad ghalat the
+
+| | row (2026-08-20) | naapa (2026-08-23) |
+|---|---|---|
+| `onclick` (guarded) | 123 | **125** |
+| `onchange` | 59 | **61** |
+| `oninput` | 17 | **20** |
+| **guard se bahar** | 76 | **81** (kul ka 39%) |
+
+Wahi bimari jo `ROADMAP.md` ki P0 rows mein thi. **Parking-lot row ka adad tareekh
+hai, haqiqat nahi** — kaam uthate waqt dobara naapo.
+
+### 81 entries `--write` se PEHLE dekhi gayin
+
+Irfan ne yehi maanga tha, aur theek maanga: do saaf qismein nikleen.
+
+**57 seedha markup mein** — `onSubjectChange()`, `loadList()` ×5, `loadGrid(true)` ×4.
+Bilkul `onclick` jaise, guard mein aane chahiye the.
+
+**24 `<script>` ke andar `innerHTML` templates mein** — `onchange="onTypeChange(${i}, this)"`.
+Ye source mein literal text hain, is liye freeze karna mustahkam hai aur `onTypeChange`
+ka rename phir bhi pakda jayega.
+
+**Ek badsoorat hai, aur ye jaan lena zaroori hai:** `blueprint.html`:410 JS concatenation
+hai — `setPinSection(\'' + escAttr(q.id) + '\', this)` — jise regex poora nigal jata hai.
+Naam ki hifazat theek karta hai, magar `BASELINE.json` mein bura lagta hai.
+
+**Koi false positive nahi tha** — na CSS attribute selector, na koi data string.
+
+### Widening izafi hai, ye naap kar tasdeeq hui
+
+`--write` se pehle per-page diff chalaya: **699 → 780 (+81), aur purani entries mein se
+gayab 0.** Ye ahem tha — `--write` poori `BASELINE.json` dobara likhta hai (`metrics` +
+`per_page` + `frozen_inventory`), sirf inventory nahi. Metrics us waqt baseline se behtar
+ya barabar the (`total_css_lines` 1873 vs 1875), to ratchet **sakht** hua, dheela nahi.
+
+### Guard chalta hai — maana nahi, aazmaya
+
+`oninput="setPrintRange()"` — theek wahi handler jo 20 Aug ko bina guard ke gaya tha —
+aarzi taur par rename kiya:
+
+```
+exit code: 1
+RATCHET FAILED:
+  - print.html: MISSING oninput="setPrintRange()" - renaming this breaks a handler silently
+  - print.html: ADDED oninput="setPrintRangeXX()" - declare it in the task scope, then --write
+```
+
+File foran wapas asal halat mein (`git status` khali).
+
+### Mustaqbil ke liye
+
+`onsubmit`, `onkeyup`, `onkeydown`, `onkeypress`, `onblur`, `onfocus` bhi list mein hain.
+In ki ginti aaj **sifar** hai — yani 0 nayi entries — magar `plan.html` jaisa naya page
+jab pehla form banayega to wo apne pehle commit se guard mein hoga, agli khamosh
+kharabi ke baad nahi.
+
+**Agla:** `plan.html` (R7 Marhala 4, sirf "plan bharo" wala hissa — coverage baad mein).
+
+## 2026-08-22 — R7 Marhala 2: Excel template + import (backend; UI abhi nahi)
+
+**1055 pass** (1026 → 1055, **29 nayi**), ruff saaf, CSS ratchet ka har metric **+0**
+(is kaam ne CSS chhua hi nahi). Spec: `docs/TOPIC_WEEK_PLAN.md` §7.
+
+Marhala 1 ne table/service/API di thi magar plan bharne ka koi zariya nahi tha. Ye
+wo zariya hai — Irfan ke "data Excel se aayega" wale faisle par:
+
+| naya | kya karta hai |
+|---|---|
+| `GET /api/topic-plan/template` | us (subject, grade) ke saare topics ka sheet |
+| `POST /api/topic-plan/assign-import` | bhari hui sheet se plan replace-set |
+| `topic_week_import_service.py` | dono ka kaam (184 lines) |
+
+`question_slo_import_service` ka aaina: header lower-case, match **`syllabus_topic_id`
+se — title se nahi**, aur ghalat/gayab id par us row ka saaf error.
+
+### Teen faisle jo SLO import se jaan-boojh kar mukhtalif hain
+
+**1. Unknown id = ERROR, warning nahi.** SLO import mein unknown `slo_code` sirf
+warning hai kyunke baqi links phir bhi ban jate hain. Yahan `week_no` poori row ka
+maqsad hai — ghalat hua to karne ko kuch bacha hi nahi, aur chup-chaap 0 (Unassigned)
+likh dena teacher ko dhoka dena hoga.
+
+**2. Khali `week_no` = plan CLEAR, na ke skip.** Sheet "template" bhi hai aur "export"
+bhi — current `week_no` pehle se bhara aata hai, to cell khali karna teacher ka saaf
+iraada hai. Response mein `cleared` alag ginti hai taake ye khamoshi se na ho.
+
+**3. Tanbeeh Excel cell-comment mein, alag note-row mein nahi.** Note-row daalte to
+wahi file dobara upload karne par header toot jata. Header ek hi hai, machine-readable.
+
+Saari rows pehle parhi jati hain, phir **ek dafa** likha jata hai — aadha-laga plan sab
+se bura nateeja hai, teacher ko pata nahi chalta kaunsi rows lagin. Id-tasdeeq bhi ek
+hi DB round mein (`existing_topic_ids`), har row par query nahi.
+
+### Jo ab bhi baqi hai — ye feature teacher tak nahi pahunchta
+
+`grep` se naapa: **`static/` mein in dono endpoints ka sifar zikr hai.** API zinda aur
+green hai, magar koi button/page us se juda nahi. `slo.html` ka `/api/slo/assign-import`
+ek **alag purana** endpoint hai — us se dhoka na khayein.
+
+Chhoti baat, darj isliye ke chupi na rahe: import service `topic_week_service._week_count()`
+bulata hai — doosre module ka private function. Kaam karta hai, magar Marhala 3 mein
+public karna behtar hoga.
+
+**Agla:** ya to R7 ka UI (in endpoints ko page se jorna), ya Marhala 3 (coverage).
+
+## 2026-08-22 — R7 Marhala 1: hafta-war plan ki buniyad (UI abhi nahi)
+
+**1026 pass** (976 → 1026, **50 nayi**), ruff saaf. Spec: `docs/TOPIC_WEEK_PLAN.md`.
+
+Irfan ke do faisle jin par ye khara hai: daira **taqseem-e-auqat + coverage** hai
+(sabaq ka mazmoon nahi), aur data **Excel se** bharega (manual form nahi — wahi wajah
+jo `HANDOVER_19July.md` mein likhi hai).
+
+### Ye naya module nahi — aadhi machinery mojood thi
+
+"Planned vs actual" ki shakal repo mein pehle se do dafa bani hai: taqseem
+(`slo_exam_plan`) + `coverage_service`. **Jo waqai naya hai wo sirf waqt ka dimension
+hai** — kaunsa topic kab. Is liye ROADMAP ka "size L" naapne par zyada laga; andaza
+ab **~2 hafte** hai.
+
+`topic_week_plan` `slo_exam_plan` ka **hu-ba-hu aaina** hai — table, repository ki
+ordering, upsert, aur Unassigned bucket ka rule (0 / NULL / >N). Naya design isliye
+nahi banaya ke wo rule pehle se aazmaya hua hai.
+
+| naya | kis ka aaina |
+|---|---|
+| `topic_week_plan` table + index | `slo_exam_plan` |
+| `topic_week_plan_repository.py` | `slo_exam_plan_repository` |
+| `topic_week_service.py` | `taqseem_service` |
+| `api/topic_plan.py` | `api/taqseem.py` (ValueError→400, NotFound→404) |
+
+### Ek daawa jo naapne par poora sach nahi nikla
+
+`coverage_service` ka docstring kehta hai `_assemble_coverage` "DB-FREE hai taake
+dobara istemal ho". **Wo waada SLO ke daire ke andar tha** (draft question_ids).
+Function khud **SLO-keyed** hai — `s["slo_id"]` aur `strand` par chalta hai. Topic ke
+liye us ki key parameterize karni paregi. **Ye Marhala 3 ka kaam hai, aur us ke
+mojooda tests hi gate honge — SLO coverage tootni nahi chahiye.**
+
+Plan mein maine pehle likh diya tha "coverage dobara likhne ki zaroorat nahi" — wo
+zyada tha, aur spec mein durust kar diya gaya.
+
+### Auto-generate jaan-boojh kar nahi banaya
+
+`taqseem_service` mein `generate_plan()` hai (SLO ko N exams mein baraabar baant do).
+Yahan wo **nahi** — Irfan ne Excel chuna, aur andhi taqseem ye nahi jaanti kaunsa
+topic bhaari hai. 87 topics ko 36 hafton par baraabar baant dena aisa plan deta jo
+har hafte badalna parta.
+
+### `week_count`: column haan, settings API nahi
+
+`school_settings.week_count` (default 36) migration se add hui — `exam_count` ka
+aaina. Magar **`SchoolSettings` model aur `save_settings()` jaan-boojh kar nahi chhue
+gaye**: `/api/school-settings` ka partial POST baqi fields wipe kar deta hai, to us
+surface ko chherna apna alag gate maangta hai (Marhala 4, jab UI ise edit karega).
+`_week_count()` column na hone par bhi 36 par chalti hai — dono suraton mein
+mehfooz.
+
+### Tests: 50, aur teenon parton par
+
+repository **14** · service **26** · API **10**
+
+Jo edge jaan-boojh kar likhe: N ghatne par purane hafte (>N) Unassigned mein girein
+aur **gum na hon**; `week_no` 0 = Unassigned, error nahi; khali syllabus par crash
+nahi (PRD §6); ghalat input par **DB mein aadha kaam na ho** (validate pehle, likhna
+baad mein); aur bin-plan topics `list_resolved` mein aayen warna teacher ko kabhi
+pata na chale kitna kaam baqi hai.
+
+**Ruff ne ek asal cheez pakdi:** `raise ValueError(...)` bina `from e` — B904. Theek
+kiya.
+
+**Naapa NAHI gaya:** koi UI nahi (Marhala 4), koi Excel import nahi (Marhala 2),
+coverage ka hisaab nahi (Marhala 3). Ye teen endpoint abhi sirf `curl` se kaam ke
+hain.
+
+## 2026-08-22 — D4: teen mari hui spec files repo root se archive mein
+
+Teenon **Classic navy/gold** palette par likhi hain, jo **Modern** se supersede ho
+chuki. `git mv` se `docs/design/archive/` mein gayin — root ab sirf zinda dastaveiz
+rakhta hai.
+
+**UI-064 ka intezar nahi kiya (D4 row wahan bhejti thi), aur wajah ye hai:**
+`ROLLOUT_all_pages.md` §1 aaj bhi kehti thi *"theme.css `static/` mein rakho — agar
+purana chhota hai to isse replace karo"*. Magar `static/theme.css` **UI-064 part 1
+mein delete ho chuka hai** (2026-08-13, 212 lines), aur usi delete se
+`unsanctioned_hex` 429 → 400 gira tha. Yani ye spec sirf gumraah-kun nahi thi —
+**us par amal karne wala wo file wapas bana deta jo jaan-boojh kar hataayi gayi
+thi.** Ek deferred row ke peeche ye chhorna theek nahi tha.
+
+Har file ke oopar ⛔ tanbeeh lagi hai: kya supersede hua, kaunsa hawala ab jhoot hai,
+aur aaj asal jagah kaun si hai (`docs/ui/STATUS.md`, `docs/ui/PLAN.md`,
+`static/css/`). Sirf hata dena kaafi nahi hota — jo shakhs purana link khole use
+wahin par pata chalna chahiye.
+
+**Hawale naape gaye pehle:** teenon ka bahar se koi link nahi tha — sirf apne andar
+ke ("Read X fully before writing code") aur `DEFERRED.md` ki D4 row. Kuch nahi toota.
+
+**Naapa gaya:** `test_css_architecture.py` 32 pass (ye files CSS metrics mein nahi
+aatin).
+
+**Ek aur jhooti row jo isi dauran nazar aayi, theek NAHI ki:** `docs/ROADMAP.md` ki
+**H6** row kehti hai *"`API_VERSIONING.md` — **File mojood nahi**"*. Wo file repo
+root mein **mojood hai**. Ye aaj ka chautha aisa daawa hai. Alag kaam hai, apne
+gate ke saath — magar darj kar raha hoon taake dobara na chhupe.
+
+## 2026-08-22 — `.app-sidebar` ka "OPEN DEFECT" kab ka band ho chuka tha
+
+**Ek line bhi CSS nahi likhi gayi. Kaam sirf do jhoote comment hatane ka nikla.**
+
+`docs/ui/STATUS.md` ye kehti thi:
+
+> **OPEN DEFECT, not fixed and not forgotten:** `.app-sidebar` has `height:100vh`
+> and no `overflow`, on all six pages that use it. `index` ... is fixed
+> page-scoped; **the other five are untouched.**
+
+Fix likhne se pehle naapa (file-ba-file, comment ke bharose nahi) — aur **saaton
+pages pehle se dhaki hui hain**:
+
+| page | overflow kahan se |
+|---|---|
+| `bank`, `library`, `slo`, `slo-health`, `taqseem` | apni `pages/*.css`, `@layer components` |
+| `index` | `.sidenav__panel` — `05-components/nav.css`:217 |
+| `print` | apni legacy base rule mein pehle se (`overflow-y: auto`) |
+
+**Koi bhi media query ke peeche nahi** — ye alag se dekha, warna "fix mojood hai"
+kehna aur sirf desktop par lagna do alag baatein hotin.
+
+Doosra jhoota comment `static/css/pages/index.css`:110 par tha — *"THE SAME HOLE IS
+OPEN ON THE OTHER FIVE PAGES"*. Us waqt ye sach tha; un paanchon ka apna gate baad
+mein chala aur ye jumla peechhe reh gaya.
+
+**Dono jagah mitaya nahi, kaata gaya** aur neeche naapi hui haqeeqat likhi — kyunke
+paanch pages ko us waqt na chherne ki wajah durust thi ("five live pages want their
+own gate run rather than a drive-by"), aur agle bande ko wo wajah dikhni chahiye.
+
+**Naapa gaya:** CSS metrics 0 delta (sirf `shared_css_lines` +12, yani comment ki
+lines — ye ratcheted metric nahi). `test_css_architecture.py` 32 pass.
+
+**Ye is repo ki asal bimari ka teesra namoona hai aaj.** Pehla: ROADMAP ki R1 row
+("5 khali" magar 6 ginwaye). Doosra: `css_baseline.py` ka CLI exit 0 deta hai jabke
+suite fail hoti hai. Teesra ye. **Kaam uthane se pehle naapo — row, comment aur CLI,
+teenon jhoot bol sakte hain.**
+
+## 2026-08-22 — #3: blueprint ka class box ab tajweez deta hai (19 July plan)
+
+`HANDOVER_19July.md` ke "BAQI PENDING" mein **#3 — class dropdown** likha tha:
+free-text box se `Jasmine` / `NUrsery` / `play` jaise gande class aate hain jo
+coverage tod dete hain.
+
+**Naapne par kaam aadha pehle se ho chuka tha:** `index.html` ka generator
+`gradeSelect` (dropdown) use karta hai aur `taqseem.html:68` bhi `<select>` hai.
+**Sirf `blueprint.html`:102 free-text bacha tha** — ek field, poora kaam nahi.
+
+### `<select>` nahi, `<datalist>`
+
+Aap ka plan kehta tha "dropdown + custom fallback", aur yehi wajah hai:
+
+* **`<select>` ghalat hota** — SLO/syllabus se bahar ki class (misal section "8A")
+  likhne ka raasta band ho jata
+* **`/api/slo/facets` bhi ghalat source hota** — us mein sirf wo classes hain jin ke
+  SLO hain, yani aaj **sirf Pre Year 1**. Blueprint us par bandh dete to baqi saari
+  classes ke liye page hi na-qabil-e-istemaal ho jata
+
+Source `/api/syllabus-grades` hai — **wahi jo generator ka `gradeSelect` use karta
+hai**, taake class ke naam poore app mein ek jaise rahein (#3 ka asal maqsad yehi
+tha). Nayi API call nahi: blueprint pehle se `_allGrades` isi endpoint se bharta hai
+(`loadSyllabusGrades()`), bas us ke akhir mein `fillClassNameOptions()` laga di.
+
+### Bhejne wala code chhua hi nahi gaya
+
+`datalist` ke saath `input.value` waisa hi rehta hai, is liye lines 943 aur 1110
+(`bpClassName').value.trim() || null`) **jyun ke tyun** hain. Ye jaan-boojh kar tha —
+is repo mein "ek button chale doosra nahi" wale markup bug isi tarah ke edits se
+aate hain.
+
+**Naapa gaya:** JS `node --check` saaf (script block nikaal kar). CSS **metrics** 0
+delta — koi nayi inline style nahi, koi hex nahi.
+
+**Naapa NAHI gaya:** browser mein khol kar nahi dekha (extension connected nahi).
+Jo dekha jana chahiye: box par click karne se grades ki fehrist aati hai, **aur**
+apni marzi ka matn abhi bhi likha ja sakta hai.
+
+### frozen inventory ne roka, Irfan ke confirm par `--write` — ab 976 pass
+
+```
+blueprint.html: ADDED id="bpClassOptions" - declare it in the task scope, then --write
+```
+
+`scripts/css_baseline.py` ka CLI **exit 0** deta hai aur metrics table par kuch nahi
+kehta — pehra asal mein `tests/test_css_architecture.py` mein hai
+(`test_frozen_inventory_is_unchanged` + `test_everything_at_once`). **Full suite:
+974 pass, 2 fail.**
+
+**Yeh script ki kami hai, code ki nahi:** CLI chalane wala samajhta hai ratchet saaf
+hai jabke suite fail hogi. (Is entry ka pehla draft yehi ghalti kar chuka tha —
+"ratchet saaf" likha gaya tha. Sirf metrics saaf thin.)
+
+`--write` is repo mein insani faisla hai — script ka apna docstring use *"a
+conversation, not a command"* kehta hai. Essay wale kaam (D40) mein maine apna
+banaya hua section **hata diya tha** kyunke us ki zaroorat nahi thi; yahan wo raasta
+hai hi nahi — `datalist` `list="bpClassOptions"` se hi judta hai, id ke baghair
+chalta nahi. **Irfan ne confirm kiya, `--write` chalayi gayi.**
+
+Purani `BASELINE.json` pehle mehfooz ki gayi, phir naye aur purane ka diff naapa gaya —
+kyunke `--write` **saari** metrics dobara likhta hai, sirf wo nahi jo aap chahte hain:
+
+```
+frozen inventory:  blueprint.html: ADDED id="bpClassOptions"     <- sirf yehi, aur kuch nahi
+metrics (sab NEECHE gayin, yani pehra sakht hua):
+  unsanctioned_hex   429 -> 356      legacy_css_lines  2115 -> 1875
+  total_css_lines   2115 -> 1875     total_hardcoded_hex 449 -> 385
+```
+
+Koi REMOVED nahi, koi doosri page nahi — yani is `--write` ke saath kuch chori se
+nahi ghusa. **Zimni faida:** Sprint 6 ki ab tak ki mehnat (−240 legacy lines, −73 hex)
+ab baseline mein lock ho gayi; pehle wo purane oonche adad par dhili pari thi.
+
+**Full suite ab 976 pass, ruff saaf.**
+
+## 2026-08-22 — 429 ab "busy" nahi, "quota" kehta hai
+
+**Chhota fix, magar rozana ghalat rasta dikha raha tha.**
+
+`_provider_error_message()` 429 aur 503 ko ek hi paighaam deta tha:
+*"abhi busy/overloaded hai. Thodi der baad dobara try karen."*
+
+503 par ye theek hai. **429 par ye jhoot hai** — aaj hi naapa gaya ke free-tier
+ka quota **rozana** hai: PY2 sirf 26 calls ke baad ruka, aur PY3 poore waqfe ke
+baad bhi pehli hi call par mara. "Thodi der baad" kabhi nahi chalta; kal chalta hai.
+Jo banda ye paighaam parhta, wo shaam tak dobara koshish karta rehta.
+
+Ab 429 ka apna matn hai: *"quota/rate-limit lag gaya... agar dobara chalane par
+foran yehi aaye to rozana quota khatam hai — kal try karen."* 503 ka purana matn
+waise ka waisa.
+
+**Body nahi parhi ja rahi.** Gemini rozana quota aur per-minute throttle dono par
+429 deta hai; farq sirf response body mein hai. Wo body yahan jaan-boojh kar nahi
+choo-i gayi (us mein API key echo ho sakti hai — isi function ka asal maqsad yehi
+tha), is liye paighaam **dono suraton ka ehaata** karta hai.
+
+**Ek baareek baat jo torh sakti thi:** `scripts/seed_bank.py`:163 ka auto-stop
+paighaam ke **matn** par bharosa karta hai (`"429" in str(err)`). Naye matn mein
+`HTTP 429` isi liye rakha gaya. Ye fallback tab chalta hai jab status object na
+mile.
+
+**Test:** ek nayi test (`test_rate_limit_message_says_quota_not_busy`) jo 429 par
+"quota" + "kal" maangti hai aur "busy" mana karti hai, aur 503 par ulta. Purana
+matn is par **teenon** assertions par fail karta hai — naapa gaya, farz nahi kiya.
+`test_ai_service.py` 18 pass, ruff clean.
+
+## 2026-08-22 — Pre Year 2 seed hua (23/87), Pre Year 3 quota par ruk gaya
+
+**Koi code nahi badla — sirf data.** Tests waise hi 975 pass (seeding se pehle
+chalayi gayin), ruff/CSS ratchet chhu-e nahi gaye kyunke chhune ki zaroorat nahi thi.
+
+`scripts/seed_bank.py` chalayi gayi, dono grades par **ek jaisi settings**:
+
+```
+python -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2" \
+  --types "multiple-choice,short-answer,true-false" --bloom foundational \
+  --max-topics 87 --write
+```
+
+Script ke defaults jaan-boojh kar chhode gaye: `fill-blank` aur `essay` is umar ke
+liye ghalat hain — char saal ka bacha abhi likhna seekh raha hai.
+
+| | nateeja |
+|---|---|
+| Pre Year 2 | **23 / 87 topics, 92 sawal** — MCQ 39, short-answer 27, true-false 26 |
+| Pre Year 3 | **0 / 87 topics** — pehli hi call par 429 |
+| bank total | 502 → **594** |
+
+Backups: `paper_maker_backup_before_preyear2_seed_20260822.db` aur
+`..._preyear3_...` (baad wala mojooda DB ke barabar hai, PY3 ne kuch likha hi nahi).
+
+### Ye kaam grade filter ke baghair NUQSAN deta
+
+Yaad rahe ke ye kaam kal tak kyun ruka hua tha: `485f9ba` se pehle Grade 4 ka paper
+88% pre-school sawalon se banta tha. In 92 naye sawalon ke baad wo ginti aur bigarti —
+**seeding se pehle filter chahiye tha, aur wo ab mojood hai.** Isi liye aaj ye
+mehfooz tha.
+
+### Seed se pehle titles parhe gaye — aur isi ne bachaya
+
+Pehla qadam AI call nahi, `syllabus_topics` ke titles parhna tha (muft hai):
+*"Introduction of number 50"*, *"Concept of up and down"*. Ye **asli pre-school Math**
+nikle, wo jaali duplicate Grade-4 rows nahi jo 2026-08-21 ko paanch subject×grade
+joron mein mile the. Agar ye bhi wahi hote to 350 hisaab ke sawal ghalat naam par
+ban jate — bilkul jaise Geography ke saath hua tha.
+
+### `--bloom foundational` ka koi asar nahi hua — aur ye bug NAHI hai
+
+Data mein har topic se REMEMBER/UNDERSTAND/APPLY/ANALYZE ek-ek nikla, yaani
+`balanced` jaisa. Naapa gaya:
+
+```
+foundational 4  -> R1 U1 A1 AN1      balanced 4  -> R1 U1 A1 AN1     <- bilkul ek
+foundational 10 -> R4 U3 A2 AN1      balanced 10 -> R2 U2 A2 AN2 E1 C1
+```
+
+Hisaab theek hai (40% x 4 = 1.6 -> ceil 2 -> surplus kat kar 1). **Char sawal itne
+kam hain ke koi taqseem apna farq zahir nahi kar sakti.** Ye `bloom_service` ka
+masla nahi, `--per-topic 4` ka hai. **Agla banda isay bug samajh kar peechha na
+kare** — flag chali to sahi, dikhi nahi.
+
+### ANALYZE label se ghabrane ki zaroorat nahi — matn parh kar dekha
+
+Pehle shak hua ke ANALYZE pre-school ke liye ooncha hai aur wo 39 sawal delete karne
+parenge. Sawal parhne par shak ghalat nikla:
+
+> *"You see a small ant and a big elephant. Which animal is bigger?"*
+> *"A tomato is red and a strawberry is red. What colour do they both share?"*
+
+**Label ooncha hai, sawal nahi.** Koi cleanup nahi kiya gaya, aur na hona chahiye.
+Faisla: dono grades ka data yaksaan rakha jaye; `--per-topic` par baad mein poore
+bank ke liye ek saath socha jaye (`--per-topic 5` foundational ko R2/U1/A1/AN1 deta hai).
+
+### Quota: rozana hai, "busy" nahi
+
+PY2 sirf **26 calls** par ruk gaya (21 Aug ko ~60 par ruka tha). PY2 ke aakhri fail
+aur PY3 ki pehli call ke darmiyan backup + command ka poora waqfa tha, phir bhi pehli
+hi call 429 hui — **yaani per-minute throttle nahi, rozana quota.**
+
+**Ek chhoti si kami jo yahan darj kar raha hoon, theek nahi ki:** script 429 ko
+*"Gemini abhi busy/overloaded hai. Thodi der baad dobara try karen"* kehti hai.
+Ye gumraah karta hai — banda thodi der baad try karta rahega jabke asal mein **kal**
+tak intezar chahiye. Paighaam quota aur overload mein farq nahi karta.
+
+**Baqi (kal ke liye):** PY2 ke **64 topics**, PY3 ke **87**. Wahi command dobara
+chalani hai — seeded topics khud chhut jate hain, to dohrane ka koi khatra nahi.
+
 ## 2026-08-21 — D40: teacher ab haath se essay likh sakta hai
 
 **975 pass, ruff clean, CSS ratchet OK.**

@@ -26,7 +26,7 @@ Rule: env reads at module boundary; API keys never in URLs; secrets never logged
 **FR-3 Assembly:** POST `/api/generate-paper` with `paper_type ∈ {mixed, mcq, subjective, custom-ratio}`; when custom-ratio, `mcq_percent ∈ [0,100]`; split = half-up rounding, `subjective = total − mcq` (no drift); per-group Bloom distribution reuses `calculate_bloom_distribution`.
 **FR-4 Guards:** empty/insufficient bank per group → 404 with group-named message (`QuestionBankEmpty`); invalid percent → 400/422. Never crash.
 **FR-5 Replace:** swap one question on a paper preserving position; totals recomputed; usage bumped; ValueError on unknown question.
-**FR-6 Export:** Word (python-docx) and PDF (LibreOffice soffice, path auto-discovered or `SOFFICE_PATH`); print.html view.
+**FR-6 Printing:** ~~Word (python-docx) and PDF (LibreOffice soffice…)~~ — **export was deleted 2026-08-13 (`e2bdcc4`); this requirement is retired.** Output today is `print.html` + print CSS, printed from the browser.
 **FR-7 Results & analysis:** CSV upload → per-question P-value, D-index, bad-question flags; dashboard summaries.
 **FR-8 Adaptive:** build paper targeting weakest Bloom levels from class results.
 **FR-9 Auth:** if `PAPER_MAKER_API_KEY` set → all `/api/*` require matching `X-API-Key` (401 otherwise); static mount `/` always open; frontend stores key (localStorage) and gates on 401.
@@ -56,7 +56,6 @@ Rule: env reads at module boundary; API keys never in URLs; secrets never logged
 
 - **Gemini API** — `x-goog-api-key` header; model `gemini-2.5-flash`; errors sanitized via `AIGenerationFailed`.
 - **Anthropic API** — optional, priority if key present.
-- **LibreOffice** — local binary for docx→pdf.
 
 ## 6. Environment Variables (contract)
 
@@ -66,8 +65,7 @@ Rule: env reads at module boundary; API keys never in URLs; secrets never logged
 | `ANTHROPIC_API_KEY` | optional | preferred provider if set |
 | `PAPER_MAKER_API_KEY` | prod | enables API auth |
 | `PAPER_MAKER_ALLOWED_ORIGINS` | prod | CORS allowlist |
-| `DB_PATH` | prod | SQLite location (Railway volume) |
-| `SOFFICE_PATH` | optional | LibreOffice override |
+| `DB_PATH` | prod | SQLite location |
 
 ## 7. Error Handling Conventions
 

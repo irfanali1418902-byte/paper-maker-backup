@@ -1,6 +1,5 @@
   :root {
     --primary: #2E5AAC;
-    --primary-hover: #244a90;
     --navy: #16294A;
     --tint: #EAF1FB;
     --ink: #16213A;
@@ -8,21 +7,15 @@
     --muted: #5B6678;
     --muted2: #8A93A4;
     --border: #E3E8F1;
-    --surface: #FFFFFF;
-    --bg: #EEF1F6;
     --err-bg: #FBE9E7; --err-tx: #C0392B;
     --ok-bg: #E6F4EC;  --ok-tx: #2E7D5B;
     --warn-bg: #FBF1DF; --warn-tx: #B5760E;
-    --radius-btn: 10px;
-    --shadow: 0 2px 12px rgba(22,33,58,.06);
   }
   html, body { margin: 0; height: 100%; }
-  body {
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    color: var(--ink); background: var(--bg);
-    display: flex; min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+  /* UI-073: font/colour/background/smoothing gaye — 03-elements/typography.css
+     layer(elements) mein wohi paint karti hai aur layer order legacy ko harata
+     hai. Sirf ye do zinda thin. */
+  /* body: pages/bank.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar ---- */
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
@@ -30,18 +23,13 @@
   /* ---- Main ---- */
   .bank-main { flex: 1; min-width: 0; padding: 30px 34px; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-  .page-head { margin-bottom: 24px; }
-  .page-head p  { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
+  /* UI-070: page-head -> `.pagehead`, 05-components/card.css. */
 
-  /* ---- Card ---- */
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+  /* ---- Card ---- UI-068: bare `.card` -> 05-components/card.css.
+     `.add-q-collapse`/`.bp-card`/`.bulk-card` -> pages/bank.css (D51). */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
   /* Collapsible "Naya question add karo" — print.html ke Print Settings jaisa */
-  .add-q-collapse { padding: 0; }
   .add-q-collapse > .add-q-summary {
     list-style: none; cursor: pointer; user-select: none;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -55,14 +43,11 @@
   .add-q-body { padding: 20px 22px 22px; }
 
   /* ---- Form elements ---- */
-  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink2); margin-top: 14px; }
+  /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
+  label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  input[type="text"], input[type="number"], select, textarea {
-    width: 100%; min-height: 44px; padding: 10px 13px; margin-top: 6px;
-    border: 1px solid #D6DEEA; border-radius: 10px;
-    font-size: 14.5px; font-family: inherit; background: #fff; color: var(--ink);
-  }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--tint); }
+  /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; UI-066 note there. */
+  input[type="text"], input[type="number"], select, textarea { width: 100%; min-height: 44px; margin-top: 6px; }
 
   /* .field-row: 05-components/field.css (UI-042) */
 
@@ -89,7 +74,7 @@
   .urdu-toggle-row small { font-size: 11.5px; color: var(--muted); font-weight: 400; }
 
   /* ---- MCQ options grid ---- */
-  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  /* .options-grid: 05-components/field.css; farq + @760: pages/bank.css (UI-076). */
   .opt-input-wrap { display: flex; align-items: center; gap: 8px; }
   .opt-label { font-size: 12px; font-weight: 700; color: var(--muted); width: 20px; flex-shrink: 0; }
   .opt-input-wrap input[type="radio"] { width: auto; min-height: 0; margin: 0; cursor: pointer; accent-color: var(--primary); }
@@ -102,7 +87,6 @@
   .radio-row input[type="radio"] { width: auto; min-height: 0; margin: 0; accent-color: var(--primary); }
 
   /* ---- Bank-paper section ---- */
-  .bp-card { border: 2px solid #c7d8f7; }   /* subtle blue border — distinguishes from add form */
   .bp-card .card-title { color: var(--primary); }
   /* .type-checks + its label: 05-components/field.css (UI-042). The checkbox
      rule below stays — see that file's header for why. */
@@ -117,15 +101,9 @@
   /* ---- Topic image strip ---- */
   .topic-img-strip { margin: 10px 0 4px; }
   .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
-  .strip-filter { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-  .strip-filter input, .strip-filter select {
-    min-height: 30px; padding: 4px 9px; font-size: 12px;
-    border: 1px solid #D6DEEA; border-radius: 7px; font-family: inherit;
-    background: #fff; color: var(--ink);
-  }
+  /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  .strip-filter input:focus, .strip-filter select:focus { outline: none; border-color: var(--primary); }
-  .strip-empty { font-size: 11.5px; color: var(--muted2); padding: 4px 0; }
+  /* .strip-empty: 05-components/empty.css (UI-076); colour pages/bank.css mein. */
   .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 180px; overflow-y: auto; }
   .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
   .topic-img-thumb {
@@ -182,50 +160,37 @@
   .q-marks { font-size: 12.5px; font-weight: 700; color: var(--muted); white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
   .q-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 1px; }
 
-  .list-empty { text-align: center; color: var(--muted2); padding: 40px 20px; font-size: 14px; }
+  /* .list-empty: 05-components/empty.css (UI-076); padding pages/bank.css mein. */
   #listStatus { font-size: 13px; color: var(--muted); margin-bottom: 10px; min-height: 20px; }
 
   /* ---- Edit Modal ---- */
+  /* scrim, radius, shadow, close size: modal.css (UI-067). */
   .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,.45); z-index: 999;
+    display: none; position: fixed; inset: 0; z-index: 999;
     align-items: center; justify-content: center; padding: 16px;
   }
   /* .modal-backdrop.open: 05-components/modal.css (UI-042) */
   .modal {
-    background: #fff; border-radius: 12px; padding: 24px 28px;
+    background: #fff; padding: 24px 28px;
     width: min(640px, 96vw); max-height: 92vh; overflow-y: auto;
-    box-shadow: 0 16px 48px rgba(0,0,0,.22);
   }
-  /* .modal-header: 05-components/modal.css (UI-042). The h3 stays: its only
-     live declaration is the colour — margin is reset.css's and the 16px loses
-     to typography.css, measured at 14px. */
-  .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy); }
+  /* .modal-header: 05-components/modal.css (UI-042). UI-062 dropped the two
+     dead declarations UI-042 had already named — margin is reset.css's, the
+     16px loses to typography.css (measured 14px). Only the colour was live. */
+  .modal-header h3 { color: var(--navy); }
   .modal-close {
-    background: none; border: none; font-size: 22px; cursor: pointer;
+    background: none; border: none; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;
   }
   .modal-close:hover { color: var(--ink); }
-  /* .modal-footer: 05-components/modal.css (UI-042) */
-  .btn-cancel {
-    padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-btn);
-    background: #fff; cursor: pointer; font-size: 14px; font-family: inherit;
-  }
-  .btn-cancel:hover { background: var(--bg); }
-  .btn-save {
-    padding: 8px 20px; border: none; border-radius: var(--radius-btn);
-    background: var(--primary); color: #fff; cursor: pointer;
-    font-size: 14px; font-weight: 600; font-family: inherit;
-  }
-  .btn-save:hover { background: var(--primary-hover); }
-  .btn-save:disabled { opacity: .6; cursor: not-allowed; }
+  /* .modal-footer: 05-components/modal.css (UI-042).
+     .btn-cancel / .btn-save + states: 05-components/btn.css (UI-062). */
   .modal-err {
     background: var(--err-bg); border: 1px solid #ffb3b3; border-radius: 7px;
     padding: 8px 12px; font-size: 13px; color: var(--err-tx); margin-bottom: 12px; display: none;
   }
 
   /* ---- Bulk Upload ---- */
-  .bulk-card { border: 2px solid #c7d8f7; }
   .bulk-card .card-title { color: var(--primary); }
   .bulk-drop-zone {
     border: 2px dashed #b8c9e8; border-radius: 10px;
@@ -296,9 +261,10 @@
   .float-bar input[type="text"]::placeholder { color: rgba(255,255,255,.45); }
   .float-bar input[type="text"]:focus, .float-bar select:focus { outline: none; border-color: #5B8DEF; }
   .fb-count { font-size: 13px; font-weight: 700; white-space: nowrap; }
-  .btn-fb-save { padding: 6px 16px; border: none; border-radius: 8px; background: #5B8DEF; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  /* UI-063 took the radius only — these are the on-dark variant; D48 */
+  .btn-fb-save { padding: 6px 16px; border: none; border-radius: var(--radius-control); background: #5B8DEF; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .btn-fb-save:hover { background: #3a6cdf; }
-  .btn-fb-cancel { padding: 6px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; background: transparent; color: rgba(255,255,255,.8); font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .btn-fb-cancel { padding: 6px 14px; border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-control); background: transparent; color: rgba(255,255,255,.8); font-size: 13px; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .btn-fb-cancel:hover { background: rgba(255,255,255,.1); }
 
   /* ---- Bulk checkbox ---- */
@@ -306,11 +272,5 @@
 
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
-    body { flex-direction: column; }
-    .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 14px 16px; gap: 10px; align-items: center; }
-    .brand { padding: 0; }
-    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0; }
-    .sidebar-foot { display: none; }
     .bank-main { padding: 16px 14px; }
-    .options-grid { grid-template-columns: 1fr; }
   }

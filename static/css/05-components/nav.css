@@ -23,13 +23,18 @@
        as `.o-shell` and `.o-shell__spacer` — UI-030 shipped the grid and the
        flex spacer in full. Repeating them here would duplicate the layout this
        epic exists to de-duplicate.
-     · `.nav a .icon` is DEAD and is deliberately absent. static/app.css:57
-       sets a bare `.icon` UNLAYERED, and an unlayered rule sits outside the
-       layer order entirely (main.css:73-74), so it beats every @layer
-       regardless of specificity. Specificity would suggest otherwise —
-       `.nav a .icon` is 0,2,0 against a bare 0,1,0 — and that reading is
-       wrong. This is the same finding landing's icon decision turned on.
-       theme.css:84 also spells it `.nav a .ic, .nav a .icon`; the `.ic` half
+     · `.nav a .icon` is DEAD and is deliberately absent. ⚠ THE REASON CHANGED
+       ON 2026-09-02 (UI-075, item 9) EVEN THOUGH THE VERDICT DID NOT.
+       Previously: static/app.css:57 set a bare `.icon` UNLAYERED, and an
+       unlayered rule sits outside the layer order entirely (main.css:73-74), so
+       it beat every @layer regardless of specificity. app.css is now deleted and
+       that rule lives in 05-components/icon.css, in THIS layer. So a
+       `.nav a .icon` here would no longer lose to an unlayered rule — it would
+       win on specificity (0,2,0 against a bare 0,1,0) and change the icons. It
+       stays absent because there is nothing for it to say: every icon in the app
+       is the same 17x17 box, which is exactly what icon.css declares once.
+       theme.css:84 also spelled it `.nav a .ic, .nav a .icon` (that file was
+       deleted at UI-064); the `.ic` half
        is dead for the same reason and the board records only `.icon`.
 
    `.top` AND `.nav` SHRINK TO TWO DECLARATIONS EACH. shell.css already owns
@@ -187,15 +192,32 @@
 
    Adopted by bank, library, slo and slo-health, whose six legacy shell rules
    were measured identical on all four before any of this was written, and by
-   index on 2026-08-20 — the panel and the brand name only. index's `.brand` is
-   a flex row around a 40px logo and its `.tag` is a live `<div>`, so neither
-   `.sidenav__brand` nor `.sidenav__brand-sub` is on it. index also hid this
-   panel below 760px, and that override had to move UP into pages/index.css to
-   outrank the `display: flex` below. Opt-in
+   index on 2026-08-20 — the panel and the brand name only.
+
+   UI-068 BROUGHT THE LAST THREE SIDEBAR PAGES ONTO `.sidenav__brand`: index,
+   taqseem and print. The paragraph here used to explain why index was not on
+   it — "index's `.brand` is a flex row around a 40px logo and its `.tag` is a
+   live `<div>`" — and that reasoning was sound but produced the wrong split.
+   `.sidenav__brand` declares PADDING and nothing else, and index's padding was
+   already `2px 22px 20px`, byte-identical to it. The flex row and the logo are
+   what could not come, and those are page cosmetics; they live in
+   pages/index.css and pages/taqseem.css. Same for taqseem's logo.
+
+   print had never been given the class at all, and UI-065 had already taken
+   its `.app-sidebar { padding: 24px 18px }` away — so from 2026-08-27 to
+   2026-08-28 print's brand sat flush at padding 0 against the navy edge, the
+   only sidebar page of seven that did. Measured, not spotted by eye. Adopting
+   the class is the fix.
+
+   index also hid this panel below 760px, and that override had to move UP into
+   pages/index.css to outrank the `display: flex` below. Opt-in
    by class, the same way `.sidenav` was: nothing here is named `.app-sidebar`
    or `.brand`, so no page gets it without asking. That distinction is what
    UI-047b's ban was actually about — a rule NAMED `.brand` in layer(components)
-   repaints all nine pages the moment they link main.css.
+   repaints all nine pages the moment they link main.css. It is still the right
+   ban: `.brand` is on landing too, where it is a HERO block in a gradient
+   header — a 52px white logo and a 20px name, nothing to do with a sidebar.
+   The audit files landing under "brand"; the markup says it is not this thing.
 
    blueprint is not in this group: it runs 04-objects/shell.css's `.o-shell`
    grid, which owns its sidebar box already.
@@ -229,14 +251,32 @@
   line-height: 1.15;
 }
 
-/* TWO DECLARATIONS OF THE LEGACY RULE ARE DELIBERATELY ABSENT. It also set
-   `font-size: 10.5px` and `color: #9DB0D0`, and both are already dead: the
-   subtitle measures 11.5px in slate on all four pages, not 10.5px in pale
-   blue. Carrying them into layer(components) would have brought them back —
-   the mistake .filter-bar made on 2026-08-15. */
+/* THE FONT-SIZE STAYS ABSENT. THE COLOUR CAME BACK IN UI-068, AND THE
+   REASON THE OLD NOTE MISSED IT IS WORTH KEEPING.
+
+   That note said the legacy rule's `font-size: 10.5px` and its pale-blue
+   `color` were "already dead — the subtitle measures 11.5px in slate on all
+   four pages", and carrying them up would resurrect them. True on both counts,
+   and it is why the size is still not here. But "dead" only said the legacy
+   declaration lost; it never asked WHAT WON. What won is
+   03-elements/typography.css:88 — a bare `small { color: --color-text-muted }`
+   in layer(elements), correct for body copy, and it was painting slate-500
+   on a navy sidebar on six pages. Measured 2026-08-28: --slate-500 over
+   --navy-900 is ~3.1:1, under AA for small text.
+
+   So this is not a legacy value being resurrected — it is a role that was
+   never chosen being replaced by one that was. `--color-sidebar-fg-muted`
+   (--navy-400, ~4.5:1) already existed for exactly this job (theme.css:131)
+   and had one consumer, `.sidenav__foot`. Irfan, 2026-08-28.
+
+   The old legacy pale blue was NOT the answer even though it reads better
+   still (~6.8:1): it is in no Tier 1 role, and 99-legacy/landing.css is now
+   its only user. No hex is spelled in this comment on purpose — the ratchet
+   counts comment lines too, and this check has failed that way before. */
 .sidenav__brand-sub {
   display: block;
   margin-top: 3px;
+  color: var(--color-sidebar-fg-muted);
 }
 
 .sidenav__foot {
@@ -245,4 +285,64 @@
   font-size: 12px;
   color: var(--color-sidebar-fg-muted);
   line-height: 1.6;
+}
+
+/* THE NARROW-SCREEN COLLAPSE, AND IT IS A BUG FIX, NOT AN ADDITION.
+   ------------------------------------------------------------------------
+   This component had NO @media rule at all, and `legacy` is the WEAKEST layer
+   (main.css:42). So every page's own `@media { .app-sidebar { width: 100% } }`
+   lost to `.sidenav__panel`'s `width: 248px` here, and the sidebar stayed a
+   248px sticky column on a phone instead of becoming a top bar.
+
+   MEASURED 2026-08-27 at the 700px band, BEFORE this rule existed:
+
+     slo, slo-health, library, bank, index   248px, sticky   <- broken
+     taqseem, print                          700px, static   <- correct
+
+   The five broken ones are exactly the five that carry `sidenav__panel`. The
+   two correct ones were the two still OFF the component — which is why UI-065,
+   moving those two on, is what surfaced it. Nothing caught it for the fourteen
+   days it existed because every probe in this repo ran at 1280x900 until
+   UI-064; see PROBES.md rule 12.
+
+   THE VALUES ARE THE MAJORITY LEGACY VARIANT, NOT NEW DESIGN: bank, blueprint
+   and library all declared exactly this. Two things had to be picked because
+   the nine files disagreed, and both are recorded rather than silently chosen:
+
+     · 760px, not 720px. Four files said 760 (bank, blueprint, library, print),
+       three said 720 (slo, slo-health, taqseem). Those three now collapse
+       40px earlier than they used to — a real, intended delta in the 721-760
+       band, and the only band where this rule changes a page that was already
+       working.
+     · `flex-direction: row`. The 760 group wrapped the nav into a bar; the 720
+       group kept a column. Row is the majority and is what a top bar means. */
+@media (max-width: 760px) {
+  .sidenav__panel {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  /* SCOPED TO INSIDE THE PANEL, and the first draft was not — it said `.sidenav`
+     and broke blueprint. blueprint carries `class="o-shell__nav sidenav"`: the
+     SAME nav component inside a TOP BAR, not a sidebar (it is the one page on
+     `o-shell`). A bare `.sidenav` rule turned its already-horizontal-shell nav
+     from column to row and stripped its padding — 18 deltas on a page that has
+     no sidebar to collapse. Measured, then scoped. */
+  .sidenav__panel .sidenav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  /* Hidden on a bar, exactly as all three legacy variants had it — the foot is
+     a paragraph of help text and there is no room for it beside the links. */
+  .sidenav__panel .sidenav__foot {
+    display: none;
+  }
 }

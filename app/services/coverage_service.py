@@ -141,12 +141,37 @@ def coverage_summary(class_name: str, subject: str) -> dict:
     }
 
 
-def _summary_row(exam_no: int, planned_ids: set, covered_count: int, unassigned: bool = False) -> dict:
+def bucket_row(planned_ids: set, covered_count: int, unassigned: bool = False) -> dict:
+    """Ek bucket ka planned/covered/percent -- kis cheez ka bucket hai, ye NAHI jaanta.
+
+    R7 Marhala 3 mein ye `_summary_row` se nikal kar public hua, aur ye faisla naap
+    kar hua tha. Spec (docs/TOPIC_WEEK_PLAN.md sec 8) kehta tha `_assemble_coverage`
+    ko key-parameterize karo; teen cheezein us ke khilaf naapi gayin (2026-08-23):
+
+      1. `_assemble_coverage` ko aaj koi bahar se bulata hi nahi -- us ke docstring ka
+         "Hissa 4 dobara istemal karega" wala waada kabhi poora nahi hua.
+      2. Us ka maal (covered/remaining/strands + paper_ids drill-down) hafta-war
+         report ko chahiye hi nahi; report per-bucket ginti hai.
+      3. Jo waqai dono jagah ek jaisa hai wo yeh aath lines hain.
+
+    To parameterize wo function nahi hua jise spec ne naam diya tha. `_assemble_coverage`
+    bilkul chhua nahi gaya -- us ke SLO tests bina hile green hain.
+
+    `exam_no` yahan se GAYA hai: caller apni bucket key khud lagata hai (`exam_no` ya
+    `week_no`). Isi liye ye function dono services ke kaam aata hai. Percent ka rule
+    wohi hai jo pehle tha -- planned 0 ho to None, 0% nahi (0/0 ko 0% dikhana jhoot
+    hai; `_assemble_coverage` bhi yehi karta hai)."""
     planned = len(planned_ids)
     return {
-        "exam_no": exam_no,
         "unassigned": unassigned,
         "planned": planned,
         "covered": covered_count,
         "coverage_percent": round(covered_count / planned * 100) if planned else None,
     }
+
+
+def _summary_row(exam_no: int, planned_ids: set, covered_count: int, unassigned: bool = False) -> dict:
+    """Exam ka bucket row -- shared `bucket_row` + is domain ki key. Wrapper isliye
+    rakha gaya ke `coverage_summary` ka output byte-ke-byte wohi rahe jo tha, aur
+    `exam_no` pehli key rahe."""
+    return {"exam_no": exam_no, **bucket_row(planned_ids, covered_count, unassigned)}
