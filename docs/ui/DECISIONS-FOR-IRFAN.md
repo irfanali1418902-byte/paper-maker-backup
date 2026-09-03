@@ -133,7 +133,7 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
 |---|---|---|
 | `.options-grid` | `bank.css:77`, `print.css:257` | gap **8px** banaam **6px**; bank par `margin-top: 8px`, print par nahi. Print ke paas `.options-grid input { width:100% }` bhi hai, bank ke paas nahi. Bank ke paas `@760` ka `1fr` override bhi hai. |
 | `.strip-empty` | `bank.css:106`, `print.css:306` | sirf rang: `var(--muted2)` banaam **ek hardcoded hex**. Wo hex `unsanctioned_hex` mein ginta hai. |
-| `.list-empty` | `bank.css:163`, `blueprint.css:117` | padding **40px 20px** banaam **30px**. Baqi teen declarations barabar. |
+| `.list-empty` | `bank.css:163`, `blueprint.css:117` | padding **40px 20px** banaam **30px**. ~~Baqi teen declarations barabar.~~ ⚠ **Ye aakhri jumla 2026-09-03 ko naapne par GHALAT nikla — RANG bhi alag hai.** Dono `color: var(--muted2)` likhti hain, magar `--muted2` har page apna declare karta hai: `bank.css:8` par `#8A93A4`, `blueprint.css:9` par `var(--muted)`. Naapa (inject probe): bank **rgb(138,147,164)**, blueprint **rgb(100,116,139)**. Yani declaration lafz-ba-lafz barabar hai aur natija barabar nahi — **do farq hain, ek nahi.** |
 
 | | |
 |---|---|
@@ -143,6 +143,13 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
 
 **Do baatein jo faisle se pehle jaan lena zaroori hai:**
 
+* ✅ **FIXTURES LIKHI JA CHUKI HAIN — 2026-09-03, `css_inject_probe.mjs` mein paanch entries**
+  (bank ke teen, blueprint aur print ka ek ek). **Control se sabit:** blueprint ka
+  `.list-empty` padding `30px → 40px 20px` karne par diff ne **theek 4 deltas usi element
+  par** diye aur baqi har jagah 0, aur revert ke baad phir 0. Yani `A` ka kaam ab naapa
+  ja sakta hai. Tafseel `PROBES.md` rule 11.
+  ⚠ **Line-hawale neeche EK-EK ZYADA thay** — asal `bank.html:843`/`:1006`/`:1255`,
+  `print.html:353`, `blueprint.html:1062`.
 * **`.strip-empty` aur `.list-empty` dono JS se bante hain** (`innerHTML`, `bank.html:844`,
   `:1007`, `print.html:354`, `bank.html:1256`, `blueprint.html:1063`). **`css_type_probe`
   aur `css_state_probe` inhein sifar elements ginte hain, yani ghalat tabdeeli par bhi
@@ -150,6 +157,27 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
   mein ye do abhi **nahi** hain — B ya A par jane se pehle **fixtures likhni parengi.**
 * **B ka ek muft faida hai:** `.strip-empty` ka print wala hardcoded hex `var(--muted2)`
   ke haq mein khatam ho jayega, yani `unsanctioned_hex` ek aur ghatega.
+* ⚠ **TEESRA RULE — `.options-grid` — ka gate BHI shak ke daire mein hai, aur ye 2026-09-03
+  ko nikla. Ise step 2 se PEHLE naapna hai.** Ye rule JS se nahi banti (markup mein mojood
+  hai: `bank.html:134`, `:476`, `print.html:139`, `:143`) — is liye `css_type_probe` ke
+  liye ye sifar-element wala maamla **nahi** hai aur is ki fixture nahi likhi gayi. Magar
+  chaar mein se **teen** copies aaram se nazar aane wali jagah par nahi hain:
+
+  | kahan | parda |
+  |---|---|
+  | `bank.html:134` (`#sec-mcq`) | khula — naapa gaya, koi chhupa ancestor nahi ✅ |
+  | `bank.html:476` | `#ef-opts-sec` `display:none`, **aur** us ke ooper `#editBackdrop` `.modal-backdrop` |
+  | `print.html:139`, `:143` | `#editModalBackdrop` `.modal-backdrop` |
+
+  `99-legacy/print.css:220` par `.modal-backdrop { display: none }` hai aur `open` class
+  hi use kholti hai (`modal.css:42`). **Jo abhi tak naapa NAHI gaya wo ye hai ke is soorat
+  mein `css_type_probe` ki apni property list mein se kitni qadrein bharosay ke laiq
+  rehti hain** — `gap` jaisi computed qadrein `display:none` ke neeche bhi theek aati
+  hain, magar layout se nikalne wali (used) qadrein nahi (D53 ka doosra hissa).
+  **Step 2 mein `.options-grid` ko haath lagane se pehle ye naapo**, warna us rule ka
+  natija ek aisi run par khara hoga jis ka aadha matlab hai. Agar kamzor nikle to isi
+  file mein `.options-grid` ki bhi fixture likhni paregi — modal wahi `open` class se
+  khulegi jo dono strip fixtures pehle se istemal karti hain.
 
 | # | answer |
 |---|---|

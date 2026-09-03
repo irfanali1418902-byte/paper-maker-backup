@@ -53,6 +53,11 @@ const PROPS = [
   'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
   'font-size', 'font-weight', 'line-height',
   'list-style-type', 'list-style-position',
+  /* `text-align` 2026-09-03 ko add hui, item 8 ke `.list-empty` ke saath — wo rule
+   * `text-align: center` declare karti hai aur us ke baghair fixture us ka aadha
+   * matlab hi na naapti. Rule 3 ("property set naapne se PEHLE tay ho") isi liye
+   * poori hui: ye line pehli run se pehle likhi gayi, natija dekh kar nahi. */
+  'text-align',
 ];
 
 /* ── THE FIXTURES ────────────────────────────────────────────────────────────────────────
@@ -61,6 +66,52 @@ const PROPS = [
  * `html`  — the builder's own output shape, text replaced with placeholders.
  * Each entry cites the source line so the next reader can check it has not rotted. */
 const FIXTURES = {
+  /* ── item 8 ka tail (§6 ka jawab A, 2026-09-03) ──────────────────────────────────────
+   * `.strip-empty` aur `.list-empty` DONO JS se bante hain, is liye `css_type_probe`
+   * inhein sifar elements ginta hai aur GHALAT tabdeeli par bhi 0 deltas deta — wohi
+   * D45 wali shakl. Ye paanch fixtures us gate ko zinda karti hain, aur `A` ka poora
+   * maqsad yehi hai ke har page ka apna farq mehfooz rahe: bank ka `.list-empty`
+   * 40px 20px hai aur blueprint ka 30px, bank ka `.strip-empty` `var(--muted2)` hai
+   * aur print ka `#999` — agar component in mein se kisi ko barabar kar de to ye
+   * fixtures hi wo pakrengi.
+   *
+   * ⚠ LINE-HAWALE 2026-09-03 KO DOBARA NAAPE GAYE AUR `DECISIONS-FOR-IRFAN.md` §6 ke
+   * hawale EK-EK ZYADA THAY (:844/:1007/:354/:1256/:1063 likhe thay; asal :843/:1006/
+   * :353/:1255/:1062 hain). Neeche wale naape hue hain. */
+  bank: [
+    /* bank.html:843 _renderAddStrip() — `row` = #addTopicImgRow (bank.html:98), jo
+     * #addTopicStrip (bank.html:84) ke andar hai. Wo strip `style="display:none"` ke
+     * saath aati hai aur builder khud `strip.style.display = ''` karta hai (bank.html:840);
+     * fixture bilkul wohi karti hai, warna hum display:none ke neeche naap rahe hote. */
+    {
+      into: '#addTopicImgRow',
+      set: [{ sel: '#addTopicStrip', attr: 'style', value: '' }],
+      html: '<div class="strip-empty">Filter se koi image nahi mili.</div>',
+    },
+    /* bank.html:1006 _renderEditStripImgs() — `row` = #efTopicImgRow (bank.html:595),
+     * #efTopicStrip (bank.html:581) ke andar, jo KHUD edit modal #editBackdrop
+     * (bank.html:455) ke andar hai. Do parde hain, dono kholna parte hain:
+     *   1. modal — app `classList.add('open')` karti hai (bank.html:1407)
+     *   2. strip — inline display:none, magar us ke saath `margin-top:14px` bhi hai,
+     *      is liye style poori khali nahi ki, sirf display hataya — app bhi yehi
+     *      karti hai (`strip.style.display = ''`, bank.html:1004). */
+    {
+      into: '#efTopicImgRow',
+      set: [
+        { sel: '#editBackdrop', attr: 'class', value: 'modal-backdrop open' },
+        { sel: '#efTopicStrip', attr: 'style', value: 'margin-top:14px;' },
+      ],
+      html: '<div class="strip-empty">Filter se koi image nahi mili.</div>',
+    },
+    /* bank.html:1255 loadList() — `listEl` = #qList (bank.html:436). Koi parda nahi:
+     * naapa gaya ke us ke ooper koi display:none ancestor nahi hai, is liye na `set`
+     * chahiye na `show`. */
+    {
+      into: '#qList',
+      html: '<div class="list-empty">Koi question nahi mila. Upar form se naya question add karo.</div>',
+    },
+  ],
+
   /* blueprint.html:1280 shortfallHtml(), delivered via :1189 setStatusHtml('warn', …),
    * which sets `class="status-bar warn"` on #actionStatus. */
   blueprint: [{
@@ -74,6 +125,15 @@ const FIXTURES = {
       + '<ul class="sf-options"><li>opt</li>'
       + '<li>opt <span class="sf-gain">gain</span></li></ul>'
       + '</div></div>',
+  },
+  /* blueprint.html:1062 loadBlueprints() — `listEl` = #bpList (blueprint.html:168),
+   * `.bp-list` ke andar ek `.card` mein. Koi chhupa ancestor nahi.
+   * ⚠ YEHI WO JODA HAI JIS PAR ITEM 8 KA FAISLA HUA: blueprint ka `.list-empty`
+   * padding 30px hai aur bank ka 40px 20px. Dono fixtures isi liye saath likhi gayi
+   * hain — `A` ke baad bhi ye farq zinda rehna chahiye. */
+  {
+    into: '#bpList',
+    html: '<div class="list-empty">Koi blueprint save nahi hua abhi tak.</div>',
   }],
 
   /* print.html:993 — same six inner rules, different box, and `no-print` on the panel.
@@ -93,6 +153,25 @@ const FIXTURES = {
       + '<ul class="sf-options"><li>opt</li>'
       + '<li>opt <span class="sf-gain">gain</span></li></ul>'
       + '</div>',
+  },
+  /* print.html:353 _renderTopicStripImgs() — `row` = #ef_topic_strip_row
+   * (print.html:205), #ef_topic_strip (print.html:191) ke andar, jo edit modal
+   * #editModalBackdrop (print.html:117) ke andar hai. Bank wali jodi jaisa hi
+   * do-parda maamla, aur app ke apne tareeqe se khola gaya: modal par
+   * `classList.add('open')` (print.html:341), strip par `style.display = ''`
+   * (print.html:351). Is strip ke inline style mein display ke ilawa kuch nahi,
+   * is liye yahan poora style khali kiya gaya hai.
+   * ⚠ YEHI ITEM 8 KA DOOSRA JODA HAI: print ka `.strip-empty` rang HARDCODED `#999`
+   * hai aur bank ka `var(--muted2)`. Wo hex `unsanctioned_hex` mein ginta hai, magar
+   * `A` us ko nahi maarta (wo `B` ka faida tha) — ye fixture sirf ye pakregi ke
+   * component farq mita to na de. */
+  {
+    into: '#ef_topic_strip_row',
+    set: [
+      { sel: '#editModalBackdrop', attr: 'class', value: 'modal-backdrop no-print open' },
+      { sel: '#ef_topic_strip', attr: 'style', value: '' },
+    ],
+    html: '<div class="strip-empty">Filter se koi image nahi mili.</div>',
   }],
 
   /* index.html:2190-2192 — three `.pill`s, and each carries its colour as an INLINE style.
@@ -231,7 +310,10 @@ const injectExpr = (fixtures) => String.raw`(() => {
     if (f.cls) host.className = f.cls;
     if (f.show) host.style.display = '';
     const holder = document.createElement('div');
-    holder.setAttribute('data-inject-probe', '1');
+    /* Container ka selector, sirf '1' nahi -- ye key ka hissa banta hai. Dekhein
+       snapExpr ka comment: do fixtures jin ki shakl aur jagah ek jaisi ho, ek jaisi
+       key deti thin aur EK KHAMOSHI SE DOOSRI KO MITA DETI THI. */
+    holder.setAttribute('data-inject-probe', f.into);
     if (f.wrap) holder.className = f.wrap;
     holder.innerHTML = f.html;
     host.appendChild(holder);
@@ -252,12 +334,23 @@ const snapExpr = String.raw`(() => {
     }
     return parts.join('>');
   };
+  /* KEY MEIN CONTAINER KA SELECTOR SHAMIL HAI, AUR YE 2026-09-03 KI DURUSTI HAI.
+     Pehle key sirf path() thi. Us din bank par teen fixtures aayin -- do strip-empty
+     jo do alag containers (#addTopicImgRow, #efTopicImgRow) mein jati hain magar shakl
+     aur jagah bilkul ek jaisi rakhti hain. Dono ki path "DIV[0]>DIV[0]" bani, out ek
+     plain object hai, aur DOOSRI ne PEHLI KO CHUP-CHAAP MITA DIYA: "injected 3, elems 2".
+     Ye rule 10 ki apni bimari ka naya rukh tha -- gate ne ghalti nahi batayi, sirf ek
+     fixture kam ginayi, aur agar injected aur elems ka farq na dekha jata to run
+     "saaf" lagti. Ab har key us container se shuru hoti hai jis mein fixture gayi.
+     (Aur is comment ne file ki apni tanbeeh sach kar di: pehli koshish mein yahan
+     backtick likh diye thay aur String.raw literal wahin khatam ho gaya.) */
   for (const holder of document.querySelectorAll('[data-inject-probe]')) {
+    const into = holder.getAttribute('data-inject-probe');
     for (const el of holder.querySelectorAll('*')) {
       const cs = getComputedStyle(el);
       const rec = { '@': el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : '') };
       for (const p of PROPS) rec[p] = cs.getPropertyValue(p);
-      out[path(el)] = rec;
+      out[into + ' ' + path(el)] = rec;
     }
   }
   return out;

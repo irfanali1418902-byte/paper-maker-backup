@@ -326,3 +326,33 @@ once:
 
     ⚠ **A RENAME MAKES ITS OWN ENTRY'S BEFORE/AFTER MEANINGLESS.** The element identity
     changed on purpose, so read absolute values for that entry instead of the diff.
+
+    ⚠ **TWO FIXTURES OF THE SAME SHAPE USED TO EAT EACH OTHER — fixed 2026-09-03, and the
+    only reason it was caught is that `injected` and `elems` disagreed.** Item 8's fixtures
+    put an identical `.strip-empty` into two different bank containers (`#addTopicImgRow`,
+    `#efTopicImgRow`). Both are the first child of their host, so `path()` produced the same
+    key for both, the snapshot object is a plain object, and **the second silently
+    overwrote the first**: the run printed `injected 3, elems 2` and was otherwise clean.
+    Keys now begin with the container selector the fixture was injected into. **Read the
+    `injected` and `elems` columns against each other** — a fixture that vanishes this way
+    does not report an error, and a gate that measures two things where you wrote three is
+    rule 10's own disease one level down.
+
+11. **A fixture is not a gate until a control has broken it.** *(2026-09-03, item 8.)*
+
+    The five new fixtures all resolved and printed plausible values on the first clean run —
+    which proves only that they found *something*. The proof they measure the right thing is
+    the control: `99-legacy/blueprint.css`'s `.list-empty` padding was changed `30px` →
+    `40px 20px`, and the diff returned **exactly 4 deltas on exactly that element and 0
+    everywhere else**, then **0 again after the revert**. Do this before trusting any new
+    fixture. It costs two probe runs and it is the difference between a gate and a decoration
+    — D45 was written because a probe that could not see a change passed happily.
+
+    Values the fixtures pulled on the first run, which are also item 8's own disagreements:
+
+    ```
+    bank      .strip-empty  color rgb(138,147,164)   pad 4px 0
+    print     .strip-empty  color rgb(153,153,153)   pad 4px 0     <- hardcoded #999
+    bank      .list-empty   color rgb(138,147,164)   pad 40px 20px
+    blueprint .list-empty   color rgb(100,116,139)   pad 30px      <- BOTH differ
+    ```
