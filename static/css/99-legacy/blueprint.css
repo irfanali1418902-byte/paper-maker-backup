@@ -216,6 +216,6 @@
      pages/blueprint.css ka `.o-shell__brand` layer(components) mein hai aur ye
      legacy mein, to paanchon bands par 18px/16px hi naapa gaya. Murda thi. */
   @media (max-width: 760px) {
-    body { flex-direction: column; }
+    /* body ki murda flex-direction delete (UI-077) — is page ki body block hai. */
     .bp-main { padding: 16px 14px; }
   }

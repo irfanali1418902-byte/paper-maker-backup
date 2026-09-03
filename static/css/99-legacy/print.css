@@ -22,7 +22,7 @@
   /* UI-073: dekho bank.css ka wohi note. `margin` 02-generic/reset.css deti hai,
      aur is page ka apna `color` (rgb(26,26,26)) bhi murda tha — nau ke nau pages
      ek hi qeemat compute karte hain. */
-  body { display: flex; min-height: 100vh; }
+  /* body: pages/print.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar (screen only, hidden in print) ----
      UI-065: panel + nav + links moved to 05-components/nav.css; print.html now carries
@@ -193,7 +193,8 @@
   #status { text-align: center; padding: 40px; color: var(--muted); }
 
   @media print {
-    body { background: #fff; display: block; }
+    /* display: block -> pages/print.css @layer objects (UI-077); background yahin. */
+    body { background: #fff; }
     .app-sidebar { display: none !important; }
     .no-print { display: none !important; }
     .print-main { padding: 0; }
@@ -201,7 +202,6 @@
   }
 
   @media (max-width: 760px) {
-    body { flex-direction: column; }
     .print-main { padding: 16px; }
   }
 

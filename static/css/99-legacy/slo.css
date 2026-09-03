@@ -8,7 +8,7 @@
   }
   html, body { margin: 0; height: 100%; }
   /* UI-073: dekho bank.css ka wohi note. */
-  body { display: flex; min-height: 100vh; }
+  /* body: pages/slo.css ka @layer objects (UI-077). */
 
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
 
@@ -49,5 +49,4 @@
   .empty-state { color: var(--muted); font-size: 13.5px; padding: 16px 0; }  /* 18->16, majority; UI-071 */
 
   @media (max-width: 720px) {
-    body { flex-direction: column; }
   }

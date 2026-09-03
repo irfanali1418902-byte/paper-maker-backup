@@ -324,7 +324,33 @@ un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
   (`:32`) ZINDA hai** — 0.44px letter-spacing, jo kahin aur declare nahi hota. **Wo
   chhori gayi hai; use delete mat karna.** `pages/index.css:245` ka comment
   (*"Both legacy `.tag` declarations can go"*) **is baare mein ghalat hai.**
-* **`body` ka bacha hua hissa** (UI-073 ne sirf murda hissa liya): `display:flex` +
+* ~~**`body` ka bacha hua hissa**~~ ✅ **HO GAYA 2026-09-03 (UI-077) — faisla: `plan.css`
+  wala namoona sab par.** Chhe pages (`bank`, `library`, `print`, `slo`, `slo-health`,
+  `taqseem`) ki `body { display: flex; min-height: 100vh }` aur un ka `@media`
+  `flex-direction: column` `99-legacy/` se nikal kar **har page ki apni `pages/*.css` ke
+  `@layer objects`** mein — bilkul waise jaise `plan` pehle se karta tha. Qadrein nahi badlin.
+  `legacy_css_lines` **1704 → 1699**, `unsanctioned_hex` 300 par barqarar.
+  **Gate: `css_type_probe`, das pages × paanch viewports — chhe pages par 0 deltas.**
+  ⚠ **CHAAR CHEEZEIN JO NAAPNE PAR NIKLEEN, AUR TEEN BOARD KE KHILAF THIN:**
+  1. **Shared file mein ye rule NAHI ja sakti thi.** `body` bare selector hai; ek
+     `04-objects/` wali rule das ke das pages par lagti aur `index`/`landing`/`blueprint`
+     — jin ki body aaj **`block`** hai — sab flex ho jate. Isi liye har page ki apni file.
+  2. **`print` ki chhapai toot rahi thi.** `@media print { body { display: block } }`
+     `layer(legacy)` mein tha; `display: flex` ke objects mein jate hi wo haar jata aur
+     **paper flex layout mein chhapta**. Us ek declaration ko `pages/print.css` ke usi
+     layer mein uthana pada (base rule ke BAAD — tarteeb badalna is ko tor dega).
+     `background` jaan-boojh kar legacy mein chhora: upar le jane se murda declaration
+     zinda ho sakti thi. **Naapa gaya: print media mein body ab bhi `block`.**
+  3. **Board kehta tha "`flex-direction: column` saat files mein byte-identical".** Rule
+     ka matn barabar hai, **media query nahi**: `bank`/`library`/`print`/`blueprint` **760px**
+     par hain aur `slo`/`slo-health`/`taqseem` **720px** par. Har page ne apna breakpoint
+     rakha — unhein barabar karna ek dikhne wali tabdeeli hoti jo kisi ne nahi maangi.
+  4. **Saatwin copy MURDA thi.** `blueprint` ki body `display: block` hai (dono widths par
+     naapa), aur flex-direction non-flex body par kuch nahi karti. Wo rule delete ki gayi.
+     **Is par probe ne 3 deltas diye — sirf `flex-direction`, sirf 760 se neeche wale
+     teen widths par — aur ye peshgoi delete se PEHLE likhi gayi thi.** Render kuch nahi
+     badla, kyunke body block hai.
+  ~~Purana row:~~ (UI-073 ne sirf murda hissa liya): `display:flex` +
   `min-height:100vh` chhe pages par — `pages/plan.css` ka `@layer objects { body }`
   namoona mojood hai, **faisla Irfan ka**; `@media` ka `flex-direction: column` saat
   files mein byte-identical — **magar media-query + layer wali shakl hai, uthane se

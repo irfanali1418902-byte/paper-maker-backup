@@ -15,7 +15,7 @@
   /* UI-073: font/colour/background/smoothing gaye — 03-elements/typography.css
      layer(elements) mein wohi paint karti hai aur layer order legacy ko harata
      hai. Sirf ye do zinda thin. */
-  body { display: flex; min-height: 100vh; }
+  /* body: pages/bank.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar ---- */
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
@@ -272,6 +272,5 @@
 
   /* ---- Responsive ---- */
   @media (max-width: 760px) {
-    body { flex-direction: column; }
     .bank-main { padding: 16px 14px; }
   }

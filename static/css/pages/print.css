@@ -356,3 +356,49 @@
     color: #999;
   }
 }
+
+/* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
+   2026-09-03). Ye rule `99-legacy/print.css` mein thi; wahan se nikli aur yahan
+   `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta
+   tha. QADREIN NAHI BADLIN.
+
+   Ye har page ki APNI file mein hai, kisi mushtarka file mein NAHI — aur ye jaan-boojh
+   kar hai. `body` ek bare selector hai: agar ye `04-objects/` ki koi shared file
+   deti, to `index`, `landing`, `blueprint` aur `plan` — jin ki body aaj `block` hai —
+   sab flex ho jatin. Naapa gaya 2026-09-03: das mein se sirf CHHE pages ki body flex
+   hai. Shared rule is family ke liye ghalat auzaar hai jab tak body par koi class na ho.
+
+   Breakpoint 760px is page ka apna hai. Teen pages 760 par hain aur teen 720 par —
+   board inhein "byte-identical" kehta tha, jo RULE ke baare mein sach hai magar media
+   query ke baare mein nahi. Unhein barabar karna ek dikhne wali tabdeeli hoti, jo kisi
+   ne nahi maangi. */
+@layer objects {
+  body {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  @media (max-width: 760px) {
+    body {
+      flex-direction: column;
+    }
+  }
+
+  /* ⚠ YE RULE IS FILE KI SAB SE AHEM LINE HAI. Ye `99-legacy/print.css` ke
+     `@media print` se yahan aayi, aur usay aana HI PADA: ooper wali
+     `body { display: flex }` ab layer(objects) mein hai, aur wahan chhorne par wo
+     legacy ki `display: block` ko harati — yani teacher ka paper flex layout mein
+     chhapta, jo is app ka sab se ahem kaam hai. Yahan ye usi layer mein hai aur
+     source order se jeetti hai (ye block ooper wale ke BAAD hai — tarteeb badalna
+     is ko tor dega).
+
+     Us rule ka `background` saath NAHI aaya aur ye bhool nahi hai: use upar le jana ek
+     mumkina murda declaration ko zinda kar deta (05-components/field.css ke header
+     wala 75-delta waqia), aur wo is faisle ka hissa nahi tha. Wo apni jagah
+     legacy mein hai. */
+  @media print {
+    body {
+      display: block;
+    }
+  }
+}

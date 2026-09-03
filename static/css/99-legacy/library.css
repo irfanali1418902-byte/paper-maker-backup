@@ -14,7 +14,7 @@
   }
   html, body { margin: 0; height: 100%; }
   /* UI-073: dekho bank.css ka wohi note. */
-  body { display: flex; min-height: 100vh; }
+  /* body: pages/library.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar ---- */
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
@@ -179,7 +179,6 @@
   .pg-info { font-size: 12.5px; color: var(--muted); padding: 0 4px; }
 
   @media (max-width: 760px) {
-    body { flex-direction: column; }
     .lib-main { padding: 16px 14px; }
     .filter-bar { flex-direction: column; }
     .filter-bar > div { min-width: 0; }
