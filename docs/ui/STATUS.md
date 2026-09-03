@@ -12,6 +12,10 @@
 > P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-03 nahi hai to
 > **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
+> *(Neeche wala khulasa **2026-09-02 ko din ke beech** likha gaya tha aur usi din ka baqi
+> kaam us mein nahi tha — **2026-09-03 ko dobara naap kar theek kiya gaya**, purane alfaz
+> ~~strike~~ ke saath mojood hain. Plan ke qadam (§1–§4) us waqt bhi durust thay.)*
+>
 > **2026-09-02 ka natija — din audit par gaya, seeding quota par mari gayi.**
 > Irfan ne audit maanga; **board pehli baar poora sach nikla** (310/214/96, 1030 sawal,
 > 1706 lines, scope 276, 1075 pass — sab dobara naape gaye aur sab barabar), sirf
@@ -30,8 +34,26 @@
 > jin ka `syllabus_topic_id` NULL hai. Backup se row-by-row diff: **sirf
 > `learning_outcome` badla, 583 rows, koi row na gayi na aayi.**
 >
-> **CSS par aaj kuch nahi hua** — 1706 jyun ka tyun. **Browser check phir nahi hua**
-> (ab chaar sessions se khula). Do commit bane, **dono un-pushed**.
+> ~~**CSS par aaj kuch nahi hua** — 1706 jyun ka tyun.~~ ⚠ **Ye jumla us waqt likha gaya
+> jab item 9 aur D59 baqi thay; usi din dono ho gaye. Naapa 2026-09-03:**
+> **CSS par kaam HUA, magar `legacy_css_lines` phir bhi 1706 — aur ye tazad nahi:**
+> item 9 (UI-075) ne `static/app.css` (57 lines) li, jo `static/css/` se bahar hai aur is
+> counter mein kabhi thi hi nahi; D59 ne `scripts/` ki do probe files (1039 lines) leen, jo
+> CSS hain hi nahi. **Drain ka faasla waisa ka waisa hai** — §3/§4 ka tail (item 8 ka tail,
+> `.tag`, `body`) ab bhi baqi.
+>
+> **Paanch DEFERRED rows band hueen: D5, D57, D59, D29, D30 — aur in mein se CHAAR ka apna
+> bayan naapne par ghalat nikla** (D59 ki *"deleting it is tempting and wrong"* wali dalil,
+> D57 ka poora symptom, D29 aur D30 apni hi peshgoi par mareen). **Row par bharosa mat karo
+> — is repo ki sab se baar-baar aane wali bimari yehi hai.** D60 khuli hai (fix
+> `master`-wali branch par, is branch par nahi).
+>
+> **Browser check phir nahi hua** (ab chaar sessions se khula).
+>
+> ~~Do commit bane, **dono un-pushed**.~~ → **09-02 ko chhe commit bane** (`566d722` …
+> `38256b2`), **sab un-pushed**; `master` se **56 aage, 0 peechhe** (naapa 2026-09-03).
+> Tests **1078 pass** (2026-09-03 ko chalaye), ruff aur ratchet saaf; bank **1042**, khaali
+> `learning_outcome` **130** (sab `syllabus_topic_id` NULL) — teenon dobara naape gaye.
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
 nahi chala to din ka quota zaya. **Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phir PY1 ke 10.**
@@ -215,7 +237,9 @@ neeche batati hai ke kya karna hai. **Wo AANKH wale kabhi apne aap ✅ nahi hong
   basi hota hai jitna carried number** — ye wala apni rule se sattrah din zyada jiya.
   D59 (jo item 9 ki rukawat thi) usi din band hua: `css_orphans.py` + `css_rules_probe.mjs`
   delete, 1039 lines — us row ki apni dalil bhi naapne par ghalat nikli.
-* **Phir `master` merge** — 09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**.
+* **Phir `master` merge** — ~~09-02 ko naapa: **52 aage** (is commit se pehle), **0 peechhe**~~
+  **(09-03 ko 56 tha — yani ye adad yahan likhte hi basi ho gaya, jo isi row ki apni tanbeeh
+  ka saboot hai. Ab yahan koi adad nahi; command chalao):**
   ⚠ **Ye adad har commit par badalta hai — isay yahan se mat quote karo, naapo:**
   `git rev-list --left-right --count master...HEAD`. Board is se pehle do baar basi
   mila (09-01 ne 45 likha, 09-02 ko 50 tha). **Item 9 ab ho chuka hai, is liye ye rukawat
