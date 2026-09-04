@@ -1,0 +1,40 @@
+/* =========================================================================
+   04-objects/slo-main.css — `.slo-main`, the SLO pages' content column (UI-079)
+
+   `slo` aur `slo-health` dono ki `99-legacy/*.css` mein ye rule BYTE-IDENTICAL
+   thi aur audit ne is ko `agree` mein rakha tha — yani koi faisla darkar nahi,
+   sirf dohraav. Ab ek jagah hai.
+
+   YE OBJECT HAI, COMPONENT NAHI: ye layout ka dhaancha hai (flex child + content
+   width), koi shakl ya rang nahi — bilkul `04-objects/shell.css` ki tarah.
+   `pages/plan.css` apni `.plan-main` isi layer mein rakhti hai; wahi namoona.
+
+   NAAPA GAYA 2026-09-04, aur teenon sawal alag alag naape gaye:
+
+     1. ZINDA HAI YA MURDA? Dono pages par har declaration compute hoti hai —
+        flex-grow 1, min-width 0, padding 30px/34px, max-width 1100px,
+        width 987px. Koi declaration kisi ooper wali layer se nahi harti.
+        (Ye check `05-components/field.css` ke header wale 75-delta waqie ki
+        wajah se lazmi hai: layer upar le jane se MURDA declaration ZINDA ho
+        jati hai.)
+     2. DONO BARABAR? Haan, har naapi hui qadr dono pages par ek jaisi.
+     3. KISI TEESRE PAGE PAR TO NAHI? Nahi — das ke das pages par
+        `css_selector_probe` chalaya: sirf `slo` aur `slo-health` par match,
+        baqi aath par "no match". **Ye sawal audit KHUD NAHI POOCHTA** — us ka
+        `agree` sirf un files ko dekhta hai jin mein rule MOJOOD hai, un pages
+        ko nahi jin par MARKUP hai magar rule nahi. Isi sawal ne `.row` ko is
+        commit se bahar rakha (`DEFERRED.md` D63).
+
+   `margin: 0 auto` ka computed `margin-left: 0px` aana MURDA hona nahi hai —
+   is viewport par `max-width` se kam jagah hai, is liye `auto` ke paas baantne
+   ko kuch nahi. Wo tang container mein zinda hoti hai, is liye saath aayi.
+   ========================================================================= */
+
+.slo-main {
+  flex: 1;
+  min-width: 0;
+  padding: 30px 34px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}

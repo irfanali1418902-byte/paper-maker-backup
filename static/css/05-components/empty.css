@@ -44,3 +44,49 @@
   font-size: 14px;
   color: var(--muted2);
 }
+
+/* ---------------------------------------------------------------------------
+   .empty-state — SLO pages ka "kuch nahi mila" paighaam. UI-079.
+
+   `slo` aur `slo-health` mein BYTE-IDENTICAL thi (audit: `agree`). Is file mein
+   pehle se do khaali-halat wale paighaam hain, aur ye teesra unhi ka bhai hai —
+   is liye nayi file nahi banayi.
+
+   ⚠ YE `.strip-empty`/`.list-empty` SE ALAG HAI: WO DONO JS SE BANTE HAIN AUR
+   INJECT PROBE MAANGTE HAIN. `.empty-state` markup mein mojood hai (slo par 1,
+   slo-health par 4 elements), is liye `css_type_probe` is ko poora dekhta hai
+   aur us ka gate is ke liye kaafi hai. Is ki fixture jaan-boojh kar nahi likhi.
+
+   Naapa gaya 2026-09-04, teenon sawal: (1) har declaration zinda — colour
+   rgb(91,102,120), font-size 13.5px, padding 16px 0, koi ooper wali layer nahi
+   harati; (2) dono pages par barabar; (3) das ke das pages par probe chalaya —
+   sirf `slo` aur `slo-health` par match, baqi aath par "no match".
+   --------------------------------------------------------------------------- */
+.empty-state {
+  color: var(--muted);
+  font-size: 13.5px;
+  padding: 16px 0;
+}
+
+/* ---------------------------------------------------------------------------
+   .card .hint — card ke andar ki wazahati line. UI-079.
+
+   ⚠ ORIGINAL RULE KA EK TIHAAI YAHAN JAAN-BOOJH KAR NAHI HAI, AUR YE IS FILE KI
+   SAB SE AHEM LINE HAI. `99-legacy/slo.css`:18 aur `slo-health.css`:24 dono
+   `margin: 0 0 16px` likhti thin. **Wo 16px MURDA hai:** `.hint` ek `<p>` hai,
+   aur `02-generic/reset.css`:86 `p { margin: 0 }` deti hai `layer(generic)` mein,
+   jo `layer(legacy)` ko harata hai. Naapa gaya: dono pages par computed
+   `margin-bottom` **0px**, 16px nahi.
+
+   Agar wo margin yahan likh di jati to `layer(components)` `generic` ko harata
+   aur **16px ZINDA ho jata — aath elements par nazar aane wali tabdeeli**, wo bhi
+   ek "dohraav hatane" wale commit mein. Yehi `field.css` ke header wala 75-delta
+   waqia hai, aur is dafa badalne se PEHLE pakra gaya.
+
+   Sirf do zinda declarations aayi hain. Agar kabhi wo 16px waqai chahiye ho to
+   wo apna faisla hai, is drain ka hissa nahi.
+   --------------------------------------------------------------------------- */
+.card .hint {
+  font-size: 12.5px;
+  color: var(--muted);
+}

@@ -152,6 +152,12 @@
    collision, the second put `.spacer` in the theme.css-only group.
    ------------------------------------------------------------------------- */
 @import url("04-objects/shell.css")        layer(objects);
+/* UI-079 — `.slo-main`, slo aur slo-health ka content column. Dono legacy files
+   mein byte-identical thi (audit: `agree`). Object hai, component nahi: sirf
+   layout, koi shakl nahi — `pages/plan.css` apni `.plan-main` isi layer mein
+   rakhti hai. Read its header: teen sawal naape gaye, aur teesra (kisi teesre
+   page par to nahi?) wo hai jo audit khud nahi poochta. */
+@import url("04-objects/slo-main.css")     layer(objects);
 
 /* UI-030 authored shell.css only; these two arrive with the components that
    need them, which is Sprint 4. */

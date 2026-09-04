@@ -581,9 +581,43 @@ likhi ja rahi hai.
 naapo; 0.6 se bahut alag nikle to adad phir dekhna hoga — **magar ab tareeqa mojood hai,
 sirf number badlega.**
 
-**Agla CSS kaam: `agree` wale 50 rules** (77 lines, chhe families — `field/filter` 18,
-`shell/nav` 13, `chip/pill/row` 7, `btn-*` 6, `modal` 4, `card` 2). **Koi faisla darkar
-nahi**, aur `~1650` tak yehi raasta hai.
+**Agla CSS kaam: `agree` wale rules.** Pehla batch 2026-09-04 ko ho gaya (UI-079):
+`.slo-main` → `04-objects/slo-main.css`, `.empty-state` + `.card .hint` →
+`05-components/empty.css`. **Gate: 0 deltas** (das pages × paanch viewports).
+`legacy_css_lines` **1697 → 1695**, scope **254 → 248**. Baqi `agree`: **71 lines**.
+
+### ⚠ 2026-09-04 SHAAM — TARGET KA MODEL USI DIN GHALAT SABIT HUA, AUR GHALTI MERI THI
+
+Subah ka model kehta tha "har rule ~0.6 comment line chhorti hai", **magar phir main ne
+us ka ULTA istemal kar liya**: `agree` ke 77 lines par sirf ~30 comment gine (yani 0.39
+rate) aur 47 lines ki bachat likh di. **Agar 0.6 sach hai to 77 lines par ~46 comment
+aate hain aur bachat 31 hoti hai.** Do naape hue din ab ye kehte hain:
+
+```
+09-03   rule-block −23   legacy −9    bachat ka tanasub 0.39
+09-04   rule-block  −6   legacy −2    bachat ka tanasub 0.33
+```
+
+Dono ~0.35 par hain, 0.61 par nahi. **Durust peshgoi:**
+
+```
+abhi                1695
+agree ka baqi kaam   −25   (71 lines × 0.35)   → ~1670
+disagree ka kaam     −62   (177 lines × 0.35)  → ~1608
+```
+
+**Yani asal farsh `~1600` hai, `~1500` nahi.** ⚠ **Magar target dobara badalne se pehle
+ye samjhein: asal lever target nahi, POINTER COMMENT ki policy hai.** Wo 0.65 lines jo
+har rule ke peechhe reh jati hain, **hamari apni likhi hui hain** — `/* X: 05-components/… */`.
+Agar legacy mein pointer comment likhna band kar dein to tanasub 1.0 ho jata hai aur
+`1695 − 248 = 1447` — yani `~1450`, jo `~1400` ke qareeb hai.
+
+**Do soortein, aur ye faisla Irfan ka hai** (`DECISIONS-FOR-IRFAN.md` §7 ka tail):
+**(a)** pointer comments rakhein aur target `~1600` kar dein; **(b)** pointer comments
+band karein (trail commit message aur `git log` mein rahega) aur `~1450` par qaim rahein.
+**Aaj ke kaam ne khud dikhaya ke ye farq kitna asli hai:** teen rules uthane par pehle
+faida SIFAR tha (6 lines gayin, 6 comment aaye), aur comments ko do-do line par jama
+karne se hi 2 lines bachin.
 
 **Agle session ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye
 number board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —
