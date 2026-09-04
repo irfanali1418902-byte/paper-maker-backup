@@ -647,8 +647,8 @@ ka dohraav khatam). `agree` ab **71 → 36 lines**.
 | `.app-nav` (5 files) | **D64** — index aur print par markup hai magar rule nahi; un ka `padding-left` 0px hai, baqi paanch ka 10px |
 | `.row` (3 files) | **D63** — index ka rule `flex-wrap` declare hi nahi karta |
 | `input[type=text/number]` | **D51** — ye teen properties layer upar le jane par CHHE pages tor chuki hain, 2026-08-27 ko naapa gaya |
-| `label` / `label:first-of-type` | abhi nahi kiya. Chaar pages par zinda (`margin-top` 14px), magar `print` par 11 label hain jin ke paas ye rule nahi — apna gate maangta hai |
-| `html, body { height: 100% }` | **abhi tak naapa nahi gaya** (board ye pehle se kehta hai) |
+| `label` / `label:first-of-type` | **D65 — aazmaya gaya aur 347 deltas mile.** `layer(elements)` mein jate hi har page-level `label` override (`.urdu-toggle-row label` waghaira, sab `layer(legacy)` mein) haar jata hai. D51 wali shakl |
+| `html, body { height: 100% }` | **D65 — delete karne par ek page ka `body height` 900px se 72666px ho gaya.** Inert nahi hai |
 
 ### ⚠ `AGREE` KA MATLAB "MEHFOOZ" NAHI HAI — YE AAJ TEEN DAFA SABIT HUA
 
@@ -658,6 +658,15 @@ nahi** — aur wahi page component aate hi badal jata hai. Ek hi din mein isi sa
 teen cheezein ruki: `.row` (D63), `.app-nav` (D64), aur `.card .hint` ka murda margin
 (UI-079). **Is liye ab har selector par `css_selector_probe` das ke das pages par chalao,
 chahe audit us ko `agree` hi kyun na kahe.**
+
+⚠ **Aur usi din ek chauthi shakl bhi nikli (D65), jo is se bhi zyada bunyadi hai:**
+`label` aur `html, body` par koshish ki gayi aur gate ne **347 deltas** diye. Wajah ye
+nahi thi ke koi teesra page tha — wajah ye thi ke **rule layer upar jate hi un rules ko
+harane lagti hai jo aaj us se jeet rahi hain.** Is app ke saare compact/compound
+overrides `layer(legacy)` mein hain, aur `layer(elements)` unhein specificity se
+qat-e-nazar harata hai. **Yani `agree` ka matlab sirf itna hai ke rule ki NAQAL har file
+mein ek jaisi hai — us se ye nahi nikalta ke us ko UPAR le jana mehfooz hai.** Sab kuch
+revert kar diya gaya (revert ke baad 0 deltas, tasdeeq-shuda).
 
 ⚠ **Aur `css_selector_probe` ki apni ek hadd hai jo aaj pakri gayi: wo sirf PEHLA element
 parhta hai** (`getComputedStyle(els[0])`). `label` par is ne `margin-top: 0px` dikhaya
