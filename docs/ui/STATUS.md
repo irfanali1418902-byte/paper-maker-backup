@@ -19,6 +19,27 @@
 > `master` `backup/master` se **226 aage aur un-pushed** hai; push Irfan GitHub Desktop
 > se khud karta hai.
 >
+> ### 2026-09-04 ki seeding — ✅ PRE YEAR 2 MUKAMMAL, aur DO ANDESHE GHALAT NIKLE
+> **18/18 topics, 72 sawal, koi FAIL nahi, quota bilkul nahi lagi** (09-02 aur 09-03 dono
+> dafa lagi thi). Bank **1126 → 1198**. **PY2 ab 87/87 — PY3 ke saath mukammal.**
+> **Baqi sirf PY1 ke 10 topics.** `integrity_check` ok, har topic par poore 4 sawal.
+>
+> **1. Dohraav ka andesha ghalat nikla — aur ye khaas tor par naapa gaya tha.** Board ne
+> tanbeeh ki thi ke baqi 18 topics mein sirf 10 alag titles hain aur *"Practice of
+> subtraction"* **paanch baar** hai. Naapa gaya: **naye 72 ke andar 0 dohre, aur poore
+> bank ke khilaf bhi 0** — kal ke batch mein 2 thay. Un paanch yaksan-naam topics par
+> alag alag: **har ek par 4 sawal, chaaron alag** — yani paanch qareeb-yaksan prompts se
+> **20 mukhtalif sawal**. PY3 par yehi shakl thi aur wahan bhi natija mauzoon tha.
+> ⚠ **Magar ye PY1 ka saboot NAHI hai** — wahan 10 topics mein sirf **3** alag titles hain
+> aur ek title **saat baar**, jo is se bhi tang soorat hai. **Wahan bhi naapna hoga.**
+>
+> **2. D60 ka naya check PASS hua, aur wo tawaqqu nahi, naap hai.** Merge ke baad pehli
+> seeding: naye 72 mein khaali `learning_outcome` **0**, aur bank ka kul khaali
+> **130 par barqarar** (sab `manual`). **Backfill ki zaroorat waqai khatam.**
+>
+> **Dhaancha 72/72 saaf:** khaali sawal/jawab/tashreeh/Urdu **0**, MCQ bina options **0**,
+> MCQ ka jawab options mein **32/32**.
+>
 > ### 2026-09-04 ka audit — DB aur code raat bhar nahi hile, magar EK ADAD BADLA
 > Sab dobara naapa gaya aur barabar mila: bank **1126**, PY1 71/81, PY2 69/87, PY3 87/87,
 > **baqi 28**, khaali `learning_outcome` **130 (sab `manual`)**, `integrity_check` ok,
@@ -206,16 +227,16 @@ python -u -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --ty
 >    PY2 banaam PY3). 2/84 pichhle batches ke barabar hai. **Faisla Irfan ka, maine kuch
 >    delete nahi kiya.**
 
-**BANK KA HISAAB — 2026-09-03 ko naapa gaya (adad yahan se parho, yaad se nahi):**
+**BANK KA HISAAB — 2026-09-04 ko naapa gaya (adad yahan se parho, yaad se nahi):**
 
 ```
 grade         topics  seeded  baqi   sawal
-Pre Year 1        81      71    10     329
-Pre Year 2        87      69    18     276
+Pre Year 1        81      71    10     329   <- ab sirf ye baqi hai
+Pre Year 2        87      87     0     348   <- mukammal 2026-09-04
 Pre Year 3        87      87     0     348   <- mukammal
 Grade 4           11      11     0      43
 G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
-KUL              310     238    72     996
+KUL              310     256    54    1068
 ```
 
 > ~~09-02: PY2 48/39/192, KUL 217/93/912~~ — 09-03 ki seeding ke baad badal gaya.
@@ -223,7 +244,7 @@ KUL              310     238    72     996
 > Grade 5 Mathematics, Grade 6 Mathematics, Grade 7 Science, Grade 8 Geography — 11-11
 > topics, chaaron par sawal `0`.**
 
-> **`996` topic-se-jure sawal hain; `questions` table mein kul 1126 hain.** Farq wo
+> **`1068` topic-se-jure sawal hain; `questions` table mein kul 1198 hain.** Farq wo
 > **130 English sawal** hain jin ka `syllabus_topic_id` NULL hai (bulk Excel import) —
 > un ke liye koi syllabus row hai hi nahi. **Dono adad theek hain, bas alag cheez
 > ginte hain** — jo bhi "bank ka size" likhe, batae ke kaun sa.
