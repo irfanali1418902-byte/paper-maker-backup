@@ -217,3 +217,53 @@ padding — **sab jyun ke tyun, koi dikhne wali tabdeeli nahi.**
 hardcoded hex `var(--muted2)` ke haq mein nahi marta, kyunke A page ka farq qaim rakhta
 hai. Yani **`unsanctioned_hex` is kaam se nahi ghatega** — jo bhi target ka hisaab likhe,
 ye ek line yahan se parhe.
+
+---
+
+### 7. Target `~1400` — us ki bunyaad ab mojood nahi, aur faasla BARH raha hai
+
+**Ye maloomat ki baat nahi, faisla-talab hai — aur is se pehle koi aur CSS drain shuru
+karna waqt zaya karna hai.**
+
+§5 mein aap ne **A — `~1400`** chuna tha, **2026-08-31**. Us waqt audit ka scope **308**
+lines tha. Wo bunyaad ab mojood nahi:
+
+```
+             faisle ke waqt   2026-09-03   2026-09-04
+legacy_css_lines   1873          1706         1697
+scope mein          308           276          254
+sab kuch delete    1565          1430         1443
+karke bhi        (target se     (target se   (target se
+                  +165)          +30)         +43)
+```
+
+**Ghaur se dekhein: 09-03 se 09-04 ke darmiyan faasla 30 se 43 HO GAYA.** Us din teen
+asli kaam hue (item 8 ka tail, `body`, `.tag`) — aur unhon ne target ko qareeb nahi,
+**door** kar diya.
+
+**Wajah bunyadi hai, ittefaq nahi.** Jab ek rule `99-legacy/` se nikal kar component ya
+page file mein jati hai:
+
+* `legacy_css_lines` sirf utni ghatti hai jitni us rule ki apni lines thin — aur akser
+  us ki jagah ek pointer comment aa jata hai, to faida aur kam ho jata hai (09-03 ko
+  nau lines).
+* Magar `scope` us se **zyada** ghatta hai, kyunke scope rule-block lines ginta hai aur
+  ek rule ke jane se us ki saari copies scope se nikal jati hain (rule-block 1326 → 1303
+  = **23**, jab ke legacy sirf **9**).
+
+Yani **jitna kaam karenge, `1400` utna hi door hota jayega.** Ye scope ke andar reh kar
+hal nahi ho sakta.
+
+| | | |
+|---|---|---|
+| **A** | **Target par nazar-e-sani** — aaj ke naape hue adad par naya number tay karein (`1443` farsh hai agar scope ke andar hi rehna hai) | Sab se saaf. Target ek anadaza tha, aur us ke peechhe ka hisaab badal chuka. **Meri sifarish.** |
+| **B** | **Scope se bahar jao** — wo **1049** `page-only` lines chherein jinhein audit ne jaan-boojh kar chhora hai | `1400` mumkin ho jayega, magar ye hafton ka naya kaam hai aur audit ne un ko "component mumkin hi nahi" kaha tha. Faida sirf ek adad hai. |
+| **C** | **Target chhor dein** — dhaancha apna maqsad poora kar chuka | Das pages ek stylesheet, poora ITCSS tree, saat probes, epic merged, `1873 → 1697`. Line-count ab is epic ka maqsad nahi raha. |
+
+**A ki sifarish is liye hai** ke `1400` kabhi naapa hua hadaf nahi tha — wo us waqt ka
+munasib andaza tha jab scope 308 tha. B do mahine ka kaam hai bina saaf faide ke, aur C
+mein wo cheez zaya hoti hai jo ab bhi qeemti hai: **ek adad jis par agla kaam naapa jaye.**
+
+| # | answer |
+|---|---|
+| 7 target par nazar-e-sani | ⬜ **khula — 2026-09-04 ko naapa aur likha gaya** |

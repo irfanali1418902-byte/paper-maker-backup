@@ -5,13 +5,31 @@
 
 ---
 
-## 📅 PLAN — **2026-09-03 ke liye**, is tarteeb mein
+## 📅 PLAN — **2026-09-04 ke liye**, is tarteeb mein
 
-> *(Likha 2026-09-02. Heading mein tareekh hai, "kal" nahi — is repo mein har
-> relative label basi ho kar jhoot ban chuka hai: `HANDOFF.md` ka banner nau din,
-> P0 rows mahinon. Agla session pehle ye tareekh dekhe: agar aaj 09-03 nahi hai to
-> **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
+> *(Likha 2026-09-04, us din subah poora audit chalane ke BAAD. Heading mein tareekh
+> hai, "kal" nahi — is repo mein har relative label basi ho kar jhoot ban chuka hai:
+> `HANDOFF.md` ka banner nau din, P0 rows mahinon. Agla session pehle ye tareekh dekhe:
+> agar aaj 09-04 nahi hai to **is plan ke adad dobara naapo**, ROADMAP §E ka qaida.)*
 >
+> ### ⚠ SAB SE PEHLE: BRANCH BADAL CHUKI HAI
+> **Epic `master` mein merge ho chuka (`dc9436a`, 2026-09-03) aur kaam ab `master` par
+> hota hai, `feat/ui-architecture` par NAHI.** Is file ki bahut si zaban abhi bhi epic-
+> branch ke waqt ki hai — jahan "is branch par nahi" jaisa jumla mile, wo ab tareekhi hai.
+> `master` `backup/master` se **226 aage aur un-pushed** hai; push Irfan GitHub Desktop
+> se khud karta hai.
+>
+> ### 2026-09-04 ka audit — DB aur code raat bhar nahi hile, magar EK ADAD BADLA
+> Sab dobara naapa gaya aur barabar mila: bank **1126**, PY1 71/81, PY2 69/87, PY3 87/87,
+> **baqi 28**, khaali `learning_outcome` **130 (sab `manual`)**, `integrity_check` ok,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1697**, `unsanctioned_hex` **300**.
+>
+> **Magar audit ka scope 276 → 254 ho gaya** (rule-block 1326 → **1303**, agree 86 → **77**,
+> disagree 190 → **177**), kyunke 09-03 ke teen kaam un rules ko legacy se nikal le gaye,
+> is liye wo scope se bhi nikal gaye. **Is ne 09-03 ki shaam ka mera apna hisaab ghalat
+> sabit kiya:** maine "target se ~21 lines door" likha tha, purana scope 276 istemal karke.
+> Sahi hisaab §4 mein hai aur wo **43** hai. **Sabaq wahi purana: apne hi kal ke adad ko
+> naape baghair dobara mat quote karo.**
 > *(Neeche wala khulasa **2026-09-02 ko din ke beech** likha gaya tha aur usi din ka baqi
 > kaam us mein nahi tha — **2026-09-03 ko dobara naap kar theek kiya gaya**, purane alfaz
 > ~~strike~~ ke saath mojood hain. Plan ke qadam (§1–§4) us waqt bhi durust thay.)*
@@ -84,7 +102,24 @@
 
 **1. SEEDING — PEHLA KAAM, subah sab se pehle.** Quota-bound hai, waqt-bound nahi: subah
 nahi chala to din ka quota zaya. ~~**Baqi ba-ikhtiyar 49 topics — PY2 ke 39, phir PY1 ke
-10.**~~ **Naapa 2026-09-03: baqi ab 28 — PY2 ke 18, phir PY1 ke 10.**
+10.**~~ **Naapa 2026-09-04: baqi 28 — PY2 ke 18, phir PY1 ke 10.**
+
+> ### ✅ D60 BAND HO CHUKI — BACKFILL AB NAHI CHALANI, MAGAR NAAPNA ZAROORI HAI
+> `f547f21` ab `master` par hai (merge `dc9436a`), aur `question_service.py`:65 par wo
+> khana mojood hai. **Yani yahan se chalayi gayi seeding ka `learning_outcome` khud
+> bharna chahiye aur backfill ki zaroorat khatam.** ⚠ **Magar ye TAWAQQU hai, naap nahi:
+> pehle batch ke baad khaali ginti khud dekho** —
+> `select count(*) from questions where learning_outcome is null or trim(learning_outcome)=''`
+> — jo **130 se barhna nahi chahiye** (wo 130 bulk-import ke hain, D61). Agar barhe, to
+> fix merge hone ke bawajood kaam nahi kar rahi aur **D60 dobara kholni paregi**.
+
+> ### ⚠ BACKUP: `.db` FILE COPY KARNA AB KAAFI NAHI
+> 2026-09-04 ko `paper_maker.db-wal` mojood mila (09-03 ko nahi tha). WAL mode mein
+> seedhi file copy adhoori ho sakti hai. Backup **sqlite ke apne backup API se lo**:
+> ```
+> python -c "import sqlite3; s=sqlite3.connect('file:paper_maker.db?mode=ro',uri=True); d=sqlite3.connect('BACKUP.db'); s.backup(d)"
+> ```
+> Phir backup par `integrity_check` aur row-ginti dono naapo.
 
 > **Quota ka anjaam aankhon se dekha gaya, dono din:** `FAIL: Gemini ka quota/rate-limit
 > lag gaya (HTTP 429)`. **Output ka tail parho, sirf exit code par mat jao** — 09-02 ko
@@ -407,17 +442,36 @@ Target `~1400` **Irfan ka faisla hai aur qaim hai** (§5 / `DECISIONS-FOR-IRFAN.
 Magar UI-073 ke baad audit dobara chali aur scope **ghat gaya**:
 
 ```
-             faisle ke waqt      2026-09-01      2026-09-03
-rule-block        1359              1327            1326
-page-only         1051 (77%)        1051 (79%)      1050 (79%)
-agree               76               86              86
-disagree           232              190             190
-scope mein         308              276             276
+             faisle ke waqt   2026-09-01   2026-09-03   2026-09-04
+rule-block        1359           1327         1326         1303
+page-only         1051 (77%)     1051 (79%)   1050 (79%)   1049 (81%)
+agree               76             86           86           77
+disagree           232            190          190          177
+scope mein         308            276          276          254
 ```
 
-> **09-03 ko dobara chalayi gayi: rule-block aur page-only DONO ek-ek kam nikle** (1327 →
-> 1326, 1051 → 1050). **`agree`/`disagree`/`scope` bilkul barabar**, is liye neeche wala
-> `1706 − 276 = 1430` wala hisaab nahi hila. Farq page-only mein hai, scope mein nahi.
+> **09-03 ki subah:** rule-block aur page-only ek-ek kam, `scope` 276 par barabar.
+>
+> ### ⚠ 09-04 KO SCOPE 276 → 254 GIR GAYA, AUR YEHI IS PAGE KA ASAL MAZMOON HAI
+> Wajah na-kaami nahi, **kaamyabi** hai: 09-03 ke teen kaam (item 8 ka tail, `body`,
+> `.tag`) un rules ko `99-legacy/` se nikal le gaye, is liye wo `disagree`/`agree` se bhi
+> nikal gayin. **Magar do adad saath saath badle aur ye tanasub kaam ke KHILAF hai:**
+>
+> ```
+> 09-03 subah   legacy 1706   scope 276   →  1706 − 276 = 1430   (target se 30 door)
+> 09-04 subah   legacy 1697   scope 254   →  1697 − 254 = 1443   (target se 43 door)
+> ```
+>
+> **Din bhar ke teen kaam ne legacy sirf 9 lines ghatai magar scope 22 ghata di — yani
+> target QAREEB nahi, DOOR hua.** Ye har us kaam par dobara hoga jo rules ko legacy se
+> nikalta hai, kyunke nikli hui rule apni lines apne saath le jati hai magar scope se
+> apne se ZYADA hissa kaat ti hai (rule-block lines 1326 → 1303 = 23, jab ke legacy 9).
+>
+> **Natija saaf hai aur ise chhupana nahi chahiye: `~1400` scope ke andar reh kar KABHI
+> nahi aayega, aur har guzarte kaam ke saath faasla barhega.** §5 ka faisla 2026-08-31 ko
+> us waqt liya gaya tha jab scope **308** tha; wo bunyaad ab mojood nahi. Teen raaste
+> `DECISIONS-FOR-IRFAN.md` §7 mein likhe hain — **ye faisla Irfan ka hai, aur is se pehle
+> koi aur CSS drain shuru karna waqt zaya karna hai.**
 
 **`1706 − 276 = 1430`** — yani sirf rules delete karne se **1400 nahi aata, ~30 lines
 reh jati hain.** Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
