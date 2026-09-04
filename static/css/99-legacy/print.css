@@ -22,7 +22,6 @@
   /* UI-073: dekho bank.css ka wohi note. `margin` 02-generic/reset.css deti hai,
      aur is page ka apna `color` (rgb(26,26,26)) bhi murda tha — nau ke nau pages
      ek hi qeemat compute karte hain. */
-  /* body: pages/print.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar (screen only, hidden in print) ----
      UI-065: panel + nav + links moved to 05-components/nav.css; print.html now carries
@@ -193,7 +192,6 @@
   #status { text-align: center; padding: 40px; color: var(--muted); }
 
   @media print {
-    /* display: block -> pages/print.css @layer objects (UI-077); background yahin. */
     body { background: #fff; }
     .app-sidebar { display: none !important; }
     .no-print { display: none !important; }
@@ -222,7 +220,6 @@
     display: none; position: fixed; inset: 0; z-index: 999;
     align-items: center; justify-content: center;
   }
-  /* .modal-backdrop.open: 05-components/modal.css (UI-042) */
 
   .modal {
     background: #fff; padding: 24px 28px;
@@ -254,7 +251,6 @@
     direction: rtl; font-family: "Noto Nastaliq Urdu", serif;
     font-size: 15px; line-height: 1.8;
   }
-  /* .options-grid: 05-components/field.css; gap + input: pages/print.css (UI-076). */
 
   .modal-section-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -302,7 +298,6 @@
   .topic-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
   .strip-filter input { flex: 1; min-width: 90px; }
-  /* .strip-empty: 05-components/empty.css (UI-076); colour pages/print.css mein. */
   .topic-strip-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 160px; overflow-y: auto; }
   /* ---- Library picker search bar ---- */
   .lib-picker-search {
@@ -369,7 +364,6 @@
     background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px;
     padding: 8px 12px; color: #7b5c00; margin: 0 0 10px; display: block;
   }
-  /* .sf-* -> 05-components/shortfall.css (UI-071). Box yahin rehta hai. */
 
   /* ---- Library picker modal ---- */
   /* The app's 8th modal, page-only so no audit bucket listed it. modal.css, UI-067. */

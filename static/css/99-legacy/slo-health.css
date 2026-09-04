@@ -7,21 +7,14 @@
   }
   html, body { margin: 0; height: 100%; }
   /* UI-073: dekho bank.css ka wohi note. */
-  /* body: pages/slo-health.css ka @layer objects (UI-077). */
 
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
-
-  /* UI-079 -> .slo-main: 04-objects/slo-main.css · .card .hint + .empty-state:
-     05-components/empty.css (.hint ka margin murda thi, saath nahi gayi). */
-  /* UI-070: page-head -> `.pagehead`, 05-components/card.css. */
 
   .draft-note {
     display: inline-flex; align-items: center; gap: 7px; margin-top: 12px;
     font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 20px;
     background: var(--warn-bg); color: var(--warn-tx);
   }
-
-  /* UI-068: bare `.card` -> 05-components/card.css. */
 
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 
@@ -37,7 +30,6 @@
   .cov-empty { font-size: 13px; color: var(--muted); }
   td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   
-
   .pct { font-weight: 700; }
   .pct.good { color: var(--ok-tx); }
   .pct.mid { color: var(--warn-tx); }

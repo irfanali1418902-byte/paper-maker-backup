@@ -266,7 +266,32 @@ mein wo cheez zaya hoti hai jo ab bhi qeemti hai: **ek adad jis par agla kaam na
 
 | # | answer |
 |---|---|
-| 7 target par nazar-e-sani | **A — nazar-e-sani. Naya target `~1500`. Answered 2026-09-04** ✅ |
+| 7 target par nazar-e-sani | **A — nazar-e-sani. Answered 2026-09-04.** Naya target ~~`~1500`~~ → **`~1450`** (usi din shaam ko durust hua, neeche) ✅ |
+| 7b pointer comment policy | **(b) — `99-legacy/` mein pointer comment band. Answered 2026-09-04** ✅ `CLAUDE.md` §11.1 |
+
+**⚠ `~1500` USI DIN SHAAM KO GHALAT SABIT HUA, AUR GHALTI HISAAB KI THI, NAAP KI NAHI.**
+Subah ka model durust tha (har rule ~0.6 comment line chhorti hai), magar phir main ne
+`agree` ke 77 lines par sirf ~30 comment gine — yani 0.39 rate — jab ke apna hi model
+0.6 kehta tha. Do naape hue din (09-03: −23 rule/−9 legacy, 09-04: −6/−2) tanasub
+**~0.35** batate hain. Us hisaab se farsh `~1600` banta, `~1500` nahi.
+
+**Magar us se pehle hi asal sawal saamne aa gaya, aur us ka jawab (b) ne poora naqsha
+badal diya:** wo 0.65 lines jo har rule ke peechhe reh jati thin, **hamari apni likhi
+hui thin.** Pointer comment band karne se tanasub **1.0** ho jata hai:
+
+```
+1629 (39 purane pointers delete karne ke baad)
+ −71   agree ka baqi kaam      → ~1558
+−177   disagree ka kaam        → ~1381
+```
+
+**Is liye target `~1450` hai** — `agree` ka poora kaam plus `disagree` ka taqreeban
+aadha. `~1400` bhi ab pahunch mein hai magar us ke liye `disagree` ke **~50 faisle**
+darkar hain, aur wo qeemat pehle se likhi ja rahi hai.
+
+**Sabaq jo is se nikla aur agli dafa lagana chahiye:** target ko rule-count se mat baandho,
+**us cheez se baandho jo tum khud likh rahe ho.** Do din tak faasla is liye barh raha tha
+ke drain ka faida hum khud comment likh kar wapas kha rahe thay.
 
 **Naya target `~1500` hai, aur ye pehli dafa NAAPA HUA adad hai — andaza nahi.**
 `~1400` 2026-08-31 ko munasib andaze par chuna gaya tha; ye us se mukhtalif tareeqe se

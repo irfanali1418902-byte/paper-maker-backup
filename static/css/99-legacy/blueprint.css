@@ -18,7 +18,6 @@
      Yahan sirf blueprint-specific content width. */
   .main { max-width: 1080px; margin: 0 auto; }
 
-  /* ---- Cards ---- UI-068: bare `.card` -> 05-components/card.css. */
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; color: var(--ink2); }
 
   /* ---- Form elements ---- */
@@ -28,10 +27,7 @@
   /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; UI-066 note there. */
   input[type="text"], input[type="number"], select { width: 100%; min-height: 44px; margin-top: 6px; }
 
-  /* .field-row: 05-components/field.css (UI-042) */
-
   /* ---- Buttons ---- */
-  /* .btn-primary + states: 05-components/btn.css (UI-041) */
 
   .btn-secondary {
     display: inline-flex; align-items: center; gap: 8px;
@@ -42,15 +38,12 @@
   .btn-secondary:hover { background: var(--tint); }
   .btn-secondary:disabled { opacity: .5; }   /* cursor -> forms.css (D49) */
 
-
   .btn-danger-sm {
     background: var(--err-bg); border: 1px solid var(--red); color: var(--err-tx);
     padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
     font-family: inherit; cursor: pointer;
   }
   .btn-danger-sm:hover { background: var(--red-bg); }
-
-  /* ---- Status banner: 05-components/status.css (UI-043) ---- */
 
   /* ---- Type checkboxes ---- */
   /* .type-checks + its label: 05-components/field.css (UI-042). The checkbox
@@ -114,7 +107,6 @@
   .bp-name { font-size: 14px; font-weight: 600; }
   .bp-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .bp-actions { display: flex; gap: 8px; flex-shrink: 0; }
-  /* .list-empty: 05-components/empty.css (UI-076); padding pages/blueprint.css mein. */
 
   /* ---- Shortfall warnings ---- */
   .shortfall-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
@@ -128,7 +120,6 @@
     background: var(--surface); border-left: 3px solid var(--warn-tx);
     color: var(--warn-tx); padding: 8px 11px; border-radius: 6px;
   }
-  /* .sf-* -> 05-components/shortfall.css (UI-071). Box yahin rehta hai. */
 
   /* ---- Bloom guidance panel (Marhala 2B — soft) ---- */
   .bloom-guide {
@@ -186,18 +177,14 @@
   /* ---- Card with header/body (.ch/.cb) ---- UI-068: dead, deleted.
      card.css owns padding + overflow, and its radius is now the same 16px. */
 
-  /* ---- Page header: 05-components/card.css owns .pagehead (UI-040) ---- */
-
   /* ---- Section card (mockup .sec / .sh / .body) ---- */
   .sec { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel); }
-  
   
   .sec .body { padding: 8px 14px; }
 
   /* ---- Question row (mockup .qrow) — flex, dashed divider ---- */
   .qrow:last-child { border-bottom: none; }
   
-
   /* ---- Pin button (mockup .pin / .pin.on) — box-style only; behavior JS se ---- */
   .pin {
     width: 26px; height: 26px; border-radius: 6px;

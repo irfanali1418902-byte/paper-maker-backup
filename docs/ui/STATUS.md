@@ -612,12 +612,28 @@ har rule ke peechhe reh jati hain, **hamari apni likhi hui hain** — `/* X: 05-
 Agar legacy mein pointer comment likhna band kar dein to tanasub 1.0 ho jata hai aur
 `1695 − 248 = 1447` — yani `~1450`, jo `~1400` ke qareeb hai.
 
-**Do soortein, aur ye faisla Irfan ka hai** (`DECISIONS-FOR-IRFAN.md` §7 ka tail):
-**(a)** pointer comments rakhein aur target `~1600` kar dein; **(b)** pointer comments
-band karein (trail commit message aur `git log` mein rahega) aur `~1450` par qaim rahein.
-**Aaj ke kaam ne khud dikhaya ke ye farq kitna asli hai:** teen rules uthane par pehle
-faida SIFAR tha (6 lines gayin, 6 comment aaye), aur comments ko do-do line par jama
-karne se hi 2 lines bachin.
+**✅ FAISLA: (b) — Irfan, 2026-09-04, aur usi din laagu.** `99-legacy/` mein pointer
+comment likhna **band**. Qaida ab `CLAUDE.md` **§11.1** mein hai — wahan se parho, yahan
+se nahi, kyunke wo har CSS task par lagta hai aur ye page ek din ka khulasa hai.
+
+**Purane 39 pointers usi din delete kiye gaye** (jo sirf pata dete thay). **`legacy_css_lines`
+1695 → 1629**, `unsanctioned_hex` 300 par barqarar, aur **`css_type_probe` par 0 deltas** —
+das pages × paanch viewports — yani wo 66 lines sirf wazan thin, koi rule nahi gayi.
+**Teen comment jaan-boojh kar chhore gaye** kyunke un mein pate ke ilawa naapi hui baat
+thi (*"its compact look was dead — D43"*, *"chaaron declarations zinda thin"*) — wo
+maloomat hai, pointer nahi.
+
+**Naya faasla, aur ab tanasub 1.0 hai:**
+
+```
+abhi                1629
+agree ka baqi kaam   −71   → ~1558
+disagree ka kaam    −177   → ~1381
+```
+
+Yani **`~1400` ab pahunch mein wapas aa gaya hai** — magar wo poora scope khatam karne
+par, jis ke liye `disagree` ke ~50 faisle darkar hain. **Target `~1450` par rakha gaya
+hai** (§7), jo `agree` khatam + `disagree` ka aadha hissa hai.
 
 **Agle session ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye
 number board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —

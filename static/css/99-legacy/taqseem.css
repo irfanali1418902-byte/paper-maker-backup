@@ -5,7 +5,6 @@
     --warn-tx: var(--yellow);
   }
   /* UI-073: dekho bank.css ka wohi note. */
-  /* body: pages/taqseem.css ka @layer objects (UI-077). */
 
   /* ---- Sidebar (mockup: navy bg, gold active rail) ----
      UI-065: panel + foot moved to 05-components/nav.css (this page already had

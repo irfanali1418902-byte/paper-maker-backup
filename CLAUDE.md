@@ -409,6 +409,34 @@ utility or a component. Two traps, both already paid for:
 - JS-interpolated values (`style="width:${pct}%"`) become custom properties
   (`style="--bar-width:${pct}%"`) so CSS keeps ownership of the rule.
 
+### 11.1 `99-legacy/` mein POINTER COMMENT mat likho (Irfan ka faisla, 2026-09-04)
+
+Jab koi rule `99-legacy/` se nikal kar component, object ya `pages/*.css` mein jaye,
+**us ki jagah `/* .foo: 05-components/bar.css (UI-0xx) */` MAT likho.** Rule ko chup-chaap
+jane do.
+
+**Wajah adad hai, zauq nahi.** `legacy_css_lines` un comments ko ginta hai, aur wo poore
+drain ka faida kha rahe thay. Do naape hue din:
+
+```
+09-03   rule lines nikleen −23   pointer comments aaye +14   asal faida  −9
+09-04   rule lines nikleen  −6   pointer comments aaye  +6   asal faida   0
+```
+
+**09-04 wale din teen rules uthane ka faida bilkul SIFAR tha** — jitni lines gayin utne
+hi comment aa gaye. Purane 39 aise pointers 2026-09-04 ko delete kiye gaye: **1695 → 1629
+lines, aur `css_type_probe` par 0 deltas** (das pages × paanch viewports), yani wo lines
+sirf wazan thin.
+
+**Trail phir bhi mojood rehta hai, teen jagah:** (1) us commit ka message, (2) `git log -S`
+selector par, (3) **naye component/object ka apna header**, jo waise bhi batata hai ke us
+ne kis file ki kaun si rule li — aur wahi wo jagah hai jahan agla parhne wala dekhega.
+
+⚠ **Ek istisna:** agar comment mein pate ke ilawa koi NAAPI HUI baat ya tanbeeh ho
+(*"its compact look was dead — D43"*, *"chaaron declarations zinda thin"*), to wo
+maloomat hai, pointer nahi — **wo rukegi.** 2026-09-04 ki safai mein teen aisi lines
+jaan-boojh kar chhori gayin.
+
 ---
 
 ## 12. Agentic session protocol

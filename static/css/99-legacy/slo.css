@@ -8,14 +8,8 @@
   }
   html, body { margin: 0; height: 100%; }
   /* UI-073: dekho bank.css ka wohi note. */
-  /* body: pages/slo.css ka @layer objects (UI-077). */
 
   .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
-
-  /* UI-079 -> .slo-main: 04-objects/slo-main.css · .card .hint + .empty-state:
-     05-components/empty.css (.hint ka margin murda thi, saath nahi gayi). */
-
-  /* UI-068: bare `.card` -> 05-components/card.css. */
 
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .btn {
