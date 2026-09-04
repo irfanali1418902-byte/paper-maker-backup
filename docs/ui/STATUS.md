@@ -1,6 +1,10 @@
 # UI-ARCH — Status Board
 
 > **Fresh session: read THIS file first. Do not read PROGRESS.md (2000+ lines).**
+> **⚠ Ye file SIRF CSS epic ka board hai.** Agar sawal ye ho ke *"poore project mein
+> kitna kaam hua aur kitna baqi hai"*, to wo yahan nahi — **`docs/ROADMAP.md` §0**
+> (2026-09-04 ko naapa gaya: PRD ke 22 rows, har kaam ka apna %, aur ye ke baqi ka bara
+> hissa kaam nahi **faisla** hai).
 > Full plan: `docs/ui/PLAN.md` · Rules: `CLAUDE.md` §11–12 · Parking lot: `docs/ui/DEFERRED.md`
 
 ---
