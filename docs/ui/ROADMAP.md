@@ -12,6 +12,29 @@ about sequencing, this file is the newer decision.
 **9 of 9 pages are live** as of 2026-08-13. **Marhala A is complete** — it was estimated at 4–7
 sessions and took about two.
 
+**⚠⚠ NEECHE KA BLOCK 2026-08-14 KA HAI AUR AAJ SAAF GHALAT HAI. 2026-09-04 KO NAAPA GAYA
+AUR YAHIN DURUST KIYA JA RAHA HAI — MITAYA NAHI, KYUNKE US KI DALIL AB BHI PARHNE LAIQ HAI.**
+
+Wo kehta hai *"CSS has roughly doubled and nothing has been deleted yet"*, *"Sprint 6, which
+has not started"* aur *"`legacy_css_lines` has still not moved"*. **Teenon ab ghalat hain:**
+
+| | 2026-08-14 | 2026-09-04 |
+|---|---:|---:|
+| `legacy_css_lines` | 2,075 | **1,593** |
+| `unsanctioned_hex` | — | **298** (356 se) |
+| Sprint 6 | shuru nahi hua | **chal raha hai** — UI-073 se UI-081 tak |
+| `static/theme.css` | deleted 08-13 | — |
+| `static/app.css` | *"still linked by all nine"* | **deleted (UI-075)** — das ke das pages ab EK stylesheet link karte hain |
+| epic ki branch | `feat/ui-architecture` | **`master` mein merge (`dc9436a`)** |
+
+**Aur target bhi badal chuka:** `~1400` par 2026-08-31 ko faisla hua tha, phir **2026-09-04
+ko us par nazar-e-sani hui aur naya adad `~1450` hai** — pehla target jo andaze ke bajaye
+naap se bana (`DECISIONS-FOR-IRFAN.md` §7, `STATUS.md` §4).
+
+**Ye row theek ussi bimari ka shikaar hui jis par isi file ka §E poora block likha hai**
+("row kaam ke usi din kaato; jo do din mein nahi kata, wo do mahine nahi katta") — ye
+**teen hafte** basi rahi. *Neeche 2026-08-14 ka asal matn:*
+
 **And the duplication this epic exists to remove is still entirely present.** That is not a
 failure, it is the middle of a strangler fig — but it should not be misread:
 
