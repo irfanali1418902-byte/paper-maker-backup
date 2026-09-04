@@ -374,7 +374,8 @@ un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
 > cursor **bug nahi**, aur us file ka apna comment ye wajah likhta hai. Check ab dono
 > qadrein alag alag dikhata hai.
 
-**3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1706**, target **1400**.
+**3. CSS — jo bacha, is tarteeb mein.** `legacy_css_lines` **1697**, target **~1500**
+(2026-09-04 ko nazar-e-sani hui — `DECISIONS-FOR-IRFAN.md` §7; purana `~1400` mansookh).
 
 > ⚠ **Comment ki apni qeemat hai — 09-01 ko naapa gaya.** UI-074 mein 7-line ka wazahati
 > comment likhne se `legacy_css_lines` **1707 → 1713** ho gaya **aur `unsanctioned_hex`
@@ -506,7 +507,9 @@ un chaar ka ✅ Irfan ki aankh se aaya hai, script se nahi.
 
 **4. ⚠ TARGET KA HISAAB TANG HAI — ye agle session ki pehli CSS baat hai.**
 
-Target `~1400` **Irfan ka faisla hai aur qaim hai** (§5 / `DECISIONS-FOR-IRFAN.md` §5).
+~~Target `~1400` **Irfan ka faisla hai aur qaim hai**~~ **→ 2026-09-04 ko NAZAR-E-SANI HUI.
+Naya target `~1500`** (`DECISIONS-FOR-IRFAN.md` §7, jawab A). Neeche ka poora hisaab wahi
+saboot hai jis par ye nazar-e-sani hui — use padha jaye, mitaya nahi.
 Magar UI-073 ke baad audit dobara chali aur scope **ghat gaya**:
 
 ```
@@ -542,11 +545,45 @@ scope mein         308            276          276          254
 > koi aur CSS drain shuru karna waqt zaya karna hai.**
 
 **`1706 − 276 = 1430`** — yani sirf rules delete karne se **1400 nahi aata, ~30 lines
-reh jati hain.** Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
+reh jati hain.** *(09-04: aur ye adad khud bhi ummeed-afza tha — asal hisaab neeche.)* Ye na-kaami nahi hai aur target badalne ki wajah bhi nahi: `legacy_css_lines`
 **1706** poori file ginta hai, jab ke audit ka **1326** sirf rule-block lines hai — beech ka
 farq comments, blank lines aur `@media` ke bracket hain, **jo apni rules ke saath khud
 jate hain** (UI-073 mein 34 rule-lines ke saath 8 comment-lines bhi gayin, magar naye
 comment 6 wapas aaye). Yani 1400 **ban sakta hai, magar khud-ba-khud nahi**.
+
+### ✅ 2026-09-04 — NAZAR-E-SANI HO GAYI. NAYA TARGET `~1500`, AUR YE NAAPA HUA HAI
+
+Ooper ka poora andesha durust nikla, aur us ka jawab `DECISIONS-FOR-IRFAN.md` §7 mein
+hai: **A — target par nazar-e-sani**. Naya adad andaze se nahi, **09-03 ke apne kaam se
+nikle model** se bana:
+
+```
+09-03:  rule lines nikleen     −23
+        pointer comments aaye  +14
+        legacy ka asal farq     −9      aur 1706 − 23 + 14 = 1697  ✓
+```
+
+**Har nikli hui rule apne peechhe ~0.6 comment line chhorti hai** — `/* X: 05-components/… */`
+likhna parta hai aur counter use ginta hai. Bacha hua scope **254 lines, 100 rules** mein:
+
+```
+abhi           1697
+agree ka kaam   −47   (77 lines, ~30 comment wapas)   → ~1650  ← checkpoint
+disagree ka    −147   (177 lines, ~30 comment wapas)  → ~1500  ← target
+```
+
+**`~1650` checkpoint hai, target nahi:** wahan tak **koi naya faisla darkar nahi**. Us se
+aage ke ~150 lines ke liye **taqreeban 50 aur faisle Irfan se lene parenge** — `disagree`
+ke 50 rules, aur item 8 ka poora tail un mein se sirf **teen** tha. Ye qeemat pehle se
+likhi ja rahi hai.
+
+⚠ **Ye model EK naape hue din par khara hai.** Agla kaam khatam ho to tanasub dobara
+naapo; 0.6 se bahut alag nikle to adad phir dekhna hoga — **magar ab tareeqa mojood hai,
+sirf number badlega.**
+
+**Agla CSS kaam: `agree` wale 50 rules** (77 lines, chhe families — `field/filter` 18,
+`shell/nav` 13, `chip/pill/row` 7, `btn-*` 6, `modal` 4, `card` 2). **Koi faisla darkar
+nahi**, aur `~1650` tak yehi raasta hai.
 
 **Agle session ka kaam:** item 8 + `.tag` + `body` ka tail lo, phir **dobara naapo aur ye
 number board par likho.** Agar tab bhi faasla bache to **Irfan ko wajah ke saath batao** —

@@ -74,6 +74,11 @@ shell has drifted, `.brand` has drifted. Fixing them is user-visible and is the 
 was started for.
 
 ~~**So the target is `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**~~
+**⚠⚠ SUPERSEDED AGAIN 2026-09-04 — the number is now `~1500`** (`DECISIONS-FOR-IRFAN.md`
+§7). It is the first target here derived from a measurement instead of an estimate: each
+rule that leaves `99-legacy/` leaves a pointer comment behind, and the counter counts it,
+so removing 254 lines of scope yields roughly 197. `STATUS.md` §4 carries the arithmetic.
+
 **⚠ SUPERSEDED 2026-08-31 — Irfan set a single number: `legacy_css_lines` ~1400.** The
 range's lower end was never reachable: re-running the audit that day gave `agree` 76 +
 `disagree` 232 = **308 lines in scope**, against 1,729 at the time. See `docs/ui/STATUS.md`

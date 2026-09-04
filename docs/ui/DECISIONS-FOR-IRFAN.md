@@ -97,7 +97,7 @@ treats the hyphen as a word boundary, the same trap this epic hit on `app-nav` a
 
 ---
 
-### 5. Target — `legacy_css_lines` ka aakhri adad · **ANSWERED: ~1400, 2026-08-31**
+### 5. Target — `legacy_css_lines` ka aakhri adad · ~~**ANSWERED: ~1400, 2026-08-31**~~ **→ MANSOOKH, dekhein §7 (2026-09-04): naya target `~1500`**
 
 **Irfan ne range khatam ki: ek adad, `~1400`.** Purana `1,200–1,400` mansookh.
 
@@ -181,7 +181,7 @@ hai — `disagree` ka matlab hi yehi hai ke copies aapas mein ikhtilaf rakhti ha
 
 | # | answer |
 |---|---|
-| 5 target | **A — ~1400. Answered 2026-08-31** ✅ |
+| 5 target | ~~**A — ~1400. Answered 2026-08-31**~~ → **§7 ne 2026-09-04 ko is par nazar-e-sani ki; naya adad `~1500`** |
 | 6 item-8 tail | **A — component banao, farq page par chhoro. Answered 2026-09-03** ✅ **KAAM BHI HO GAYA usi din (UI-076)** |
 
 > **✅ HO GAYA — UI-076, 2026-09-03.** `.strip-empty` + `.list-empty` ki mushtarka
@@ -220,7 +220,7 @@ ye ek line yahan se parhe.
 
 ---
 
-### 7. Target `~1400` — us ki bunyaad ab mojood nahi, aur faasla BARH raha hai
+### 7. Target `~1400` — us ki bunyaad ab mojood nahi, aur faasla BARH raha hai · **ANSWERED: A, naya target `~1500`, 2026-09-04**
 
 **Ye maloomat ki baat nahi, faisla-talab hai — aur is se pehle koi aur CSS drain shuru
 karna waqt zaya karna hai.**
@@ -266,4 +266,35 @@ mein wo cheez zaya hoti hai jo ab bhi qeemti hai: **ek adad jis par agla kaam na
 
 | # | answer |
 |---|---|
-| 7 target par nazar-e-sani | ⬜ **khula — 2026-09-04 ko naapa aur likha gaya** |
+| 7 target par nazar-e-sani | **A — nazar-e-sani. Naya target `~1500`. Answered 2026-09-04** ✅ |
+
+**Naya target `~1500` hai, aur ye pehli dafa NAAPA HUA adad hai — andaza nahi.**
+`~1400` 2026-08-31 ko munasib andaze par chuna gaya tha; ye us se mukhtalif tareeqe se
+bana. Bunyaad wo model hai jo 09-03 ke apne kaam se nikla aur usi din tasdeeq hua:
+
+```
+09-03:  rule lines nikleen     −23
+        pointer comments aaye  +14
+        legacy ka asal farq     −9      aur 1706 − 23 + 14 = 1697  ✓
+```
+
+Yani **har nikli hui rule apne peechhe taqreeban 0.6 comment line chhorti hai** — kyunke
+us ki jagah `/* X: 05-components/... */` likhna parta hai, aur `legacy_css_lines` us ko
+ginta hai. Bacha hua scope **254 lines, 100 rules** mein hai (50 `agree` + 50 `disagree`):
+
+```
+abhi           1697
+agree ka kaam   −47   (77 lines nikleen, ~30 comment wapas aayin)   → ~1650
+disagree ka    −147   (177 lines nikleen, ~30 comment wapas aayin)  → ~1500
+               ----
+naya target    ~1500
+```
+
+**`~1650` ko checkpoint samjhein, alag target nahi:** wahan tak koi naya faisla darkar
+nahi (`agree` ka matlab hi yehi hai). **Us se aage ke ~150 lines ke liye taqreeban 50 aur
+faisle Irfan se lene parenge** — `disagree` ke 50 rules, aur item 8 ka poora tail un mein
+se sirf **teen** tha. **Ye qeemat pehle se likhi ja rahi hai taake baad mein hairat na ho.**
+
+⚠ **Ye model EK naape hue din par khara hai (09-03).** Agla kaam khatam ho to tanasub
+dobara naapo: agar 0.6 se bahut alag nikle to ye adad phir se dekhna hoga — **magar is
+dafa tareeqa mojood hai, sirf number badalna hoga.**

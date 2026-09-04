@@ -55,6 +55,9 @@ zero" — **wo mansookh hai.** `scripts/css_duplication_audit.py` se dobara nika
 
 ~~**Target: `legacy_css_lines` ~1,200–1,400 aur ek mutabiq app. Sifar NAHI.**~~
 **⚠ 2026-08-31 — Irfan ne range khatam kar ke ek adad tay kiya: `legacy_css_lines` ~1400.**
+**⚠⚠ SUPERSEDED 2026-09-04 — us par nazar-e-sani hui aur naya target `~1500` hai**
+(`DECISIONS-FOR-IRFAN.md` §7). `~1400` scope ke andar reh kar hasil hi nahi ho sakta tha;
+wajah aur poora hisaab `STATUS.md` §4 mein.
 `docs/ui/STATUS.md` §5 dekho. Range ka neecha sira (1,200) riyazi taur par pohanch se
 bahar tha — scope mein sirf 308 lines hain. Baqi jumla qaim: **sifar NAHI**, aur agar
 koi session 99-legacy ko khali karne baithe to wo mansookh kaam kar raha hai.

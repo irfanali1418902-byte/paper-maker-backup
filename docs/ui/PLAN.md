@@ -399,6 +399,9 @@ icons (unreachable from any layer — see `STATUS.md` §"THE SIX HELD PAGES, MEA
 > are already one file per page**, so it removes no duplication, no CSS and no lookup step —
 > `legacy_css_lines` would fall to ~0 and nothing else would change. ~~**The target is
 > `legacy_css_lines` ≈ 1,200–1,400 and a visually coherent app, not 0.**~~ **⚠ SUPERSEDED
+> **⚠ SUPERSEDED 2026-09-04: the target is now `~1500`, measured rather than estimated —
+> see `DECISIONS-FOR-IRFAN.md` §7 and `STATUS.md` §4. `~1400` was unreachable while
+> staying inside the audit's scope, and the gap to it GREW with every task.**
 > 2026-08-31 — one number now: `legacy_css_lines` ~1400** (Irfan). The 1,200 end was
 > unreachable; see `docs/ui/STATUS.md` §5. "Not 0" is unchanged.
 >
