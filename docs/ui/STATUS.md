@@ -40,6 +40,35 @@
 > **Dhaancha 72/72 saaf:** khaali sawal/jawab/tashreeh/Urdu **0**, MCQ bina options **0**,
 > MCQ ka jawab options mein **32/32**.
 >
+> ### 2026-09-04, PY1 ki seeding — quota ne roka, aur EK NAYA MASLA BANA
+> **16 sawal, 4/8 topics** (2 chhue hi nahi gaye), 4 par HTTP 429, musalsal teen par
+> script khud ruki. **PY1 ab 75/81, baqi 6.** Bank **1198 → 1214**. `integrity_check` ok.
+> **D60 ka check phir pass:** khaali `learning_outcome` **130 par barqarar**.
+> **Dohraav:** naye 16 ke andar **0**; poore bank ke khilaf **1**, aur wo bhi do alag
+> grades mein (*"Count the stars…"* PY1 banaam PY2, marks 4 banaam 5). Saat yaksan-naam
+> topics ka andesha yahan bhi nahi laga.
+>
+> ### ⚠ NAYA MASLA — PY1 AB KHUD DO PAIMANON PAR HAI, AUR YE AAJ BANA
+> §1 ki row 2 kehti thi *"PY1 ke har short-answer par 1 mark"*. **Naapne par wo adhoora
+> tha: PY1 ka POORA grade 1-mark par tha** — 61 MCQ, 240 short-answer, 28 true-false, sab
+> `avg 1.0`, `min 1`, `max 1`. **Aaj ke 16 naye sawal us paimane par NAHI aaye:**
+>
+> ```
+>                    PY1 purane (329)   PY1 naye (16)   PY3 ke liye nisbat
+> multiple-choice    avg 1.0            avg 3.4         3.08
+> short-answer       avg 1.0            avg 6.14        4.81
+> true-false         avg 1.0            avg 2.75        2.18
+> ```
+>
+> **Naye short-answer 6.14 par hain — PY3 (4.81) se bhi ooper**, yani ye sirf "PY2/PY3
+> wala paimana" nahi, us se bhi bhaari. **Ab ek hi grade ke andar do paimane hain:** 329
+> sawal 1-mark par aur 16 sawal 2–7 par. PY1 ka koi bhi mila-jula paper ab andar se
+> be-tarteeb marks dega — **aur ye 09-04 se pehle mojood nahi tha.**
+> **Faisla Irfan ka, maine kuch nahi badla.** Teen soortein: (a) naye 16 ko 1-mark par
+> le aao, (b) puraane 329 ko dobara marks do, (c) PY1 ko bhi PY2/PY3 wale paimane par
+> chalne do aur 329 ko waise hi chhoro. **Baqi 6 topics seed karne se PEHLE ye tay karna
+> behtar hai**, warna farq aur barhega.
+>
 > ### 2026-09-04 ka audit — DB aur code raat bhar nahi hile, magar EK ADAD BADLA
 > Sab dobara naapa gaya aur barabar mila: bank **1126**, PY1 71/81, PY2 69/87, PY3 87/87,
 > **baqi 28**, khaali `learning_outcome` **130 (sab `manual`)**, `integrity_check` ok,
@@ -231,12 +260,12 @@ python -u -m scripts.seed_bank --subject Mathematics --grade "Pre Year 2"   --ty
 
 ```
 grade         topics  seeded  baqi   sawal
-Pre Year 1        81      71    10     329   <- ab sirf ye baqi hai
+Pre Year 1        81      75     6     345   <- baqi 6, quota par ruki
 Pre Year 2        87      87     0     348   <- mukammal 2026-09-04
 Pre Year 3        87      87     0     348   <- mukammal
 Grade 4           11      11     0      43
 G5/G6/Sci7/Geo8   44       0    44       0   <- JAALI, seed karna mana
-KUL              310     256    54    1068
+KUL              310     260    50    1084
 ```
 
 > ~~09-02: PY2 48/39/192, KUL 217/93/912~~ — 09-03 ki seeding ke baad badal gaya.
@@ -244,7 +273,7 @@ KUL              310     256    54    1068
 > Grade 5 Mathematics, Grade 6 Mathematics, Grade 7 Science, Grade 8 Geography — 11-11
 > topics, chaaron par sawal `0`.**
 
-> **`1068` topic-se-jure sawal hain; `questions` table mein kul 1198 hain.** Farq wo
+> **`1084` topic-se-jure sawal hain; `questions` table mein kul 1214 hain.** Farq wo
 > **130 English sawal** hain jin ka `syllabus_topic_id` NULL hai (bulk Excel import) —
 > un ke liye koi syllabus row hai hi nahi. **Dono adad theek hain, bas alag cheez
 > ginte hain** — jo bhi "bank ka size" likhe, batae ke kaun sa.
@@ -282,8 +311,13 @@ KUL              310     256    54    1068
    > akser **title hi hota hai** (baqi PY2 ke 18 mein **18/18**, PY1 ke 10 mein **10/10**),
    > is liye bhara hua khana asal maloomat nahi, **sirf title ki nakal** hai. Ye syllabus
    > ke data ki kharabi hai, is bug ki nahi — aur `master` merge is ko theek nahi karega.
-2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** PY1 ke har short-answer par **1
-   mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
+2. **PY1 aur PY2/PY3 ke marks ka paimana alag hai.** ⚠ **2026-09-04 ko naapne par ye row
+   do jagah adhoori nikli.** (a) Baat sirf short-answer ki nahi thi: **PY1 ka poora grade
+   1-mark par tha** — 61 MCQ, 240 short-answer, 28 true-false, sab `avg 1.0 / min 1 /
+   max 1`. (b) **Aur ab ye "PY1 banaam PY2/PY3" ka masla nahi raha — PY1 KHUD DO PAIMANON
+   PAR HAI**, kyunke 09-04 ke 16 naye sawal `avg 3.4 / 6.14 / 2.75` par aaye. Tafseel
+   ooper 09-04 ke block mein, teen soorton ke saath. ~~Purana matn:~~ PY1 ke har
+   short-answer par **1 mark** (240 sawal, sab 1); PY2/PY3 ke short-answer par **avg ~4.5** (3–7). 09-01 ka
    batch (4.4 / 4.55) pichhle sab AI batches ke barabar hai — **behkaav aaj nahi aaya**,
    magar bank mein do paimane mojood hain. Mile-jule paper ka total ajeeb banega.
 
