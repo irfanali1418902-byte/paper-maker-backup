@@ -5,7 +5,47 @@
 
 ---
 
-## 📅 PLAN — **2026-09-04 ke liye**, is tarteeb mein
+## 📅 PLAN — **2026-09-05 ke liye**, is tarteeb mein
+
+> ### 1️⃣ KAL KA PEHLA KAAM — D51, AUR WO `css_drain_probe.mjs` SE SHURU HOTA HAI
+> **(Irfan, 2026-09-04 ki shaam.)** Faisla ho chuka hai — **opt-in class control par**
+> (`.ctl-stack`), container par nahi (`DEFERRED.md` D51). Kaam shuru NAHI hua, aur
+> tarteeb ye hai:
+>
+> **(a) `node scripts/css_drain_probe.mjs bank` — ad-hoc script MAT likho.** 09-04 ko
+> theek yehi naapne ke liye ek ad-hoc CDP script likhi gayi thi aur wo **kaam nahi kar
+> saki** (`document.styleSheets` par walk `sheets=1, style-rules seen=0` deta raha).
+> `css_drain_probe` yehi sawal poochta hai — *"ye rule delete karun to kya hilta hai?"* —
+> aur wo pehle se reviewed hai. **Us naakami par dobara waqt mat do.**
+>
+> **(b) Phir wo EK cheez tay karo jo abhi tay nahi hui:** compact controls (`.strip-filter`
+> 30px, `.filter-bar` 38px, `.filter-row` 38px) **bhi** base rule par khare hain — unhein
+> `width: 100%` aur `margin-top` wahin se milta hai. Yani unhein bhi `.ctl-stack` chahiye,
+> aur phir us ka `min-height: 44px` un ke apne 30/38px ko harane lagega. **Do raaste:**
+> `.ctl-stack` ko un rules se PEHLE rakho, ya compact rules ko zyada specificity do.
+> **Ye tay kiye baghair markup shuru mat karo.**
+>
+> **(c) Phir markup — EK page, phir gate.** Chaar zinda pages ka HTML hai. Class **ADD**
+> karni hai, rename nahi, is liye D11 (JS class names load-bearing) laagu nahi hota —
+> magar har page ke baad `css_type_probe` chalao, sab ek saath nahi.
+>
+> ### 2️⃣ DO SAWAL JO IRFAN KE MUNTAZIR HAIN (dono chhote, dono DIKHNE WALI tabdeeli)
+> * **D63 — `.row`:** `index` ka rule `flex-wrap` declare hi nahi karta. Mehfooz raasta:
+>   `pages/index.css` mein `flex-wrap: nowrap` saaf likho (aaj ki computed qadr wohi hai,
+>   0 deltas aane chahiyen), phir `.row` component ban sakta hai.
+> * **D64 — `.app-nav`:** `index` aur `print` par markup hai magar rule nahi; un ka
+>   `padding-left` **0px** hai, baqi paanch ka **10px**. Sawal: un dono ko bhi 10px mile?
+>
+> ### 3️⃣ AGAR QUOTA CHALE — PY1 ke baqi **6 topics**
+> Backup **sqlite backup API se** (WAL-safe), `python -u`, tail parho.
+> ⚠ **Seeding ke foran baad ye chalao** — `seed_bank.py` ko PY1 ka 1-mark paimana maloom
+> nahi, is liye naye sawal phir 2–7 par aayenge:
+> `select count(*) from questions q join syllabus_topics t on t.id=q.syllabus_topic_id where t.grade='Pre Year 1' and q.marks <> 1`
+> — **0 aana chahiye**, warna wahi `UPDATE ... SET marks = 1` dobara chalani hai.
+
+---
+
+## 📅 2026-09-04 ka plan (ho chuka) — is tarteeb mein tha
 
 > *(Likha 2026-09-04, us din subah poora audit chalane ke BAAD. Heading mein tareekh
 > hai, "kal" nahi — is repo mein har relative label basi ho kar jhoot ban chuka hai:
