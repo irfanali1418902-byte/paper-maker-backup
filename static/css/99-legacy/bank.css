@@ -93,7 +93,6 @@
   .topic-img-strip { margin: 10px 0 4px; }
   .topic-img-strip-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   /* .strip-filter: 05-components/field.css (UI-061); its compact look was dead — D43. */
-  .strip-filter input { flex: 1; min-width: 90px; }
   .topic-img-row { display: flex; gap: 8px; flex-wrap: wrap; max-height: 180px; overflow-y: auto; }
   .topic-img-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
   .topic-img-thumb {
@@ -107,18 +106,6 @@
   .topic-img-thumb img    { width: 100%; height: 100%; object-fit: contain; }
   .topic-img-name { font-size: 10px; color: var(--muted); text-align: center; width: 68px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-  .btn-danger {
-    background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
-    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    font-family: inherit; cursor: pointer; min-height: 0;
-  }
-  .btn-danger:hover { background: #fdd; }
-
-  .btn-edit {
-    background: var(--tint); border: 1px solid var(--border); color: var(--primary);
-    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    font-family: inherit; cursor: pointer; min-height: 0;
-  }
   .btn-edit:hover { background: #d5e5ff; }
 
   /* ---- Filter bar ---- */
@@ -162,7 +149,6 @@
   /* .modal-header: 05-components/modal.css (UI-042). UI-062 dropped the two
      dead declarations UI-042 had already named — margin is reset.css's, the
      16px loses to typography.css (measured 14px). Only the colour was live. */
-  .modal-header h3 { color: var(--navy); }
   .modal-close {
     background: none; border: none; cursor: pointer;
     color: var(--muted); line-height: 1; padding: 2px 6px;

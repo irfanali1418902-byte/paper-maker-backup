@@ -34,12 +34,6 @@
     background: var(--color-surface); color: var(--color-text); }
 
   /* UI-070: size bank ki (majority). PROGRESS.md 2026-08-28. */
-  .btn-danger {
-    background: var(--err-bg); border: 1px solid #fbb; color: var(--err-tx);
-    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    font-family: inherit; cursor: pointer; min-height: 0;
-  }
-  .btn-danger:hover { background: #fdd; }
 
   /* ---- File pre-check warning ---- */
   .file-warning { color: var(--err-tx); font-size: 12.5px; margin-top: 6px; display: none; }
@@ -83,11 +77,6 @@
   .bulk-result-list li.skip { background: var(--warn-bg);  color: var(--warn-tx); }
   .bulk-result-list li.err  { background: var(--err-bg);  color: var(--err-tx); }
 
-  .btn-edit {
-    background: var(--tint); border: 1px solid var(--border); color: var(--primary);
-    padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 600;
-    font-family: inherit; cursor: pointer; min-height: 0;
-  }
   .btn-edit:hover { background: var(--primary); color: #fff; }
 
   /* ---- Card checkbox + selected state ---- */
@@ -124,11 +113,6 @@
 
   /* ---- Edit Modal ---- */
   /* scrim, radius, shadow, close size: modal.css (UI-067). */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    display: none; align-items: center; justify-content: center;
-    z-index: 100; padding: 16px;
-  }
   .modal-overlay.open { display: flex; }
   .modal-box {
     background: #fff; padding: 24px 26px;

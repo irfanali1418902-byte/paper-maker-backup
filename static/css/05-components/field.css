@@ -149,3 +149,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+
+/* `.strip-filter input` — bank aur print ke image-strip filter ka input.
+   UI-081. Dono par `flex: 1; min-width: 90px`, naapa gaya aur barabar; kisi
+   teesre page par match nahi. `.strip-filter` khud is file mein pehle se hai. */
+.strip-filter input {
+  flex: 1;
+  min-width: 90px;
+}

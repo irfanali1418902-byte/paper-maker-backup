@@ -356,3 +356,19 @@ once:
     bank      .list-empty   color rgb(138,147,164)   pad 40px 20px
     blueprint .list-empty   color rgb(100,116,139)   pad 30px      <- BOTH differ
     ```
+
+12. **`css_selector_probe` sirf PEHLA element parhta hai — jab kai elements hon to wo
+    jhoot nahi bolta, magar poora sach bhi nahi batata.** *(2026-09-04, UI-081.)*
+
+    Us ka core `getComputedStyle(els[0])` hai (`:118`), aur output ka `n=` batata hai ke
+    kitne mile — magar qadrein sirf pehle ki hain. `label` par is ne chaar pages par
+    `margin-top: 0px` dikhaya, jis se seedha natija nikalta tha ke legacy ka
+    `label { margin-top: 14px }` **murda hai** aur us ko chhorna mehfooz hai. **Wo ghalat
+    hota.** Pehla `label` hamesha `label:first-of-type` hai, aur usi page ka apna
+    `label:first-of-type { margin-top: 0 }` us par lagta hai. `label:not(:first-of-type)`
+    se naapne par chaaron pages par **14px** nikla — rule poori tarah zinda.
+
+    **Qaida: agar `n` ek se zyada ho aur elements mein farq mumkin ho (`:first-of-type`,
+    `:last-child`, koi state class), to ek aur selector likh kar dobara naapo.** `n=459`
+    dekh kar ek qadr par bharosa karna wahi ghalti hai jise rule 10 doosri shakl mein
+    mana karta hai.

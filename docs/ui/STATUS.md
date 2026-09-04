@@ -631,6 +631,41 @@ agree ka baqi kaam   −71   → ~1558
 disagree ka kaam    −177   → ~1381
 ```
 
+### 2026-09-04 — `agree` ka doosra batch (UI-081), aur `agree` ki asal hadd
+
+Uthaye gaye: `.btn-danger` + `:hover`, `.btn-edit` (base), `.modal-overlay` (band halat),
+`.modal-header h3`, `.strip-filter input`. **Gate: 0 deltas** (das pages × paanch
+viewports). `legacy_css_lines` **1629 → 1593**, `unsanctioned_hex` **300 → 298** (do hex
+ka dohraav khatam). `agree` ab **71 → 36 lines**.
+
+**Jo saath NAHI aaya, aur har ek ki wajah naapi hui hai:**
+
+| kya | kyun ruka |
+|---|---|
+| `.btn-edit:hover` | bank aur library par do alag soortein — audit ne bhi `agree` mein nahi rakha |
+| `.modal-overlay` ka khulne wala selector | index `[data-open="1"]`, library `.open` — do alag hooks |
+| `.app-nav` (5 files) | **D64** — index aur print par markup hai magar rule nahi; un ka `padding-left` 0px hai, baqi paanch ka 10px |
+| `.row` (3 files) | **D63** — index ka rule `flex-wrap` declare hi nahi karta |
+| `input[type=text/number]` | **D51** — ye teen properties layer upar le jane par CHHE pages tor chuki hain, 2026-08-27 ko naapa gaya |
+| `label` / `label:first-of-type` | abhi nahi kiya. Chaar pages par zinda (`margin-top` 14px), magar `print` par 11 label hain jin ke paas ye rule nahi — apna gate maangta hai |
+| `html, body { height: 100% }` | **abhi tak naapa nahi gaya** (board ye pehle se kehta hai) |
+
+### ⚠ `AGREE` KA MATLAB "MEHFOOZ" NAHI HAI — YE AAJ TEEN DAFA SABIT HUA
+
+Audit ka `agree` sirf itna kehta hai ke **jin files mein rule MOJOOD hai wo aapas mein
+muttafiq hain.** Wo ye nahi dekhta ke **kisi aur page par MARKUP mojood hai magar rule
+nahi** — aur wahi page component aate hi badal jata hai. Ek hi din mein isi sawal se
+teen cheezein ruki: `.row` (D63), `.app-nav` (D64), aur `.card .hint` ka murda margin
+(UI-079). **Is liye ab har selector par `css_selector_probe` das ke das pages par chalao,
+chahe audit us ko `agree` hi kyun na kahe.**
+
+⚠ **Aur `css_selector_probe` ki apni ek hadd hai jo aaj pakri gayi: wo sirf PEHLA element
+parhta hai** (`getComputedStyle(els[0])`). `label` par is ne `margin-top: 0px` dikhaya
+aur ye "murda hai" wala ghalat natija de raha tha — kyunke pehla `label` hamesha
+`label:first-of-type` hota hai, jis par 0 durust hai. `label:not(:first-of-type)` se
+naapne par asal qadr **14px** nikli. **Jab ek selector ke kai elements hon aur un mein
+farq mumkin ho, alag selector se dobara naapo.** (`PROBES.md` rule 12.)
+
 Yani **`~1400` ab pahunch mein wapas aa gaya hai** — magar wo poora scope khatam karne
 par, jis ke liye `disagree` ke ~50 faisle darkar hain. **Target `~1450` par rakha gaya
 hai** (§7), jo `agree` khatam + `disagree` ka aadha hissa hai.

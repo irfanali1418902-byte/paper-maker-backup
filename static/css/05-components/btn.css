@@ -409,3 +409,55 @@
 .btn-cancel:hover {
   background: var(--color-surface-sunken);
 }
+
+/* ---------------------------------------------------------------------------
+   .btn-danger / .btn-edit — bank aur library ke chhote row-action buttons.
+   UI-081. Dono files mein byte-identical thay (audit: `agree`).
+
+   Naapa gaya 2026-09-04, teen sawal:
+     1. zinda? Haan — background rgb(251,233,231) / rgb(234,241,251), border,
+        colour, padding 4px 10px, radius 7px: sab dono pages par compute hote hain.
+     2. barabar? Haan, har qadr dono par ek jaisi.
+     3. kisi teesre page par? Nahi — das ke das pages par probe: sirf bank aur
+        library par match. (Ye sawal audit khud nahi poochta; usi sawal ne is
+        batch se `.app-nav` aur `.row` ko bahar rakha — D63 aur STATUS §3.)
+
+   ⚠ `.btn-edit:hover` YAHAN NAHI HAI, AUR YE BHOOL NAHI. bank par wo ek halka
+   neela hex hai aur library par `var(--primary)` fill ke saath safed text — do alag
+   soortein, is liye audit ne bhi us ko `agree` mein nahi rakha. Wo dono apni apni
+   legacy file mein hain. `.btn-danger:hover` dono par ek hi qadr thi, is liye wo
+   saath aaya.
+
+   (Is comment mein koi hex jaan-boojh kar nahi likha: `unsanctioned_hex` comments
+   ke andar ke hex bhi ginta hai, aur ye ghalti is epic mein teen dafa ho chuki hai —
+   STATUS.md §3 ki tanbeeh isi par hai.)
+   --------------------------------------------------------------------------- */
+.btn-danger {
+  background: var(--err-bg);
+  border: 1px solid #fbb;
+  color: var(--err-tx);
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.btn-danger:hover {
+  background: #fdd;
+}
+
+.btn-edit {
+  background: var(--tint);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 0;
+}

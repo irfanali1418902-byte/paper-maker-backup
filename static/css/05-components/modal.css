@@ -111,3 +111,35 @@
 .modal-close {
   font-size: 20px;
 }
+
+/* ---------------------------------------------------------------------------
+   .modal-overlay — index aur library ka overlay dabba. UI-081.
+
+   Is file ka header pehle se batata hai ke is app mein TEEN modal systems hain;
+   ye `.modal-overlay` wala hai (index 1, library 3). Dono legacy files mein
+   declarations byte-identical thin (audit: `agree`) — sirf tarteeb alag thi.
+
+   ⚠ KHULNE WALA SELECTOR YAHAN NAHI HAI, AUR WO JAAN-BOOJH KAR HAI: index
+   `.modal-overlay[data-open="1"]` istemal karta hai aur library `.modal-overlay.open`.
+   Do alag hooks, do alag pages — wo apni apni legacy file mein hain. Yahan sirf
+   band halat ka dabba hai.
+
+   Naapa 2026-09-04: dono par `display: none`, `position: fixed`, aur background
+   `rgba(15,23,42,.45)` — wo background in rules mein hai hi nahi, is file ki apni
+   `.modal-backdrop`/overlay paint se aata hai. Teesre page par koi match nahi.
+   --------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* bank aur print ke modal ka unwan. Dono par `var(--navy)`, computed
+   rgb(22,41,74). UI-081. */
+.modal-header h3 {
+  color: var(--navy);
+}
