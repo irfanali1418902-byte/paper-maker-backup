@@ -64,10 +64,23 @@
 > wala paimana" nahi, us se bhi bhaari. **Ab ek hi grade ke andar do paimane hain:** 329
 > sawal 1-mark par aur 16 sawal 2–7 par. PY1 ka koi bhi mila-jula paper ab andar se
 > be-tarteeb marks dega — **aur ye 09-04 se pehle mojood nahi tha.**
-> **Faisla Irfan ka, maine kuch nahi badla.** Teen soortein: (a) naye 16 ko 1-mark par
-> le aao, (b) puraane 329 ko dobara marks do, (c) PY1 ko bhi PY2/PY3 wale paimane par
-> chalne do aur 329 ko waise hi chhoro. **Baqi 6 topics seed karne se PEHLE ye tay karna
-> behtar hai**, warna farq aur barhega.
+> **✅ FAISLA: (a) — Irfan, 2026-09-04, aur usi din laagu.** Naye sawal 1-mark par le
+> aaye gaye; purana bank bilkul nahi chhua gaya. **PY1 phir ek hi paimane par hai:**
+> teenon qismein `avg 1.0 / min 1 / max 1`, aur `marks <> 1` wale **0**.
+>
+> **Set shart se chuna gaya, "aakhri 16 rows" se NAHI** — aur is ne apni qeemat foran
+> dikhai: shart (`grade='Pre Year 1' AND marks <> 1`) ne **15** rows pakre, 16 nahi,
+> kyunke naye 16 mein se ek MCQ pehle hi 1-mark par aaya tha. "Aakhri 16" likhne se ek
+> row be-wajah likhi jati. Aur chunke PY1 ke purane 329 sab pehle se 1 par thay, ye
+> shart khud sabit karti hai ke koi purana row is mein aa hi nahi sakta.
+> **Backup se row-by-row diff:** *rows pehle 1214 ab 1214, gayab 0, naye 0, badle hue
+> columns `{marks: 15}`*, `integrity_check` ok.
+>
+> ⚠ **Ye sirf aaj ke rows ka ilaaj hai, sabab ka nahi.** `seed_bank.py` ko PY1 ka paimana
+> maloom nahi — **agle batch ke sawal phir 2–7 par aayenge** aur yehi `UPDATE` dobara
+> chalani paregi. **Baqi 6 topics seed karne ke foran baad ye check karo:**
+> `select count(*) from questions q join syllabus_topics t on t.id=q.syllabus_topic_id
+> where t.grade='Pre Year 1' and q.marks <> 1` — **0 aana chahiye.**
 >
 > ### 2026-09-04 ka audit — DB aur code raat bhar nahi hile, magar EK ADAD BADLA
 > Sab dobara naapa gaya aur barabar mila: bank **1126**, PY1 71/81, PY2 69/87, PY3 87/87,
