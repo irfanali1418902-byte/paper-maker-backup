@@ -24,8 +24,7 @@
   .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: 16px; }
 
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
-  label { display: block; margin-top: 14px; }
-  label:first-of-type { margin-top: 0; }
+  /* bare `label` + `label:first-of-type` -> 03-elements/forms.css (UI-089, D65). */
   /* Box + :focus: forms.css:80,132. Jo teen wo nahi deta — width/min-height/margin-top —
      wo ab `.ctl-stack` (field.css) deti hai; typed selector UI-086 mein gaya. D51.
      ⚠ Us selector mein `input[type="file"]` BHI tha, is liye is page ke teenon file

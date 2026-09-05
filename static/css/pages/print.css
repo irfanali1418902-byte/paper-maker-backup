@@ -402,3 +402,43 @@
     }
   }
 }
+
+
+/* D65 / UI-089 — `label` KE COMPOUND OVERRIDES, BARE `label` SE PEHLE YAHAN.
+   `03-elements/forms.css` ab bare `label { display: block; margin-top: 14px }`
+   `layer(elements)` mein deta hai (chaar legacy files se uthaya gaya). Ye rules
+   `layer(legacy)` mein thin aur layer order specificity se pehle tay hota hai,
+   to wahan rehte hue ye us se HAAR jatin — chahe `(0,1,1)` hon. D65 ki row is
+   naakami ka record hai: 2026-09-04 ko yehi kaam bina is qadam ke aazmaya gaya
+   aur gate ne 347 deltas diye.
+
+   ⚠ SIRF WOHI DECLARATIONS AAYI HAIN JO BARE RULE SE TAKRATI HAIN — `display`
+   aur `margin`. Baqi (`font-size`, `font-weight`, `color`, `cursor`, `gap`)
+   legacy mein hi hain: bare rule unhein chhoti hi nahi, aur unhein upar laane ka
+   matlab hota unhein `forms.css` ke muqable zinda karna. Wahi trap jo
+   `05-components/field.css`:8 par likha hai. */
+@layer components {
+  /* ⚠ YE BARE RULE `print` KA NEUTRALIZER HAI AUR IS PAGE PAR HI ZAROORI HAI.
+     Baqi chaar pages ne `label { display: block; margin-top: 14px }` khud
+     declare kiya tha; `print` ne KABHI NAHI kiya — us ke gyarah labels UA ki
+     default `inline` par khare hain. Bare rule `layer(elements)` mein jate hi
+     wo bhi block ho jate aur 14px le lete: 2026-09-04 ko naapa gaya, DAS
+     deltas, ek zinda page par jo is task ka hissa hi nahi tha. Ye rule wahi
+     qadrein wapas rakhti hai jo aaj hain.
+
+     Neeche wale do compound rules is se `(0,1,1)` par jeette hain, is liye
+     tarteeb par kuch munhasir nahi. */
+  label {
+    display: inline;
+    margin-top: 0;
+  }
+
+  .field-group label {
+    display: block;
+  }
+
+  .lib-picker-foot label {
+    display: flex;
+    margin: 0;
+  }
+}

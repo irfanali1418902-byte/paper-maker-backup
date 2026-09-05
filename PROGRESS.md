@@ -1,5 +1,74 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-089: D65(a) band — bare `label` upar gaya, aur ek selector jo grep se chhoot gaya tha
+
+D65 us naakami ka record hai jab 2026-09-04 ko `label { display: block; margin-top:
+14px }` seedha `03-elements/forms.css` mein daala gaya aur gate ne **347 deltas** diye.
+Ab wo D51 wale tareeqe par hua — **do alag qadmon mein, dono par 0 deltas.**
+
+**Qadam 1:** saat compound `label` overrides ki **sirf takraane wali declarations**
+(`display`, `margin`) apne `pages/*.css` ke `@layer components` mein gayin — `bank`
+(`.urdu-toggle-row label`, `.radio-row label`), `blueprint` (`.filter-row label`,
+`.dist-field label`), `library` (`.qt-checks label`), `print` (`.field-group label`,
+`.lib-picker-foot label`). `font-size`/`font-weight`/`color`/`cursor`/`gap` legacy mein
+hi rahe — bare rule unhein chhoti hi nahi, aur upar laane ka matlab unhein `forms.css`
+ke muqable zinda karna hota. **Gate: 0 deltas.**
+
+**`print` ko ek neutralizer mili.** Baqi chaar pages ne ye rule khud declare ki thi;
+`print` ne kabhi nahi — us ke gyarah labels UA ki `inline` par khare hain. Bare rule
+`layer(elements)` mein jate hi wo bhi block ho jate (09-04 ki naap: 10 deltas), is liye
+`pages/print.css` mein `label { display: inline; margin-top: 0 }` likhi gayi.
+
+**Qadam 2:** bare `label` + `label:first-of-type` `forms.css` mein, chaar legacy copies
+delete. **Gate: 0 deltas.**
+
+### Ek selector grep se chhoot gaya, aur gate ne use pehli hi run mein pakra
+
+Pehli koshish mein qadam 2 ne **65 deltas** diye, sab ek hi element se:
+`label.dist-toggle-row` ka `display: flex → block` (aur us ka andar ka checkbox aur
+span). Wajah: `.dist-toggle-row` ek **`<label>` element par lagi class** hai, magar us
+ke selector mein lafz `label` hai hi nahi — is liye wo `grep "label"` se chhoot gaya.
+
+**Sabaq, aur wo ab `pages/blueprint.css` mein likha hai:** `label` ke overrides
+`... label` selector se hi nahi aate. Poori list is se milti hai:
+
+```
+grep -roh '<label[^>]*class="[^"]*"' static/*.html
+```
+
+Paanch classes nikalti hain; teen ke apne rules hain — `.dist-toggle-row`,
+`.topic-check-row` (dono `blueprint`) aur `.btn-file-label` (`print`).
+
+**`.btn-file-label` ko kuch nahi chahiye tha, aur ye naapa gaya, socha nahi:** us ka
+`display: inline-block` **pehle se murda hai**, kyunke wo element `.field-group` ke
+andar hai aur `.field-group label` `(0,1,1)` us `(0,1,0)` se jeet jata hai.
+
+**`.topic-check-row` gate se bahar hai** — wo `renderSection()` ka topics list hai jo
+at rest render nahi hota. Us ki `display: flex` ehtiyatan upar le jayi gayi; `probe`
+us par 0 deltas dega chahe theek ho ya galat, aur ye us rule ke saath likha hai.
+
+**Naap:** das pages × paanch viewports, **0 deltas** (cumulative bhi, D64 ke baad se).
+**1083 pass**, ruff saaf, `unsanctioned_hex` **298**, `legacy_css_lines` 1603 → **1599**.
+
+## 2026-09-05 — D43 band: compact filter row wapas nahi aa raha (faisla), aur kaam pehle se ho chuka tha
+
+**Irfan ka faisla: murda declarations rehne nahi dene, compact variant zinda nahi
+karna.** Yani `.strip-filter` ke controls jaise aaj hain waise hi rahenge (13.5px /
+padding 11px / radius 11px), aur 12px wala iraada band.
+
+**Magar row basi thi, aur ye darj karna zaroori hai:** wo declarations
+(`font-size: 12px`, `padding: 4px 9px`, `border: 1px solid #D6DEEA`,
+`border-radius: 7px`) **pehle se ja chuki hain** — UI-061 ne 2026-08-24 ko hi hata di
+thin. Aaj `99-legacy/bank.css`:97 aur `99-legacy/print.css`:298 par sirf ek pointer
+comment bacha hai. Tasdeeq: `grep -rn "D6DEEA" static/` ab sirf `field.css` ke comment
+aur `index` ke apne (ghair-mutalliq) rules deta hai.
+
+Naapa gaya (`css_selector_probe`, dono pages): `.strip-filter input` `font-size`
+**13.5px**, `padding-left` **11px**, `border-top-left-radius` **11px**,
+`min-height` **30px**. Wahi qadrein jo D43 ne 08-24 ko darj ki thin.
+
+**Is liye is row par CSS ka koi kaam nahi hua — sirf faisla darj hua aur row band.**
+
 ## 2026-09-05 — UI-088: D64 band — `.app-nav` component, aur `index`/`print` ke nav ko 10px
 
 **Irfan ka faisla: sab ko 10px.** Ye is poore din ka **waahid** kaam hai jis ka

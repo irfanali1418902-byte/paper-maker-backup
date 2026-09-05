@@ -231,3 +231,58 @@
     min-height: 36px;
   }
 }
+
+
+/* D65 / UI-089 — `label` KE COMPOUND OVERRIDES, BARE `label` SE PEHLE YAHAN.
+   `03-elements/forms.css` ab bare `label { display: block; margin-top: 14px }`
+   `layer(elements)` mein deta hai (chaar legacy files se uthaya gaya). Ye rules
+   `layer(legacy)` mein thin aur layer order specificity se pehle tay hota hai,
+   to wahan rehte hue ye us se HAAR jatin — chahe `(0,1,1)` hon. D65 ki row is
+   naakami ka record hai: 2026-09-04 ko yehi kaam bina is qadam ke aazmaya gaya
+   aur gate ne 347 deltas diye.
+
+   ⚠ SIRF WOHI DECLARATIONS AAYI HAIN JO BARE RULE SE TAKRATI HAIN — `display`
+   aur `margin`. Baqi (`font-size`, `font-weight`, `color`, `cursor`, `gap`)
+   legacy mein hi hain: bare rule unhein chhoti hi nahi, aur unhein upar laane ka
+   matlab hota unhein `forms.css` ke muqable zinda karna. Wahi trap jo
+   `05-components/field.css`:8 par likha hai. */
+@layer components {
+  .filter-row label {
+    margin-top: 0;
+  }
+
+  .dist-field label {
+    margin-top: 0;
+  }
+
+  /* ⚠ YE DO SELECTORS MEIN LAFZ `label` HAI HI NAHI, AUR ISI LIYE PEHLI
+     KOSHISH MEIN CHHOOT GAYE. `.dist-toggle-row` aur `.topic-check-row` DONO
+     `<label>` elements par lagti hain (`blueprint.html`) aur dono `display`
+     declare karti hain. Bare `label` rule `layer(elements)` mein jate hi ye
+     `layer(legacy)` mein haar gayin: gate ne **65 deltas** diye, sab ek hi
+     element se — `label.dist-toggle-row` ka `display: flex -> block`, aur us
+     ka andar ka checkbox aur span.
+
+     SABAQ: `label` ke overrides `... label` selector se hi nahi aate. Jo bhi
+     aisa kaam kare, pehle ye chalaye:
+       grep -roh '<label[^>]*class="[^"]*"' static/*.html
+     Us se paanch classes nikalti hain; teen ke apne rules hain
+     (`.dist-toggle-row`, `.topic-check-row`, `.btn-file-label`).
+
+     `.btn-file-label` (print) ko kuch nahi chahiye tha: us ka `inline-block`
+     pehle se MURDA hai, kyunke wo element `.field-group` ke andar hai aur
+     `.field-group label` `(0,1,1)` us se jeet jata hai. Naapa gaya, socha
+     nahi. */
+  .dist-toggle-row {
+    display: flex;
+    margin-top: 12px;
+  }
+
+  /* ⚠ YE RULE GATE SE BAHAR HAI: `.topic-check-row` `renderSection()` ka
+     topics list hai (`blueprint.html`) jo at rest render nahi hota, is liye
+     css_type_probe is par 0 deltas dega chahe ye theek ho ya galat.
+     `field.css`:26 wahi baat is page ke `.type-checks` ke liye kehti hai. */
+  .topic-check-row {
+    display: flex;
+  }
+}

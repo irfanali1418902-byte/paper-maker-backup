@@ -15,10 +15,10 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1603**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1599**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
 >
-> ⚠ **`legacy_css_lines` UI-083–086 ke baad 1593 se 1603 par CHARHA, aur ye jaan-boojh kar
+> ⚠ **`legacy_css_lines` UI-083–089 ke baad 1593 se 1599 par (charh kar 1603 tak gaya, phir D65 ne 4 wapas diye), aur ye jaan-boojh kar
 > hai.** Chaar pages ki base rules aur chaar compact declarations nikleen, magar un ki
 > jagah paanch jagah "ye baqi declarations MURDA hain / ye upar chala gaya" wale
 > pointers likhe gaye, aur wo lines gin'ti mein aati hain. `field.css:8` ka precedent
@@ -29,6 +29,25 @@
 > **Ek cheez badli: IRFAN NE PUSH KAR DIYA.** `master` ab `backup/master` ke **barabar**
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
+>
+> ### ✅ D43 BAND, D65(a) BAND — 2026-09-05 (UI-089)
+> * **D43:** Irfan ka faisla — compact variant **zinda nahi** karna. ⚠ **Row basi thi:**
+>   jo murda declarations delete karni thin wo **UI-061 ne 08-24 ko hi hata di thin**;
+>   dono files par sirf pointer comment tha. CSS ka koi kaam nahi hua, sirf faisla.
+> * **D65(a) `label`:** D51 wala tareeqa, do qadam, dono par **0 deltas**. Saat compound
+>   overrides ki takraane wali declarations `pages/*.css` mein, phir bare `label`
+>   `forms.css` mein, chaar legacy copies delete. `print` ko neutralizer mili.
+>   ⚠ **Ek selector grep se chhoot gaya, gate ne pakra:** `label.dist-toggle-row` —
+>   `<label>` par lagi CLASS jis ke selector mein lafz `label` hai hi nahi. 65 deltas.
+>   **Poori list:** `grep -roh '<label[^>]*class="[^"]*"' static/*.html`.
+> * **D65(b) `html, body { height: 100% }` — KHULA HAI, MAGAR AB ADAD MOJOOD HAI.**
+>   `shell.css` mein daal kar naapa: **27 deltas, chaar pages par jin par ye rule aaj
+>   hai hi nahi** — `landing` 10, `plan` 9, `taqseem` 4, `blueprint` 4. `landing` par
+>   `html`/`body` ki height content (1012–1660px) se girr kar **900px** ho jati hai.
+>   **`print` par 0 deltas** — wo khatra in paanch viewports par nahi bana. Naap ke
+>   baad **sifarish: chaar legacy copies rehne dein aur hissa band karein**, kyunke
+>   `04-objects/shell.css`:29 pehle se yehi faisla naap ke saath darj karta hai.
+>   **Irfan ka jawab darkar.**
 >
 > ### 1️⃣ ✅ D51 **BAND** — CHAARON PAGES HO GAYE (UI-083 → UI-086).
 > `bank`, `blueprint`, `index`, `library`. Wo teen properties jo `forms.css` kabhi nahi

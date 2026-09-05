@@ -41,8 +41,7 @@
 
   /* ---- Form elements ---- */
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
-  label { display: block; margin-top: 14px; }
-  label:first-of-type { margin-top: 0; }
+  /* bare `label` + `label:first-of-type` -> 03-elements/forms.css (UI-089, D65). */
   /* Box + :focus: forms.css:80,132. Jo teen wo nahi deta — width/min-height/margin-top —
      wo ab `.ctl-stack` (field.css) deti hai; bare typed selector UI-083 mein gaya. D51. */
 

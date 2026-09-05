@@ -45,10 +45,35 @@
    Zero visual effect today: nothing links main.css until Sprint 3.
    ========================================================================= */
 
+/* ⚠ `display` AUR `margin-top` UI-089 MEIN YAHAN AAYE, AUR PEHLI KOSHISH NAAKAM
+   HUI THI — DEFERRED.md D65 US NAAKAMI KA RECORD HAI. 2026-09-04 ko yehi do
+   declarations chaar legacy files (`bank`, `blueprint`, `index`, `library`) se
+   seedhi yahan laayi gayin aur gate ne **347 deltas** diye; sab revert hua.
+   Sabab: is app ke compound label overrides (`.urdu-toggle-row label`,
+   `.radio-row label`, `.filter-row label`, `.dist-field label`, `.qt-checks
+   label`) `layer(legacy)` mein thay, aur ye rule `layer(elements)` mein hai —
+   layer order specificity se pehle tay hota hai, is liye ye un sab ko haraane
+   lagi. `print` par bhi das deltas aaye, jahan `label` ki rule thi hi nahi.
+
+   UI-089 ne wahi kiya jo D51 ne `.ctl-stack` ke liye kiya tha, aur DO ALAG
+   QADMON MEIN: pehle un saat overrides ki takraane wali declarations
+   (`display`, `margin`) apne `pages/*.css` ke `@layer components` mein gayin
+   aur gate chala (0 deltas), phir ye do yahan aayin aur gate dobara (0 deltas).
+   `print` ko `pages/print.css` mein ek bare `label` neutralizer mili, kyunke us
+   page ne ye rule kabhi declare nahi ki thi.
+
+   Jo bhi in par haath dale: pehle dekho ke kis page par `label` ka koi compound
+   override ab bhi `layer(legacy)` mein hai. */
 label {
+  display: block;
+  margin-top: 14px;
   font-size: var(--text-label);
   font-weight: var(--font-weight-strong);
   color: var(--color-text-muted-strong);
+}
+
+label:first-of-type {
+  margin-top: 0;
 }
 
 /* UI-066 — TWO SELECTORS WERE ADDED HERE AND THEY ARE NOT A WIDENING OF THE SET.
