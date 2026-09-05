@@ -1,0 +1,47 @@
+/* =========================================================================
+   05-components/row.css — `.row`, ek wrapping flex row.
+
+   UI-087, DEFERRED.md D63. `slo`, `slo-health` aur `taqseem` ki legacy files
+   mein `.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }`
+   byte-identical thi — audit ise `agree` kehta tha. Magar `agree` ka matlab
+   sirf itna hai ke rule ki NAQAL har file mein ek jaisi hai; wo ye nahi
+   poochta ke kin PAGES par MARKUP hai aur rule NAHI (D65 ka sabaq).
+
+   ⚠ `index` KA `.row` YAHAN SE NAHI AATA, AUR YEHI IS FILE KA POORA MASLA THA.
+   Us page par bhi `.row` ka markup hai magar us ka apna rule
+   `pages/index.css` mein hai jo `flex-wrap` DECLARE HI NAHI KARTA tha — yani
+   wahan wo initial value `nowrap` par khari thi. Is file ke aane par
+   ghair-mojood declaration kuch nahi harati, to `index` ka `.row` `nowrap` se
+   `wrap` ho jata: ek zinda page par nazar aane wali tabdeeli jo kisi ne nahi
+   maangi. Is liye UI-087 DO alag qadmon mein chala — pehle `pages/index.css`
+   mein `flex-wrap: nowrap` SAAF likhi gayi (0 deltas, kyunke computed qadr
+   wohi thi), aur GATE US KE BAAD chala; phir ye file aayi aur gate dobara.
+   Ek saath karne par pata na chalta ke kaun sa qadam kis delta ka zimmedar hai.
+
+   `index` ki rule isi layer mein hai aur `main.css` ke BAAD import hoti hai,
+   is liye wo source order se jeetti hai — barabar specificity `(0,1,0)` par.
+
+   ⚠ "SAAT PAGES REPAINT HO JAYENGE" GHALAT THA, AUR WO JUMLA
+   `pages/index.css` ke comment mein likha tha. `css_selector_probe` das ke das
+   pages par chalaya gaya (UI-087): `.row` ka markup sirf CHAAR par hai —
+   `index` (n=1, nowrap), `slo` (n=4), `slo-health` (n=2), `taqseem` (n=1),
+   teenon `wrap`. Baqi chhe par koi match nahi. Us comment ki qadr thi — us ne
+   is khatre ko darj rakha jab tak koi naap na le — magar adad basi tha.
+
+   `gap` 10px hai, 12px nahi: taqseem 12px par tha aur UI-071 mein majority par
+   aaya. Wo faisla wahan darj hai, yahan sirf us ka natija hai.
+
+   ⚠ `.topbar .row` (`99-legacy/index.css`:275) IS FILE SE MUTASSIR NAHI HOTA
+   jitna lagta hai. Wo `layer(legacy)` mein hai aur `@media (max-width: 760px)`
+   ke andar, to wo is file se aur `pages/index.css` se dono se haarta hai —
+   magar us ka `padding: 14px 16px` koi bhi declare nahi karta, is liye wo
+   narrow width par ab bhi lagta hai. Naapa gaya: paanchon viewports par
+   0 deltas.
+   ========================================================================= */
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}

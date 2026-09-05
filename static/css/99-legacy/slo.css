@@ -9,9 +9,9 @@
   html, body { margin: 0; height: 100%; }
   /* UI-073: dekho bank.css ka wohi note. */
 
-  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  /* `.app-nav` -> 05-components/nav.css (UI-088, D64). */
 
-  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  /* `.row` -> 05-components/row.css (UI-087, D63). */
   .btn {
     display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
     border: 0; border-radius: var(--radius-btn); font-size: 14px; font-weight: 600;

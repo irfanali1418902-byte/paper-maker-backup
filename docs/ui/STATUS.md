@@ -94,7 +94,21 @@
 > rename nahi, is liye D11 laagu nahi hota. ⚠ `index` ka selector bare `input, select` hai
 > (`99-legacy/index.css:70`) — sab se chaura, aur har typed-selector grep se chhoot jata hai.
 >
-> ### 2️⃣ DO SAWAL JO IRFAN KE MUNTAZIR HAIN (dono chhote, dono DIKHNE WALI tabdeeli)
+> ### 2️⃣ ✅ DONO SAWAL BAND — D63 (UI-087) AUR D64 (UI-088), 2026-09-05
+> * **D63 — `.row`:** row ka likha hua raasta harf-ba-harf chala, **do alag qadmon mein**
+>   (`pages/index.css` mein `flex-wrap: nowrap`, gate; phir `05-components/row.css`, gate)
+>   — **dono par 0 deltas.** ⚠ "Saat pages repaint honge" **ghalat tha**: `.row` ka markup
+>   sirf CHAAR par hai (`index` nowrap, `slo`/`slo-health`/`taqseem` wrap). Adad basi tha.
+> * **D64 — `.app-nav`:** Irfan ka faisla **sab ko 10px**. Component `nav.css` mein, paanch
+>   legacy copies gayin. **Ye din ka waahid kaam hai jis ka maqsood natija 0 deltas NAHI
+>   tha — 40 deltas aaye, sirf `index` (26) aur `print` (14) par, aur wohi natija tha.**
+>   Do cheezein naapne par nikleen jo row mein nahi thin: `index`/`print` ka nav pehle se
+>   `.sidenav` par hai (yani 0px bhool thi, design nahi), aur `taqseem` ka @720 override
+>   component se haar jata — wo pehle `pages/taqseem.css` mein le jaya gaya, alag naap.
+> * Narrow widths par koi delta nahi: `nav.css` ka `.sidenav__panel .sidenav { padding: 0 }`
+>   `(0,2,0)` hai. Saare 40 deltas 1280 aur 900 par hain.
+>
+> #### Purana matn (sawal, ab band)
 > * **D63 — `.row`:** `index` ka rule `flex-wrap` declare hi nahi karta. Mehfooz raasta:
 >   `pages/index.css` mein `flex-wrap: nowrap` saaf likho (aaj ki computed qadr wohi hai,
 >   0 deltas aane chahiyen), phir `.row` component ban sakta hai.

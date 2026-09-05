@@ -277,9 +277,21 @@
      inside `@media (max-width: 760px)` (index.css:304), so at desktop width
      nothing redeclares it. Page-scoped for the same reason as `.tag`: `.row`
      is live on slo-health, slo and taqseem, and a layer(components) rule
-     would repaint all seven — measured, 2 deltas on taqseem alone. */
+     would repaint all seven — measured, 2 deltas on taqseem alone.
+
+     ⚠ `flex-wrap: nowrap` YAHAN SE PEHLE GHAIB THI, AUR GHAIB HONA HI KHATRA THA
+     — D63. Ye rule `flex-wrap` declare hi nahi karti thi, is liye is page par wo
+     initial value `nowrap` par khari thi, jab ke `slo`, `slo-health` aur `taqseem`
+     apni legacy files mein saaf `wrap` likhte hain. `.row` ko `layer(components)`
+     ka component banate hi (`wrap` ke saath) ye page us ko override nahi kar
+     pata — ghair-mojood declaration kuch nahi harati — aur is ka `.row`
+     `nowrap` se `wrap` ho jata. Ek zinda page par nazar aane wali tabdeeli.
+     Ab qadr SAAF likhi hai. **Ye tabdeeli 0 deltas hai** (aaj ki computed qadr
+     bilkul yehi thi, naapa gaya UI-087 mein) — maqsad shakl badalna nahi, us
+     rule ko woh sawal poochne ke qabil banana jo component pooche ga. */
   .row {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 10px;
   }

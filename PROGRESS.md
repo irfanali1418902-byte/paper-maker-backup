@@ -1,5 +1,84 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-088: D64 band — `.app-nav` component, aur `index`/`print` ke nav ko 10px
+
+**Irfan ka faisla: sab ko 10px.** Ye is poore din ka **waahid** kaam hai jis ka
+maqsood natija 0 deltas NAHI tha — aur wo deltas aaye, ginti ke saath: **40, sirf
+`index` (26) aur `print` (14) par.** Baqi aath pages 0.
+
+**Naap (`css_selector_probe`, das pages):** saat par `.app-nav` ka markup, paanch par
+`padding-left` **10px** (`bank`, `library`, `slo`, `slo-health`, `taqseem`), aur
+`index` + `print` par **0px**. Baqi sab — `display`, `flex-direction`, `row-gap: 2px`
+— saaton par barabar.
+
+### Do cheezein naapne par nikleen jo D64 ki row mein nahi thin
+
+**(1) `index` aur `print` ka nav pehle se naye naam par hai.** Un ka markup
+`class="app-nav sidenav"` hai, aur un ka `display`/`flex-direction`/`gap`
+`05-components/nav.css` ki `.sidenav` (:114) se aa raha tha — legacy rule se nahi.
+Us rule mein horizontal padding hai hi nahi. **Yani 0px koi design faisla nahi tha:
+wo paanch legacy files mein likhi padding thi jin par ye do pages hain hi nahi.**
+Isi se faisla aasan hua.
+
+**(2) `taqseem` ka `@media (max-width: 720px)` override component se HAAR jata.**
+`99-legacy/taqseem.css`:85 par `.app-nav { flex-direction: row; flex-wrap: wrap;
+padding: 0 10px }` tha — `layer(legacy)` mein. Component `layer(components)` mein
+aata hai aur layer order media query se qat-e-nazar pehle tay hota hai, to us page ka
+nav ≤720px par row se **column** ho jata. **Wo pehle `pages/taqseem.css` ke
+`@layer components` mein le jaya gaya, alag qadam aur alag naap (0 deltas), phir
+component aaya.** Wahi shakl jo `pages/bank.css` ke `.options-grid` @760 note mein hai.
+
+### Kaam
+
+- `05-components/nav.css` — nayi `.app-nav { display: flex; flex-direction: column;
+  gap: 2px; padding: 0 10px }`, `.sidenav` ke **baad** (dono `(0,1,0)`; jin do pages
+  par dono classes hain wahan baad wali jeetti hai).
+- Paanch legacy copies delete.
+- `pages/taqseem.css` — @720 override ka naya ghar.
+
+**Narrow width par do alag raaste, dono pehle se mojood thay aur dono gate se
+tasdeeq-shuda:** `index`/`print` par `nav.css` ka apna `@media (max-width: 760px)`
+block `.sidenav__panel .sidenav { padding: 0 }` deta hai, jo `(0,2,0)` hai — is liye
+40 deltas mein se ek bhi 740/700/520 par nahi, sab 1280 aur 900 par hain. `taqseem`
+apne naye ghar se jeet raha hai. `bank`/`library`/`slo`/`slo-health` ka koi narrow
+override hai hi nahi, wo har width par 10px lete thay aur lete rahenge.
+
+**Deltas ki shakl:** `padding-left`/`padding-right` `0px → 10px` nav par, aur us ka
+natija har link par `width` `248px → 228px` (do taraf 10px). Yani 40 mein se sirf 4
+asal tabdeeli hain, baqi 36 un ka layout natija.
+
+**Naap:** 1083 pass, ruff saaf, `unsanctioned_hex` **298**, `legacy_css_lines`
+**1603** (aath rule lines gayin, aath pointer-comments aayin).
+
+## 2026-09-05 — UI-087: D63 band — `.row` component, do alag qadmon mein
+
+D63 ki row ne raasta pehle se likh rakha tha aur us par harf-ba-harf amal hua:
+**pehle `index` ki qadr saaf likho aur gate chalao, phir component banao aur dobara
+gate — ek saath karne par pata nahi chalta ke kaun sa qadam kis delta ka zimmedar hai.**
+
+**Qadam 1 — `pages/index.css` mein `flex-wrap: nowrap`.** Wo rule `flex-wrap`
+declare hi nahi karti thi, is liye us page par wo initial value `nowrap` par khari
+thi. Component `wrap` ke saath aata to ghair-mojood declaration use harati nahi aur
+`index` ka `.row` `nowrap` se `wrap` ho jata. Qadr saaf likhi gayi — **0 deltas**,
+kyunke computed qadr bilkul wohi thi.
+
+**Qadam 2 — `05-components/row.css`,** aur `slo`/`slo-health`/`taqseem` ki teen
+byte-identical legacy copies delete. **0 deltas.** `index` ki apni rule isi layer
+mein hai aur `main.css` ke baad import hoti hai, to wo source order se jeetti hai.
+
+### "Saat pages repaint ho jayenge" ghalat tha
+
+Wo jumla `pages/index.css` ke comment mein likha tha aur do rows ne use naqal kiya.
+`css_selector_probe` das ke das pages par chalaya gaya: **`.row` ka markup sirf CHAAR
+par hai** — `index` (n=1, `nowrap`), `slo` (n=4), `slo-health` (n=2), `taqseem` (n=1),
+teenon `wrap`. Baqi chhe par koi match nahi. **Us comment ki qadr thi** — us ne khatre
+ko darj rakha jab tak koi naap na le — **magar us ka adad basi tha**, aur naye file ke
+header mein wo durusti likhi hai.
+
+`.topbar .row` (`99-legacy/index.css`:275) bhi dekha gaya: wo `flex-wrap` declare
+nahi karta, sirf `padding: 14px 16px` us ka apna hai jise koi aur nahi chhoo raha —
+is liye narrow width par wo ab bhi lagta hai. Paanchon viewports par 0 deltas.
+
 ## 2026-09-05 — UI-086: D51 ka chautha page (`library`) — **AUR D51 KA CSS WALA HISSA KHATAM**
 
 `css_drain_probe.mjs library`: 56 rules, 15 dead candidates, 41 live, base rule

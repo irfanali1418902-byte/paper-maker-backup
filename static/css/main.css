@@ -201,6 +201,11 @@
 /* UI-042 — .field-row + .filter-bar. LIVE on bank, blueprint, index and
    library; all four carry the markup. Layout and size only, no colour. */
 @import url("05-components/field.css")     layer(components);
+/* UI-087 — `.row`, ek wrapping flex row. LIVE on slo, slo-health aur taqseem.
+   ⚠ `index` par bhi markup hai magar wo JAAN-BOOJH KAR is file se bahar hai:
+   us ka `.row` `nowrap` hai aur us ki apni rule `pages/index.css` mein hai, jo
+   isi layer mein baad ka source order rakhti hai. D63; file ka header parho. */
+@import url("05-components/row.css")       layer(components);
 /* @import url("05-components/badge.css")     layer(components); */
 @import url("05-components/nav.css")       layer(components);
 /* UI-071 — the shortfall note's INSIDES, on blueprint and print. The box is

@@ -115,6 +115,29 @@
   .app-sidebar {
     overflow-y: auto;
   }
+
+  /* D64 / UI-088 — YE RULE `99-legacy/taqseem.css`:85 SE YAHAN AAYI HAI, AUR US
+     KA SABAB CASCADE HAI, SAFAAI NAHI. `05-components/nav.css` ab `.app-nav` ka
+     poora box `layer(components)` mein deta hai (`flex-direction: column`
+     samet). Ye override `layer(legacy)` mein tha, aur layer order specificity
+     se — aur media query se — pehle tay hota hai, to wahan rehte hue ye us se
+     HAAR jata aur is page ka nav ≤720px par column ho jata. Yahan wo usi layer
+     mein hai aur source order se jeetta hai (ye file `main.css` ke baad aati
+     hai). Bilkul wahi shakl jo `pages/bank.css` ke `.options-grid` @760 note
+     mein likhi hai.
+
+     ⚠ Breakpoint 720px hai, 760px nahi — ye is page ka apna hai. `nav.css` ka
+     apna `@media (max-width: 760px)` block is page ko chhoo hi nahi sakta:
+     wo `.sidenav__panel .sidenav` par scoped hai aur is page ke nav par
+     `.sidenav` class hai hi nahi (wo abhi `.app-nav` par hai). QADREIN NAHI
+     BADLIN. */
+  @media (max-width: 720px) {
+    .app-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding: 0 10px;
+    }
+  }
 }
 
 /* THE `.brand` PARTIALS ARE DELIBERATELY NOT PORTED, AND AN EARLIER VERSION

@@ -12,12 +12,12 @@
      never a third navy: it resolved to the same rgb(22,41,74) the other six paint.
      UI-068: brand -> `.sidenav__brand*`; flex/gap + `.logo` -> pages/taqseem.css.
      Irfan ne shared values qubool kiye — divider aur uppercase sub gaye. */
-  .app-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  /* `.app-nav` -> 05-components/nav.css (UI-088, D64). */
 
   .tq-main { flex: 1; min-width: 0; padding: 24px 30px 40px; margin: 0 auto; width: 100%; max-width: 1400px; }
 
   /* toolbar row inside card */
-  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }  /* 12->10, majority; UI-071 */
+  /* `.row` -> 05-components/row.css (UI-087, D63); gap 12->10 UI-071 ka faisla. */
   .n-badge {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
     padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: #8a6410;
@@ -82,6 +82,6 @@
 
   @media (max-width: 720px) {
     .app-sidebar { width: 100%; height: auto; position: static; flex-direction: column; }
-    .app-nav { flex-direction: row; flex-wrap: wrap; padding: 0 10px; }
+    /* `.app-nav` @720 -> pages/taqseem.css @layer components (UI-088, D64). */
     .sidebar-foot { display: none; }
   }

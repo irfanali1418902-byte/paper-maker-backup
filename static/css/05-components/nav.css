@@ -118,6 +118,47 @@
   background: var(--color-sidebar-bg);
 }
 
+/* -------------------------------------------------------------------------
+   `.app-nav` — wohi nav, purane naam par. UI-088, DEFERRED.md D64.
+
+   Paanch legacy files (`bank`, `library`, `slo`, `slo-health`, `taqseem`) mein
+   ye rule byte-identical thi. Ab ek jagah hai aur wo paanch copies gayin.
+
+   ⚠ YE FILE `index` AUR `print` KA NAV 0px SE 10px PAR LE JATI HAI, AUR YE
+   MAQSOOD HAI — IRFAN KA FAISLA 2026-09-05. Un dono ka markup
+   `class="app-nav sidenav"` hai, yani wo pehle se naye naam par bhi hain aur
+   un ka `display`/`flex-direction`/`gap` ooper wali `.sidenav` se aata tha —
+   magar horizontal padding kisi ne nahi di, kyunke `.app-nav { padding: 0 10px }`
+   sirf un paanch legacy files mein thi jin par wo dono nahi hain. Naapa gaya
+   2026-09-04 aur dobara 2026-09-05 (`css_selector_probe`, das pages): saat
+   pages par markup, paanch par `padding-left` 10px, in dono par 0px.
+   **Sawal "kya dono ko bhi 10px milna chahiye" tha aur jawab HAAN hai** — nav
+   har page par ek hi cheez hai; 0px ek bhool thi, design nahi. Gate is
+   tabdeeli par deltas dikhayega aur wo deltas hi is task ka natija hain.
+
+   Ye `.sidenav` ke BAAD hai, jaan-boojh kar: dono `(0,1,0)` hain aur jin do
+   pages par dono classes hain wahan baad wali jeetti hai. Qadrein waise bhi
+   ek jaisi hain — sirf `padding` ka izafa hai — is liye ye tarteeb aaj koi
+   farq nahi daalti, magar `.sidenav` badla to daalegi.
+
+   ⚠ NARROW WIDTH PAR DO ALAG RAASTE HAIN AUR DONO PEHLE SE MOJOOD THAY:
+     · `index` / `print` — is file ka apna `@media (max-width: 760px)` block
+       `.sidenav__panel .sidenav { padding: 0 }` deta hai, jo `(0,2,0)` hai aur
+       is rule ko harata hai. Yani un ka nav narrow par 10px NAHI leta.
+     · `taqseem` — us ka `@media (max-width: 720px)` override ab
+       `pages/taqseem.css` ke `@layer components` mein hai (UI-088 ka pehla
+       qadam, 0 deltas). Legacy mein rehne par wo is rule se haar jata aur us
+       ka nav ≤720px par row se column ho jata.
+   `bank`, `library`, `slo`, `slo-health` ka koi narrow override hai hi nahi,
+   to wo har width par 10px lete hain — pehle bhi, ab bhi.
+   ------------------------------------------------------------------------- */
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+}
+
 /* Group heading — "PAPERS", "CONTENT". Uppercase micro type. */
 .sidenav__group {
   padding: 14px 12px 6px;
