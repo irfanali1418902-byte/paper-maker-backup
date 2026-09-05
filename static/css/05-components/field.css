@@ -31,6 +31,58 @@
    pages/index.css. Numbers and before/after pairs: PROGRESS.md 2026-08-15/16.
    ========================================================================= */
 
+/* -------------------------------------------------------------------------
+   .ctl-stack — a STACKED control: full width, 44px tall, 6px below its label.
+   DEFERRED.md D51, opt-in class decided by Irfan 2026-09-04.
+
+   This replaces the three properties `03-elements/forms.css` could never
+   supply — `width`, `min-height`, `margin-top` — which sat as a bare typed
+   selector in four legacy files (`99-legacy/bank.css:47` and friends). That
+   rule could not move up a layer: measured 2026-08-27, it broke six pages,
+   because every compact override in this app lives in layer(legacy) and a
+   base rule one layer up beats all of them whatever the specificity. The
+   class exists so the rule stops applying to controls that never wanted it.
+
+   ⚠ THE CLASS GOES ON THE CONTROL, NOT THE CONTAINER. On the container it
+   would have to reach its controls through a descendant selector, and that
+   is the cascade fight this class was created to end.
+
+   ⚠ COMPACT CONTROLS CARRY `.ctl-stack` TOO — they want the width and the
+   margin-top, only not the 44px. So every compact rule must BEAT this one.
+   Two things make that work, and both were checked before this was written:
+     · specificity — every compact rule is `(0,1,1)` (`.strip-filter input`,
+       `.filter-bar select`, `.ps-range input`); this one is `(0,1,0)`.
+     · layer — a compact rule still in layer(legacy) would LOSE here at any
+       specificity, since layer order is decided first. Those move into their
+       `pages/<page>.css` `@layer components` block, which is imported after
+       main.css and so wins on source order as well. Do that move BEFORE
+       deleting the page's base rule, or the control jumps to 44px in between.
+   Sitting first in this file keeps the source-order half true for every
+   compact rule below it as well.
+
+   ⚠ `min-height` KO `:not(textarea)` KI ZAROORAT HAI, AUR YE NAAPNE PAR NIKLA,
+   SOCHNE PAR NAHI. Pehli koshish mein `min-height` bare `.ctl-stack` par tha
+   aur gate ne bank par **40 deltas** diye, paanchon widths par, sab textarea ke:
+   `min-height 80px -> 44px` (aur `#q-mcq-text` ki height 80px -> 74px). Sabab
+   `03-elements/forms.css:124` ka `textarea { min-height: 80px }` hai —
+   `layer(elements)` mein. Purana bare typed selector `layer(legacy)` mein tha,
+   is liye us se HAARTA tha aur textarea 80px par rehta tha; `.ctl-stack`
+   `layer(components)` mein hai, jo elements ko jeet leti hai, to 44px ne 80px
+   ko dabaa diya. **Bilkul wahi shakl jo D51 aur D65 darj karti hain: rule ko
+   layer upar le jane ka matlab hai wo un rules ko bhi harane lagti hai jo aaj
+   us se jeet rahi hain.** 80px ko yahan naqal karna ghalat hal hota — wo qadr
+   forms.css ki hai; is liye textarea ko `min-height` di hi nahi jati, aur
+   `width`/`margin-top` use pehle ki tarah milte rehte hain.
+   ------------------------------------------------------------------------- */
+.ctl-stack {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.ctl-stack:not(textarea) {
+  min-height: 44px;
+}
+
 .field-row {
   display: flex;
   gap: 14px;

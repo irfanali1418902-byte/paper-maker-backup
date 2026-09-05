@@ -225,6 +225,44 @@
   }
 }
 
+/* D51 — BANK KE DO COMPACT CONTROLS, `.ctl-stack` SE PEHLE YAHAN LAYE GAYE.
+   `05-components/field.css` ka `.ctl-stack` (width 100% / min-height 44px /
+   margin-top 6px) `99-legacy/bank.css:47` ke bare typed selector ki jagah leta
+   hai. Wo selector in dono controls par bhi lagta tha, aur ye dono sirf
+   `min-height` (aur opt-input `margin`) waapas jeet kar compact rehte thay.
+
+   ⚠ SPECIFICITY IN KO NAHI BACHA SAKTI THI, IS LIYE GHAR BADLA GAYA. Dono
+   rules `layer(legacy)` mein thin aur `.ctl-stack` `layer(components)` mein
+   hai; layer order specificity se pehle tay hota hai, to legacy mein rehte
+   hue ye har specificity par haar jatin — `(0,3,3)` kar dene par bhi. Yahan
+   ye usi layer mein hain, is file ke main.css ke baad aane se source order
+   par bhi jeetti hain, aur `(0,1,1)` > `(0,1,0)` se bhi.
+
+   ⚠ SIRF WOHI DECLARATIONS AAYI HAIN JO ZINDA THIN. Dono rules ke
+   `font-size`, `padding`, `border`, `background`, `color` `layer(legacy)`
+   mein MURDA hain — `03-elements/forms.css:80` wahi controls `layer(elements)`
+   mein style karta hai aur legacy ko harata hai. `css_drain_probe` ne
+   `.float-bar select, .float-bar input[type="text"]` par poori rule delete
+   kar ke sirf **2 deltas** diye, dono `min-height` ke; float bar ka on-dark
+   look pehle se dead hai (D43 wali shakl). Unhein upar laana un ko ZINDA kar
+   deta — wahi trap jo `05-components/field.css:8` par likha hai aur jis ne
+   UI-042 mein 75 deltas hilaye thay. Wo declarations legacy hi mein rahengi.
+
+   Ye block base rule ke delete hone se PEHLE aaya, jaan-boojh kar: ulti
+   tarteeb mein float bar ke controls beech ke commit mein 34px se 44px ho
+   jate. Naap: UI-0xx, css_type_probe paanchon widths. */
+@layer components {
+  .opt-input-wrap input[type="text"] {
+    min-height: 38px;
+    margin: 0;
+  }
+
+  .float-bar select,
+  .float-bar input[type="text"] {
+    min-height: 34px;
+  }
+}
+
 /* UI-077 — `body` ka shell layout, `pages/plan.css` ke namoone par (Irfan ka faisla,
    2026-09-03). Ye rule `99-legacy/bank.css` mein thi; wahan se nikli aur yahan
    `@layer objects` mein aa gayi, bilkul usi shakl mein jaise `plan` pehle se karta

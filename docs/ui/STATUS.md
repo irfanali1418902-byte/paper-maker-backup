@@ -15,34 +15,46 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1593**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1597**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
+>
+> ⚠ **`legacy_css_lines` UI-083 ke baad 1593 se 1597 par CHARHA, aur ye jaan-boojh kar
+> hai.** Base rule aur do compact declarations nikleen (−2 lines) magar teen jagah
+> "ye baqi declarations MURDA hain, inhein upar mat le jao" wala warning likha gaya
+> (+6). `field.css:8` ka precedent yehi kehta hai — wahi trap UI-042 mein 75 deltas ka
+> tha. Metric informational hai, ratcheted nahi; `unsanctioned_hex` **298 par barqarar**.
 >
 > **Ek cheez badli: IRFAN NE PUSH KAR DIYA.** `master` ab `backup/master` ke **barabar**
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
-> ### 1️⃣ AAJ KA PEHLA KAAM — D51, AUR WO `css_drain_probe.mjs` SE SHURU HOTA HAI
-> **(Irfan, 2026-09-04 ki shaam; ye plan 09-05 ke liye likha gaya tha aur aaj wohi din hai.)** Faisla ho chuka hai — **opt-in class control par**
-> (`.ctl-stack`), container par nahi (`DEFERRED.md` D51). Kaam shuru NAHI hua, aur
-> tarteeb ye hai:
+> ### 1️⃣ ✅ D51 — `bank` HO GAYA (UI-083, 2026-09-05). TEEN PAGES BAQI.
+> **(a), (b) aur (c) teenon mukammal.** `css_drain_probe.mjs bank` chali (ad-hoc script
+> nahi, jaisa plan kehta tha): **98 rules, 33 dead, 65 live, aur base rule ZINDA — 167
+> deltas.** (b) ka faisla Irfan ne diya — **compact rules ko zyada specificity do** — aur
+> naapne par wo do hisson mein bata: `layer(components)` waali compact rules (`.strip-filter
+> input`, `.filter-bar select/input`, `.ps-range input`) **pehle se `(0,1,1)` par jeet rahi
+> thin**, un par koi kaam nahi; `layer(legacy)` waali rules par **specificity bemaani hai**
+> (layer order pehle tay hota hai) aur unhein `pages/<page>.css` ke `@layer components`
+> mein le jana parta hai. (c) hua: `bank.html` ke **58 controls** par class ADD, phir gate.
 >
-> **(a) `node scripts/css_drain_probe.mjs bank` — ad-hoc script MAT likho.** 09-04 ko
-> theek yehi naapne ke liye ek ad-hoc CDP script likhi gayi thi aur wo **kaam nahi kar
-> saki** (`document.styleSheets` par walk `sheets=1, style-rules seen=0` deta raha).
-> `css_drain_probe` yehi sawal poochta hai — *"ye rule delete karun to kya hilta hai?"* —
-> aur wo pehle se reviewed hai. **Us naakami par dobara waqt mat do.**
+> **Gate: das pages × paanch viewports = 0 deltas, 0 drift.** `test_css_architecture.py`
+> 32 pass. Tafseel PROGRESS.md 2026-09-05.
 >
-> **(b) Phir wo EK cheez tay karo jo abhi tay nahi hui:** compact controls (`.strip-filter`
-> 30px, `.filter-bar` 38px, `.filter-row` 38px) **bhi** base rule par khare hain — unhein
-> `width: 100%` aur `margin-top` wahin se milta hai. Yani unhein bhi `.ctl-stack` chahiye,
-> aur phir us ka `min-height: 44px` un ke apne 30/38px ko harane lagega. **Do raaste:**
-> `.ctl-stack` ko un rules se PEHLE rakho, ya compact rules ko zyada specificity do.
-> **Ye tay kiye baghair markup shuru mat karo.**
+> **⚠ GATE NE EK CHEEZ PAKRI JO KISI TAJZIYE MEIN NAHI THI.** Pehli koshish mein
+> `min-height: 44px` bare `.ctl-stack` par tha aur bank par **40 deltas** aaye, sab
+> textarea ke (`80px → 44px`): `03-elements/forms.css:124` ka `textarea { min-height: 80px }`
+> `layer(elements)` mein hai, purana legacy selector us se **haarta** tha, aur `.ctl-stack`
+> us se **jeet** jati hai. **Wahi D51/D65 wali shakl, magar is dafa `agree`/`disagree` ke
+> tajziye se nahi — gate se nikli.** Hal: `.ctl-stack:not(textarea)`, 80px naqal kiye
+> baghair. **Baqi teen pages par yehi khatra dobara dekhna hai.**
 >
-> **(c) Phir markup — EK page, phir gate.** Chaar zinda pages ka HTML hai. Class **ADD**
-> karni hai, rename nahi, is liye D11 (JS class names load-bearing) laagu nahi hota —
-> magar har page ke baad `css_type_probe` chalao, sab ek saath nahi.
+> **AGLA KAAM — `blueprint`, `index`, `library` par wohi tarteeb:** (1) us page ki
+> `layer(legacy)` waali compact rules pehle `pages/<page>.css` ke `@layer components` mein,
+> sirf ZINDA declarations; (2) phir markup par `.ctl-stack`; (3) phir base rule delete;
+> (4) phir gate — **ek page, phir gate**, sab ek saath nahi. Class **ADD** karni hai,
+> rename nahi, is liye D11 laagu nahi hota. ⚠ `index` ka selector bare `input, select` hai
+> (`99-legacy/index.css:70`) — sab se chaura, aur har typed-selector grep se chhoot jata hai.
 >
 > ### 2️⃣ DO SAWAL JO IRFAN KE MUNTAZIR HAIN (dono chhote, dono DIKHNE WALI tabdeeli)
 > * **D63 — `.row`:** `index` ka rule `flex-wrap` declare hi nahi karta. Mehfooz raasta:

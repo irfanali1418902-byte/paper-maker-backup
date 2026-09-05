@@ -63,20 +63,20 @@
     <div class="field-row">
       <div>
         <label>Subject <span style="color:var(--err-tx)">*</span></label>
-        <select id="fSubject" onchange="onSubjectChange()">
+        <select class="ctl-stack" id="fSubject" onchange="onSubjectChange()">
           <option value="">-- Loading... --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade <span style="color:var(--err-tx)">*</span></label>
-        <select id="fGrade" disabled onchange="onGradeChange()">
+        <select class="ctl-stack" id="fGrade" disabled onchange="onGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Syllabus Topic <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(paper filter isi se hoga)</span></label>
-    <select id="fTopic" disabled onchange="onAddTopicChange()">
+    <select class="ctl-stack" id="fTopic" disabled onchange="onAddTopicChange()">
       <option value="">-- Pehle class chunein --</option>
     </select>
 
@@ -84,8 +84,8 @@
     <div id="addTopicStrip" class="topic-img-strip" style="display:none">
       <div class="topic-img-strip-label">Is topic ki library images — click kar ke select karo (optional):</div>
       <div class="strip-filter">
-        <input type="text" id="addStripSearch" placeholder="naam ya keyword..." oninput="_scheduleAddStripReload()" />
-        <select id="addStripQType" onchange="_reloadAddStrip()">
+        <input type="text" class="ctl-stack" id="addStripSearch" placeholder="naam ya keyword..." oninput="_scheduleAddStripReload()" />
+        <select class="ctl-stack" id="addStripQType" onchange="_reloadAddStrip()">
           <option value="">Sab types</option>
           <option value="count">Count</option>
           <option value="colour">Colour</option>
@@ -102,14 +102,14 @@
     <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
     <div id="addSloBox" style="border:1px solid var(--color-border);border-radius:8px;padding:10px;background:#fafbfc;">
       <div id="addSloHint" style="font-size:13px;color:var(--muted,#64748b);">Pehle upar subject, class aur topic chuno — phir usi ke SLO yahan aayenge.</div>
-      <input type="text" id="addSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('add')"
+      <input type="text" class="ctl-stack" id="addSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('add')"
              style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />
       <div id="addSloList" style="max-height:180px;overflow-y:auto;"></div>
     </div>
 
     <!-- Type -->
     <label>Question Type <span style="color:var(--err-tx)">*</span></label>
-    <select id="fType" onchange="onTypeChange()">
+    <select class="ctl-stack" id="fType" onchange="onTypeChange()">
       <option value="multiple-choice">MCQ (Multiple Choice)</option>
       <option value="fill-blank">Fill in the Blank</option>
       <option value="true-false">True / False</option>
@@ -128,29 +128,29 @@
     <!-- MCQ section -->
     <div id="sec-mcq">
       <label>Question <span style="color:var(--err-tx)">*</span></label>
-      <textarea id="q-mcq-text" rows="3" placeholder="Sawal likhein..."></textarea>
+      <textarea class="ctl-stack" id="q-mcq-text" rows="3" placeholder="Sawal likhein..."></textarea>
 
       <label style="margin-top:16px;">Options <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(circle select = sahi jawab)</span></label>
       <div class="options-grid">
         <div class="opt-input-wrap">
           <input type="radio" name="mcq-correct" value="0" id="opt-r0" />
           <span class="opt-label">A</span>
-          <input type="text" id="opt-0" placeholder="Option A" />
+          <input type="text" class="ctl-stack" id="opt-0" placeholder="Option A" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="mcq-correct" value="1" id="opt-r1" />
           <span class="opt-label">B</span>
-          <input type="text" id="opt-1" placeholder="Option B" />
+          <input type="text" class="ctl-stack" id="opt-1" placeholder="Option B" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="mcq-correct" value="2" id="opt-r2" />
           <span class="opt-label">C</span>
-          <input type="text" id="opt-2" placeholder="Option C (optional)" />
+          <input type="text" class="ctl-stack" id="opt-2" placeholder="Option C (optional)" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="mcq-correct" value="3" id="opt-r3" />
           <span class="opt-label">D</span>
-          <input type="text" id="opt-3" placeholder="Option D (optional)" />
+          <input type="text" class="ctl-stack" id="opt-3" placeholder="Option D (optional)" />
         </div>
       </div>
       <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">Sahi jawab ke saamne wala circle select karo.</div>
@@ -159,15 +159,15 @@
     <!-- Fill-blank section -->
     <div id="sec-fill" style="display:none">
       <label>Question <span style="color:var(--err-tx)">*</span> <span style="font-size:11px;font-weight:400;color:var(--muted)">(blank ke liye ___ likhein)</span></label>
-      <textarea id="q-fill-text" rows="2" placeholder="e.g. The capital of Pakistan is ___."></textarea>
+      <textarea class="ctl-stack" id="q-fill-text" rows="2" placeholder="e.g. The capital of Pakistan is ___."></textarea>
       <label>Answer (optional)</label>
-      <input type="text" id="q-fill-answer" placeholder="e.g. Islamabad" />
+      <input type="text" class="ctl-stack" id="q-fill-answer" placeholder="e.g. Islamabad" />
     </div>
 
     <!-- True/False section -->
     <div id="sec-tf" style="display:none">
       <label>Question <span style="color:var(--err-tx)">*</span></label>
-      <textarea id="q-tf-text" rows="2" placeholder="e.g. The Earth revolves around the Moon."></textarea>
+      <textarea class="ctl-stack" id="q-tf-text" rows="2" placeholder="e.g. The Earth revolves around the Moon."></textarea>
       <label style="margin-top:14px;">Sahi jawab</label>
       <div class="radio-row">
         <label><input type="radio" name="tf-answer" value="True" checked /> True (صحیح)</label>
@@ -178,9 +178,9 @@
     <!-- Short-answer section -->
     <div id="sec-short" style="display:none">
       <label>Question <span style="color:var(--err-tx)">*</span></label>
-      <textarea id="q-short-text" rows="3" placeholder="Sawal likhein..."></textarea>
+      <textarea class="ctl-stack" id="q-short-text" rows="3" placeholder="Sawal likhein..."></textarea>
       <label>Answer lines (print mein kitni lines milein)</label>
-      <select id="q-short-lines">
+      <select class="ctl-stack" id="q-short-lines">
         <option value="">Default (4 lines)</option>
         <option value="0">None (0)</option>
         <option value="2">2 lines</option>
@@ -195,11 +195,11 @@
     <div class="field-row" style="margin-top:16px;">
       <div>
         <label>Marks <span style="color:var(--err-tx)">*</span></label>
-        <input type="number" id="fMarks" value="1" min="1" max="20" />
+        <input type="number" class="ctl-stack" id="fMarks" value="1" min="1" max="20" />
       </div>
       <div>
         <label>Difficulty</label>
-        <select id="fDifficulty">
+        <select class="ctl-stack" id="fDifficulty">
           <option value="easy">Easy</option>
           <option value="medium" selected>Medium</option>
           <option value="hard">Hard</option>
@@ -216,7 +216,7 @@
       <div class="field-row" style="margin-top:12px;">
         <div>
           <label>Bloom Level</label>
-          <select id="fBloom">
+          <select class="ctl-stack" id="fBloom">
             <option value="REMEMBER">Remember</option>
             <option value="UNDERSTAND" selected>Understand</option>
             <option value="APPLY">Apply</option>
@@ -227,28 +227,28 @@
         </div>
         <div>
           <label>Status</label>
-          <select id="fStatus">
+          <select class="ctl-stack" id="fStatus">
             <option value="published" selected>Published</option>
             <option value="draft">Draft</option>
           </select>
         </div>
       </div>
       <label>Learning Outcome</label>
-      <input type="text" id="fLearningOutcome" placeholder="e.g. Students will understand Newton's laws." />
+      <input type="text" class="ctl-stack" id="fLearningOutcome" placeholder="e.g. Students will understand Newton's laws." />
       <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">(comma-separated)</span></label>
-      <input type="text" id="fKeywords" placeholder="e.g. gravity, newton, force" />
+      <input type="text" class="ctl-stack" id="fKeywords" placeholder="e.g. gravity, newton, force" />
       <div class="field-row" style="margin-top:4px;">
         <div>
           <label>Estimated Time <span style="font-size:11px;font-weight:400;color:var(--muted)">(minutes)</span></label>
-          <input type="number" id="fEstTime" min="1" placeholder="e.g. 3" />
+          <input type="number" class="ctl-stack" id="fEstTime" min="1" placeholder="e.g. 3" />
         </div>
         <div>
           <label>Source Book</label>
-          <input type="text" id="fSourceBook" placeholder="e.g. NCERT Physics 8" />
+          <input type="text" class="ctl-stack" id="fSourceBook" placeholder="e.g. NCERT Physics 8" />
         </div>
         <div>
           <label>Page No.</label>
-          <input type="number" id="fPageNo" min="1" placeholder="e.g. 45" />
+          <input type="number" class="ctl-stack" id="fPageNo" min="1" placeholder="e.g. 45" />
         </div>
       </div>
     </div>
@@ -274,20 +274,20 @@
     <div class="field-row">
       <div>
         <label>Subject <span style="color:var(--err-tx)">*</span></label>
-        <select id="bpSubject" onchange="onBpSubjectChange()">
+        <select class="ctl-stack" id="bpSubject" onchange="onBpSubjectChange()">
           <option value="">-- Subject chunein --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="bpGrade" disabled onchange="onBpGradeChange()">
+        <select class="ctl-stack" id="bpGrade" disabled onchange="onBpGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — ek topic ke saare manual questions)</span></label>
-    <select id="bpTopic" disabled>
+    <select class="ctl-stack" id="bpTopic" disabled>
       <option value="">-- Sab topics (subject ke) --</option>
     </select>
 
@@ -304,18 +304,18 @@
     <div class="field-row" style="margin-top:16px;">
       <div>
         <label>Paper title <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="bpTitle" placeholder="e.g. Chapter 5 Test" />
+        <input type="text" class="ctl-stack" id="bpTitle" placeholder="e.g. Chapter 5 Test" />
       </div>
       <div>
         <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="bpClass" placeholder="e.g. Class 7A" />
+        <input type="text" class="ctl-stack" id="bpClass" placeholder="e.g. Class 7A" />
       </div>
     </div>
 
     <div class="field-row" style="margin-top:4px;">
       <div style="max-width:180px;">
         <label>Max questions <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — khali = sab)</span></label>
-        <input type="number" id="bpTotal" min="1" max="100" placeholder="e.g. 10" />
+        <input type="number" class="ctl-stack" id="bpTotal" min="1" max="100" placeholder="e.g. 10" />
       </div>
     </div>
 
@@ -380,13 +380,13 @@
     <div class="filter-bar">
       <div>
         <label>Subject</label>
-        <select id="lSubject" onchange="loadList()">
+        <select class="ctl-stack" id="lSubject" onchange="loadList()">
           <option value="">Sab subjects</option>
         </select>
       </div>
       <div>
         <label>Type</label>
-        <select id="lType" onchange="loadList()">
+        <select class="ctl-stack" id="lType" onchange="loadList()">
           <option value="">Sab types</option>
           <option value="multiple-choice">MCQ</option>
           <option value="fill-blank">Fill-blank</option>
@@ -397,7 +397,7 @@
       </div>
       <div>
         <label>Difficulty</label>
-        <select id="lDiff" onchange="loadList()">
+        <select class="ctl-stack" id="lDiff" onchange="loadList()">
           <option value="">Sab</option>
           <option value="easy">Easy</option>
           <option value="medium">Medium</option>
@@ -406,7 +406,7 @@
       </div>
       <div>
         <label>Bloom Level</label>
-        <select id="lBloom" onchange="loadList()">
+        <select class="ctl-stack" id="lBloom" onchange="loadList()">
           <option value="">Sab</option>
           <option value="REMEMBER">Remember</option>
           <option value="UNDERSTAND">Understand</option>
@@ -418,7 +418,7 @@
       </div>
       <div>
         <label>Status</label>
-        <select id="lStatus" onchange="loadList()">
+        <select class="ctl-stack" id="lStatus" onchange="loadList()">
           <option value="">Sab</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
@@ -427,7 +427,7 @@
       </div>
       <div>
         <label>Search</label>
-        <input type="text" id="lSearch" placeholder="text ya keyword..." oninput="scheduleSearch()" style="font-size:13.5px;padding:8px 11px;min-height:38px;" />
+        <input type="text" class="ctl-stack" id="lSearch" placeholder="text ya keyword..." oninput="scheduleSearch()" style="font-size:13.5px;padding:8px 11px;min-height:38px;" />
       </div>
       <button class="btn-ghost" onclick="clearListFilters()">Clear</button>
     </div>
@@ -440,13 +440,13 @@
 <!-- ===== FLOATING BULK BAR ===== -->
 <div class="float-bar" id="floatBar">
   <span class="fb-count" id="floatCount">0 chuney</span>
-  <select id="fbStatus" style="width:130px;">
+  <select class="ctl-stack" id="fbStatus" style="width:130px;">
     <option value="">Status...</option>
     <option value="published">Published</option>
     <option value="draft">Draft</option>
     <option value="archived">Archived</option>
   </select>
-  <input type="text" id="fbKeywords" placeholder="Keywords (comma-separated)..." style="width:210px;" />
+  <input type="text" class="ctl-stack" id="fbKeywords" placeholder="Keywords (comma-separated)..." style="width:210px;" />
   <button class="btn-fb-save" onclick="saveBulkMeta()">Meta Badlo</button>
   <button class="btn-fb-cancel" onclick="clearBulkSel()">Cancel</button>
 </div>
@@ -462,7 +462,7 @@
 
     <!-- Edit: question text -->
     <label>Question Text <span style="color:var(--err-tx)">*</span></label>
-    <textarea id="ef-text" rows="3"></textarea>
+    <textarea class="ctl-stack" id="ef-text" rows="3"></textarea>
 
     <!-- Edit: Urdu toggle -->
     <div class="urdu-toggle-row" style="margin-top:10px;">
@@ -477,22 +477,22 @@
         <div class="opt-input-wrap">
           <input type="radio" name="ef-correct" value="0" id="ef-r0" />
           <span class="opt-label">A</span>
-          <input type="text" id="ef-opt-0" />
+          <input type="text" class="ctl-stack" id="ef-opt-0" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="ef-correct" value="1" id="ef-r1" />
           <span class="opt-label">B</span>
-          <input type="text" id="ef-opt-1" />
+          <input type="text" class="ctl-stack" id="ef-opt-1" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="ef-correct" value="2" id="ef-r2" />
           <span class="opt-label">C</span>
-          <input type="text" id="ef-opt-2" />
+          <input type="text" class="ctl-stack" id="ef-opt-2" />
         </div>
         <div class="opt-input-wrap">
           <input type="radio" name="ef-correct" value="3" id="ef-r3" />
           <span class="opt-label">D</span>
-          <input type="text" id="ef-opt-3" />
+          <input type="text" class="ctl-stack" id="ef-opt-3" />
         </div>
       </div>
     </div>
@@ -509,13 +509,13 @@
     <!-- Edit: fill-blank answer -->
     <div id="ef-fill-sec" style="display:none;margin-top:14px;">
       <label>Answer (optional)</label>
-      <input type="text" id="ef-fill-answer" />
+      <input type="text" class="ctl-stack" id="ef-fill-answer" />
     </div>
 
     <!-- Edit: answer lines (short-answer) -->
     <div id="ef-lines-sec" style="display:none;margin-top:14px;">
       <label>Answer lines</label>
-      <select id="ef-lines">
+      <select class="ctl-stack" id="ef-lines">
         <option value="">Default (4 lines)</option>
         <option value="0">None</option>
         <option value="2">2 lines</option>
@@ -528,7 +528,7 @@
 
     <!-- Edit: marks -->
     <label style="margin-top:14px;">Marks</label>
-    <input type="number" id="ef-marks" min="1" max="20" style="width:100px;" />
+    <input type="number" class="ctl-stack" id="ef-marks" min="1" max="20" style="width:100px;" />
 
     <!-- Edit: Smart Details collapsible -->
     <div class="smart-details-toggle" onclick="toggleSmartDetails('efSmart', this)" style="margin-top:14px;">
@@ -539,7 +539,7 @@
       <div class="field-row" style="margin-top:12px;">
         <div>
           <label>Bloom Level</label>
-          <select id="ef-bloom">
+          <select class="ctl-stack" id="ef-bloom">
             <option value="REMEMBER">Remember</option>
             <option value="UNDERSTAND">Understand</option>
             <option value="APPLY">Apply</option>
@@ -550,7 +550,7 @@
         </div>
         <div>
           <label>Status</label>
-          <select id="ef-status">
+          <select class="ctl-stack" id="ef-status">
             <option value="published">Published</option>
             <option value="draft">Draft</option>
             <option value="archived">Archived</option>
@@ -558,21 +558,21 @@
         </div>
       </div>
       <label>Learning Outcome</label>
-      <input type="text" id="ef-learning-outcome" placeholder="e.g. Students will understand Newton's laws." />
+      <input type="text" class="ctl-stack" id="ef-learning-outcome" placeholder="e.g. Students will understand Newton's laws." />
       <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">(comma-separated)</span></label>
-      <input type="text" id="ef-keywords" placeholder="e.g. gravity, newton, force" />
+      <input type="text" class="ctl-stack" id="ef-keywords" placeholder="e.g. gravity, newton, force" />
       <div class="field-row" style="margin-top:4px;">
         <div>
           <label>Estimated Time <span style="font-size:11px;font-weight:400;color:var(--muted)">(min)</span></label>
-          <input type="number" id="ef-est-time" min="1" placeholder="e.g. 3" />
+          <input type="number" class="ctl-stack" id="ef-est-time" min="1" placeholder="e.g. 3" />
         </div>
         <div>
           <label>Source Book</label>
-          <input type="text" id="ef-source-book" placeholder="e.g. NCERT Physics 8" />
+          <input type="text" class="ctl-stack" id="ef-source-book" placeholder="e.g. NCERT Physics 8" />
         </div>
         <div>
           <label>Page No.</label>
-          <input type="number" id="ef-page-no" min="1" placeholder="e.g. 45" />
+          <input type="number" class="ctl-stack" id="ef-page-no" min="1" placeholder="e.g. 45" />
         </div>
       </div>
     </div>
@@ -581,8 +581,8 @@
     <div id="efTopicStrip" class="topic-img-strip" style="display:none;margin-top:14px;">
       <div class="topic-img-strip-label">Is topic ki library images — click kar ke seedha attach karo:</div>
       <div class="strip-filter">
-        <input type="text" id="efStripSearch" placeholder="naam ya keyword..." oninput="_scheduleEditStripReload()" />
-        <select id="efStripQType" onchange="_reloadEditStrip()">
+        <input type="text" class="ctl-stack" id="efStripSearch" placeholder="naam ya keyword..." oninput="_scheduleEditStripReload()" />
+        <select class="ctl-stack" id="efStripQType" onchange="_reloadEditStrip()">
           <option value="">Sab types</option>
           <option value="count">Count</option>
           <option value="colour">Colour</option>
@@ -599,7 +599,7 @@
     <label style="margin-top:14px;">SLO <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional — is sawal se jude learning outcomes)</span></label>
     <div id="efSloBox" style="border:1px solid var(--color-border);border-radius:8px;padding:10px;background:#fafbfc;">
       <div id="efSloHint" style="font-size:13px;color:var(--muted,#64748b);">SLO load ho rahe hain...</div>
-      <input type="text" id="efSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('ef')"
+      <input type="text" class="ctl-stack" id="efSloSearch" placeholder="SLO code ya text se filter..." oninput="_filterSloList('ef')"
              style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;padding:6px 8px;font-size:13px;" />
       <div id="efSloList" style="max-height:180px;overflow-y:auto;"></div>
     </div>

@@ -1,5 +1,77 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-083: D51 ka pehla page (`bank`) — `.ctl-stack` opt-in class
+
+Irfan ka faisla 2026-09-04: class **control** par, container par nahi. Aaj us par
+kaam shuru hua aur `bank` mukammal hua — **das pages, paanch viewports, 0 deltas**.
+
+**Pehle `css_drain_probe.mjs bank` chalayi** (board ne ad-hoc script se mana kiya
+tha — 09-04 ki naakami `sheets=1, style-rules seen=0`). Natija: 98 rules, 33 dead
+candidates, 65 live, aur **base rule zinda nikla — 167 deltas**
+(`99-legacy/bank.css:47`, `input[type=text], input[type=number], select, textarea
+{ width: 100%; min-height: 44px; margin-top: 6px }`). Yani "delete kar do" wala
+raasta band tha, jaisa 08-27 ki naap kehti thi.
+
+**Faisla jo aaj tay hua (Irfan): compact rules ko zyada specificity do.** Naapne
+par wo faisla do hisson mein bat gaya, aur aadha hissa specificity se hal hi nahi
+hota tha:
+
+- **`layer(components)` mein pehle se mojood compact rules** — `.strip-filter
+  input/select` (30px), `.filter-bar select/input` (38px), `.ps-range input` — sab
+  `(0,1,1)` hain aur `.ctl-stack` `(0,1,0)`. **Ye pehle se jeet rahi thin; koi kaam
+  nahi.**
+- **`layer(legacy)` mein baqi compact rules** — in par **specificity bemaani thi**.
+  Layer order specificity se pehle tay hota hai, to `layer(components)` ki
+  `.ctl-stack` inhein `(0,3,3)` par bhi haraa deti. Inhein **ghar** chahiye tha, na
+  ke specificity: bank ki do rules `pages/bank.css` ke `@layer components` mein
+  gayin, jo `main.css` ke baad import hoti hai — wahan wo layer, source order aur
+  specificity, teenon par jeetti hain.
+
+**Kaam (bank):**
+- `05-components/field.css` — nayi `.ctl-stack` (`width: 100%; margin-top: 6px`) +
+  `.ctl-stack:not(textarea) { min-height: 44px }`. File mein **sab se pehle** rakhi
+  gayi taake har compact rule us se baad mein aaye.
+- `pages/bank.css` — naya `@layer components` block: `.opt-input-wrap
+  input[type="text"] { min-height: 38px; margin: 0 }` aur `.float-bar select,
+  .float-bar input[type="text"] { min-height: 34px }`. **Sirf zinda declarations
+  aayin** — dono rules ke `font-size`/`padding`/`border`/`background`/`color`
+  `layer(legacy)` mein murda hain (forms.css:80 unhein `layer(elements)` se harata
+  hai) aur unhein upar laana un ko zinda kar deta — UI-042 wala 75-delta trap.
+- `static/bank.html` — **58 controls** par `class="ctl-stack"` (22 `select`, 24
+  `input[type=text]`, 7 `input[type=number]`, 5 `textarea`). Radio, checkbox aur
+  file par jaan-boojh kar nahi: purana selector un tak pahunchta hi nahi tha.
+- `99-legacy/bank.css:47` — base rule delete. Tarteeb ahem thi: compact rules pehle
+  upar gayin, warna beech mein float bar 34px se 44px ho jata.
+
+### Gate ne ek asli regression pakri — textarea, 40 deltas
+
+Pehli koshish mein `min-height: 44px` bare `.ctl-stack` par tha. Gate ne bank par
+**40 deltas** diye, paanchon widths par, sab textarea ke: `min-height 80px → 44px`,
+aur `#q-mcq-text` ki height `80px → 74px`.
+
+Sabab **`03-elements/forms.css:124` ka `textarea { min-height: 80px }`** hai, jo
+`layer(elements)` mein hai. Purana bare typed selector `layer(legacy)` mein tha aur
+us se **haarta** tha — is liye textarea aaj tak 80px par khare thay. `.ctl-stack`
+`layer(components)` mein hai, jo elements ko jeet leti hai, to 44px ne 80px ko
+dabaa diya.
+
+**Ye theek wahi shakl hai jo D51 aur D65 darj karti hain: rule ko layer upar le
+jane ka matlab hai wo un rules ko bhi harane lagti hai jo aaj us se jeet rahi
+hain** — aur is dafa wo `agree`/`disagree` ke tajziye se nahi, gate se nikli.
+
+Hal: `80px` ko component mein naqal **nahi** kiya (wo qadr forms.css ki hai);
+`min-height` ko `.ctl-stack:not(textarea)` par rakha, to textarea ko `width` aur
+`margin-top` milte rehte hain aur `min-height` forms.css se aata hai.
+
+**Naap (dobara chalane ke baad):** `css_type_probe` × 5 viewports (1280/900/740/
+700/520), das pages — `slo`, `slo-health`, `library`, `taqseem`, `blueprint`,
+`bank`, `landing`, `index`, `print`, `plan` — **0 deltas, 0 beforeOnly, 0
+afterOnly, 0 drift**. `tests/test_css_architecture.py` **32 pass**.
+
+**Baqi:** yehi kaam `blueprint`, `index` aur `library` par (D51 kehta hai chaar
+pages ye rule declare karte hain, aur `index` ka selector bare `input, select` hai
+— sab se chaura).
+
 ## 2026-09-02 — Audit: board pehli baar poora sach nikla, aur `persist_batch` ka chhupa surakh
 
 Irfan: *"audit kar lo aur phir plan do kya zaroori hai."* Sab kuch **khud naapa gaya**,
