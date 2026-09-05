@@ -65,9 +65,11 @@
   /* UI-061: font-weight/size/color dropped — dead against forms.css:47 by layer order. */
   label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  /* Box + :focus — forms.css:80,132. Selector stays BARE: checkboxes, file and colour
-     rode it too. 48/7 -> 44/6 = Irfan 2026-08-27. PROGRESS.md 2026-08-27. */
-  input, select { width: 100%; min-height: 44px; margin-top: 6px; }
+  /* Box + :focus: forms.css:80,132. Jo teen wo nahi deta — width/min-height/margin-top —
+     wo ab `.ctl-stack` (field.css) deti hai; bare `input, select` UI-085 mein gaya. D51.
+     ⚠ Selector BARE tha, is liye checkbox/file/colour bhi us par khare thay — is page ke
+     HAR input aur select par class hai, sirf typed waalon par nahi. 48/7 -> 44/6 = Irfan
+     2026-08-27, PROGRESS.md 2026-08-27. */
   /* file + colour are UA-drawn, so forms.css excludes both and their box stays here. */
   input[type="file"], input[type="color"] { border: 1px solid var(--color-border);
     border-radius: var(--radius-control); font-size: var(--text-control); font-family: inherit;

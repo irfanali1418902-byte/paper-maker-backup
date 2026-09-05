@@ -15,11 +15,11 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1599**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1601**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
 >
-> ⚠ **`legacy_css_lines` UI-083+UI-084 ke baad 1593 se 1599 par CHARHA, aur ye jaan-boojh kar
-> hai.** Dono pages ki base rules aur chaar compact declarations nikleen, magar un ki
+> ⚠ **`legacy_css_lines` UI-083/084/085 ke baad 1593 se 1601 par CHARHA, aur ye jaan-boojh kar
+> hai.** Teen pages ki base rules aur chaar compact declarations nikleen, magar un ki
 > jagah paanch jagah "ye baqi declarations MURDA hain / ye upar chala gaya" wale
 > pointers likhe gaye, aur wo lines gin'ti mein aati hain. `field.css:8` ka precedent
 > yehi kehta hai — wahi trap UI-042 mein 75 deltas ka tha. Metric informational hai,
@@ -30,7 +30,20 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
-> ### 1️⃣ ✅ D51 — `bank` (UI-083) AUR `blueprint` (UI-084) HO GAYE. DO PAGES BAQI.
+> ### 1️⃣ ✅ D51 — `bank`, `blueprint` AUR `index` HO GAYE. SIRF `library` BAQI.
+> **`index` (UI-085):** sab se chaura page, aur wahi hua — selector **BARE** tha
+> (`99-legacy/index.css:70`, `input, select`), to checkbox/file/colour bhi us par khare
+> thay aur class **har** input+select par lagi (47 tag-sites). Group B ka kaam is page
+> par nikla hi nahi: koi compact override hai hi nahi. Gate **0 deltas**.
+> ⚠ **EK GHALTI GATE SE BAHAR PAKRI GAYI — D11 KI NAYI SHAKL.** Script ne chaar tags par
+> **do `class` attributes** bana diye (`:117/:118/:119` `type="checkbox" class="qtype"`,
+> `:464` `id=... class="urdu"`), kyunke class tag ke shuru mein nahi thi. Browser doosra
+> girata hai — `.qtype` aur `.urdu` mar jate. **Gate pakar hi nahi sakta tha:** `.qtype`
+> ek JS hook hai jis ki koi CSS rule nahi. Aankh se pakra gaya, chaaron merge kiye.
+> **`.sec-row__*` (`index.html:1391–1415`) gate se bahar hain** — source order se mehfooz
+> (`pages/index.css` `@layer components` `:63` vs `main.css` `:60`), naapa nahi gaya.
+> **Ab sirf `library` baqi hai.**
+>
 > **`blueprint` (UI-084):** drain par base rule zinda (65 deltas); `.filter-row select`
 > aur `.dist-field input` `pages/blueprint.css` ke `@layer components` mein gaye,
 > 20 tag-sites par class lagi, **gate 0 deltas pehli koshish mein**. Is page ki base

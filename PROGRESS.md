@@ -1,5 +1,60 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-085: D51 ka teesra page (`index`) — aur ek script ki ghalti jo gate se nahi, aankh se pakri gayi
+
+`index` teenon mein sab se chaura tha aur wahi hua: **base rule ka selector BARE hai**
+— `99-legacy/index.css:70`, `input, select`, na ke bank/blueprint wala typed selector.
+Us rule ka apna comment yehi kehta tha: *"Selector stays BARE: checkboxes, file and
+colour rode it too."* Yani is page par `width: 100%`, `min-height: 44px`,
+`margin-top: 6px` **checkbox, file aur colour inputs par bhi** khare thay. Is liye
+class **har** `input` aur **har** `select` par lagi (47 tag-sites), sirf typed waalon
+par nahi.
+
+`css_drain_probe.mjs index`: 132 rules, 73 dead candidates, 59 live, base rule
+**zinda — 115 deltas**.
+
+**`index` par Group B ka kaam NIKLA HI NAHI.** Poori legacy file mein control ke
+`width`/`min-height`/`margin-top` ka koi compact override hai hi nahi (grep kiya) —
+`input[type="file"], input[type="color"]` sirf border/radius/font/background/colour
+deti hai aur `input[type="file"]` sirf padding, aur `.ctl-stack` in mein se kuch nahi
+chhoti. To yahan sirf do qadam thay: class, phir base rule delete.
+
+### Script ne chaar tags TOR diye thay, aur gate ne wo nahi pakra
+
+Insert wali script class ko `<input` ke foran baad daalti hai. Jin chaar tags par
+class **pehle se thi magar baad ke attribute mein** — `:117/:118/:119` ka
+`type="checkbox" class="qtype"` aur `:464` ka `id="schoolNameUr" class="urdu"` — un par
+**do `class` attributes** ban gaye. Browser doosra chup-chaap girata hai, yani
+**`.qtype` aur `.urdu` mar jate.**
+
+**Gate ne ye nahi pakra aur pakar bhi nahi sakta tha:** `.qtype` ek JS hook hai
+(`index.html:1290`, `querySelectorAll('.qtype:checked')`) jis ki koi CSS rule nahi, to
+computed-style diff mein 0 deltas hi aate. **Ye theek D11 wali surat hai** — aur is
+dafa wo class rename se nahi, class **jorne** se aayi. Chaaron merge kar diye gaye
+(`class="ctl-stack qtype"`), aur jorne ke baad `querySelectorAll('.qtype:checked')`
+theek chalta hai.
+
+Sabaq: **jorne wale patch mein "pehle se class thi ya nahi" sirf tag ke shuru mein mat
+dekho** — attribute kahin bhi ho sakta hai.
+
+### Gate se bahar kya raha
+
+`.sec-row__*` controls (`index.html:1391–1415`) `renderSections()` mein bante hain aur
+at rest **render nahi hote** — snapshot mein 42 controls hain aur un mein 78px/56px
+waali koi width nahi. **Ye naapa nahi gaya, magar source order se mehfooz hai aur wo
+files se tasdeeq-shuda hai:** `.sec-row__count { width: 78px }` aur
+`.sec-row__typecount { width: 56px }` `pages/index.css` ke `@layer components` (:63)
+mein hain, aur wo file `@import url("../main.css")` (:60) ke **baad** aati hai — yani
+usi layer mein baad ka source order, to wo `.ctl-stack` ke `width: 100%` ko barabar
+specificity `(0,1,0)` par harate hain. `min-height`/`margin-top` wahan koi rule chhoti
+hi nahi, is liye `.ctl-stack` bilkul wohi qadrein deti hai jo base rule deti thi.
+
+**Naap:** `css_type_probe` × 5 viewports, das pages — **0 deltas, 0 drift**.
+**1083 pass**, ruff saaf, `unsanctioned_hex` **298**, `inline_style_attrs` **466**
+(nahi hila), `legacy_css_lines` 1599 → **1601**.
+
+**Baqi: sirf `library`.**
+
 ## 2026-09-05 — UI-084: D51 ka doosra page (`blueprint`)
 
 Wohi tarteeb jo UI-083 mein tay hui, aur is dafa bila-hairat chali: **das pages,

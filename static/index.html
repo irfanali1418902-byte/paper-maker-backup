@@ -72,39 +72,39 @@
           <div class="stack">
           <div class="card">
             <label data-i18n="form.subject">Subject select karen</label>
-            <select id="subjectSelect" onchange="onSubjectChange()">
+            <select class="ctl-stack" id="subjectSelect" onchange="onSubjectChange()">
               <option value="">-- Loading subjects... --</option>
             </select>
 
             <label data-i18n="form.classGrade">Class/Grade select karen</label>
-            <select id="gradeSelect" onchange="onGradeChange()" disabled>
+            <select class="ctl-stack" id="gradeSelect" onchange="onGradeChange()" disabled>
               <option value="">-- Pehle subject chunein --</option>
             </select>
 
             <label data-i18n="form.syllabusTopic">Topic select karen</label>
-            <select id="syllabusTopic" onchange="onSyllabusTopicChange()" disabled>
+            <select class="ctl-stack" id="syllabusTopic" onchange="onSyllabusTopicChange()" disabled>
               <option value="">-- Pehle class chunein --</option>
             </select>
 
             <div class="field-row">
               <div>
                 <label data-i18n="form.subject">Subject</label>
-                <input id="subject" placeholder="e.g. Mathematics" value="Mathematics" />
+                <input class="ctl-stack" id="subject" placeholder="e.g. Mathematics" value="Mathematics" />
               </div>
               <div>
                 <label data-i18n="form.topic">Topic</label>
-                <input id="topic" placeholder="e.g. Fractions" value="Fractions" />
+                <input class="ctl-stack" id="topic" placeholder="e.g. Fractions" value="Fractions" />
               </div>
             </div>
 
             <div class="field-row">
               <div>
                 <label data-i18n="form.totalQuestions">Total questions</label>
-                <input id="totalQuestions" type="number" value="10" />
+                <input class="ctl-stack" id="totalQuestions" type="number" value="10" />
               </div>
               <div>
                 <label data-i18n="form.difficulty">Difficulty</label>
-                <select id="difficulty">
+                <select class="ctl-stack" id="difficulty">
                   <option value="easy" data-i18n="opt.easy">Easy</option>
                   <option value="medium" selected data-i18n="opt.medium">Medium</option>
                   <option value="hard" data-i18n="opt.hard">Hard</option>
@@ -114,20 +114,20 @@
 
             <label data-i18n="form.questionTypes">Question types (generate)</label>
             <div style="display:flex; gap:18px; flex-wrap:wrap; margin-bottom:10px;">
-              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="multiple-choice" checked /> <span data-i18n="qtype.mcq">Multiple choice</span></label>
-              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="short-answer" /> <span data-i18n="qtype.short">Short answer</span></label>
-              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input type="checkbox" class="qtype" value="essay" /> <span data-i18n="qtype.essay">Essay</span></label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input class="ctl-stack qtype" type="checkbox" value="multiple-choice" checked /> <span data-i18n="qtype.mcq">Multiple choice</span></label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input class="ctl-stack qtype" type="checkbox" value="short-answer" /> <span data-i18n="qtype.short">Short answer</span></label>
+              <label style="display:flex; align-items:center; gap:6px; font-weight:normal; margin:0;"><input class="ctl-stack qtype" type="checkbox" value="essay" /> <span data-i18n="qtype.essay">Essay</span></label>
             </div>
 
             <label data-i18n="form.bloomDist">Bloom distribution</label>
-            <select id="bloomDist">
+            <select class="ctl-stack" id="bloomDist">
               <option value="balanced" data-i18n="opt.balanced">Balanced</option>
               <option value="foundational" data-i18n="opt.foundational">Foundational</option>
               <option value="advanced" data-i18n="opt.advanced">Advanced</option>
             </select>
 
             <label data-i18n="form.paperType">Paper type</label>
-            <select id="paperType" onchange="onPaperTypeChange()">
+            <select class="ctl-stack" id="paperType" onchange="onPaperTypeChange()">
               <option value="mixed" selected data-i18n="opt.mixed">Mixed (sab types)</option>
               <option value="mcq" data-i18n="opt.mcq">MCQ-only</option>
               <option value="subjective" data-i18n="opt.subjective">Subjective</option>
@@ -164,22 +164,22 @@
                 <button type="button" class="ratio-preset" onclick="setRatioPreset(80)">80/20</button>
               </div>
               <label style="font-weight:normal; margin:0;" data-i18n="form.mcqPercent">MCQ % (baaki subjective)</label>
-              <input id="mcqPercent" type="number" min="0" max="100" value="50" />
+              <input class="ctl-stack" id="mcqPercent" type="number" min="0" max="100" value="50" />
             </div>
 
             <label>Language filter</label>
-            <select id="languageFilter">
+            <select class="ctl-stack" id="languageFilter">
               <option value="">Sab (English + Urdu)</option>
               <option value="en">English only</option>
               <option value="ur">Urdu only</option>
             </select>
 
             <label data-i18n="form.paperTitle">Paper title / naam (optional)</label>
-            <input id="paperTitle" placeholder="e.g. First Term – Math – Class 4" />
+            <input class="ctl-stack" id="paperTitle" placeholder="e.g. First Term – Math – Class 4" />
             <p style="margin:2px 0 10px;font-size:12px;color:var(--muted);">Ye paper ka naam hai, subject nahi — print par header mein dikhe ga.</p>
 
             <label>Exam (taqseem)</label>
-            <select id="paperExamNo"><option value="">Unassigned</option></select>
+            <select class="ctl-stack" id="paperExamNo"><option value="">Unassigned</option></select>
             <p style="margin:2px 0 10px;font-size:12px;color:var(--muted);">Ye paper kis exam ka hissa hai — coverage isi se naapi jaati hai. Unassigned = kisi exam se tag nahi.</p>
 
             <div class="actions">
@@ -221,15 +221,15 @@
         <div class="twocol">
           <div class="card">
             <label data-i18n="form.subject">Subject</label>
-            <input id="pdfSubject" list="pdfSubjectOptions" placeholder="Maujooda mein se chuno ya naya likho" />
+            <input class="ctl-stack" id="pdfSubject" list="pdfSubjectOptions" placeholder="Maujooda mein se chuno ya naya likho" />
             <datalist id="pdfSubjectOptions"></datalist>
 
             <label data-i18n="form.classGrade2">Class/Grade</label>
-            <input id="pdfGrade" list="pdfGradeOptions" placeholder="Maujooda mein se chuno ya naya likho" />
+            <input class="ctl-stack" id="pdfGrade" list="pdfGradeOptions" placeholder="Maujooda mein se chuno ya naya likho" />
             <datalist id="pdfGradeOptions"></datalist>
 
             <label data-i18n="form.singlePdf">Single PDF (text-based ya scanned)</label>
-            <input type="file" id="pdfFile" accept=".pdf" />
+            <input class="ctl-stack" type="file" id="pdfFile" accept=".pdf" />
             <div class="actions">
               <button class="gen-btn" id="pdfUploadBtn" onclick="uploadSyllabusPdf()" data-i18n="btn.uploadExtract">Upload &amp; extract topics</button>
             </div>
@@ -238,7 +238,7 @@
             <hr />
 
             <label data-i18n="form.zip">Ya ZIP (multiple PDF + images JPG/PNG)</label>
-            <input type="file" id="zipFile" accept=".zip" />
+            <input class="ctl-stack" type="file" id="zipFile" accept=".zip" />
             <div class="actions">
               <button class="ghost-btn" id="zipUploadBtn" onclick="uploadSyllabusZip()" data-i18n="btn.uploadZip">Upload ZIP &amp; extract topics</button>
             </div>
@@ -268,7 +268,7 @@
           </div>
 
           <label style="font-size:13px;">Excel file (.xlsx) <span style="color:#c00">*</span></label>
-          <input type="file" id="unitImportFile" accept=".xlsx,.xls,.csv" style="margin-bottom:12px;" />
+          <input class="ctl-stack" type="file" id="unitImportFile" accept=".xlsx,.xls,.csv" style="margin-bottom:12px;" />
 
           <div class="actions">
             <button class="gen-btn" id="unitImportBtn" onclick="importUnitExcel()" style="font-size:13px;padding:8px 18px;">
@@ -298,7 +298,7 @@
         <div id="adStep1">
           <div class="card">
             <label>Paper chunen</label>
-            <select id="adaptivePaperSelect" onchange="onAdaptivePaperSelect()" style="width:100%">
+            <select class="ctl-stack" id="adaptivePaperSelect" onchange="onAdaptivePaperSelect()" style="width:100%">
               <option value="">-- paper chunen --</option>
             </select>
             <div id="adHasResultsBox" style="display:none;margin-top:14px;padding:12px 14px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;font-size:13px;color:#1b5e20">
@@ -319,7 +319,7 @@
         <div id="adStep2" style="display:none">
           <div class="card">
             <label>Results file chunen (.xlsx ya .csv)</label>
-            <input type="file" id="adResultsFile" accept=".xlsx,.xls,.csv" style="margin-bottom:10px" />
+            <input class="ctl-stack" type="file" id="adResultsFile" accept=".xlsx,.xls,.csv" style="margin-bottom:10px" />
             <div class="actions" style="margin-top:8px;flex-wrap:wrap;gap:8px">
               <button class="ghost-btn" onclick="showAdaptiveStep(1)">← Back</button>
               <button class="gen-btn" onclick="uploadAdaptiveResults()">Upload Results</button>
@@ -342,9 +342,9 @@
         <div id="adStep4" style="display:none">
           <div class="card">
             <label>Total sawaal</label>
-            <input type="number" id="adTotalQ" value="20" min="1" max="200" style="width:120px" />
+            <input class="ctl-stack" type="number" id="adTotalQ" value="20" min="1" max="200" style="width:120px" />
             <label style="margin-top:10px">Language</label>
-            <select id="adLang" style="width:200px">
+            <select class="ctl-stack" id="adLang" style="width:200px">
               <option value="">Sab (English + Urdu)</option>
               <option value="en">English only</option>
               <option value="ur">Urdu only</option>
@@ -390,7 +390,7 @@
                 <button class="gen-btn" id="printBtn" style="display:none" onclick="openPrintView()" data-i18n="btn.print">Print / PDF dekhen</button>
                 <button class="ghost-btn" id="csvDownloadBtn" style="display:none" onclick="downloadResultCSV()" data-i18n="btn.csvDownload">📥 Result CSV download karen</button>
                 <button class="ghost-btn" id="csvUploadBtn" style="display:none" onclick="document.getElementById('csvFileInput').click()" data-i18n="btn.csvUpload">📤 Filled CSV upload karen</button>
-                <input type="file" id="csvFileInput" accept=".csv,.xlsx" style="display:none" onchange="uploadResultCSV(this)">
+                <input class="ctl-stack" type="file" id="csvFileInput" accept=".csv,.xlsx" style="display:none" onchange="uploadResultCSV(this)">
               </div>
               <p class="sub" style="margin-top:14px" data-i18n="results.actionsNote">Paper build karne ke baad ye actions enable ho jate hain.</p>
             </div>
@@ -408,7 +408,7 @@
           <div class="field-row" style="align-items:flex-end">
             <div style="flex:1">
               <label>Paper chunen</label>
-              <select id="anPaperDropdown" onchange="loadAnalytics()" style="width:100%">
+              <select class="ctl-stack" id="anPaperDropdown" onchange="loadAnalytics()" style="width:100%">
                 <option value="">-- pehle paper chunen --</option>
               </select>
             </div>
@@ -418,7 +418,7 @@
           </div>
           <div id="anUploadPicker" style="display:none; margin-top:6px">
             <label data-i18n="an.uploadPick">Kaunsa upload (newest pehle)</label>
-            <select id="anUploadSelect" onchange="onAnUploadChange()"></select>
+            <select class="ctl-stack" id="anUploadSelect" onchange="onAnUploadChange()"></select>
           </div>
           <div id="anStatus" style="margin-top:10px; font-size:14px; color:var(--muted); min-height:20px"></div>
         </div>
@@ -454,29 +454,29 @@
         <div class="twocol">
           <div class="card">
             <label data-i18n="form.logo">Logo upload karen</label>
-            <input type="file" id="logoFile" accept="image/*" onchange="onLogoSelected(event)" />
+            <input class="ctl-stack" type="file" id="logoFile" accept="image/*" onchange="onLogoSelected(event)" />
             <img id="logoPreview" style="display:none;width:60px;height:60px;object-fit:contain;margin-top:8px;border:1px solid var(--border);border-radius:8px" />
 
             <label data-i18n="form.schoolEn">School/Institute name (English)</label>
-            <input id="schoolNameEn" placeholder="e.g. Ameen Islamic Institute" />
+            <input class="ctl-stack" id="schoolNameEn" placeholder="e.g. Ameen Islamic Institute" />
 
             <label data-i18n="form.schoolUr">School/Institute name (Urdu)</label>
-            <input id="schoolNameUr" class="urdu" placeholder="e.g. امین اسلامک انسٹیٹیوٹ" dir="rtl" style="font-family:'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu',serif" />
+            <input class="ctl-stack urdu" id="schoolNameUr" placeholder="e.g. امین اسلامک انسٹیٹیوٹ" dir="rtl" style="font-family:'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu',serif" />
 
             <label data-i18n="form.address">Address</label>
-            <input id="schoolAddress" placeholder="e.g. Swat, Khyber Pakhtunkhwa" />
+            <input class="ctl-stack" id="schoolAddress" placeholder="e.g. Swat, Khyber Pakhtunkhwa" />
 
             <label>Phone</label>
-            <input id="schoolPhone" placeholder="e.g. 0946-1234567" />
+            <input class="ctl-stack" id="schoolPhone" placeholder="e.g. 0946-1234567" />
 
             <label>Email</label>
-            <input id="schoolEmail" type="email" placeholder="e.g. info@school.edu.pk" />
+            <input class="ctl-stack" id="schoolEmail" type="email" placeholder="e.g. info@school.edu.pk" />
 
             <label>Principal name <span style="color:var(--muted);font-weight:400">(record only — print par nahi)</span></label>
-            <input id="schoolPrincipal" placeholder="e.g. Muhammad Irfan" />
+            <input class="ctl-stack" id="schoolPrincipal" placeholder="e.g. Muhammad Irfan" />
 
             <label data-i18n="form.accent">Accent colour (letterhead line)</label>
-            <input id="accentColor" type="color" value="#0e4d3c" style="min-height:48px;cursor:pointer;padding:4px" />
+            <input class="ctl-stack" id="accentColor" type="color" value="#0e4d3c" style="min-height:48px;cursor:pointer;padding:4px" />
 
             <div class="actions">
               <button class="gen-btn" onclick="saveSchoolSettings()" data-i18n="btn.saveSettings">Settings save karen</button>
@@ -501,7 +501,7 @@
           <div class="field-row" style="margin-top:14px;flex-wrap:wrap;gap:16px">
             <div style="flex:1;min-width:180px">
               <label>Session start month</label>
-              <select id="sessionStartMonth" style="width:100%">
+              <select class="ctl-stack" id="sessionStartMonth" style="width:100%">
                 <option value="1">January</option>
                 <option value="2">February</option>
                 <option value="3" selected>March</option>
@@ -518,7 +518,7 @@
             </div>
             <div style="flex:1;min-width:160px">
               <label>Number of exams (N)</label>
-              <input type="number" id="examCount" value="8" min="1" max="24" style="width:100%" />
+              <input class="ctl-stack" type="number" id="examCount" value="8" min="1" max="24" style="width:100%" />
             </div>
           </div>
         </div>
@@ -530,15 +530,15 @@
           <div class="field-row" style="margin-top:14px;flex-wrap:wrap;gap:16px">
             <div style="flex:1;min-width:160px">
               <label>Class Size (students)</label>
-              <input type="number" id="classSize" value="25" min="1" max="500" style="width:100%" />
+              <input class="ctl-stack" type="number" id="classSize" value="25" min="1" max="500" style="width:100%" />
             </div>
             <div style="flex:1;min-width:160px">
               <label>Minimum Analysis % (students present)</label>
-              <input type="number" id="minAnalysisPct" value="60" min="1" max="100" style="width:100%" />
+              <input class="ctl-stack" type="number" id="minAnalysisPct" value="60" min="1" max="100" style="width:100%" />
             </div>
             <div style="flex:1;min-width:160px">
               <label>Weak Topic Threshold (%)</label>
-              <input type="number" id="weakTopicThreshold" value="60" min="1" max="100" style="width:100%" />
+              <input class="ctl-stack" type="number" id="weakTopicThreshold" value="60" min="1" max="100" style="width:100%" />
             </div>
           </div>
           <div class="actions" style="margin-top:14px">
@@ -556,7 +556,7 @@
 
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex; gap:10px; align-items:center;">
-            <input id="mpSearch" placeholder="Paper naam ya subject se dhoondein…" style="flex:1; margin:0;" oninput="mpOnSearch()" />
+            <input class="ctl-stack" id="mpSearch" placeholder="Paper naam ya subject se dhoondein…" style="flex:1; margin:0;" oninput="mpOnSearch()" />
             <button class="ghost-btn" style="white-space:nowrap; margin:0;" onclick="mpLoad()">Refresh</button>
           </div>
         </div>
@@ -1388,10 +1388,10 @@ function renderSectionRows() {
   host.innerHTML = _sections.map((s, i) => `
     <div class="sec-row">
       <div class="sec-row__top">
-        <input class="sec-row__heading" value="${escapeHtml(s.heading)}" placeholder="Section ka naam"
+        <input class="ctl-stack sec-row__heading" value="${escapeHtml(s.heading)}" placeholder="Section ka naam"
                oninput="onSectionField(${i}, 'heading', this.value)" />
         ${s.exact ? '' : `
-        <input class="sec-row__count" type="number" min="1" value="${s.count}" title="Kitne sawal"
+        <input class="ctl-stack sec-row__count" type="number" min="1" value="${s.count}" title="Kitne sawal"
                oninput="onSectionField(${i}, 'count', this.value)" />`}
         <button type="button" class="ghost-btn sec-row__remove" title="Section hatao"
                 onclick="removeSectionRow(${i})">✕</button>
@@ -1401,18 +1401,18 @@ function renderSectionRows() {
           const on = s.types.includes(t.value);
           return `
           <label class="sec-row__type">
-            <input type="checkbox" ${on ? 'checked' : ''}
+            <input class="ctl-stack" type="checkbox" ${on ? 'checked' : ''}
                    onchange="onSectionType(${i}, '${t.value}', this.checked)" />
             ${t.label}
             ${s.exact && on ? `
-            <input class="sec-row__typecount" type="number" min="1" title="${t.label} ke kitne sawal"
+            <input class="ctl-stack sec-row__typecount" type="number" min="1" title="${t.label} ke kitne sawal"
                    value="${s.counts[t.value] || 1}"
                    oninput="onSectionTypeCount(${i}, '${t.value}', this.value)" />` : ''}
           </label>`;
         }).join('')}
       </div>
       <label class="sec-row__exact">
-        <input type="checkbox" ${s.exact ? 'checked' : ''}
+        <input class="ctl-stack" type="checkbox" ${s.exact ? 'checked' : ''}
                onchange="onSectionExact(${i}, this.checked)" />
         Har qism ki alag ginti
       </label>
