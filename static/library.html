@@ -55,25 +55,25 @@
     <div class="card-title">Nayi image upload karen</div>
 
     <label>Image ka naam <span style="color:var(--err-tx)">*</span></label>
-    <input type="text" id="imgName" placeholder="e.g. Human digestive system diagram" />
+    <input type="text" class="ctl-stack" id="imgName" placeholder="e.g. Human digestive system diagram" />
 
     <div class="field-row">
       <div>
         <label>Subject</label>
-        <select id="upSubject" onchange="onUpSubjectChange()">
+        <select class="ctl-stack" id="upSubject" onchange="onUpSubjectChange()">
           <option value="">-- Loading... --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="upGrade" disabled onchange="onUpGradeChange()">
+        <select class="ctl-stack" id="upGrade" disabled onchange="onUpGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Syllabus Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(auto-suggest ke liye zaroori)</span></label>
-    <select id="upTopic" disabled>
+    <select class="ctl-stack" id="upTopic" disabled>
       <option value="">-- Pehle class chunein --</option>
     </select>
     <p style="margin:4px 0 0;font-size:11.5px;color:var(--warn-tx);">
@@ -81,7 +81,7 @@
     </p>
 
     <label>Image file (JPG ya PNG, max 10 MB) <span style="color:var(--err-tx)">*</span></label>
-    <input type="file" id="imgFile" accept="image/jpeg,image/png" onchange="onFileChange()" />
+    <input type="file" class="ctl-stack" id="imgFile" accept="image/jpeg,image/png" onchange="onFileChange()" />
     <div class="file-warning" id="fileWarning"></div>
 
     <div style="margin-top:18px;">
@@ -104,25 +104,25 @@
     <div class="field-row">
       <div>
         <label>Subject</label>
-        <select id="bulkSubject" onchange="onBulkSubjectChange()">
+        <select class="ctl-stack" id="bulkSubject" onchange="onBulkSubjectChange()">
           <option value="">-- Subject chunein (optional) --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="bulkGrade" disabled onchange="onBulkGradeChange()">
+        <select class="ctl-stack" id="bulkGrade" disabled onchange="onBulkGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Syllabus Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(auto-suggest ke liye zaroori)</span></label>
-    <select id="bulkTopic" disabled>
+    <select class="ctl-stack" id="bulkTopic" disabled>
       <option value="">-- Pehle class chunein --</option>
     </select>
 
     <label>Images (JPG ya PNG, max 10 MB each) <span style="color:var(--err-tx)">*</span></label>
-    <input type="file" id="bulkFiles" accept="image/jpeg,image/png" multiple />
+    <input type="file" class="ctl-stack" id="bulkFiles" accept="image/jpeg,image/png" multiple />
 
     <div style="margin-top:18px;">
       <button class="btn-primary" id="bulkUploadBtn" onclick="bulkUpload()">
@@ -153,7 +153,7 @@
     </div>
 
     <label>Excel file chuniye (.xlsx) <span style="color:var(--err-tx)">*</span></label>
-    <input type="file" id="metaImportFile" accept=".xlsx,.xls,.csv" />
+    <input type="file" class="ctl-stack" id="metaImportFile" accept=".xlsx,.xls,.csv" />
 
     <div style="margin-top:18px;">
       <button class="btn-primary" id="metaImportBtn" onclick="importMetaExcel()">
@@ -176,29 +176,29 @@
     <div class="filter-bar">
       <div>
         <label>Subject se filter</label>
-        <select id="fSubject" onchange="loadGrid(true)">
+        <select class="ctl-stack" id="fSubject" onchange="loadGrid(true)">
           <option value="">Sab subjects</option>
         </select>
       </div>
       <div>
         <label>Class se filter</label>
-        <select id="fGrade" onchange="loadGrid(true)">
+        <select class="ctl-stack" id="fGrade" onchange="loadGrid(true)">
           <option value="">Sab classes</option>
         </select>
       </div>
       <div>
         <label>Naam / Keyword</label>
-        <input type="text" id="fSearch" placeholder="naam ya keyword..." oninput="scheduleSearch()" style="min-height:38px;font-size:13.5px;padding:8px 11px;" />
+        <input type="text" class="ctl-stack" id="fSearch" placeholder="naam ya keyword..." oninput="scheduleSearch()" style="min-height:38px;font-size:13.5px;padding:8px 11px;" />
       </div>
       <div>
         <label>Category</label>
-        <select id="fCategory" onchange="loadGrid(true)">
+        <select class="ctl-stack" id="fCategory" onchange="loadGrid(true)">
           <option value="">Sab categories</option>
         </select>
       </div>
       <div>
         <label>Question Type</label>
-        <select id="fQType" onchange="loadGrid(true)">
+        <select class="ctl-stack" id="fQType" onchange="loadGrid(true)">
           <option value="">Sab types</option>
           <option value="count">Count</option>
           <option value="colour">Colour</option>
@@ -238,20 +238,20 @@
     <div class="field-row">
       <div>
         <label>Subject</label>
-        <select id="btSubject" onchange="onBtSubjectChange()">
+        <select class="ctl-stack" id="btSubject" onchange="onBtSubjectChange()">
           <option value="">-- Subject chunein --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="btGrade" disabled onchange="onBtGradeChange()">
+        <select class="ctl-stack" id="btGrade" disabled onchange="onBtGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Syllabus Topic <span style="color:var(--err-tx)">*</span></label>
-    <select id="btTopic" disabled>
+    <select class="ctl-stack" id="btTopic" disabled>
       <option value="">-- Pehle class chunein --</option>
     </select>
 
@@ -274,7 +274,7 @@
     <p id="bulkMetaCount" style="margin:0 0 16px;font-size:13px;color:var(--muted);"></p>
 
     <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">comma se alag — jaise "apple, fruit, red"</span></label>
-    <input type="text" id="bmKeywords" placeholder="e.g. apple, fruit, red" />
+    <input type="text" class="ctl-stack" id="bmKeywords" placeholder="e.g. apple, fruit, red" />
     <div style="display:flex;gap:16px;margin-top:8px;">
       <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;margin:0;cursor:pointer;">
         <input type="radio" name="bmMode" value="replace" checked /> Replace (purane hata do)
@@ -285,8 +285,8 @@
     </div>
 
     <label style="margin-top:16px;">Category <span style="font-size:11px;font-weight:400;color:var(--muted)">(khaali chhodo = nahi badlega)</span></label>
-    <select id="bmCategory" onchange="onBmCategoryChange()"></select>
-    <input type="text" id="bmCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
+    <select class="ctl-stack" id="bmCategory" onchange="onBmCategoryChange()"></select>
+    <input type="text" class="ctl-stack" id="bmCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
 
     <label style="margin-top:14px;">Question Types <span style="font-size:11px;font-weight:400;color:var(--muted)">(koi check nahi = nahi badlega)</span></label>
     <div class="qt-checks" id="bmQtChecks">
@@ -316,25 +316,25 @@
     </div>
 
     <label>Naam <span style="color:var(--err-tx)">*</span></label>
-    <input type="text" id="editName" placeholder="e.g. oranges5" />
+    <input type="text" class="ctl-stack" id="editName" placeholder="e.g. oranges5" />
 
     <div class="field-row" style="margin-top:14px;">
       <div>
         <label>Subject</label>
-        <select id="editSubject" onchange="onEditSubjectChange()">
+        <select class="ctl-stack" id="editSubject" onchange="onEditSubjectChange()">
           <option value="">-- Subject chunein --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="editGrade" disabled onchange="onEditGradeChange()">
+        <select class="ctl-stack" id="editGrade" disabled onchange="onEditGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
       </div>
     </div>
 
     <label>Syllabus Topic <span style="font-size:11px;font-weight:400;color:var(--muted)">(khaali chhod sakte hain)</span></label>
-    <select id="editTopic" disabled>
+    <select class="ctl-stack" id="editTopic" disabled>
       <option value="">-- Pehle class chunein --</option>
     </select>
 
@@ -343,7 +343,7 @@
     <div class="smart-section-head">Smart Tags <span style="font-weight:400;text-transform:none;color:var(--muted2)">(optional)</span></div>
 
     <label>Keywords <span style="font-size:11px;font-weight:400;color:var(--muted)">comma se alag — jaise "apple, fruit, red"</span></label>
-    <input type="text" id="editKeywords" placeholder="e.g. apple, fruit, red, counting" />
+    <input type="text" class="ctl-stack" id="editKeywords" placeholder="e.g. apple, fruit, red, counting" />
 
     <label>Question Types <span style="font-size:11px;font-weight:400;color:var(--muted)">ye image kin sawaal types ke liye theek hai</span></label>
     <div class="qt-checks" id="editQtChecks">
@@ -356,17 +356,17 @@
     </div>
 
     <label>Category <span style="font-size:11px;font-weight:400;color:var(--muted)">jaise "fruit", "animal", "shape"</span></label>
-    <select id="editCategory" onchange="onEditCategoryChange()"></select>
-    <input type="text" id="editCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
+    <select class="ctl-stack" id="editCategory" onchange="onEditCategoryChange()"></select>
+    <input type="text" class="ctl-stack" id="editCategoryNew" placeholder="nayi category likhein..." style="display:none;margin-top:6px" />
 
     <div class="field-row" style="margin-top:14px;">
       <div>
         <label>Source Book <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="editSourceBook" placeholder="e.g. Maths Book 3" />
+        <input type="text" class="ctl-stack" id="editSourceBook" placeholder="e.g. Maths Book 3" />
       </div>
       <div>
         <label>Page Number <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="number" id="editPageNumber" placeholder="e.g. 42" min="1" />
+        <input type="number" class="ctl-stack" id="editPageNumber" placeholder="e.g. 42" min="1" />
       </div>
     </div>
 

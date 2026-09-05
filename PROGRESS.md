@@ -1,5 +1,59 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-086: D51 ka chautha page (`library`) — **AUR D51 KA CSS WALA HISSA KHATAM**
+
+`css_drain_probe.mjs library`: 56 rules, 15 dead candidates, 41 live, base rule
+**zinda — 104 deltas** (`99-legacy/library.css:31`). Us selector mein
+**`input[type="file"]` bhi tha** — bank/blueprint ke barkhilaf — is liye is page ke
+teenon file inputs par bhi class lagi. Checkbox aur radio us mein nahi thay aur unhein
+class **nahi** mili.
+
+**`library` par bhi Group B ka kaam nikla nahi:** legacy file mein control ke
+`width`/`min-height`/`margin-top` ka koi compact override hai hi nahi. `.filter-bar`
+waale paanch controls apni 38px `05-components/field.css` se lete hain, jo `(0,1,1)`
+hai aur `.ctl-stack` `(0,1,0)` — pehle se jeet rahe thay.
+
+- `static/library.html` — **30 tag-sites** par class (18 select, 8 text, 1 number,
+  3 file). `<textarea>` aur bare `<input>` is page par hai hi nahi — bare `<input>`
+  hota to attribute selector use match hi na karta aur use class nahi milni chahiye thi.
+- `99-legacy/library.css:31` — base rule delete. `input[type="file"]` ki apni box rule
+  (padding/border/radius/font/background/colour) wahin rahi: file inputs `forms.css` ke
+  set se contract ke tehat bahar hain (UI-066).
+
+**UI-085 ka sabaq is patch mein pehle se laga hua tha:** script ne poore tag ko dekh kar
+duplicate `class` attribute ka guard chalaya. Is page par koi target tag class ke saath
+tha hi nahi, to guard ne kuch nahi badla — magar wo ab likha hua hai.
+
+**Naap:** das pages × paanch viewports — **0 deltas, 0 drift**. `library` at rest 68
+controls, `min-height` taqseem `{44px: 25, 38px: 5, 0px: 38}` — 25+5 = theek wohi 30
+jin par class lagi (paanch `.filter-bar` waale 38px par). **1083 pass**, ruff saaf,
+`unsanctioned_hex` **298**, `legacy_css_lines` 1601 → **1603**.
+
+### D51 band — chaaron pages ho gaye
+
+`grep -rn "width: 100%; min-height: 44px" static/css/` ab **kuch nahi** deta. Wo teen
+properties jo `03-elements/forms.css` kabhi nahi de sakti thin — `width`, `min-height`,
+`margin-top` — ab ek jagah hain: `05-components/field.css` ki `.ctl-stack`.
+
+**Chaaron pages ke selector alag thay aur yahi is row ka asal kaam tha:**
+
+| page | purana selector | file inputs? | checkbox/radio? | Group B rules |
+|---|---|---|---|---|
+| `bank` | text, number, select, **textarea** | nahi | nahi | 2 |
+| `blueprint` | text, number, select | nahi | nahi | 2 |
+| `index` | **bare `input, select`** | haan | **haan** | 0 |
+| `library` | text, number, **file**, select | **haan** | nahi | 0 |
+
+**Kul: 155 tag-sites par class, chaar base rules delete, chaar compact rules upar,
+0 deltas har page par.** Do cheezein raste mein pakri gayin jo kisi tajziye mein nahi
+thin — `textarea` ka layer wala regression (UI-083, gate ne pakra) aur duplicate
+`class` attribute (UI-085, aankh ne pakra, gate pakar hi nahi sakta tha).
+
+**D51 se juri jo cheezein ab khul gayi hain:** D65 ka `label` waala hissa (us ki row
+kehti hai "pehle D51 ka markup kaam ho"), aur D43 (compact rules ke murda declarations),
+jo `legacy_css_lines` ko asal mein girayega — abhi wo 1593 se 1603 par charha hai kyunke
+un declarations ki jagah warning-comments likhe gaye.
+
 ## 2026-09-05 — UI-085: D51 ka teesra page (`index`) — aur ek script ki ghalti jo gate se nahi, aankh se pakri gayi
 
 `index` teenon mein sab se chaura tha aur wahi hua: **base rule ka selector BARE hai**

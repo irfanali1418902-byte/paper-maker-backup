@@ -26,9 +26,11 @@
   /* UI-061: font-size/weight/color dropped — dead against forms.css:47 by layer order. */
   label { display: block; margin-top: 14px; }
   label:first-of-type { margin-top: 0; }
-  /* Box + :focus — forms.css:80,132. Only the three it lacks stay here; file inputs
-     are out of its set by contract, so theirs keeps a box, on tokens. UI-066. */
-  input[type="text"], input[type="number"], input[type="file"], select { width: 100%; min-height: 44px; margin-top: 6px; }
+  /* Box + :focus: forms.css:80,132. Jo teen wo nahi deta — width/min-height/margin-top —
+     wo ab `.ctl-stack` (field.css) deti hai; typed selector UI-086 mein gaya. D51.
+     ⚠ Us selector mein `input[type="file"]` BHI tha, is liye is page ke teenon file
+     inputs par bhi class hai. File inputs forms.css ke set se contract ke tehat bahar
+     hain, is liye un ka box neeche wali rule mein hi rehta hai, tokens par. UI-066. */
   input[type="file"] { padding: 10px 11px; border: 1px solid var(--color-border);
     border-radius: var(--radius-control); font-size: var(--text-control); font-family: inherit;
     background: var(--color-surface); color: var(--color-text); }

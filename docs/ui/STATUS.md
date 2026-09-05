@@ -15,11 +15,11 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1601**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1603**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
 >
-> ⚠ **`legacy_css_lines` UI-083/084/085 ke baad 1593 se 1601 par CHARHA, aur ye jaan-boojh kar
-> hai.** Teen pages ki base rules aur chaar compact declarations nikleen, magar un ki
+> ⚠ **`legacy_css_lines` UI-083–086 ke baad 1593 se 1603 par CHARHA, aur ye jaan-boojh kar
+> hai.** Chaar pages ki base rules aur chaar compact declarations nikleen, magar un ki
 > jagah paanch jagah "ye baqi declarations MURDA hain / ye upar chala gaya" wale
 > pointers likhe gaye, aur wo lines gin'ti mein aati hain. `field.css:8` ka precedent
 > yehi kehta hai — wahi trap UI-042 mein 75 deltas ka tha. Metric informational hai,
@@ -30,7 +30,20 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
-> ### 1️⃣ ✅ D51 — `bank`, `blueprint` AUR `index` HO GAYE. SIRF `library` BAQI.
+> ### 1️⃣ ✅ D51 **BAND** — CHAARON PAGES HO GAYE (UI-083 → UI-086).
+> `bank`, `blueprint`, `index`, `library`. Wo teen properties jo `forms.css` kabhi nahi
+> de sakti thin ab ek jagah hain: `05-components/field.css` ki **`.ctl-stack`**.
+> `grep -rn "width: 100%; min-height: 44px" static/css/` ab kuch nahi deta.
+> **Kul: 155 tag-sites par class, chaar base rules delete, chaar compact rules upar,
+> har page par 0 deltas (das pages × paanch viewports).** Group B ka kaam sirf `bank`
+> aur `blueprint` par nikla; `index` aur `library` par koi compact override tha hi nahi.
+> **Do cheezein raste mein pakri gayin jo kisi tajziye mein nahi thin:** `textarea` ka
+> layer regression (40 deltas, **gate ne pakra**, hal `:not(textarea)`) aur duplicate
+> `class` attribute (`index` par chaar tags, **gate pakar hi nahi sakta tha** — `.qtype`
+> ek JS hook hai jis ki koi CSS rule nahi). **Ab D65 ka `label` wala hissa aur D43
+> khul gaye hain.** Tafseel: PROGRESS.md 2026-09-05, DEFERRED.md D51.
+>
+> #### Din ka safar (UI-083 → 086)
 > **`index` (UI-085):** sab se chaura page, aur wahi hua — selector **BARE** tha
 > (`99-legacy/index.css:70`, `input, select`), to checkbox/file/colour bhi us par khare
 > thay aur class **har** input+select par lagi (47 tag-sites). Group B ka kaam is page
