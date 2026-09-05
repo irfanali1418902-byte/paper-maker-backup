@@ -1,5 +1,46 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-090: D65(b) band — `html, body { height: 100% }` wahin rahegi, aur wajah ek adad hai
+
+**Irfan ka faisla naap ke baad: chaar legacy copies (`bank`, `library`, `slo`,
+`slo-health`) rehne dein.** Koi CSS tabdeeli nahi; ye row faisle par band hui, kaam par
+nahi.
+
+**Naap (arzi, phir revert):** rule `04-objects/shell.css` mein daali gayi aur
+`css_type_probe` das pages × paanch viewports par chala. **Cascade-neutral NAHI nikli —
+27 deltas, chaar pages par jin par ye rule aaj hai hi nahi:**
+
+| page | deltas | kya hua |
+|---|---|---|
+| `landing` | 10 | `html`/`body` height **1012–1660px → 900px** (viewport par clamp) |
+| `plan` | 9 | 900px → 885px, sirf narrow widths par |
+| `taqseem` | 4 | |
+| `blueprint` | 4 | |
+| `print` | **0** | |
+
+`landing` wala theek wahi failure mode hai jo D65 ne 09-04 ko **ulte rukh se** darj
+kiya tha: us din rule *delete* karne par ek page ka body 900px se **72666px** ho gaya
+tha; is din rule *add* karne par `landing` ka body content se girr kar 900px par clamp
+ho gaya. Dono ek hi baat ke do rukh hain — **ye rule inert nahi hai.**
+
+### Do cheezein jo naap ne saaf kar dein
+
+**(1) `print` par 0 deltas.** Jo khatra sab se bara samjha gaya tha — Ctrl+P wala page,
+`@page { margin: 0 }` ke neeche, jise STATUS.md epic ka sab se ooncha visual risk kehta
+hai — wo in paanch viewports par bana hi nahi. **Ab wo andesha adad ke saath rad hai,
+khula nahi.** Ye khud is naap ka faida hai, chahe rule na jaye.
+
+**(2) Is row ka apna hawala basi tha.** D65 kehti thi ke `reset.css` ka header is rule
+ka ghar `04-objects/shell.css` batata hai (UI-030 ka faisla). Magar **`shell.css`:29 us
+faisle ko palat chuka hai**, aur naap ke saath: shell `100vh` se viewport bharta hai
+(`.o-shell`), `height: 100%` us ke liye redundant hai, aur D21 ki height wali baat
+wahin "unnecessary rather than deferred again" kah kar band ki gayi thi. **Do headers do
+alag baatein kah rahe thay aur naya wala sahi tha.**
+
+**Jo bhi is ko dobara uthaye:** pehle `shell.css`:29 parho, phir ye adad — naye sire se
+"shayad theek ho" mat socho. Aur naap **dono halaton** mein lena, khali page aur lamba
+content, kyunke `height: 100%` ka asar sirf doosri halat mein khulta hai.
+
 ## 2026-09-05 — UI-089: D65(a) band — bare `label` upar gaya, aur ek selector jo grep se chhoot gaya tha
 
 D65 us naakami ka record hai jab 2026-09-04 ko `label { display: block; margin-top:
