@@ -11,8 +11,19 @@
 
 ## 📅 PLAN — **2026-09-05 ke liye**, is tarteeb mein
 
-> ### 1️⃣ KAL KA PEHLA KAAM — D51, AUR WO `css_drain_probe.mjs` SE SHURU HOTA HAI
-> **(Irfan, 2026-09-04 ki shaam.)** Faisla ho chuka hai — **opt-in class control par**
+> ### ✅ 2026-09-05 KI SUBAH KA AUDIT — SAB KUCH WAISA HI HAI, EK CHEEZ BADLI
+> Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
+> (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
+> **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1593**, `unsanctioned_hex` **298**,
+> scope **248** (agree 36 + disagree 177 + rule-block 1262).
+>
+> **Ek cheez badli: IRFAN NE PUSH KAR DIYA.** `master` ab `backup/master` ke **barabar**
+> hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
+> kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
+>
+> ### 1️⃣ AAJ KA PEHLA KAAM — D51, AUR WO `css_drain_probe.mjs` SE SHURU HOTA HAI
+> **(Irfan, 2026-09-04 ki shaam; ye plan 09-05 ke liye likha gaya tha aur aaj wohi din hai.)** Faisla ho chuka hai — **opt-in class control par**
 > (`.ctl-stack`), container par nahi (`DEFERRED.md` D51). Kaam shuru NAHI hua, aur
 > tarteeb ye hai:
 >
