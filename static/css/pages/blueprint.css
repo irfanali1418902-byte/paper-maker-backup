@@ -202,3 +202,32 @@
     padding: 30px;
   }
 }
+
+/* D51 / UI-084 — blueprint ke do compact controls, `.ctl-stack` se pehle yahan.
+   Wahi tarteeb jo bank par UI-083 mein chali: `05-components/field.css` ki
+   `.ctl-stack` `99-legacy/blueprint.css:28` ke bare typed selector ki jagah leti
+   hai, aur ye dono rules us par khari thin — sirf `min-height` (aur filter-row ka
+   `margin-top: 4px`) waapas jeet kar compact rehti thin.
+
+   ⚠ SPECIFICITY IN KO NAHI BACHA SAKTI THI. Dono `layer(legacy)` mein thin aur
+   `.ctl-stack` `layer(components)` mein hai; layer order specificity se pehle tay
+   hota hai, to legacy mein rehte hue ye har specificity par haar jatin. Yahan ye
+   usi layer mein hain, `main.css` ke baad aati hain, aur `(0,1,1)` bhi hain.
+
+   ⚠ `font-size: 13px` DONO KA LEGACY MEIN HI RAHA, jaan-boojh kar. `.ctl-stack`
+   `font-size` chhoti hi nahi, is liye us declaration ka yahan koi kaam nahi — aur
+   use upar laane ka matlab hota use `03-elements/forms.css:80` ke muqable zinda
+   karna, wahi trap jo `field.css:8` par likha hai.
+
+   Ye block base rule ke delete hone se PEHLE aaya: ulti tarteeb mein filter-row ke
+   selects beech ke commit mein 38px se 44px ho jate. */
+@layer components {
+  .filter-row select {
+    min-height: 38px;
+    margin-top: 4px;
+  }
+
+  .dist-field input {
+    min-height: 36px;
+  }
+}

@@ -1,5 +1,55 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-084: D51 ka doosra page (`blueprint`)
+
+Wohi tarteeb jo UI-083 mein tay hui, aur is dafa bila-hairat chali: **das pages,
+paanch viewports, 0 deltas — pehli hi koshish mein.**
+
+`css_drain_probe.mjs blueprint`: 67 rules, 30 dead candidates, 37 live, aur base
+rule **zinda — 65 deltas** (`99-legacy/blueprint.css:28`, `input[type="text"],
+input[type="number"], select` — **`textarea` is page ki rule mein tha hi nahi**,
+aur is page par koi textarea hai bhi nahi, is liye UI-083 wala textarea khatra
+yahan paida hi nahi hua).
+
+**Kaam:**
+- `pages/blueprint.css` — naya `@layer components`: `.filter-row select
+  { min-height: 38px; margin-top: 4px }` aur `.dist-field input { min-height: 36px }`.
+  Dono ka `font-size: 13px` legacy mein hi raha — `.ctl-stack` `font-size` chhoti
+  hi nahi, is liye use upar laane ka koi sabab nahi tha aur ek trap zaroor tha.
+- `static/blueprint.html` — **20 tag-sites** par `class="ctl-stack"` (11 select,
+  4 text, 5 number).
+- `99-legacy/blueprint.css:28` — base rule delete, compact rules ke BAAD.
+
+### JS-rendered controls — pehle khatra samjha, phir naapa aur wo nikla nahi
+
+Is page ke aadhe se zyada controls `renderSection()` ke template strings mein hain
+(`blueprint.html:604–759`), aur `css_type_probe` fresh load par walk karta hai — to
+sawal ye tha ke gate unhein dekh bhi raha hai ya "0 deltas" khali DOM ka jhoot hai
+(D45 wali shakl). **Snapshot se naapa gaya: 23 controls at rest**, aur un ki
+`min-height` ki taqseem `{44px: 7, 40px: 4, 0px: 5, 38px: 4, 36px: 3}` hai — 40px
+waale theek wohi hain jin par `renderSection()` inline `min-height:40px` likhta hai
+(`:660/:677/:682/:687`), aur 38/36px waale `.filter-row select` / `.dist-field input`.
+**Yani ye page load par ek section render kar deta hai aur gate use dekh raha hai.**
+
+**Ek control phir bhi gate se bahar hai, aur ye darj hai:** `.pin-sec-sel`
+(`blueprint.html:409`), jo pinned-questions renderer mein hai aur at rest render
+nahi hota. Us par class **usool se** mehfooz hai — wo `<select>` hai, aur
+`.ctl-stack` use theek wohi teen qadrein deti hai jo base rule deti thi. Naapa nahi
+gaya, socha gaya — farq saaf rehna chahiye.
+
+⚠ **D11 (JS class names load-bearing) dekha gaya:** `.pin-sec-sel` waahid control
+hai jis par pehle se class thi, aur script ne class **jori** (`class="ctl-stack
+pin-sec-sel"`), badli nahi. JS us tak `querySelector('.pin-sec-sel')` se pahunchta
+hai (`:432`), `className ===` se nahi — to jorna mehfooz hai.
+
+**Naap:** `css_type_probe` × 5 viewports, das pages — **0 deltas, 0 drift**.
+**1083 pass**, ruff saaf, `unsanctioned_hex` **298 barqarar**, `legacy_css_lines`
+1597 → **1599** (base rule nikla, do "ye upar chala gaya" pointers likhe).
+
+**Baqi:** `index` aur `library`. ⚠ `index` ka selector bare `input, select` hai
+(`99-legacy/index.css:70`) — sab se chaura, aur har typed-selector grep se chhoot
+jata hai.
+
 ## 2026-09-05 — UI-083: D51 ka pehla page (`bank`) — `.ctl-stack` opt-in class
 
 Irfan ka faisla 2026-09-04: class **control** par, container par nahi. Aaj us par

@@ -65,18 +65,18 @@
     <div class="cb">
 
     <label>Blueprint name <span style="color:var(--err-tx)">*</span></label>
-    <input type="text" id="bpName" placeholder="e.g. Class 8 Math — Mid Term" />
+    <input type="text" class="ctl-stack" id="bpName" placeholder="e.g. Class 8 Math — Mid Term" />
 
     <div class="field-row" style="margin-top:4px;">
       <div>
         <label>Subject</label>
-        <select id="bpSubject" onchange="onSubjectChange()">
+        <select class="ctl-stack" id="bpSubject" onchange="onSubjectChange()">
           <option value="">-- Subject chunein --</option>
         </select>
       </div>
       <div>
         <label>Class / Grade</label>
-        <select id="bpGrade" disabled onchange="onGradeChange()">
+        <select class="ctl-stack" id="bpGrade" disabled onchange="onGradeChange()">
           <option value="">-- Pehle subject chunein --</option>
         </select>
         <div id="bloomSuggestionBox" style="display:none;margin-top:8px;padding:10px 14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;font-size:13px;color:var(--brand);line-height:1.5">
@@ -85,7 +85,7 @@
       </div>
       <div>
         <label>Exam (taqseem)</label>
-        <select id="bpExamNo" onchange="checkExamCoverage()"><option value="">Unassigned</option></select>
+        <select class="ctl-stack" id="bpExamNo" onchange="checkExamCoverage()"><option value="">Unassigned</option></select>
         <div style="margin-top:4px;font-size:11px;color:var(--muted);line-height:1.4">Paper kis exam ka hissa hai — coverage isi se. Unassigned = tag nahi.</div>
         <div id="bpCoverageWarn" style="display:none;margin-top:6px;font-size:12px;"></div>
       </div>
@@ -94,11 +94,11 @@
     <div class="field-row" style="margin-top:4px;">
       <div>
         <label>Paper title <span style="font-size:11px;font-weight:400;color:var(--muted)">(print par — optional)</span></label>
-        <input type="text" id="bpPaperTitle" placeholder="e.g. Mid Term Examination" />
+        <input type="text" class="ctl-stack" id="bpPaperTitle" placeholder="e.g. Mid Term Examination" />
       </div>
       <div>
         <label>Class name <span style="font-size:11px;font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="bpClassName" list="bpClassOptions" placeholder="e.g. Pre Year 1" />
+        <input type="text" class="ctl-stack" id="bpClassName" list="bpClassOptions" placeholder="e.g. Pre Year 1" />
         <datalist id="bpClassOptions"></datalist>
       </div>
     </div>
@@ -111,7 +111,7 @@
     <div class="field-row" style="align-items:flex-end;">
       <div>
         <label>Exam pattern</label>
-        <select id="presetSelect">
+        <select class="ctl-stack" id="presetSelect">
           <option value="">-- Preset chunein --</option>
         </select>
       </div>
@@ -406,7 +406,7 @@ async function showSloQuestions(sloId, linkEl) {
         '<option value="' + si + '"' + (pinnedIdx === si ? ' selected' : '') + '>'
         + String.fromCharCode(65 + si) + '</option>'
       ).join('');
-      const secSel = '<select class="pin-sec-sel" onchange="setPinSection(\'' + escAttr(q.id) + '\', this)"'
+      const secSel = '<select class="ctl-stack pin-sec-sel" onchange="setPinSection(\'' + escAttr(q.id) + '\', this)"'
         + ' style="margin-left:6px;font-size:10px;padding:1px 3px;border-radius:4px;">' + secOpts + '</select>';
       // "daalo" toggle — teacher pin karta (must-include). Pinned par green ✓.
       const on = _pinned.has(q.id);
@@ -613,7 +613,7 @@ function renderSecCard(sec, i) {
     : [];
   const unitDropdownHtml = distinctUnits.length ? `
     <label style="margin-top:10px;margin-bottom:4px;font-size:12.5px;">Unit filter</label>
-    <select style="margin-bottom:8px;" onchange="onUnitFilter(${i}, this.value)">
+    <select class="ctl-stack" style="margin-bottom:8px;" onchange="onUnitFilter(${i}, this.value)">
       <option value="" ${unitFilter === null ? 'selected' : ''}>-- Sab units --</option>
       ${distinctUnits.map(u => `<option value="${escAttr(u)}" ${unitFilter === u ? 'selected' : ''}>${escHtml(u)}</option>`).join('')}
     </select>` : '';
@@ -657,7 +657,7 @@ function renderSecCard(sec, i) {
     </div>
 
     <label style="margin-top:0;">Heading <span style="color:var(--err-tx)">*</span></label>
-    <input type="text" value="${escAttr(sec.heading)}" style="min-height:40px;font-size:14px;"
+    <input type="text" class="ctl-stack" value="${escAttr(sec.heading)}" style="min-height:40px;font-size:14px;"
       oninput="onSecField(${i}, 'heading', this.value)" />
 
     <label style="margin-top:14px;">Question Types <span style="color:var(--err-tx)">*</span></label>
@@ -674,17 +674,17 @@ function renderSecCard(sec, i) {
     <div class="field-row" style="margin-top:14px;">
       <div style="max-width:130px;">
         <label style="margin-top:0;">Count <span style="color:var(--err-tx)">*</span></label>
-        <input type="number" value="${sec.count}" min="1" max="200" style="min-height:40px;"
+        <input type="number" class="ctl-stack" value="${sec.count}" min="1" max="200" style="min-height:40px;"
           oninput="onSecField(${i}, 'count', parseInt(this.value)||1)" />
       </div>
       <div style="max-width:140px;">
         <label style="margin-top:0;">Marks each <span style="color:var(--err-tx)">*</span></label>
-        <input type="number" value="${sec.marks_each}" min="1" max="50" style="min-height:40px;"
+        <input type="number" class="ctl-stack" value="${sec.marks_each}" min="1" max="50" style="min-height:40px;"
           oninput="onSecField(${i}, 'marks_each', parseInt(this.value)||1)" />
       </div>
       <div>
         <label style="margin-top:0;">Source</label>
-        <select onchange="onSecField(${i}, 'source_filter', this.value)" style="min-height:40px;font-size:13.5px;">
+        <select class="ctl-stack" onchange="onSecField(${i}, 'source_filter', this.value)" style="min-height:40px;font-size:13.5px;">
           <option value="manual" ${srcSelected('manual')}>Manual (teacher-written)</option>
           <option value="all" ${srcSelected('all')}>Manual + AI</option>
         </select>
@@ -696,7 +696,7 @@ function renderSecCard(sec, i) {
       <div class="filter-row">
         <div>
           <label>Status</label>
-          <select onchange="onStatusFilter(${i}, this.value)">
+          <select class="ctl-stack" onchange="onStatusFilter(${i}, this.value)">
             <option value="published" ${statusSel('published')}>Published (default)</option>
             <option value="draft"     ${statusSel('draft')}>Draft</option>
             <option value="archived"  ${statusSel('archived')}>Archived</option>
@@ -705,7 +705,7 @@ function renderSecCard(sec, i) {
         </div>
         <div>
           <label>Difficulty</label>
-          <select id="diffSel_${i}" onchange="onDiffFilter(${i}, this.value)" ${distOn ? 'disabled' : ''}>
+          <select class="ctl-stack" id="diffSel_${i}" onchange="onDiffFilter(${i}, this.value)" ${distOn ? 'disabled' : ''}>
             <option value=""       ${diffSel('')}>Any</option>
             <option value="easy"   ${diffSel('easy')}>Easy</option>
             <option value="medium" ${diffSel('medium')}>Medium</option>
@@ -714,7 +714,7 @@ function renderSecCard(sec, i) {
         </div>
         <div>
           <label>Bloom Level</label>
-          <select onchange="onBloomFilter(${i}, this.value)">
+          <select class="ctl-stack" onchange="onBloomFilter(${i}, this.value)">
             <option value=""           ${bloomSel('')}>Any</option>
             <option value="REMEMBER"   ${bloomSel('REMEMBER')}>Remember</option>
             <option value="UNDERSTAND" ${bloomSel('UNDERSTAND')}>Understand</option>
@@ -727,7 +727,7 @@ function renderSecCard(sec, i) {
         </div>
         <div>
           <label>Language</label>
-          <select onchange="onLangFilter(${i}, this.value)">
+          <select class="ctl-stack" onchange="onLangFilter(${i}, this.value)">
             <option value=""   ${langSel('')}>Sab</option>
             <option value="en" ${langSel('en')}>English only</option>
             <option value="ur" ${langSel('ur')}>Urdu only</option>
@@ -746,17 +746,17 @@ function renderSecCard(sec, i) {
           <div class="dist-fields">
             <div class="dist-field">
               <label>Easy</label>
-              <input type="number" value="${distEasy}" min="0" max="200"
+              <input type="number" class="ctl-stack" value="${distEasy}" min="0" max="200"
                 oninput="onDistInput(${i}, 'easy', parseInt(this.value)||0)" />
             </div>
             <div class="dist-field">
               <label>Medium</label>
-              <input type="number" value="${distMed}" min="0" max="200"
+              <input type="number" class="ctl-stack" value="${distMed}" min="0" max="200"
                 oninput="onDistInput(${i}, 'medium', parseInt(this.value)||0)" />
             </div>
             <div class="dist-field">
               <label>Hard</label>
-              <input type="number" value="${distHard}" min="0" max="200"
+              <input type="number" class="ctl-stack" value="${distHard}" min="0" max="200"
                 oninput="onDistInput(${i}, 'hard', parseInt(this.value)||0)" />
             </div>
           </div>

@@ -15,20 +15,32 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1597**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1599**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
 >
-> ⚠ **`legacy_css_lines` UI-083 ke baad 1593 se 1597 par CHARHA, aur ye jaan-boojh kar
-> hai.** Base rule aur do compact declarations nikleen (−2 lines) magar teen jagah
-> "ye baqi declarations MURDA hain, inhein upar mat le jao" wala warning likha gaya
-> (+6). `field.css:8` ka precedent yehi kehta hai — wahi trap UI-042 mein 75 deltas ka
-> tha. Metric informational hai, ratcheted nahi; `unsanctioned_hex` **298 par barqarar**.
+> ⚠ **`legacy_css_lines` UI-083+UI-084 ke baad 1593 se 1599 par CHARHA, aur ye jaan-boojh kar
+> hai.** Dono pages ki base rules aur chaar compact declarations nikleen, magar un ki
+> jagah paanch jagah "ye baqi declarations MURDA hain / ye upar chala gaya" wale
+> pointers likhe gaye, aur wo lines gin'ti mein aati hain. `field.css:8` ka precedent
+> yehi kehta hai — wahi trap UI-042 mein 75 deltas ka tha. Metric informational hai,
+> ratcheted nahi; `unsanctioned_hex` **298 par barqarar**. **Asal kami tab aayegi jab
+> ye murda declarations khud jayengi (D43), jo alag kaam hai.**
 >
 > **Ek cheez badli: IRFAN NE PUSH KAR DIYA.** `master` ab `backup/master` ke **barabar**
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
-> ### 1️⃣ ✅ D51 — `bank` HO GAYA (UI-083, 2026-09-05). TEEN PAGES BAQI.
+> ### 1️⃣ ✅ D51 — `bank` (UI-083) AUR `blueprint` (UI-084) HO GAYE. DO PAGES BAQI.
+> **`blueprint` (UI-084):** drain par base rule zinda (65 deltas); `.filter-row select`
+> aur `.dist-field input` `pages/blueprint.css` ke `@layer components` mein gaye,
+> 20 tag-sites par class lagi, **gate 0 deltas pehli koshish mein**. Is page ki base
+> rule mein `textarea` tha hi nahi, is liye UI-083 wala khatra paida nahi hua.
+> **JS-rendered controls ka khatra naapa gaya aur nikla nahi** — `renderSection()`
+> load par chalta hai, 23 controls at rest hain (min-height 44/40/38/36/0), yani gate
+> unhein dekh raha hai. **Ek control gate se bahar hai aur naapa NAHI gaya:**
+> `.pin-sec-sel` (`blueprint.html:409`). **Ab `index` aur `library` baqi hain.**
+>
+> #### UI-083 — `bank` (wohi din, pehla page)
 > **(a), (b) aur (c) teenon mukammal.** `css_drain_probe.mjs bank` chali (ad-hoc script
 > nahi, jaisa plan kehta tha): **98 rules, 33 dead, 65 live, aur base rule ZINDA — 167
 > deltas.** (b) ka faisla Irfan ne diya — **compact rules ko zyada specificity do** — aur
