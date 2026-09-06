@@ -202,8 +202,10 @@
      1280 a dead rule in this block and a live one both read 0.
      UI-068: `.brand { padding: 0 }` bhi gayi — element to maujood hai, magar
      pages/blueprint.css ka `.o-shell__brand` layer(components) mein hai aur ye
-     legacy mein, to paanchon bands par 18px/16px hi naapa gaya. Murda thi. */
-  @media (max-width: 760px) {
-    /* body ki murda flex-direction delete (UI-077) — is page ki body block hai. */
-    .bp-main { padding: 16px 14px; }
-  }
+     legacy mein, to paanchon bands par 18px/16px hi naapa gaya. Murda thi.
+     UI-091 (D15): AAKHRI RULE BHI GAYI AUR US KE SAATH POORA BLOCK. Bacha hua
+     `.bp-main { padding: 16px 14px }` bhi murda tha — `.bp-main` poore repo ke
+     KISI HTML mein nahi hai, sirf usi rule mein tha (`grep -rn "bp-main"
+     static/` ab kuch nahi deta). Is page ka main container `.main` hai
+     (`:19`), jo `o-shell` ke saath aaya. D15 ne ye poora block 2026-07-28 ko
+     shak-zada kiya tha; UI-065 ne teen rules hatayin, ye chauthi thi. */

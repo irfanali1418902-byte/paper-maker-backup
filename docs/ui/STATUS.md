@@ -15,7 +15,7 @@
 > Sab dobara naapa gaya aur **raat bhar mein kuch nahi hila**: bank **1214**, PY1 **75/81**
 > (baqi 6), PY2 **87/87**, PY3 **87/87**, khaali `learning_outcome` **130** (sab `manual`),
 > **PY1 mein `marks <> 1` waale `0`** (09-04 ki durusti qaim hai), `integrity_check` ok,
-> **1083 pass**, ruff saaf, `legacy_css_lines` **1599**, `unsanctioned_hex` **298**,
+> **1083 pass**, ruff saaf, `legacy_css_lines` **1601**, `unsanctioned_hex` **298**,
 > scope **248** (agree 36 + disagree 177 + rule-block 1262).
 >
 > ⚠ **`legacy_css_lines` UI-083–089 ke baad 1593 se 1599 par (charh kar 1603 tak gaya, phir D65 ne 4 wapas diye), aur ye jaan-boojh kar
@@ -29,6 +29,20 @@
 > **Ek cheez badli: IRFAN NE PUSH KAR DIYA.** `master` ab `backup/master` ke **barabar**
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
+>
+> ### ✅ UI-091 — PAANCH AUR ROWS BAND: D9, D15, D19, D20, D24
+> `DEFERRED.md` par "kya jaldi ho sakta hai" wali sweep. **Teen rows BASI nikleen**
+> (D43 wali shakl — kaam ho chuka tha, row khuli reh gayi thi): **D9** (`theme.css`
+> mojood hi nahi), **D19** (`main.css` mein legacy ka ek bhi `@import` nahi), **D20**
+> (legacy 49 tokens parhti hai, undeclared sirf 1 aur wo COMMENT ke andar hai).
+> **D15:** `blueprint` ka poora `@media (max-width: 760px)` block gaya — aakhri rule
+> `.bp-main` bhi murda nikli (`grep -rn "bp-main" static/` kisi HTML mein nahi deta).
+> **D24:** `nav.mypapers` dono i18n tables mein daali; **gate is ko dekh hi nahi sakta**
+> (JS ka kaam), is liye script `node --check` se parse karayi — 83KB saaf. Gate 0 deltas.
+> ⚠ **`legacy_css_lines` 1599 → 1601 — CHARHA:** `blueprint.css` 209→211, kyunke chaar
+> rule lines ki jagah chhe lines ka warning-comment aaya. **Ek murda rule delete karne
+> par bhi adad barha.** Asal kami pointer-comments hatane se hogi.
+> **Board ka adad: 43 rows, 10 band, 33 khuli.**
 >
 > ### ✅ D43, D65 (a AUR b) — TEENON BAND, 2026-09-05 (UI-089 + UI-090)
 > * **D43:** Irfan ka faisla — compact variant **zinda nahi** karna. ⚠ **Row basi thi:**

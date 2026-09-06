@@ -1,5 +1,59 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-05 — UI-091: paanch rows band — teen basi thin, do chhoti thin
+
+`DEFERRED.md` ki baqi rows par ek sweep chalayi ke "kya jaldi ho sakta hai". Naap ne
+teen rows **basi** nikaleen — D43 wali shakl, yani kaam pehle se ho chuka tha aur row
+sirf khuli reh gayi thi. **Ye is board ka doosra aisa jora hai ek hi din mein**, aur
+sabaq wohi hai: row ka matn us din ka sach hai jis din likha gaya, aaj ka nahi.
+
+### Basi rows — sirf naap se band huin
+
+| row | kya kehti thi | aaj ka naap |
+|---|---|---|
+| **D9** | `print`/`landing` `theme.css` load nahi karte | `static/theme.css` **mojood hi nahi** (08-13 delete), kisi HTML mein hawala nahi |
+| **D19** | `main.css` nau legacy files import karta hai | `main.css` mein `99-legacy/` ka **ek bhi `@import` nahi** — chhe hawale, chhe ke chhe comments mein |
+| **D20** | legacy layer `theme.css` ke 21 tokens par khara hai | legacy 49 tokens parhti hai, **undeclared sirf 1** (`--text`), aur wo `library.css`:146 ke **comment** ke andar hai |
+
+D20 ka scan dobara chalane ke liye: har `99-legacy/*.css` se `var(--x)` nikaalo, poore
+`static/css/**` se `--x:` nikaalo, farq lo.
+
+### D15 — `blueprint` ka murda `@media` block gaya
+
+Row ne 2026-07-28 ko chaar selectors shak-zada kiye thay. UI-065 ne teen hatayin
+(`.app-sidebar`, `.app-nav`, `.sidebar-foot` — blueprint `o-shell` par hai, us ke paas
+sidebar hai hi nahi). **Chauthi, `.bp-main`, aaj naapi gayi aur wo bhi murda nikli:**
+`grep -rn "bp-main" static/` ke baad wo poore repo ke **kisi HTML mein nahi** milta —
+sirf usi rule mein tha. Is page ka main container `.main` hai. Block khali ho gaya, to
+block bhi gaya. **Gate: 0 deltas.**
+
+⚠ Likhte waqt ek ghalti hui aur foran pakri gayi: naya comment purane comment ke `*/`
+ke **baad** likha gaya, jis se ek awara `*/` bacha aur CSS toot jati. Brace/comment
+balance check (`/*` 26 = `*/` 26, `{` 65 = `}` 65) ne wo pakra. **Comment ke andar
+comment likhte waqt terminator pehle dekho.**
+
+### D24 — `nav.mypapers` ka tarjuma
+
+`index.html`:27 par `data-i18n="nav.mypapers"` tha magar **dono** tables mein wo key
+nahi thi, to Urdu par ye ek nav link angrezi mein reh jata tha. Dono mein daal di,
+nav ki tarteeb ke mutabiq.
+
+**Gate is ko dekh hi nahi sakta** — i18n JS ka kaam hai, CSS ka nahi. Is liye
+`index.html` ki saari inline `<script>` nikaal kar `node --check` chalaya: **83KB,
+saaf**, aur dono entries `<script>` ke andar mojood hain.
+
+**Naap:** das pages × paanch viewports, **0 deltas**. **1083 pass**, ruff saaf,
+`unsanctioned_hex` **298**, `legacy_css_lines` 1599 → **1601**.
+
+⚠ **AUR YE ADAD CHARHA HAI, GIRA NAHI — jo D15 ke liye ULTA hai.** `blueprint.css`
+209 lines se **211** par gayi: `@media` block ki chaar lines gayin magar un ki jagah
+chhe lines ka warning-comment aaya. **Yani ek MURDA rule delete karne par bhi legacy ka
+adad barh gaya.** Wahi udhaar jo aaj bhar chalta raha — asal kami tab hogi jab ye
+pointer-comments khud jayenge, jo apna kaam hai.
+
+**`DEFERRED.md`: kul 43 rows, 10 band, 33 khuli** (2 `⚠` + 31 saada). Aaj se pehle
+43 ki 43 khuli thin.
+
 ## 2026-09-05 — UI-090: D65(b) band — `html, body { height: 100% }` wahin rahegi, aur wajah ek adad hai
 
 **Irfan ka faisla naap ke baad: chaar legacy copies (`bank`, `library`, `slo`,
