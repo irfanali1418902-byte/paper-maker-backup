@@ -82,20 +82,28 @@ DEFAULT_TYPES = ("multiple-choice", "short-answer", "fill-blank", "essay")
 #: **Ye TEESRI dafa tha.** Har dafa ka hal ek `UPDATE` tha jo kisi ko YAAD rakhna parta
 #: tha; ab wo qaida yahan hai aur persist se PEHLE lagta hai.
 #:
-#: WARNING -- IS MAP MEIN SIRF WO GRADES HAIN JIN KA PAIMANA DB SE NAAPA GAYA.
-#: 2026-09-06 ko poora bank naapa gaya:
+#: WARNING -- IS MAP MEIN SIRF WO GRADES HAIN JIN KA PAIMANA TAY HO CHUKA HAI.
+#: 2026-09-06 ko poora bank naapa gaya aur us waqt haalat ye thi:
 #:
-#:     Pre Year 1   369 sawal, SAB marks=1        <- qaida saaf hai
-#:     Pre Year 2   348 sawal, marks 1..7 phaila  <- koi qaida nahi
-#:     Pre Year 3   348 sawal, marks 1..7 phaila  <- koi qaida nahi
-#:     Grade 4       43 sawal, marks 1..8 phaila  <- koi qaida nahi
+#:     Pre Year 1   369 sawal, SAB marks=1        <- qaida saaf tha
+#:     Pre Year 2   348 sawal, marks 1..7 phaila  <- koi qaida nahi tha
+#:     Pre Year 3   348 sawal, marks 1..7 phaila  <- koi qaida nahi tha
+#:     Grade 4       43 sawal, marks 1..8 phaila  <- ab bhi koi qaida nahi
 #:
-#: Yani "pre-school ka matlab 1 mark" SACH NAHI HAI -- sirf PY1 us par hai, aur PY2/PY3
-#: kabhi normalise nahi kiye gaye. Unhein bhi karna chahiye ya nahi, ye ~696 rows ka
-#: DATA ka faisla hai aur Irfan ka hai, is script ka nahi: DEFERRED.md D67.
-#: YAHAN ANDAZA MAT LAGAO -- grade ka paimana NAAP kar hi is map mein daalo.
+#: Yani PY2/PY3 kabhi normalise nahi kiye gaye thay aur ye farq kisi board mein darj
+#: nahi tha. IRFAN KA FAISLA (2026-09-06, D67): teenon Pre Year grades 1-mark par hon.
+#: Us din 572 rows migrate huin (696 mein se 124 pehle hi 1 par thin) aur teenon grades
+#: ab yaksan hain. Migration se pehle naapa gaya ke 31 mehfooz papers mein se EK BHI
+#: PY2/PY3 ka sawal use nahi karta, aur `student_question_results` khali hai -- yani
+#: kisi purane parche ka `total_marks` na-mutabiq nahi hua.
+#:
+#: `Grade 4` JAAN-BOOJH KAR BAHAR HAI: wo school-age hai, us ka paimana naapa nahi gaya
+#: aur us ke 43 sawal 1..8 par phaile hain. YAHAN ANDAZA MAT LAGAO -- grade ka paimana
+#: NAAP kar, ya Irfan se pooch kar, hi is map mein daalo.
 GRADE_MARKS = {
     "Pre Year 1": 1,
+    "Pre Year 2": 1,
+    "Pre Year 3": 1,
 }
 
 

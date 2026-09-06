@@ -24,13 +24,15 @@ def q(marks):
 
 
 class TestResolveMarksTarget:
-    def test_auto_pre_year_1_ek_mark_deta_hai(self):
-        assert resolve_marks_target("Pre Year 1", "auto") == 1
+    @pytest.mark.parametrize("grade", ["Pre Year 1", "Pre Year 2", "Pre Year 3"])
+    def test_auto_teenon_pre_year_ek_mark_dete_hain(self, grade):
+        """Irfan ka faisla 2026-09-06 (D67): teenon Pre Year grades 1-mark par."""
+        assert resolve_marks_target(grade, "auto") == 1
 
     def test_auto_us_grade_par_None_jis_ka_qaida_nahi(self):
-        # PY2/PY3/Grade 4 ka koi paimana NAAPA nahi gaya, is liye map mein nahi hain.
-        # None ka matlab "haath mat lagao", 0 ka nahi.
-        for grade in ("Pre Year 2", "Pre Year 3", "Grade 4", "Grade 9"):
+        # Grade 4 school-age hai aur us ka paimana naapa nahi gaya (43 sawal, marks
+        # 1..8). None ka matlab "haath mat lagao", 0 ka nahi.
+        for grade in ("Grade 4", "Grade 9", "Pre Year 4"):
             assert resolve_marks_target(grade, "auto") is None
 
     def test_keep_hamesha_None(self):
@@ -55,8 +57,10 @@ class TestApplyMarksScale:
     def test_target_None_kuch_nahi_chhoota(self):
         """Ye sab se ahem test hai: jis grade ka qaida naapa nahi gaya, us ke sawal
         waise hi rehne chahiyen. Warna ye script PY2/PY3 ke 696 sawal chup-chaap
-        badal degi -- wo faisla Irfan ka hai, script ka nahi (D67)."""
+        badal degi. D67 par ye faisla ho chuka (teenon PY 1-mark), magar Grade 4 ab
+        bhi bahar hai -- aur us par yehi hifazat lagti hai."""
         qs = [q(3), q(4), q(6)]
+        assert resolve_marks_target("Grade 4", "auto") is None
         assert apply_marks_scale(qs, None) == 0
         assert [x["marks"] for x in qs] == [3, 4, 6]
 
@@ -75,7 +79,7 @@ class TestGradeMarksMap:
     def test_sirf_naapey_hue_grades_map_mein_hain(self):
         """Map ka apna contract: sirf wo grade jis ka paimana DB se naapa gaya.
         Koi is mein andaze se grade daale to ye test us se sawal karega."""
-        assert GRADE_MARKS == {"Pre Year 1": 1}
+        assert GRADE_MARKS == {"Pre Year 1": 1, "Pre Year 2": 1, "Pre Year 3": 1}
 
     @pytest.mark.parametrize("marks", list(GRADE_MARKS.values()))
     def test_har_qadr_musbat_adad_hai(self, marks):

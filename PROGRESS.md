@@ -1,5 +1,45 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — D67 band: PY2 aur PY3 bhi 1-mark par — 572 rows migrate
+
+**Irfan ka faisla: teenon Pre Year grades 1-mark par hon.** D67 usi din khuli thi jab
+`seed_bank.py` ko marks sikhate waqt naap ne dikhaya ke sirf PY1 normalise hua hai.
+
+```
+pehle:  PY1 369 sawal marks=1  ·  PY2 348 sawal marks 1..7  ·  PY3 348 sawal marks 1..7
+ab:     PY1 369  ·  PY2 348  ·  PY3 348   — teenon marks=1
+badle:  572 rows (696 mein se 124 pehle hi 1 par thin)
+```
+
+`Grade 4` **nahi chhua** — wo school-age hai, us ka paimana naapa nahi gaya, aur us ke
+43 sawal 1..8 par phaile hain.
+
+### Migration se PEHLE asar naapa gaya, aur yehi is faisle ko mehfooz banata hai
+
+696 rows badalne ka asal khatra ye tha ke **`papers.total_marks` ek SNAPSHOT hai** —
+yani koi purana mehfooz parcha apne sawalon ke naye marks se na-mutabiq ho sakta tha.
+Naapa gaya:
+
+* **31 mehfooz papers mein se EK BHI** PY2/PY3 ka sawal use nahi karta
+* `student_question_results` **khali** hai (0 rows)
+* `blueprints` sirf section-level marks rakhte hain, per-question nahi
+
+To kisi purane parche ka total nahi hila. **Ye check pehle chalaya gaya, baad mein
+nahi** — 696 rows par "chala kar dekh lete hain" wala tareeqa theek nahi hota.
+
+Backup: `paper_maker_backup_before_py23_marks_20260906.db` (sqlite backup API, WAL-safe,
+integrity ok, 1,238 sawal).
+
+### Auzaar bhi saath chala
+
+`scripts/seed_bank.py` ka `GRADE_MARKS` ab teenon Pre Year grades rakhta hai, aur us ka
+comment ye bhi darj karta hai ke **`Grade 4` jaan-boojh kar bahar hai**.
+`tests/test_seed_bank_marks.py` **15 tests** (11 se barh kar) — aur wo hifazat ab bhi
+qaim hai jo kehti hai: **jis grade ka qaida naapa nahi gaya, us ke sawal chhoona mana
+hai** (`test_target_None_kuch_nahi_chhoota`, ab `Grade 4` par).
+
+**Naap:** **1,098 pass**, ruff saaf, `integrity_check` ok, teenon PY ka `marks <> 1` = 0.
+
 ## 2026-09-06 — UI-095: `seed_bank.py` ko per-grade marks sikha diya — aur naap ne ek chhupa farq nikala
 
 Teen dafa ek hi cheez hui thi: seeding ke baad `marks <> 1` wala check chalta, naye
