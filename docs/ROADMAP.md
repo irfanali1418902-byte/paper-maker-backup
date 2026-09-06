@@ -10,74 +10,105 @@
 
 ---
 
-## 0. POORE PROJECT KA AUDIT — 2026-09-04 (pehle din se aaj tak)
+## 0. POORE PROJECT KA AUDIT — 2026-09-06 (pehle din se aaj tak)
 
 > **Ye section is file ke baqi hisse se ALAG SAWAL ka jawab hai.** Neeche ka §A/§B July
 > ka audit hai jise patch kiya jata raha. **Ye wala ye batata hai: shuru se ab tak kitna
-> kaam hua aur kitna baqi hai.** Sab kuch 2026-09-04 ko naapa gaya — `git log`, `PRD.md`,
-> DB, aur ratchet se. **Jab bhi dobara poochha jaye, is section ko naap kar update karo,
-> naya mat likho.**
+> kaam hua aur kitna baqi hai.** Sab kuch 2026-09-06 ko **naya naapa gaya** — `git log`,
+> `PRD.md`, DB, ratchet aur code se. **Jab bhi dobara poochha jaye, is section ko naap
+> kar update karo, naya mat likho.**
+>
+> ⚠ **Is dafa naap ne DO ROWS GHALAT PAKRIN jo 09-04 ke audit mein "khula" likhi thin —
+> R5 aur R9 kab ke ho chuke hain.** Tafseel neeche. Ye wahi bimari hai jis ka hisaab §E
+> rakhta hai aur jis se P0 rows mahinon jhooti khuli rahin: **row par bharosa mat karo,
+> repo mein naapo.**
 
-### Do mahine kis cheez par gaye — naapa (`git log`, 426 commits)
+### Do mahine kis cheez par gaye — naapa (`git log`, 439 commits)
 
 | daur | commits | kaam ka rukh |
 |---|---:|---|
-| **July** | 226 | `feat` **85**, epic 32, fix 18 — **product bana** |
-| **August** | 163 | epic **64**, docs **64**, feat 16 — **product ruk gaya, architecture + quality** |
-| **September** | 37 | docs 21, epic 9 — epic ka tail, seeding, dastavez |
+| **July** | 226 | `feat` 85, epic 32, fix 18 — **product bana** |
+| **August** | 163 | epic 64, docs 64, feat 16 — **product ruk gaya, architecture + quality** |
+| **September** | 50 | epic ka tail, seeding, CSS rows, dastavez |
 
-**Asal product July mein ban gaya tha.** Do mahine mein se taqreeban **1.3 mahina**
-architecture, tests aur dastavez par laga hai, naye features par nahi. **Ye ghalati
-nahi thi — magar plan banate waqt is ko jaan-na zaroori hai.**
+**Asal product July mein ban gaya tha.** Baqi do mahine ka bara hissa architecture,
+tests aur dastavez par laga hai. **Ye ghalati nahi thi — magar plan banate waqt is ko
+jaan-na zaroori hai.**
 
 ### Asal scope (`docs/PRD.md`) ke khilaf — 22 rows
 
 **§3 (F1–F13, "shipped"): saare 13 ✅ zinda.** Sirf **F8** jaan-boojh kar badla —
 Word/PDF export `e2bdcc4` mein delete, browser print rah gaya.
 
-**§4 (R1–R9, "next releases"):**
+**§4 (R1–R9, "next releases") — dono ghalat rows ke saath:**
 
 | | | |
 |---|---|---|
 | R1 | Hosting migration (Railway) | ⛔ **MANSOOKH** — Irfan, 2026-08-31; ab school PC / Docker ka rukh |
 | R2 | Repo hygiene | ✅ |
-| R3 | GitHub branch protection | ❓ **repo se naapa nahi ja sakta** — GitHub par hai |
+| R3 | GitHub branch protection | ⛔ **BAND** — private free repo par mumkin nahi (§B H5), aur Irfan ka tareeqa PR flow hai bhi nahi |
 | R4 | Sections mode | ✅ 2026-08-20 |
-| R5 | Ratio Phase 2 | ⬜ khula (S–M) |
+| R5 | Ratio Phase 2 (exact per-type counts) | ✅ **HO CHUKA — 09-04 ka audit ise "khula" kehta tha aur wo GHALAT tha.** `type_counts` `app/schemas/requests.py`:50 mein defined, `app/services/paper_service.py`:257–266 mein wired (tarteeb bhi mehfooz), frontend par `.sec-row__typecount`, aur `tests/test_paper_sections.py` mein tested |
 | R6 | Production seeding | ✅ `scripts/seed_bank.py` |
-| R7 | Lesson Plan module | ✅ 2026-08-23 — **`topic_week_plan` ke naam se** (§C order 4 dekhein) |
-| R8 | Per-student adaptive | ⬜ khula (M) |
-| R9 | Syllabus PDF auto-extract | ⬜ khula (M) |
+| R7 | Lesson Plan module | ✅ 2026-08-23 — `topic_week_plan` ke naam se (`app/api/topic_plan.py`) |
+| R8 | Per-student adaptive | ◐ **AADHA** — per-student **results** ka poora raasta mojood hai (`adaptive_results_service.py`: roll_no, student_name, per-question marks, tested), magar paper ab bhi **poori class** ke bloom-weakness se banta hai (`/api/generate-adaptive-paper`). Jo baqi hai wo sirf per-student paper generation hai |
+| R9 | Syllabus PDF auto-extract | ✅ **HO CHUKA — ye bhi "khula" likha tha aur GHALAT tha.** `app/services/syllabus_service.py` PDF text layer nikaalta hai (`pypdf`) **aur scanned PDF ke liye vision/OCR fallback bhi rakhta hai**; `tests/test_syllabus_service.py` mein tested |
 
-**22 mein se 18 ho chuke · 1 mansookh · 3 khule · 1 naapa nahi ja sakta.**
+**22 mein se 19 ho chuke · 2 mansookh/band · 1 aadha (R8).**
 
-### Har bare kaam ka apna paimana
+### Har bare kaam ka apna paimana — 2026-09-06 ko naapa
 
 ```
-PRODUCT (PRD ke tay-shuda rows)   18/21                    ~86%
-BANK (asli topics, jaali chhor)   256/266                  ~96%
-CSS EPIC (lines)                  1873 -> 1593, target 1450
-                                  280 nikleen / 423 chahiye  ~66%
-TESTS                             1,083 pass · 14.7k test-lines banaam 11.5k app-lines
+PRODUCT (PRD ke tay-shuda rows)   19/20 zinda rows        ~95%   (R8 aadha)
+BANK (asli topics)                260/266                 ~98%   (6 PY1 baqi)
+BANK (kul rows, jaali samet)      260/310                 ~84%   (44 jaali)
+CSS EPIC (legacy lines)           1873 -> 1601, target 1450
+                                  272 nikleen / 423 chahiye ~64%
+DEFERRED rows                     14 band / 44            ~32%
+TESTS                             1,083 pass · ruff saaf
+                                  14.7k test-lines banaam 11.6k app-lines
 ```
 
-### ⚠ BAQI KAAM KA BARA HISSA "KAAM" NAHI, "FAISLA" HAI
+### Bank — 2026-09-06 ko DB se naapa (`integrity_check` ok, 1,214 sawal)
 
-Ye is audit ki sab se ahem baat hai aur plan banate waqt yehi ghalat samjhi jati hai:
+| subject / grade | topics | seeded | sawal | |
+|---|---:|---:|---:|---|
+| Mathematics / Pre Year 2 | 87 | **87** | 348 | ✅ mukammal |
+| Mathematics / Pre Year 3 | 87 | **87** | 348 | ✅ mukammal |
+| Mathematics / Pre Year 1 | 81 | 75 | 345 | **6 baqi** |
+| Mathematics / Grade 4 | 11 | 11 | 43 | ✅ |
+| Mathematics / Grade 5 | 11 | 0 | 0 | ⛔ **jaali** |
+| Mathematics / Grade 6 | 11 | 0 | 0 | ⛔ **jaali** |
+| Science / Grade 7 | 11 | 0 | 0 | ⛔ **jaali** |
+| Geography / Grade 8 | 11 | 0 | 0 | ⛔ **jaali** |
 
-* **CSS epic ka 66% se aage ka safar** taqreeban poora `disagree` ke **~50 rules** par
-  khara hai, **aur un mein se har ek Irfan ka ek faisla maangta hai.** 2026-09-04 ko ye
-  sabit ho gaya: `agree` ka bila-faisla hissa **khatam** ho chuka, aur baqi chaar cheezein
-  (**D51, D63, D64, D65**) chaaron faisle par ruki hain, kaam par nahi.
-* **3 product features** khule hain, teenon chhote.
-* **43 khule `DEFERRED.md` rows** — zyadatar isi epic ke andar ke sawal.
-* **Bank ka sab se bara khali hissa 44 jaali syllabus topics hain** (G5 Math, G6 Math,
-  G7 Science, G8 Geography) — **seeding mana hai jab tak asal syllabus import na ho.**
-  Ye bhi code ka nahi, **data ka** kaam hai.
+⚠ **"Jaali" ka matlab naap se hai, andaze se nahi:** paanchon grades (G4, G5, G6,
+Science G7, Geography G8) mein **bilkul wohi 11 Grade-4 maths topics** hain —
+`subtopic_title` ke set barabar hain, aaj dobara naapa gaya. Sirf **G4 asli hai**
+(seeded). Baqi **44 rows ko seed karna MANA hai jab tak asal syllabus import na ho** —
+Geography par yehi ho chuka tha aur 44 sawal delete karne pare. **Ye code ka masla nahi,
+data ka hai;** import ka raasta (R9) pehle se mojood aur tested hai.
 
-**Ek jumle mein:** product bana hua hai aur chal raha hai; doosra mahina us ko
-qabil-e-bharosa banane mein gaya; aur ab jo bacha hai us ka bara hissa **Irfan ke
-faislon par ruka hai, kisi ke waqt par nahi.**
+**PY1 ke 6 baqi topics** hi wo waahid seeding kaam hai jo aaj chal sakta hai. Quota
+rozana ~20–25 topics deti rahi hai, to ye **ek run** ka kaam hai.
+⚠ **Seeding ke foran baad ye chalao** — `seed_bank.py` ko PY1 ka 1-mark paimana maloom
+nahi: `select count(*) from questions q join syllabus_topics t on t.id=q.syllabus_topic_id
+where t.grade='Pre Year 1' and q.marks <> 1` — **0 aana chahiye** (aaj 0 hai).
+
+### ⚠ BAQI KAAM KA BARA HISSA "KAAM" NAHI, "FAISLA" HAI — aur ye ab bhi sach hai
+
+* **CSS epic ka baqi safar** taqreeban poora `disagree` ke ~50 rules par khara hai, aur
+  un mein se har ek Irfan ka ek faisla maangta hai. `agree` ka bila-faisla hissa
+  **khatam** ho chuka.
+* **30 khuli `DEFERRED.md` rows** — 09-05/06 ko **14 band huin** (D9, D15, D19, D20,
+  D24, D26, D31, D41, D43, D51, D63, D64, D65, D66). Un mein se **teen** sirf is liye
+  khuli thin ke kaam pehle ho chuka tha aur row kaati nahi gayi.
+* **Product mein sirf R8 ka aadha hissa khula hai.**
+* **Bank ka sab se bara khali hissa 44 jaali topics hain** — data ka kaam, code ka nahi.
+
+**Ek jumle mein:** product bana hua, chal raha, aur PRD ke hisaab se ~95% mukammal hai;
+bank do grades par poora ho chuka aur teesre par chhe topics door hai; **aur jo bacha
+hai us ka bara hissa Irfan ke faislon par ruka hai, kisi ke waqt par nahi.**
 
 ---
 

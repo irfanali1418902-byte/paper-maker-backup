@@ -30,6 +30,12 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
+> ### 🧭 NAYA CHAT? — `docs/ui/HANDOFF.md` PARHO (2026-09-06 ko naya likha)
+> Wahan teen files ki tarteeb, aaj ke naape hue adad, aur "jo abhi chal sakta hai" ki
+> tarteeb-war fehrist hai. `docs/ROADMAP.md` §0 poore project ka audit rakhta hai —
+> **2026-09-06 ko naya naapa gaya, aur us naap ne PRD ki do rows (R5, R9) ghalat pakrin
+> jo "khula" likhi thin aur kab ki ho chuki thin.**
+>
 > ### ✅ UI-094 — D66 BAND. Chaaron contrast rows khatam. (2026-09-06)
 > `.sidenav__group` ab `--color-sidebar-fg-muted` parhta hai, `opacity: 0.6` gayi:
 > **4.40 → 4.59, pass.** ⚠ **D26 wala seedha hal yahan GHALAT hota:** opacity ke baghair
