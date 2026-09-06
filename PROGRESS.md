@@ -1,5 +1,50 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — UI-095: `seed_bank.py` ko per-grade marks sikha diya — aur naap ne ek chhupa farq nikala
+
+Teen dafa ek hi cheez hui thi: seeding ke baad `marks <> 1` wala check chalta, naye
+sawal 3/4/6/7 par nikalte, aur ek `UPDATE ... SET marks = 1` chalani parti. **Har dafa
+hal ek insaan ki yaad-dasht par khara tha.** Ab wo qaida script mein hai aur
+**persist se PEHLE** lagta hai — bank mein ghalat qadr pahunchti hi nahi.
+
+- `GRADE_MARKS` map + `resolve_marks_target()` + `apply_marks_scale()`
+- naya `--marks` flag: `auto` (default, map dekho) · `keep` (AI jo de wahi) · ya ek adad
+- run ke aakhir mein saaf line: kitne sawal theek kiye aur kis qadr par
+- `tests/test_seed_bank_marks.py` — **11 tests**, aur wo AI ko bulate hi nahi
+  (`apply_marks_scale` khalis function hai, isi liye alag rakha gaya)
+
+### ⚠ Naap ne wo cheez dikhayi jo is kaam ki wajah se hi saamne aayi
+
+Map bharne se pehle poora bank naapa gaya, aur natija ye tha ke **"pre-school ka matlab
+1 mark" SACH NAHI HAI:**
+
+```
+Pre Year 1   369 sawal   SAB marks=1          <- qaida saaf
+Pre Year 2   348 sawal   marks 1..7 phaile    <- koi qaida nahi (sab se zyada 4 par, 123)
+Pre Year 3   348 sawal   marks 1..7 phaile    <- koi qaida nahi (4 par 124)
+Grade 4       43 sawal   marks 1..8 phaile    <- koi qaida nahi
+```
+
+**Sirf PY1 normalise hua hai, aur wo bhi teen dafa haath se.** PY2 aur PY3 — wahi
+pre-school family, 696 sawal — kabhi nahi hue, aur ye farq board mein **kahin darj nahi
+tha**.
+
+**Is liye `GRADE_MARKS` mein sirf `Pre Year 1` hai, jaan-boojh kar.** PY2/PY3 ka paimana
+naapa nahi gaya — us par qaida lagana andaza hota, aur andaza 696 sawal chup-chaap badal
+deta. Wo **data ka faisla hai aur Irfan ka hai: DEFERRED.md D67.** Ek test isi baat ki
+hifazat karta hai (`test_target_None_kuch_nahi_chhoota`).
+
+### Likhte waqt ek ghalti hui aur foran pakri gayi
+
+Patch script mein `print()` ke andar `
+` escape asli newline ban kar file mein utar
+gaya aur f-string beech se toot gayi — `ruff` ne 37 errors diye. File `git checkout` se
+HEAD par wapas laayi gayi aur poora patch dobara likha gaya, is dafa `NEWLINE = chr(10)`
+ke saath, taake generated code mein koi escape ho hi na. **Sabaq: code likhne wale
+script mein escape sequences se bacho — constant behtar hai.**
+
+**Naap:** **1,094 pass** (11 naye), ruff saaf.
+
 ## 2026-09-06 — Seeding: PY1 ke aakhri 6 topics — **teenon Pre Year grades ab mukammal**
 
 `Mathematics / Pre Year 1` **75/81 → 81/81**. Bank **1,214 → 1,238 sawal**. Ab

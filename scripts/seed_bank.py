@@ -53,6 +53,9 @@ from app.services import question_service, syllabus_service
 #: 44 calls tez tez chalne ke baad agli poori run (11 topics) 429 par zaya gayi.
 DEFAULT_DELAY_SECONDS = 4.0
 
+#: print() ke andar escape likhne se bacha jata hai.
+NEWLINE = chr(10)
+
 #: Itni musalsal rate-limit nakaamiyon ke baad run rok di jati hai. Us Science
 #: run mein 11 ke 11 topics fail hue — har ek ne 3 koshishein ki, yani 33 be-faida
 #: calls. Quota khatam ho to agla topic bhi nahi chalega; rukna hi theek hai.
@@ -72,6 +75,57 @@ VALID_TYPES = (
 #: A starter bank that is 100% short-answer (which is what English already is)
 #: cannot fill a sections-mode paper.
 DEFAULT_TYPES = ("multiple-choice", "short-answer", "fill-blank", "essay")
+
+#: PER-GRADE MARKS KA PAIMANA. AI har sawal ke apne marks tajweez karta hai aur wo
+#: kuch grades ke liye ghalat hote hain -- Pre Year 1 par 2026-09-06 ki run mein 24 ke
+#: 24 sawal 3/4/6/7 marks par aaye, jab ke us grade ka har sawal 1 mark ka hai.
+#: **Ye TEESRI dafa tha.** Har dafa ka hal ek `UPDATE` tha jo kisi ko YAAD rakhna parta
+#: tha; ab wo qaida yahan hai aur persist se PEHLE lagta hai.
+#:
+#: WARNING -- IS MAP MEIN SIRF WO GRADES HAIN JIN KA PAIMANA DB SE NAAPA GAYA.
+#: 2026-09-06 ko poora bank naapa gaya:
+#:
+#:     Pre Year 1   369 sawal, SAB marks=1        <- qaida saaf hai
+#:     Pre Year 2   348 sawal, marks 1..7 phaila  <- koi qaida nahi
+#:     Pre Year 3   348 sawal, marks 1..7 phaila  <- koi qaida nahi
+#:     Grade 4       43 sawal, marks 1..8 phaila  <- koi qaida nahi
+#:
+#: Yani "pre-school ka matlab 1 mark" SACH NAHI HAI -- sirf PY1 us par hai, aur PY2/PY3
+#: kabhi normalise nahi kiye gaye. Unhein bhi karna chahiye ya nahi, ye ~696 rows ka
+#: DATA ka faisla hai aur Irfan ka hai, is script ka nahi: DEFERRED.md D67.
+#: YAHAN ANDAZA MAT LAGAO -- grade ka paimana NAAP kar hi is map mein daalo.
+GRADE_MARKS = {
+    "Pre Year 1": 1,
+}
+
+
+def resolve_marks_target(grade: str, override: str) -> int | None:
+    """Is run ke liye marks ka hadaf, ya None agar koi qaida na ho.
+
+    `override` CLI se: "auto" (GRADE_MARKS dekho), "keep" (kuch mat karo), ya ek adad.
+    """
+    if override == "keep":
+        return None
+    if override == "auto":
+        return GRADE_MARKS.get(grade)
+    return int(override)
+
+
+def apply_marks_scale(questions: list[dict], target: int | None) -> int:
+    """Har sawal ke marks hadaf par le aata hai. Kitne badle, wo lautata hai.
+
+    Persist se PEHLE chalta hai, taake ghalat qadr bank mein pahunche hi na -- baad ki
+    `UPDATE` par bharosa karna hi wo tareeqa tha jo teen dafa nakaam hua.
+    """
+    if target is None:
+        return 0
+    changed = 0
+    for q in questions:
+        if q.get("marks") != target:
+            q["marks"] = target
+            changed += 1
+    return changed
+
 
 #: Cap on topics per invocation. The biggest syllabus here is 87 topics; at
 #: four questions each that is one command turning into 87 AI calls.
@@ -128,8 +182,9 @@ def select_topics(
 def seed_topic(topic: dict, args) -> tuple[list[str], list[dict]]:
     """Generates and persists one topic's questions.
 
-    Returns (saved ids, the raw AI dicts) -- the caller needs the raw dicts to
-    count which types actually came back, which the saved ids alone cannot say.
+    Returns (saved ids, the raw AI dicts, kitne sawalon ke marks theek kiye) --
+    the caller needs the raw dicts to count which types actually came back, which
+    the saved ids alone cannot say.
 
     Difficulty comes from the book's own activity tagging via
     `suggested_difficulty` unless --difficulty overrides it -- the same rule
@@ -146,7 +201,9 @@ def seed_topic(topic: dict, args) -> tuple[list[str], list[dict]]:
         learning_outcome=topic.get("learning_outcome"),
     )
     ai_questions = question_service.generate_for_topic(req)
-    return question_service.persist_batch(ai_questions, req), ai_questions
+    # Marks ka paimana persist se PEHLE -- GRADE_MARKS ka note dekho.
+    fixed = apply_marks_scale(ai_questions, resolve_marks_target(args.grade, args.marks))
+    return question_service.persist_batch(ai_questions, req), ai_questions, fixed
 
 
 def is_rate_limited(err: Exception) -> bool:
@@ -215,6 +272,14 @@ def main() -> None:
         help=f"Seconds between topics, provider ko saans dene ke liye (default {DEFAULT_DELAY_SECONDS})",
     )
     parser.add_argument(
+        "--marks",
+        default="auto",
+        help=(
+            "Marks ka paimana: auto (grade ka apna qaida, GRADE_MARKS), "
+            "keep (AI jo de wahi), ya ek adad. Default auto."
+        ),
+    )
+    parser.add_argument(
         "--include-seeded",
         action="store_true",
         help="Also seed topics that already have questions",
@@ -257,13 +322,15 @@ def main() -> None:
     consecutive_rate_limits = 0
     stopped_early = False
     processed = 0
+    marks_fixed_total = 0
 
     for i, topic in enumerate(topics, 1):
         processed = i
         title = topic["subtopic_title"]
         print(f"\n[{i}/{len(topics)}] {title}")
         try:
-            saved_ids, ai_questions = seed_topic(topic, args)
+            saved_ids, ai_questions, fixed = seed_topic(topic, args)
+            marks_fixed_total += fixed
         except Exception as e:
             # Ek topic ka fail hona poori run ko nahi girata -- 10 mein se 9
             # ban jayen to woh 9 bank mein rehne chahiyen.
@@ -301,6 +368,14 @@ def main() -> None:
     print(f"Kul mehfooz: {saved_total} sawal, {succeeded}/{processed} topics")
     if stopped_early:
         print(f"Run beech mein ruki -- {len(topics) - processed} topics chhu-e bhi nahi gaye.")
+
+    if marks_fixed_total:
+        target = resolve_marks_target(args.grade, args.marks)
+        print(
+            NEWLINE + f"Marks theek kiye: {marks_fixed_total} sawal -> {target}."
+            + NEWLINE + "  AI ne is grade ke liye ghalat marks diye thay; paimana"
+            + NEWLINE + "  GRADE_MARKS se laga -- persist se PEHLE, UPDATE se nahi."
+        )
 
     if saved_total:
         report_types(counts, args.types)
