@@ -1,5 +1,48 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — Seeding: PY1 ke aakhri 6 topics — **teenon Pre Year grades ab mukammal**
+
+`Mathematics / Pre Year 1` **75/81 → 81/81**. Bank **1,214 → 1,238 sawal**. Ab
+`Pre Year 1`, `Pre Year 2` aur `Pre Year 3` teenon 100% seeded hain, aur bank ke **asal
+topics 266/266** hain — jo bacha hai wo sirf 44 jaali rows hain.
+
+**Run:** 6 topics × 4 sawal = 24, sirf **6 AI calls**, koi rate limit nahi. Backup
+pehle **sqlite backup API se** (WAL-safe, file copy se nahi):
+`paper_maker_backup_before_py1_final_20260906.db` — integrity ok, 1,214 sawal.
+
+### Types default par NAHI chhore gaye, aur ye naap kar tay hua
+
+`seed_bank.py` ka default `multiple-choice, short-answer, fill-blank, essay` hai. **Pre
+Year 1 chaar-paanch saal ke bachon ka darja hai; `essay` wahan bemani hai.** Naapa gaya:
+mojooda 345 PY1 sawal sirf **teen** qismein rakhte thay — `short-answer` 247,
+`multiple-choice` 66, `true-false` 32; **`fill-blank` aur `essay` sifar.** Is liye run
+`--types multiple-choice,short-answer,true-false` par chalayi gayi, taake naye sawal usi
+shakl ke rahein jo is grade ki pehle se hai.
+
+### Dohraye hue TITLE — pehle naapa, phir kharch kiya
+
+Baqi 6 rows ke titles duplicate thay: `Practice and Review of number and value` **chaar
+dafa**, `Review of number, value and shape` **do dafa**, aur `learning_outcome` bilkul
+title ke barabar. **Ye theek wahi khatra hai jo ROADMAP §B R1 ne PY3 par darj kiya tha**
+(`Concept of subtraction` 13 dafa): ek jaisa title = ek jaisa prompt.
+
+Kharch se pehle mojooda data se naapa gaya — un dono titles ke pehle se seeded 14 aur 10
+sawal **sab ke sab alag** the. Seeding ke baad dobara naapa: **30/30 aur 18/18 alag,
+duplicate sifar.** Yani ROADMAP ka natija phir sahi nikla — **ek jaisa prompt duplicate
+sawal nahi deta.**
+
+### ⚠ `marks <> 1` wala check phir chala, aur phir pakra
+
+Handoff ka lazmi post-check chalaya gaya aur us ne **24 ke 24 naye sawal** pakre —
+marks 3, 4, 6 aur 7 par aaye thay. `seed_bank.py` ko PY1 ka 1-mark paimana maloom nahi
+hai aur wo har run par yehi karta hai. `UPDATE ... SET marks = 1` (sirf PY1 par) chalayi
+gayi: **24 theek, ab `marks <> 1` = 0**, `integrity_check` ok.
+
+**Ye ab teesri dafa hua hai. Jo bhi PY1 dobara seed kare: check chalana bhoolna nahi —
+ya `seed_bank.py` ko per-grade marks ka paimana sikha dena, jo asal hal hai.**
+
+**Naap:** 1,083 pass, ruff saaf, `integrity_check` ok.
+
 ## 2026-09-06 — UI-094: D66 band — aur yahan "opacity hata do" ka seedha jawab GHALAT hota
 
 D66 dekhne mein D26 ki naqal thi: `05-components/nav.css`:166 ka

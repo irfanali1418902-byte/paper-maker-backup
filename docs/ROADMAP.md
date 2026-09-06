@@ -60,8 +60,8 @@ Word/PDF export `e2bdcc4` mein delete, browser print rah gaya.
 
 ```
 PRODUCT (PRD ke tay-shuda rows)   19/20 zinda rows        ~95%   (R8 aadha)
-BANK (asli topics)                260/266                 ~98%   (6 PY1 baqi)
-BANK (kul rows, jaali samet)      260/310                 ~84%   (44 jaali)
+BANK (asli topics)                266/266                 100%   ✓ 2026-09-06
+BANK (kul rows, jaali samet)      266/310                 ~86%   (44 jaali baqi)
 CSS EPIC (legacy lines)           1873 -> 1601, target 1450
                                   272 nikleen / 423 chahiye ~64%
 DEFERRED rows                     14 band / 44            ~32%
@@ -69,13 +69,13 @@ TESTS                             1,083 pass · ruff saaf
                                   14.7k test-lines banaam 11.6k app-lines
 ```
 
-### Bank — 2026-09-06 ko DB se naapa (`integrity_check` ok, 1,214 sawal)
+### Bank — 2026-09-06 ko DB se naapa (`integrity_check` ok, **1,238 sawal**)
 
 | subject / grade | topics | seeded | sawal | |
 |---|---:|---:|---:|---|
 | Mathematics / Pre Year 2 | 87 | **87** | 348 | ✅ mukammal |
 | Mathematics / Pre Year 3 | 87 | **87** | 348 | ✅ mukammal |
-| Mathematics / Pre Year 1 | 81 | 75 | 345 | **6 baqi** |
+| Mathematics / Pre Year 1 | 81 | **81** | 369 | ✅ mukammal |
 | Mathematics / Grade 4 | 11 | 11 | 43 | ✅ |
 | Mathematics / Grade 5 | 11 | 0 | 0 | ⛔ **jaali** |
 | Mathematics / Grade 6 | 11 | 0 | 0 | ⛔ **jaali** |
@@ -89,8 +89,9 @@ Science G7, Geography G8) mein **bilkul wohi 11 Grade-4 maths topics** hain —
 Geography par yehi ho chuka tha aur 44 sawal delete karne pare. **Ye code ka masla nahi,
 data ka hai;** import ka raasta (R9) pehle se mojood aur tested hai.
 
-**PY1 ke 6 baqi topics** hi wo waahid seeding kaam hai jo aaj chal sakta hai. Quota
-rozana ~20–25 topics deti rahi hai, to ye **ek run** ka kaam hai.
+**PY1 ke 6 baqi topics 2026-09-06 ko seed ho gaye** (6 AI calls, koi rate limit nahi).
+**Ab teenon Pre Year grades 100% hain aur asal topics 266/266.** Jo seeding kaam bacha
+hai wo sirf 44 jaali rows par hai — aur wo MANA hai.
 ⚠ **Seeding ke foran baad ye chalao** — `seed_bank.py` ko PY1 ka 1-mark paimana maloom
 nahi: `select count(*) from questions q join syllabus_topics t on t.id=q.syllabus_topic_id
 where t.grade='Pre Year 1' and q.marks <> 1` — **0 aana chahiye** (aaj 0 hai).

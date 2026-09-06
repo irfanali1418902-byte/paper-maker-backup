@@ -38,7 +38,7 @@
 ```
 git            HEAD 30ee89a · working tree saaf · backup/master ke BARABAR (0 aage)
 tests          1,083 pass · ruff saaf
-DB             integrity ok · 1,214 sawal · 310 topics
+DB             integrity ok · 1,238 sawal · 310 topics · asal topics 266/266 ✅
 CSS            legacy_css_lines 1601 (target 1450) · unsanctioned_hex 298
 gate           das pages x paanch viewports · drift 0
 DEFERRED       44 rows · 14 band · 30 khuli
@@ -50,7 +50,7 @@ DEFERRED       44 rows · 14 band · 30 khuli
 
 ## Jo abhi chal sakta hai — tarteeb ke saath
 
-### 1. PY1 ke baqi 6 topics — waahid seeding kaam jo aaj mumkin hai
+### ~~1. PY1 ke baqi 6 topics~~ ✅ HO GAYA 2026-09-06 — teenon Pre Year grades mukammal
 Backup **sqlite backup API se** (WAL-safe), `python -u`, tail parho. Quota rozana
 ~20–25 topics deti rahi hai, to ye **ek run** ka kaam hai.
 ⚠ **Seeding ke foran baad:** `seed_bank.py` ko PY1 ka 1-mark paimana maloom nahi —
@@ -88,7 +88,7 @@ safai.** Aaj product PRD ke hisaab se ~95% mukammal hai — is ka matlab ye hai 
 sab se bara faida naya code likhne se nahi, is ko school ke computer par chalane se
 aata hai.**
 
-### Session 1 — PY1 ke baqi 6 topics *(chhota, magar quota ka mohtaj)*
+### ~~Session 1 — PY1 ke baqi 6 topics~~ ✅ **HO GAYA 2026-09-06**
 Bank ka waahid hissa jo aaj seed ho sakta hai. Quota rozana ~20–25 topics deti rahi
 hai, to **ek run kaafi hai.** Backup sqlite backup API se (WAL-safe), `python -u`,
 tail parho. **Seeding ke foran baad `marks <> 1` wala check chalao** (HANDOFF ke
