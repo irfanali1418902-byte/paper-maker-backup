@@ -159,11 +159,30 @@
   padding: 0 10px;
 }
 
-/* Group heading — "PAPERS", "CONTENT". Uppercase micro type. */
+/* Group heading — "PAPERS", "CONTENT". Uppercase micro type.
+
+   ⚠ THE DIMMING IS A ROLE, NOT AN `opacity` — D66, UI-094, AND SIMPLY DELETING
+   THE OPACITY WOULD HAVE BEEN THE WRONG FIX. As written this was
+   `--color-sidebar-fg` at `opacity: 0.6`, which composites to ~4.40:1 on the
+   navy panel and fails AA by 0.10 (measured 2026-09-06,
+   `scripts/css_contrast_probe.mjs`). But dropping the opacity outright takes it
+   to 9.51:1 — the SAME as `.sidenav__link` — and a group heading that is
+   exactly as loud as the items under it is not a heading any more. The
+   accessibility number would have passed and the design would have broken.
+
+   `--color-sidebar-fg-muted` already exists for this exact job: it is
+   `--navy-400`, it was added in UI-047b when `--slate-500` on navy measured
+   ~3.1:1, and its two consumers (`.sidenav__brand-sub`, `.sidenav__foot`) both
+   measure 4.59:1 and pass. So this heading now dims the way the rest of the
+   sidebar dims — by role — and stays quieter than the links.
+
+   D26 took the other branch (`pages/blueprint.css`, opacity deleted outright)
+   and that was right THERE: that subtitle sits on white, where full strength
+   is 7.58:1 and there is no sibling it can outshout. Same symptom, two
+   surfaces, two answers. */
 .sidenav__group {
   padding: 14px 12px 6px;
-  color: var(--color-sidebar-fg);
-  opacity: 0.6;
+  color: var(--color-sidebar-fg-muted);
   font-size: var(--text-micro);
   letter-spacing: 0.9px;
   text-transform: uppercase;

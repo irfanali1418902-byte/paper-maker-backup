@@ -1,5 +1,40 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — UI-094: D66 band — aur yahan "opacity hata do" ka seedha jawab GHALAT hota
+
+D66 dekhne mein D26 ki naqal thi: `05-components/nav.css`:166 ka
+`.sidenav__group { opacity: 0.6 }`, navy panel par **4.40:1**, AA se 0.10 neeche.
+Seedha wahi karna jo D26 mein hua — opacity delete — **accessibility pass kar deta aur
+design tor deta.**
+
+**Naapa gaya:** `opacity` ke baghair `--color-sidebar-fg` navy par **9.51:1** hai — yani
+theek wohi jo `.sidenav__link` ka hai. Ek group heading jo apne neeche wale items jitni
+hi roshan ho, wo heading rehti hi nahi. **Adad pass ho jata, hierarchy mar jati.**
+
+**Hal wo role hai jo is app mein pehle se mojood tha:** `--color-sidebar-fg-muted`
+(`--navy-400`). Wo UI-047b mein isi masle ke liye banaya gaya tha jab `--slate-500` navy
+par ~3.1:1 naapa gaya, aur us ke do consumers — `.sidenav__brand-sub` aur
+`.sidenav__foot` — dono **4.59:1 par pass** karte hain. `.sidenav__group` ab wahi role
+parhta hai: **4.59:1, pass**, aur links se halka rehta hai.
+
+```
+--color-sidebar-fg + opacity 0.6   4.40   fail   (pehle)
+--color-sidebar-fg, opacity nahi   9.51   pass magar links ke barabar
+--color-sidebar-fg-muted           4.59   pass   <- ye
+```
+
+**Do surfaces, do jawab — aur yehi is jori ka asal sabaq hai.** D26 ne opacity seedhi
+delete ki aur wo **wahan** durust tha: wo subtitle safed par hai, poori shiddat par
+7.58:1 deta hai, aur us ke aas paas koi aisa element nahi jise wo dabaa de. Yahan panel
+navy hai aur bhai-band elements mojood hain. **Ek jaisa symptom, ek jaisa fix nahi.**
+
+**Gate: 30 deltas** — ek element × paanch viewports × chhe properties. Chhe mein se do
+asli hain (`color`, `opacity`); baqi chaar `border-*-color` hain, jo `currentColor` se
+aati hain — **aur us element ki `border-width` sifar hai** (naapa gaya), yani wahan koi
+border paint hi nahi hoti. Baqi nau pages 0, drift 0.
+
+1083 pass, ruff saaf.
+
 ## 2026-09-06 — UI-093: D26 band — `blueprint` ke brand subtitle se `opacity: 0.7` hat gayi
 
 **Irfan ka faisla: opacity hatao.** `pages/blueprint.css`:167 se `opacity: 0.7` gayi aur

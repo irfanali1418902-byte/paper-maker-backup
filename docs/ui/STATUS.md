@@ -30,6 +30,16 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
+> ### ✅ UI-094 — D66 BAND. Chaaron contrast rows khatam. (2026-09-06)
+> `.sidenav__group` ab `--color-sidebar-fg-muted` parhta hai, `opacity: 0.6` gayi:
+> **4.40 → 4.59, pass.** ⚠ **D26 wala seedha hal yahan GHALAT hota:** opacity ke baghair
+> `--color-sidebar-fg` navy par **9.51** hai — theek `.sidenav__link` jitna — yani adad
+> pass ho jata aur heading apne items jitni roshan ho kar heading rehti hi nahi.
+> Role pehle se mojood tha (`--navy-400`, UI-047b), do consumers us par 4.59 pass karte
+> hain. **Do surfaces, do jawab — ek jaisa symptom, ek jaisa fix nahi.**
+> Gate 30 deltas: ek element × 5 viewports × 6 props; chaar `border-*-color` sirf
+> `currentColor` ki wajah se hain aur us element ki `border-width` sifar hai.
+>
 > ### ✅ UI-093 — D26 BAND. Teenon WCAG rows khatam. (2026-09-06)
 > Irfan ka faisla: **opacity hatao**. `pages/blueprint.css`:167 se `opacity: 0.7` gayi;
 > brand subtitle **3.59 → 7.58, PASS** — naapa gaya, peshgoi se bilkul mila. Gate **5
