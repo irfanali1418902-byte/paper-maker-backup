@@ -1,5 +1,37 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — UI-093: D26 band — `blueprint` ke brand subtitle se `opacity: 0.7` hat gayi
+
+**Irfan ka faisla: opacity hatao.** `pages/blueprint.css`:167 se `opacity: 0.7` gayi aur
+D26 band. Peshgoi wala adad bilkul mila:
+
+```
+slate-500 + opacity 0.7   2.72   (UI-092 se pehle)
+slate-600 + opacity 0.7   3.59   (UI-092 ke baad, ab bhi fail)
+slate-600, opacity nahi   7.58   <- naapa gaya, PASS
+```
+
+**Baqi teen declarations jaan-boojh kar rahin** — `text-transform: uppercase`,
+`letter-spacing: 0.6px` aur `display: block` us subtitle ka apna treatment hain aur un ka
+contrast se koi taalluq nahi. Sirf wahi cheez hatai gayi jise naap ne wajah batayi.
+
+**Gate: 5 deltas, aur poore ke poore maqsood** — ek element × paanch viewports, ek hi
+property (`opacity: 0.7 → 1`). Baqi nau pages 0, drift 0. 1083 pass, ruff saaf.
+
+`blueprint` ke failing text 8 se 7 par.
+
+### Ek nayi cheez naap ne dikhayi — ye D26 ka bhai hai, magar alag jagah
+
+`05-components/nav.css`:166 ka **`.sidenav__group { opacity: 0.6 }`** bilkul wahi shakl
+hai: `rgb(198,210,232)` navy `rgb(22,41,74)` par, 11.5px, aur **4.40:1 — fail**, sirf
+0.10 se. Wahi dimming, wahi natija, magar ye `blueprint` ka page-file nahi — ye
+**component** hai aur `.sidenav__group` jis jis page par hai sab par lagega.
+
+**Ye jaan-boojh kar is commit mein NAHI hai.** D26 ek element ke baare mein thi aur wo
+band ho gayi; ye ek doosra element, doosri file aur apna faisla hai — aur `nav.css` ka
+component hone ka matlab hai ke us ka blast radius pehle ginna hoga. Naye row ke liye
+darj: **D66**.
+
 ## 2026-09-06 — UI-092: WCAG rows (D26, D31, D41) — ek naya probe, do rows band, aur D26 pehle se theek nikla
 
 Teenon rows ek hi cheez maangti thin aur wo kisi ke paas nahi thi. D41: *"Verify by

@@ -160,11 +160,23 @@
     line-height: 1.05;
   }
 
+  /* D26 / UI-093 — `opacity: 0.7` YAHAN SE HAT GAYI, AUR WO IS ROW KA POORA
+     MASLA THI. Irfan ka faisla 2026-09-06. `css_contrast_probe` ne naapa:
+       slate-500 + opacity 0.7    2.72
+       slate-600 + opacity 0.7    3.59   (UI-092 ke baad, aur ab bhi fail)
+       slate-600, opacity nahi    7.58   <- ye
+     Yani rang badalne se ye theek nahi ho raha tha; dimming khud wajah thi.
+     Text ab `03-elements/typography.css` ke `small` se apna `--color-text-
+     muted-strong` leta hai aur poori shiddat par paint hota hai.
+
+     ⚠ BAQI TEEN DECLARATIONS JAAN-BOOJH KAR RAHIN. `text-transform`,
+     `letter-spacing` aur `display: block` us subtitle ka apna treatment hain
+     aur un ka contrast se koi taalluq nahi — sirf wahi cheez hatai gayi jo
+     naap ne wajah batayi. */
   .o-shell__brand small {
     display: block;
     font-size: var(--text-micro);
     font-weight: 400;
-    opacity: 0.7;
     letter-spacing: 0.6px;
     text-transform: uppercase;
   }

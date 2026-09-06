@@ -30,6 +30,17 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
+> ### ✅ UI-093 — D26 BAND. Teenon WCAG rows khatam. (2026-09-06)
+> Irfan ka faisla: **opacity hatao**. `pages/blueprint.css`:167 se `opacity: 0.7` gayi;
+> brand subtitle **3.59 → 7.58, PASS** — naapa gaya, peshgoi se bilkul mila. Gate **5
+> deltas**, poore ke poore maqsood (ek element × 5 viewports, sirf `opacity`).
+> Baqi teen declarations (`text-transform`, `letter-spacing`, `display`) jaan-boojh kar
+> rahin — un ka contrast se taalluq nahi.
+> **⚠ NAYI ROW D66:** `05-components/nav.css`:166 ka `.sidenav__group { opacity: 0.6 }`
+> bilkul wahi shakl hai — `rgb(198,210,232)` navy par, 11.5px, **4.40:1**, 0.10 se fail.
+> Blast radius naapa: sirf `blueprint`, ek element. **Magar file COMPONENT hai, page nahi**,
+> is liye D26 ka faisla yahan naqal NAHI kiya gaya — Irfan ka apna faisla chahiye.
+>
 > ### ✅ UI-092 — WCAG: D41 aur D31 BAND, D26 ka symptom mojood hi nahi (2026-09-06)
 > **Naya auzaar:** `scripts/css_contrast_probe.mjs` — har text element ka ratio us
 > background ke saamne jo ASAL MEIN PAINT hota hai (ancestors par chal kar, opacity
