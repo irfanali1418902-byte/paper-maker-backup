@@ -1,5 +1,88 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-06 — UI-092: WCAG rows (D26, D31, D41) — ek naya probe, do rows band, aur D26 pehle se theek nikla
+
+Teenon rows ek hi cheez maangti thin aur wo kisi ke paas nahi thi. D41: *"Verify by
+re-running the contrast computation against the MEASURED background of each page — not
+against white, and not against the token's nominal value."* D31: *"re-measure every
+muted-text surface at once and set the token from the worst case, rather than nudging
+it twice."* Ab tak har adad haath se, kisi session mein bana aur phenk diya gaya.
+
+### Naya auzaar: `scripts/css_contrast_probe.mjs`
+
+Har us element ka `color`/`font-size`/`font-weight` parhta hai jis ka apna text hai,
+phir ancestors par chalta hua backgrounds jama karta hai jab tak opaque na mil jaye,
+unhein `opacity` samet **back-to-front composite** karta hai, aur WCAG 2.1 ratio nikaalta
+hai (large text 3.0, baqi 4.5). **Kisi token file ko parhta hi nahi** — yehi is ka poora
+maqsad hai.
+
+**Likhte waqt do ghaltiyan huin, dono darj hain:**
+
+1. `String.raw` template ke andar backtick — wahi trap jis se `css_drain_probe` ka header
+   khabardar karta hai, **aur jis ki warning maine khud usi file mein likhi thi.**
+2. Zyada ahem: pehla draft translucent background ko **safed par** composite karta tha,
+   us ke asal parent par nahi — `index` ke navy sidebar links **1.00:1** (safed par safed)
+   aa rahe thay. Theek kiya gaya: ab poora stack jama hota hai. **Aur ye header mein bhi
+   likha hai — is probe mein `1.00` ka matlab "probe ghalat hai" hai, "text ghalat hai"
+   nahi.**
+
+⚠ Ek limit jo naapte waqt khud saamne aayi: **`TOTAL` line do runs ke darmiyan qabil-e-
+muqabla nahi.** `bank` har question row par ek text element deta hai aur us ki ginti do
+runs ke beech **3168 → 85** ho gayi (list load nahi hui thi). Total 396 → 29 gira magar
+us mein se **sirf gyarah** hamari tabdeeli thi. **Per element diff karo, ginti se kabhi
+nahi.**
+
+### D41 aur D31 — band
+
+Naap ne dono rows ke adad **bilkul** confirm kiye: `.pagehead p` **4.48** canvas
+`rgb(247,248,251)` par, aur `bank` ka `.urdu-toggle-row ... small` **4.44** tinted
+`rgb(245,247,251)` par.
+
+**Magar D41 ne pages ki ginti kam batayi thi:** row kehti thi 2 pages (`blueprint` aur
+`slo`), naap kehti hai **saat** — `slo`, `slo-health`, `library`, `taqseem`, `blueprint`,
+`bank`, `plan`.
+
+**Aur D31 ne consumers ki ginti kam batayi thi:** row do kehti hai (`typography.css` ka
+`small`, `card.css` ka `.pagehead p`); teesra `pages/plan.css`:212 ka `.plan-note` hai,
+jo us row ke likhe jane ke baad aaya.
+
+Teenon `--color-text-muted-strong` (slate-600) par le jaye gaye — wahi ek-line hal jo
+D31 tajweez karti hai aur jo `forms.css` ke `label` ke liye UI-047e mein pehle hi chal
+chuka hai.
+
+| element | pehle | ab |
+|---|---|---|
+| `.pagehead p` (saat pages) | 4.48 | **7.14** |
+| `bank` `.urdu-toggle-row small` | 4.44 | **7.07** |
+| `plan` `.plan-note` | 4.48 | **7.14** |
+
+**Gate:** 275 deltas, **sab ek hi property** — 55 elements × paanch viewports, sirf
+`color: rgb(100,116,139) → rgb(71,85,105)` `<p>`, `<small>`, `<code>` aur `#pickNote`
+par. `landing`, `index`, `print` par 0. Koi drift nahi.
+
+### D26 — pehle se theek ho chuka tha, aur jo bacha wo alag cheez hai
+
+Row kehti thi `.brand small` navy sidebar par **3.04:1**. **Naap: `small.sidenav__brand-sub`
+saat pages par `rgb(128,146,176)` par hai aur **4.59:1 — PASS**.** Yani wo fix jo row ne
+tajweez kiya tha ("sidebar ek component ho jo apne text ke rang khud rakhe,
+`05-components/nav.css`, Sprint 4") **land kar chuka hai** (UI-068).
+
+Jo bacha wo ek element, ek page hai aur us ki wajah token nahi: **`blueprint` ka
+`.o-shell__brand small`, `pages/blueprint.css`:167 par `opacity: 0.7`.**
+
+```
+slate-500 + opacity 0.7  ->  2.72   (pehle)
+slate-600 + opacity 0.7  ->  3.59   (aaj, aur ab bhi fail)
+slate-600, opacity nahi  ->  7.58
+```
+
+**Yani poora farq `opacity: 0.7` ka hai, rang ka nahi.** Us ko hatana ek dikhne wali
+design tabdeeli hai (wo uppercase + letter-spaced + dimmed subtitle treatment hai), is
+liye ye D26 mein faisle ke liye chhora gaya — magar ab us ke paas ek line ka pata aur
+teen adad hain.
+
+**Naap:** 1083 pass, ruff saaf.
+
 ## 2026-09-05 — UI-091: paanch rows band — teen basi thin, do chhoti thin
 
 `DEFERRED.md` ki baqi rows par ek sweep chalayi ke "kya jaldi ho sakta hai". Naap ne

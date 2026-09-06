@@ -85,9 +85,19 @@ h6 {
   font-size: var(--text-heading-3);
 }
 
+/* ⚠ THE ROLE IS `-strong`, NOT `--color-text-muted`, AND THAT IS A MEASURED
+   CHOICE — D31/D41, UI-092. slate-500 was picked against the WHITE canvas and
+   clears AA there with ~0.26 to spare; on every slightly-tinted Tier 2 surface
+   it drops under. Measured with `scripts/css_contrast_probe.mjs` against the
+   PAINTED backdrop of each page, not against white:
+     canvas rgb(247,248,251)   4.48   surface-inset  4.34   tinted  4.44
+     white                     4.76   sunken         4.60
+   slate-600 clears all five at 6.92-7.58. `03-elements/forms.css`'s `label`
+   already moved for the same reason in UI-047e; these are the consumers that
+   row left behind. */
 small {
   font-size: var(--text-micro);
-  color: var(--color-text-muted);
+  color: var(--color-text-muted-strong);
 }
 
 /* The data / monospace role. --font-data resolves through --font-mono, which

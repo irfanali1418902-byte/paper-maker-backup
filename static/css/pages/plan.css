@@ -208,8 +208,12 @@
     background: var(--color-surface-sunken);
   }
 
+  /* D31/D41, UI-092 — `-strong`. Ye is page ka teesra consumer tha jise D31
+     ne ginaya hi nahi tha (wo row `small` aur `.pagehead p` kehti hai); 12px
+     par canvas rgb(247,248,251) ke saamne 4.48 naapa gaya. typography.css ka
+     `small` note poori taqseem rakhta hai. */
   .plan-note {
-    color: var(--color-text-muted);
+    color: var(--color-text-muted-strong);
     font-size: var(--text-label);
     padding: var(--space-inset);
     text-align: center;

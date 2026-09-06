@@ -30,6 +30,22 @@
 > hai (0 aage, 0 peechhe) — 09-04 ki shaam wo **241 aage** tha. **Yani is epic ka saara
 > kaam ab backup remote par mehfooz hai.** Aage ka hisaab yahin se shuru hota hai.
 >
+> ### ✅ UI-092 — WCAG: D41 aur D31 BAND, D26 ka symptom mojood hi nahi (2026-09-06)
+> **Naya auzaar:** `scripts/css_contrast_probe.mjs` — har text element ka ratio us
+> background ke saamne jo ASAL MEIN PAINT hota hai (ancestors par chal kar, opacity
+> composite kar ke). Token file kabhi nahi parhta. D26/D31/D41 teenon yehi maang rahi
+> thin aur kisi ke paas ye computation nahi thi. PROBES.md mein darj.
+> * **D41 ✅** `.pagehead p` 4.48 → **7.14**. ⚠ Row 2 pages kehti thi, naap **SAAT** kehti hai.
+> * **D31 ✅** `small` + `.pagehead p` + (**teesra, jo row mein tha hi nahi**) `.plan-note`
+>   sab `--color-text-muted-strong` par. `bank` ka tinted `small` 4.44 → **7.07**.
+> * **D26 ⚠ khuli, magar nayi shakl mein.** `small.sidenav__brand-sub` saat pages par
+>   **4.59 — PASS**; jo fix row ne tajweez kiya tha wo UI-068 mein land kar chuka hai.
+>   Bacha sirf `blueprint` ka brand subtitle, aur wajah **`opacity: 0.7`** hai, token nahi:
+>   slate-600 + 0.7 = 3.59, **opacity ke baghair 7.58**. Faisla Irfan ka.
+> **Gate:** 275 deltas, sab ek hi property (55 elements × 5 viewports, sirf `color`).
+> ⚠ **Probe ka `TOTAL` do runs ke beech qabil-e-muqabla NAHI** — `bank` ki text ginti
+>   3168 → 85 ho gayi (list load nahi hui thi). Per element diff karo, ginti se nahi.
+>
 > ### ✅ UI-091 — PAANCH AUR ROWS BAND: D9, D15, D19, D20, D24
 > `DEFERRED.md` par "kya jaldi ho sakta hai" wali sweep. **Teen rows BASI nikleen**
 > (D43 wali shakl — kaam ho chuka tha, row khuli reh gayi thi): **D9** (`theme.css`
