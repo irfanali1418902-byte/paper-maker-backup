@@ -81,6 +81,56 @@ maangta hai. `agree` ka bila-faisla hissa **khatam** ho chuka.
 
 ---
 
+## AAGE KA PLAN — session ke hisaab se (Irfan, 2026-09-06)
+
+**Tarteeb ka usool: pehle wo jo TEACHER tak pahunchta hai, phir product, phir andar ki
+safai.** Aaj product PRD ke hisaab se ~95% mukammal hai — is ka matlab ye hai ke **ab
+sab se bara faida naya code likhne se nahi, is ko school ke computer par chalane se
+aata hai.**
+
+### Session 1 — PY1 ke baqi 6 topics *(chhota, magar quota ka mohtaj)*
+Bank ka waahid hissa jo aaj seed ho sakta hai. Quota rozana ~20–25 topics deti rahi
+hai, to **ek run kaafi hai.** Backup sqlite backup API se (WAL-safe), `python -u`,
+tail parho. **Seeding ke foran baad `marks <> 1` wala check chalao** (HANDOFF ke
+"jo abhi chal sakta hai" §1 mein poori query hai). Is ke baad bank ke asal topics
+**266/266** ho jayenge.
+
+### Session 2 — SCHOOL PC PAR CHALAO *(sab se zyada qeemat, aur ye code ka kaam nahi)*
+`Dockerfile` mojood hai aur `docs/SETUP-LOCAL.md` poora deployment guide hai — 20
+teachers, ek school PC, LAN par, offline. **Magar likha hua guide aur chalta hua system
+do alag cheezein hain.** Is session ka maqsad: guide ke qadam asal machine par chala kar
+dekhna kahan tootta hai — Python, `.env`, DB ka path, Nastaliq font, LAN address,
+firewall, aur teacher ka Ctrl+P.
+⚠ `SETUP-LOCAL.md`:80 ki chetawni: agar DB path ghalat ho to app **khali database bana
+leti hai** aur school ko khali dikhti hai. **Ye session Irfan ke saath, us machine par
+hona chahiye** — is mein AI ka hissa kam, mojoodgi ka zyada hai.
+
+### Session 3 — Repo hygiene: D2 + D10 *(tez, destructive, "go" chahiye)*
+22 stale branches, aur repo root mein **26** `.db`/`.zip` files. Ek `chore` session,
+CSS epic se bilkul alag. ⚠ **Backup DB delete karne se pehle Irfan se poochho** — kuch
+retention par hain.
+
+### Session 4 — R8 ka bacha hua aadha: per-student paper
+Product ka **waahid** khula kaam. Per-student results ka poora raasta mojood aur tested
+hai; paper ab bhi poori class ke bloom-weakness se banta hai. **Pehla sawal code ka
+nahi hai:** ek teacher 25 alag parche kaise chhapega aur kya wo asal mein chahta hai?
+Jawab pata chalne se pehle likhna ulta hoga.
+
+### Musalsal — CSS ke 30 khule rows *(batch mein, faisle ke saath)*
+Bara hissa `disagree` ke ~50 rules par khara hai aur **har ek Irfan ka faisla maangta
+hai, waqt nahi.** Behtar tareeqa: ek session mein **ek family** uthao (rang, ya spacing,
+ya buttons), sab naap kar do-teen sawal ek saath poochho, phir laago karo. Isi tareeqe
+se 09-05/06 ko chaudah rows band huin.
+
+### RUKA HUA — 44 jaali syllabus topics *(Irfan ke baghair nahi chal sakta)*
+`Math G5`, `Math G6`, `Science G7`, `Geography G8` — chaaron mein wohi 11 Grade-4 maths
+topics hain. **Import ka raasta mojood aur tested hai (R9, PDF + OCR fallback); jo nahi
+hai wo asal syllabus ki PDF/Excel hai.** Jab tak wo na aaye, ye rows sirf intezar hain —
+aur in ko seed karna **mana** hai (Geography par ye ho chuka aur 44 sawal delete karne
+pare).
+
+---
+
 ## Auzaar — kaun sa sawal kis se poochha jata hai
 
 `docs/ui/PROBES.md` mein poori list aur usage hai. Sab ko app chalti chahiye
