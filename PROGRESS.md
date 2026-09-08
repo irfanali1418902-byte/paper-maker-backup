@@ -1,5 +1,73 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-109: key-gate jhoot bolta tha — sahi key ko ghalat kehta tha
+
+**Irfan ne UI-108 check karte waqt kaha: *"key mange raha hai, jo maine daala wo
+ghalat hai."* Key ghalat nahi thi. Paighaam jhoota tha.**
+
+### Naap, andaze se pehle
+
+Teen cheezein alag alag jaanchi gayin, aur teenon theek nikleen:
+
+- `.env` ki key seedhe server par — `curl -H "x-api-key: ..."` → **HTTP 200**
+- `.env` ki line ka khaam matn (`cat -A`) — koi quote nahi, koi trailing space
+  nahi, koi `^M` nahi, 48 harf
+- jo clipboard command maine di thi, wo bhi chala kar dekhi — **48 harf, sahi**
+
+Phir gate ka poora flow headless Edge par dohraya gaya (asli server, auth ON):
+page kholo → gate mein key type karo → Save dabao. Natija: **andar, `key
+length = 48`, Lock button mojood.** Yani code theek tha.
+
+### Asal bug, jo usi repro ki PEHLI line mein saaf tha
+
+```
+1. page khula (koi key nahi) : msg: "Key ghalat ya missing hai — dobara daalein."
+```
+
+`apiFetch` ka `401` handler har soorat mein **ek hi jumla** deta tha. Yani jis
+banday ne **abhi tak koi key daali hi nahi**, use bhi bataya jata tha ke **us ki
+key GHALAT hai**. Irfan ne pehli dafa page khola, ye ilzaam dekha, key daali, aur
+maqool tor par samjha ke wo rad ho gayi.
+
+Ab paighaam do haalaton ka farq karta hai — aur farq `key` par hai, wo qeemat jo
+**is call ke waqt mojood thi**, is liye bharosay ke qabil hai:
+
+| kab | pehle | ab |
+|---|---|---|
+| koi key daali hi nahi | "Key **ghalat** ya missing hai" | "Is tool ko use karne ke liye apni key daalein." |
+| waqai ghalat key | "Key ghalat ya missing hai" | "**Key ghalat hai** — dobara daalein." |
+
+### Gate — aur probe ab DO PHASE ka hai
+
+`auth_lock_probe.mjs` phase 1 mein jaan-boojh kar **auth OFF** rakhta hai, warna
+gate ki wajah alag nahi ki ja sakti (401 ka gate lock ke gate jaisa hi dikhta
+hai). Magar isi wajah se wo **401 ka paighaam dekh hi nahi sakta tha** — yehi
+khala is bug ko ship hone de gaya.
+
+Ab **phase 2** hai: doosra server, port 8013, ek maloom test key ke saath, aur
+teen naye case — koi key nahi (ilzaam na de), waqai ghalat key (saaf kahe), aur
+sahi key (gate band). Teesra is liye zaroori hai ke ye sabit kare ke upar wale do
+**sirf paighaam** ka farq hain, kisi tooti hui auth ka nateeja nahi.
+
+**7/7 pass** (pehle 4/4).
+
+### Sabaq, jo is epic mein pehle bhi aa chuka hai
+
+UI-108 ka apna probe **chaar** case par green tha aur ye bug phir bhi zinda tha —
+kyunke probe ne wo **haalat** dekhi hi nahi thi jis mein bug rehta tha. Adad green
+hone ka matlab "sab theek hai" nahi, "jo naapa gaya wo theek hai" hota hai. Isi
+epic mein `css_shot.mjs` (UI-101) theek isi wajah se bana tha.
+
+**Aur ek baat jo Irfan ke liye ahem hai:** ye bug kisi metric, kisi test, kisi
+probe ne nahi pakra — **istemal karne wale ne pakra**, pehli hi koshish mein.
+
+### Adad
+
+- `auth_lock_probe.mjs` **7/7**, ruff saaf. pytest ko koi asar nahi (JS badla)
+- Chhua: `static/apiClient.js`, `scripts/auth_lock_probe.mjs`
+- ⚠ **Browser `apiClient.js` cache karta hai** — check karne se pehle
+  `Ctrl+Shift+R`, warna purani file chalti rehti hai
+
 ## 2026-09-08 — UI-108: idle auto-lock — shared school PC ka surakh band
 
 Irfan ka sawal tha: *"es ma authentication ka koye tariqakar nahe ha."* Ye baat

@@ -143,9 +143,21 @@ async function apiFetch(url, opts = {}) {
     Object.assign({ cache: "no-store" }, opts, { headers }),
   );
   if (res.status === 401) {
+    // ⚠ PAIGHAAM DO ALAG HAALTON KA FARQ KARTA HAI, AUR PEHLE NAHI KARTA THA.
+    // Pehle har 401 par ek hi jumla aata tha: "Key ghalat ya missing hai".
+    // Yani jis banday ne ABHI TAK KOI KEY DAALI HI NAHI, use bhi ye bataya
+    // jata tha ke us ki key GHALAT hai. Irfan 2026-09-08 ko theek isi par
+    // atka -- key sahi thi, paighaam jhoota tha, aur wo key ko qusoorwar
+    // samjhe. `key` yahan wo qeemat hai jo is call ke waqt MOJOOD thi, is
+    // liye ye farq bharosay ke qabil hai.
+    const thi = !!key;
     pmDrop(PM_KEY_STORAGE);
     pmDrop(PM_SEEN_STORAGE);
-    pmShowKeyGate("Key ghalat ya missing hai — dobara daalein.");
+    pmShowKeyGate(
+      thi
+        ? "Key ghalat hai — dobara daalein."
+        : "Is tool ko use karne ke liye apni key daalein.",
+    );
   }
   return res;
 }

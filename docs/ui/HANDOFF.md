@@ -7,13 +7,46 @@
 
 ---
 
+## 🆕 NAYA CHAT YAHAN SE SHURU KARO
+
+Teen file, isi tarteeb mein: **ye file** (kal ka kaam), phir **`PROGRESS.md` ki
+pehli teen entries** (UI-107/108/109 — sab se taaza pehle), phir
+**`DEFERRED.md` ki `D68` aur `D69`** (jo khula hai).
+
+**Jahan hum ruke:**
+
+| | |
+|---|---|
+| Design | **khatam** — das ke das pages Panze par (UI-098–105) |
+| School ke faisle | **ho chuke** (UI-107) |
+| Auth | **auto-lock live** (UI-108), gate ka paighaam theek (UI-109) |
+| Asli login | **nahi hua — `D68`**, scope Irfan ne chun liya |
+| Agla bara kaam | **school PC deployment**, neeche 9 qadam |
+
+**Teen cheezein jo naye chat ko foran maloom honi chahiyen:**
+
+1. **`D68` = asli authentication abhi baqi hai.** Jo hua wo sirf auto-lock hai —
+   shared PC ka surakh band, magar system ko ab bhi nahi pata ke banda **kaun**
+   hai. Koi role nahi, koi audit trail nahi.
+2. **`D69` = "My Papers" khulte hi khali dikhta hai.** Teacher ki pehli screen.
+   Purana bug hai, design ka nahi — magar kal wahi pehla taassur banega.
+3. **Push baqi hai.** `backup/master` peechay hai; **school wahi clone karega.**
+
+---
+
 ## ⏭ KAL KA KAAM — SCHOOL PC (2026-09-09)
 
 **Design ka poora kaam khatam ho chuka hai** (das ke das pages Panze par, UI-098
-se UI-105). **School ke dono faisle ho chuke hain** (UI-107). Jo bacha wo is
-machine par ho hi nahi sakta — wo us PC par karna hai.
+se UI-105). **School ke dono faisle ho chuke hain** (UI-107), aur auth par ab
+idle auto-lock bhi hai (UI-108/109). Jo bacha wo is machine par ho hi nahi sakta
+— wo us PC par karna hai.
 
-**Pehle `docs/SETUP-LOCAL.md` kholo, phir us ka §10b** — wahan table hai ke kya
+⚠ **Sab se pehla qadam PC par jaane se PEHLE hai: PUSH KARO.** School
+`paper-maker-backup` clone karega. Wo remote is waqt peechay hai — bina push ke
+school ko wo app milegi jis mein na Panze design hai, na auth ka kaam.
+(`git log --oneline backup/master..HEAD | wc -l` se ginti dekh lo.)
+
+**Phir `docs/SETUP-LOCAL.md` kholo, phir us ka §10b** — wahan table hai ke kya
 yahan aazmaya gaya aur kya nahi.
 
 ### Us PC par, isi tarteeb mein
@@ -41,6 +74,14 @@ yahan aazmaya gaya aur kya nahi.
 9. **Topbar mein `Lock` button dikhna chahiye** (UI-108, `EN/اردو` toggle ke
    baayen). Wo sirf tab aata hai jab key waqai daali ja chuki ho — yani us ka
    nazar aana khud is baat ki tasdeeq hai ke auth chal rahi hai.
+
+⚠ **Key gate mein sirf `=` ke baad wala hissa paste karna hai.** Poori line
+(`PAPER_MAKER_API_KEY=...`) paste ho jaye to key ghalat ban jati hai. Key 48
+harf ki hai.
+
+⚠ **`D69` — "My Papers" pehli dafa khali dikhega.** Ye toota hua nahi hai; list
+tab bharti hai jab rail mein "My Papers" dabaya jaye ya "Refresh". Agar kal se
+pehle theek na ho to teacher ko ye ek baat bata dena.
 
 ### ⚠ Teachers ko ye ek baat batani hai
 

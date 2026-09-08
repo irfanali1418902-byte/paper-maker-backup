@@ -1,27 +1,44 @@
 /* =========================================================================
-   auth_lock_probe.mjs — IDLE AUTO-LOCK KA GATE.
+   auth_lock_probe.mjs — IDLE AUTO-LOCK AUR KEY-GATE KA GATE.
 
    KYUN YE FILE MOJOOD HAI. `tests/test_auth.py` ka apna usool yahan bhi lagta
    hai, harf ba harf: *"ek boundary jise koi gate nahi dekhta, wo agle refactor
    mein khamoshi se khul sakti hai — aur khulne par kuch bhi fail nahi hoga."*
-   Auto-lock (2026-09-08) poori tarah client-side hai, aur is repo mein JS ka
-   koi test harness nahi (`package.json` tak nahi). To pytest ise nahi dekh
-   sakta. Bina is probe ke `static/apiClient.js` ka koi bhi refactor lock ko
-   chup-chaap mar sakta hai aur har adad phir bhi green rehta.
+   Auto-lock (UI-108) poori tarah client-side hai, aur is repo mein JS ka koi
+   test harness nahi (`package.json` tak nahi). To pytest ise nahi dekh sakta.
 
-   ⚠ YE APNA SERVER KHUD CHALATA HAI, AUTH OFF KAR KE. Do wajah:
-     1. Auth ON ho to har page load 401 par gate khol deta hai — aur phir probe
-        ye farq nahi kar sakta ke gate LOCK ki wajah se aaya ya 401 ki wajah se.
-        Auth off rakhne se gate ki EK hi mumkin wajah bachti hai: idle lock.
-     2. 2026-09-08 ka sabaq: jis din `.env` mein key aayi, poore 1,106 tests
-        `assert 401 == 200` par gir gaye kyunke suite developer ki `.env` par
-        munhasir thi. `tests/conftest.py` ko hermetic banaya gaya tha; ye file
-        wahi qaida shuru se maanti hai.
+   DO PHASE, AUR YE JAAN-BOOJH KAR HAI:
+
+   · PHASE 1 — AUTH OFF. Lock ke chaar case. Auth ON ho to har page load 401
+     par gate khol deta hai, aur phir probe ye farq nahi kar sakta ke gate LOCK
+     ki wajah se aaya ya 401 ki wajah se. Auth off rakhne se gate ki EK hi
+     mumkin wajah bachti hai: idle lock.
+
+   · PHASE 2 — AUTH ON, ek maloom test key ke saath. Gate ke PAIGHAAM ke do
+     case, jo phase 1 mein mumkin hi nahi kyunke wahan 401 aata hi nahi.
+
+   PHASE 2 KI ASAL KAHANI, taake koi ise "sirf matn ka test" samajh kar na
+   hataye: 2026-09-08 ko Irfan ne kaha *"key mange raha hai, jo maine daala wo
+   ghalat hai."* Key ghalat nahi thi — naap kar dekha, wohi key `curl` par 200
+   deti thi aur gate ke poore flow se andar bhi le jati thi. Jhoot PAIGHAAM
+   bol raha tha: har 401 par ek hi jumla aata tha, "Key ghalat ya missing hai",
+   is liye jis banday ne abhi tak koi key daali hi NAHI thi use bhi bataya jata
+   tha ke us ki key GHALAT hai. Wo ek jumla ek sahi key ko do dafa qusoorwar
+   thehra chuka hai.
+
+   ⚠ DONO SERVER YE FILE KHUD CHALATI HAI. UI-107 ka sabaq: jis din `.env`
+   mein key aayi, poore 1,106 tests `assert 401 == 200` par gir gaye kyunke
+   suite developer ki `.env` par munhasir thi. Yahan `PAPER_MAKER_API_KEY`
+   hamesha saaf tay ki jati hai -- phase 1 mein khali, phase 2 mein test key --
+   aur khali qeemat unset se alag hai: khali bhi `os.environ` mein MOJOOD
+   ginti hai, aur `load_dotenv(override=False)` sirf wahi naam bharta hai jo
+   environ mein na ho. Is tarah `.env` ki asli key kisi phase par nahi aati.
 
    USAGE
-     node scripts/auth_lock_probe.mjs
+     node scripts/auth_lock_probe.mjs [--shot <dir>]
 
-   Kuch chalta hua nahi chahiye — port 8011 khud le leta hai. Exit 0 = sab pass.
+   Kuch chalta hua nahi chahiye — ports 8011 aur 8013 khud le leta hai.
+   Exit 0 = sab pass.
    ========================================================================= */
 
 import { spawn } from 'node:child_process';
@@ -30,25 +47,39 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const PORT = 8011;
-const PAGE = `http://127.0.0.1:${PORT}/static/index.html`;
+const PORT_OFF = 8011; // auth OFF  — lock ke cases
+const PORT_ON = 8013; // auth ON   — paighaam ke cases
+const TEST_KEY = 'probe-server-key-sirf-yahan';
 const PY = '.venv\\Scripts\\python.exe';
 const IDLE_MS = 30 * 60 * 1000;
 const SHOT = process.argv.includes('--shot')
   ? process.argv[process.argv.indexOf('--shot') + 1]
   : null;
 
+const pageUrl = (port) => `http://127.0.0.1:${port}/static/index.html`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ── server, auth OFF ────────────────────────────────────────────────────────
-// PAPER_MAKER_API_KEY ko khali string par set karte hain, unset NAHI: khali bhi
-// os.environ mein MOJOOD ginti hai, aur `load_dotenv()` (override=False) sirf
-// wahi naam bharta hai jo environ mein na ho. Is tarah `.env` ki asli key —
-// jo Irfan ne 2026-09-08 ko daali — is probe par nahi aati.
-const server = spawn(PY, ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(PORT)],
-  { env: { ...process.env, PAPER_MAKER_API_KEY: '' }, stdio: ['ignore', 'ignore', 'pipe'] });
-let serverErr = '';
-server.stderr.on('data', (d) => { serverErr += d.toString(); });
+// ── servers ─────────────────────────────────────────────────────────────────
+const servers = [];
+function startServer(port, key) {
+  const p = spawn(PY, ['-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', String(port)],
+    { env: { ...process.env, PAPER_MAKER_API_KEY: key }, stdio: ['ignore', 'ignore', 'pipe'] });
+  p.err = '';
+  p.stderr.on('data', (d) => { p.err += d.toString(); });
+  servers.push(p);
+  return p;
+}
+async function waitFor(port, proc) {
+  for (let i = 0; i < 150; i++) {
+    try { const r = await fetch(pageUrl(port)); if (r.ok) return; } catch { /* abhi nahi */ }
+    if (proc.exitCode !== null) break;
+    await sleep(200);
+  }
+  throw new Error(`uvicorn nahi utha (port ${port})\n` + proc.err.slice(-1500));
+}
+
+const srvOff = startServer(PORT_OFF, '');
+const srvOn = startServer(PORT_ON, TEST_KEY);
 
 const userDataDir = mkdtempSync(join(tmpdir(), 'lock-edge-'));
 const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--no-first-run',
@@ -58,7 +89,7 @@ const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--no-first-run',
 
 function cleanup() {
   try { edge.kill('SIGKILL'); } catch { /* gone */ }
-  try { server.kill('SIGKILL'); } catch { /* gone */ }
+  for (const s of servers) { try { s.kill('SIGKILL'); } catch { /* gone */ } }
   try { rmSync(userDataDir, { recursive: true, force: true }); } catch { /* locked */ }
 }
 process.on('exit', cleanup);
@@ -96,41 +127,44 @@ async function evaluate(sessionId, expression) {
   return r.result.value;
 }
 
-// Page load par apiClient ka `pmInit` chalta hai; DOMContentLoaded ke baad ek
-// chhota sa saans, taake gate/button DOM mein aa chuke hon.
-async function loadPage(sessionId) {
+// Page load par apiClient ka `pmInit` chalta hai; load ke baad ek chhota sa
+// saans, taake gate/button DOM mein aa chuke hon aur pehli `apiFetch` lauth aaye.
+async function loadPage(sessionId, port) {
   const loaded = onceEvent('Page.loadEventFired', sessionId);
-  await send('Page.navigate', { url: PAGE }, sessionId);
+  await send('Page.navigate', { url: pageUrl(port) }, sessionId);
   await loaded;
-  await sleep(400);
+  await sleep(700);
 }
 
-// Wahi teen sawal jo har case poochhta hai.
+// Wahi sawal jo har case poochhta hai.
 const STATE = `({
   key:   !!localStorage.getItem('pm_api_key'),
   gate:  (() => { const g = document.getElementById('pm-key-gate');
                   return !!g && g.style.display !== 'none'; })(),
   lock:  !!document.querySelector('.pz-lock'),
+  msg:   (document.getElementById('pm-key-msg') || {}).textContent || '',
 })`;
 
 const results = [];
+const fmt = (s) => `key=${s.key ? 'hai' : 'nahi'} gate=${s.gate ? 'khula' : 'band'} lock-btn=${s.lock ? 'hai' : 'nahi'}`;
+
 function check(name, got, want) {
   const ok = got.key === want.key && got.gate === want.gate && got.lock === want.lock;
-  results.push({ name, ok, got, want });
-  const fmt = (s) => `key=${s.key ? 'hai' : 'nahi'} gate=${s.gate ? 'khula' : 'band'} lock-btn=${s.lock ? 'hai' : 'nahi'}`;
+  results.push({ name, ok });
   console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}`);
-  if (!ok) console.log(`        mila:   ${fmt(got)}\n        chahiye: ${fmt(want)}`);
+  if (!ok) console.log(`        mila:    ${fmt(got)}\n        chahiye: ${fmt(want)}`);
+}
+
+function checkMsg(name, got, wantSub) {
+  const ok = got.gate && got.msg.includes(wantSub);
+  results.push({ name, ok });
+  console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}`);
+  if (!ok) console.log(`        gate=${got.gate ? 'khula' : 'BAND'}  paighaam: ${JSON.stringify(got.msg)}\n        chahiye jis mein ho: ${JSON.stringify(wantSub)}`);
 }
 
 async function main() {
-  // server uthne ka intezar
-  let up = false;
-  for (let i = 0; i < 150; i++) {
-    try { const r = await fetch(PAGE); if (r.ok) { up = true; break; } } catch { /* abhi nahi */ }
-    if (server.exitCode !== null) break;
-    await sleep(200);
-  }
-  if (!up) throw new Error('uvicorn nahi utha (port ' + PORT + ')\n' + serverErr.slice(-1500));
+  await waitFor(PORT_OFF, srvOff);
+  await waitFor(PORT_ON, srvOn);
 
   const portFile = join(userDataDir, 'DevToolsActivePort');
   let port;
@@ -147,21 +181,23 @@ async function main() {
   await send('Page.enable', {}, sessionId);
   await send('Runtime.enable', {}, sessionId);
 
+  // ── PHASE 1: auth OFF — lock ────────────────────────────────────────────
+  console.log('\n  Phase 1 — auth OFF (lock ka amal)\n');
+
   // origin par pahunche baghair localStorage likha nahi ja sakta
-  await loadPage(sessionId);
+  await loadPage(sessionId, PORT_OFF);
 
   // 1 — TAAZA KEY: kuch lock na ho, aur Lock button mojood ho.
   await evaluate(sessionId, `localStorage.setItem('pm_api_key','probe-key');
     localStorage.setItem('pm_api_key_seen', String(Date.now())); true`);
-  await loadPage(sessionId);
+  await loadPage(sessionId, PORT_OFF);
   check('taaza key — khuli rehti hai, Lock button aata hai',
     await evaluate(sessionId, STATE), { key: true, gate: false, lock: true });
 
   // `--shot <dir>`: `.pz-lock` ka wajood `querySelector` se sabit ho jata hai,
   // magar wo ye nahi batata ke button DIKHTA kaisa hai -- theek jagah baitha hai
-  // ya topbar tod raha hai. 2026-09-08 ka sabaq (`scripts/css_shot.mjs` ka
-  // header) yahan bhi lagta hai: adad green ho sakte hain aur page phir bhi
-  // toota ho. Ye naap nahi hai, dekhne ke liye hai.
+  // ya topbar tod raha hai. UI-101 ka sabaq (`scripts/css_shot.mjs` ka header)
+  // yahan bhi lagta hai. Ye naap nahi hai, dekhne ke liye hai.
   if (SHOT) {
     mkdirSync(SHOT, { recursive: true });
     const shot = await send('Page.captureScreenshot', { format: 'png' }, sessionId);
@@ -175,25 +211,51 @@ async function main() {
   // load par khulna chahiye (60s wale interval ka intezar nahi).
   await evaluate(sessionId, `localStorage.setItem('pm_api_key','probe-key');
     localStorage.setItem('pm_api_key_seen', String(Date.now() - ${IDLE_MS + 60000})); true`);
-  await loadPage(sessionId);
+  await loadPage(sessionId, PORT_OFF);
   check('31 min purani key — mit jati hai, gate foran khulta hai',
     await evaluate(sessionId, STATE), { key: false, gate: true, lock: false });
 
   // 3 — DEV MODE: key hi nahi. Teacher ko aisa button nahi dikhna chahiye jo
   // kuch na kare, aur gate bhi nahi (server par auth off hai).
   await evaluate(sessionId, `localStorage.clear(); true`);
-  await loadPage(sessionId);
+  await loadPage(sessionId, PORT_OFF);
   check('koi key nahi (dev) — na gate, na Lock button',
     await evaluate(sessionId, STATE), { key: false, gate: false, lock: false });
 
   // 4 — HAATH SE LOCK: PC chhorne se pehle wala rasta.
   await evaluate(sessionId, `localStorage.setItem('pm_api_key','probe-key');
     localStorage.setItem('pm_api_key_seen', String(Date.now())); true`);
-  await loadPage(sessionId);
+  await loadPage(sessionId, PORT_OFF);
   await evaluate(sessionId, `document.querySelector('.pz-lock').click(); true`);
   await sleep(200);
   check('Lock button dabaya — key foran jati hai, gate khulta hai',
     await evaluate(sessionId, STATE), { key: false, gate: true, lock: true });
+
+  // ── PHASE 2: auth ON — gate ka paighaam ─────────────────────────────────
+  console.log('\n  Phase 2 — auth ON (gate kya KEHTA hai)\n');
+
+  // 5 — PEHLI BAAR AANE WALA. Is ne koi key daali hi nahi, is liye ise ghalti
+  // ka ilzaam nahi milna chahiye. Yehi wo case hai jis par Irfan atka tha.
+  await loadPage(sessionId, PORT_ON);
+  await evaluate(sessionId, `localStorage.clear(); true`);
+  await loadPage(sessionId, PORT_ON);
+  checkMsg('koi key daali hi nahi — paighaam ILZAAM na de',
+    await evaluate(sessionId, STATE), 'apni key daalein');
+
+  // 6 — WAQAI GHALAT KEY: ab ilzaam theek hai, aur wo saaf hona chahiye.
+  await evaluate(sessionId, `localStorage.setItem('pm_api_key','ye-key-ghalat-hai');
+    localStorage.setItem('pm_api_key_seen', String(Date.now())); true`);
+  await loadPage(sessionId, PORT_ON);
+  checkMsg('waqai ghalat key — paighaam saaf kahe ke key ghalat hai',
+    await evaluate(sessionId, STATE), 'Key ghalat hai');
+
+  // 7 — SAHI KEY: gate band, andar. Ye sabit karta hai ke phase 2 ke upar wale
+  // do case sirf paighaam ka farq hain, kisi tooti hui auth ka nateeja nahi.
+  await evaluate(sessionId, `localStorage.setItem('pm_api_key',${JSON.stringify(TEST_KEY)});
+    localStorage.setItem('pm_api_key_seen', String(Date.now())); true`);
+  await loadPage(sessionId, PORT_ON);
+  check('sahi key (auth ON) — gate band, andar',
+    await evaluate(sessionId, STATE), { key: true, gate: false, lock: true });
 
   await send('Target.closeTarget', { targetId });
 
