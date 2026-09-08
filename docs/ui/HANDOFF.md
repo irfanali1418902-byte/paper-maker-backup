@@ -1,4 +1,4 @@
-# Handoff — 2026-09-06
+# Handoff — 2026-09-08 (school PC ka kaam kal, 09-09)
 
 > **Ye file 2026-09-06 ko poori tarah nayi likhi gayi.** Is se pehle yahan 20 Agast ka
 > handoff tha jis par 31 Agast ko "YE FILE BASI HAI" ka banner laga diya gaya aur wo
@@ -6,6 +6,58 @@
 > kiya** — aur agli dafa bhi yehi karna.
 
 ---
+
+## ⏭ KAL KA KAAM — SCHOOL PC (2026-09-09)
+
+**Design ka poora kaam khatam ho chuka hai** (das ke das pages Panze par, UI-098
+se UI-105). **School ke dono faisle ho chuke hain** (UI-107). Jo bacha wo is
+machine par ho hi nahi sakta — wo us PC par karna hai.
+
+**Pehle `docs/SETUP-LOCAL.md` kholo, phir us ka §10b** — wahan table hai ke kya
+yahan aazmaya gaya aur kya nahi.
+
+### Us PC par, isi tarteeb mein
+
+1. **Clone karo** — `paper-maker-backup` (guide step 2). ⚠ **`paper-maker-mvp`
+   NAHI** — wo alag lineage hai, us mein ye kaam hai hi nahi.
+2. **`.venv` + `pip install -r requirements.txt`** (ek dafa internet chahiye).
+3. **`C:\PaperMakerData\` banao** aur **aaj chalti hui `paper_maker.db`** us mein
+   copy karo. Naam `paper_maker.db` hi rakhna.
+4. **`.env` banao** — `.env.example` ki copy. Teen lines chahiyen:
+   `DB_PATH`, `PAPER_MAKER_API_KEY`, `GEMINI_API_KEY`.
+   ⚠ **Key is machine ki `.env` mein mojood hai** (gitignored, kabhi commit nahi
+   hui). Wahi qeemat school PC par le jani hai, warna teachers ki saved key
+   kaam nahi karegi.
+5. **Firewall rule** — guide step 6, admin PowerShell mein ek dafa.
+   **Bina is ke teachers connect NAHI kar payenge.**
+6. **`start-school.bat`** — wo chaaron cheezein khud check karta hai (venv, DB
+   file ka hona, API key, firewall) aur phir LAN IP dikha kar chalta hai.
+7. **DOOSRE DEVICE SE** `http://<server-IP>:8000` kholo — phone ya kisi aur
+   laptop se. ⚠ **Ye qadam chhorna mat:** is machine par sirf **binding** naapi
+   gayi hai (server ne apne hi LAN IP par khud ko check kiya), **firewall se
+   guzarna nahi.**
+8. Us device par ek dafa **Access key** daalo, phir ek **parcha khol kar Ctrl+P**
+   karo — wahi cheez teacher ke haath mein jati hai.
+
+### Jo yahan pehle se sabit hai (dobara mat naapo)
+
+* **LAN serving chalti hai** — `0.0.0.0` par bind hone par LAN IP se pages **aur**
+  `/api` dono 200 dete hain.
+* **Auth theek chal raha hai** — bina key 401, sahi key 200, ghalat key 401, aur
+  `/static` phir bhi khula (teacher app load kar ke key daalta hai). `tests/
+  test_auth.py` ke 8 tests is ko gate par rakhte hain.
+* **`DB_PATH` ka khatra asli hai** — typo'd path chup-chaap resolve ho jata hai
+  aur khali DB ban jati hai. `start-school.bat` is ko pakadta hai.
+
+### Jo abhi tak UNTESTED hai
+
+* **Docker** — is machine par install hi nahi. Aur `Dockerfile` port **8080** par
+  hai jab ke guide/launcher **8000** par; container chalao to `-p 8000:8080`.
+* **Doosre device se connect** — qadam 7, ooper.
+* **Nastaliq font** school PC par — Urdu chhapne ke liye zaroori (guide step 1).
+
+---
+
 
 ## Naya chat yahan se shuru karo
 
@@ -37,9 +89,9 @@
 
 ```
 git            HEAD 30ee89a · working tree saaf · backup/master ke BARABAR (0 aage)
-tests          1,083 pass · ruff saaf
-DB             integrity ok · 1,238 sawal · 310 topics · asal topics 266/266 ✅
-CSS            legacy_css_lines 1601 (target 1450) · unsanctioned_hex 298
+tests          1,106 pass · ruff saaf
+DB             integrity ok · 1,238 sawal · teenon Pre Year grades 100%
+CSS            das ke das pages PANZE design par (UI-098..105) · unsanctioned_hex 297
 gate           das pages x paanch viewports · drift 0
 DEFERRED       44 rows · 14 band · 30 khuli
 ```
@@ -95,7 +147,7 @@ tail parho. **Seeding ke foran baad `marks <> 1` wala check chalao** (HANDOFF ke
 "jo abhi chal sakta hai" §1 mein poori query hai). Is ke baad bank ke asal topics
 **266/266** ho jayenge.
 
-### Session 2 — SCHOOL PC PAR CHALAO *(sab se zyada qeemat, aur ye code ka kaam nahi)*
+### ~~Session 2 — SCHOOL PC PAR CHALAO~~ ▶ **KAL, 2026-09-09 — tafseel is file ke SHURU mein**
 `Dockerfile` mojood hai aur `docs/SETUP-LOCAL.md` poora deployment guide hai — 20
 teachers, ek school PC, LAN par, offline. **Magar likha hua guide aur chalta hua system
 do alag cheezein hain.** Is session ka maqsad: guide ke qadam asal machine par chala kar
