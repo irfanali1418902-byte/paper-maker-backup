@@ -53,6 +53,15 @@
     padding: 16px;
     min-height: 100vh;
     background: var(--panze-bg);
+    /* ⚠ `width: 100%` AUR `flex: 1` DONO LAZMI HAIN, AUR YE SCREENSHOT SE PAKRA
+       GAYA -- kisi adad se nahi. Chhe pages apni `body` ko `display: flex`
+       dete hain (`pages/<page>.css` ke `@layer objects` mein, UI-077 ka
+       namoona). Us soorat mein `.pz-wrap` ek FLEX ITEM ban jata hai aur apne
+       content jitna sikur jata hai: `print` par board sirf 657px chaura raha
+       aur baqi content board se BAHAR grey par nikal gaya. `css_type_probe`
+       ne ye nahi pakra kyunke har rang aur har token theek tha. */
+    width: 100%;
+    flex: 1;
   }
 
   .pz-board {
@@ -176,6 +185,13 @@
     color: var(--panze-muted);
     background: transparent;
     box-shadow: none;
+  }
+
+  /* Mockup rail icons 19px par rakhta hai; `icon.css` ka mushtarka 17px hai.
+     Screenshot par 17px board ke grey par bohat halka lagta tha. */
+  .pz-rail .sidenav__link .icon {
+    width: 19px;
+    height: 19px;
   }
 
   .pz-rail .sidenav__link:hover {

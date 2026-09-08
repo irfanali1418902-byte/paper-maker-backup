@@ -441,34 +441,50 @@
    lang toggle (jo sirf index par hai), brand ka tag, aur `.content` wrapper.
    --------------------------------------------------------------------------- */
 @layer components {
-  .pz-logo .tag {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--panze-muted);
-  }
-
-  .pz-top .lang-toggle {
-    border-color: var(--panze-line);
-    margin: 0;
-  }
-
-  .pz-top .lang-toggle button:not([data-active="1"]) {
-    color: var(--panze-ink-2);
-  }
-
-  .pz-top .lang-toggle button[data-active="1"] {
-    background: var(--panze-coal);
-  }
-
-  .pz-logo .tag {
-    background: none;
-    color: var(--panze-ink-2);
-  }
-
-  .pz-body .content {
-    padding: 0;
-    max-width: none;
-  }
-}
+  .pz-top .lang-toggle {
+    border-color: var(--panze-line);
+    margin: 0;
+  }
+
+  .pz-top .lang-toggle button:not([data-active="1"]) {
+    color: var(--panze-ink-2);
+  }
+
+  .pz-top .lang-toggle button[data-active="1"] {
+    background: var(--panze-coal);
+  }
+
+  /* Brand ka tag. Do rules thin (ek promote karte waqt reh gayi) -- ab ek.
+     Rang mockup se ek qadam gehra: `--panze-muted` 10px par board ke grey par
+     3.09:1 deta hai, AA se neeche. D26/D41 wala hi faisla. */
+  .pz-logo .tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: none;
+    color: var(--panze-ink-2);
+  }
+
+  /* ⚠ LOGO TILE VIOLET HONA CHAHIYE THA MAGAR NEELA REH GAYA, AUR YE SIRF
+     SCREENSHOT SE PAKRA GAYA. `panze.css` ka `.pz-logo .logo` (0,2,0) hai aur
+     is file ka `.brand .logo` bhi (0,2,0) -- aur ye file `main.css` ke BAAD
+     import hoti hai, to barabar specificity par ye jeet jati thi. Koi adad is
+     par fail nahi hua tha; sirf aankh ne pakra. */
+  .pz-logo.brand .logo {
+    background: var(--panze-violet);
+  }
+
+  /* Lang toggle top bar mein simat kar gol daayre jaisa ho gaya tha (UI-101
+     ka screenshot). Us ki legacy rule sidebar ki poori chaurai maanti thi. */
+  .pz-top .lang-toggle {
+    width: 104px;
+    flex: 0 0 auto;
+    overflow: hidden;
+  }
+
+  .pz-body .content {
+    padding: 0;
+    max-width: none;
+  }
+}

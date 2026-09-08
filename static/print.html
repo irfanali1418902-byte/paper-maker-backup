@@ -30,15 +30,24 @@
   <div class="pz-body">
 
    <nav class="pz-rail app-nav sidenav">
-    <a href="/" class="sidenav__link">← Generator</a>
-    <a href="/library.html" class="sidenav__link">Image Library</a>
-    <a href="/bank.html" class="sidenav__link">Question Bank</a>
-    <a href="/blueprint.html" class="sidenav__link">Blueprint</a>
-    <a href="/slo-health.html" class="sidenav__link">SLO Health</a>
+    <a href="/" class="sidenav__link"><svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>← Generator</a>
+    <a href="/library.html" class="sidenav__link"><svg class="icon"><use href="/static/icons.svg#i-library"></use></svg>Image Library</a>
+    <a href="/bank.html" class="sidenav__link"><svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg>Question Bank</a>
+    <a href="/blueprint.html" class="sidenav__link"><svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>Blueprint</a>
+    <a href="/slo-health.html" class="sidenav__link"><svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>SLO Health</a>
   </nav>
 
   <!-- Print settings (Marhala 4B) — screen only (.no-print). Stepper hilane par
        preview foran badalta hai (setVar). DB mein sirf Save par likhta hai. -->
+
+  <div class="sidebar-foot sidenav__foot">Sidebar sirf screen par hai —<br/>print/PDF mein sirf paper aata hai.</div>
+
+<main class="print-main">
+  <!-- ⚠ PRINT SETTINGS PANEL YAHAN AAYA (UI-101). Pehle ye `<aside>` ke andar
+       tha; Panze shell mein wo aside khatam ho gayi to ye `.pz-body` ka SEEDHA
+       flex-item ban gaya aur poori chaurai le kar asal `main` ko dayein kinare
+       par 48px mein simet diya -- screenshot mein paper ki jagah error text
+       board se bahar nikla hua tha. Ab ye main ke andar, paper ke ooper hai. -->
   <details class="print-settings no-print" id="printSettings">
     <summary>🖨️ Print Settings</summary>
     <div class="ps-body">
@@ -89,10 +98,6 @@
       <div class="ps-hint" id="psHint"></div>
     </div>
   </details>
-
-  <div class="sidebar-foot sidenav__foot">Sidebar sirf screen par hai —<br/>print/PDF mein sirf paper aata hai.</div>
-
-<main class="print-main">
   <div id="status">Paper load ho raha hai...</div>
   <div class="sheet" id="sheet" style="display:none">
 
