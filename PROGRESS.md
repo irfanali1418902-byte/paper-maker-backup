@@ -1,5 +1,53 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-107: dono school faisle laagu — aur ek security boundary jise koi gate nahi dekh raha tha
+
+Irfan ke do jawab: **backup wala repo use karo**, aur **API key set kar do**.
+
+### 1. Guide ab sahi repo par bhejta hai
+
+`docs/SETUP-LOCAL.md` step 2 ab `paper-maker-backup` clone karta hai. Purana URL
+(`paper-maker-mvp`) school ko **wo app deta jo ye project hai hi nahi** — us repo
+ka `master` is repo ki history mein mojood nahi (naapa 2026-09-06, `git cat-file`
+us object par fail karta hai). NSSM ke do paths bhi durust kiye.
+
+Guide mein saaf likha hai: **naam "backup" hai magar wo asal repo hai** — taake
+agla parhne wala naam se dhoka na khaye.
+
+### 2. Key set ho gayi
+
+`.env` mein 48-character random key (`secrets.token_urlsafe`). Wo file gitignored
+hai — `git check-ignore` se tasdeeq ki gayi, key kabhi commit nahi hogi.
+
+Live server par naapa: **bina key 401 · sahi key 200 · ghalat key 401**, aur
+static pages phir bhi 200 (teacher app khol kar key ek dafa daalta hai).
+
+### ⚠ Key set karte hi POORI SUITE GIR GAYI — aur wo apne aap mein ek naqs tha
+
+`assert 401 == 200`. Wajah: `app/api/auth.py` apni key **module import par** parhti
+hai aur `database.py:33` ka `load_dotenv()` `.env` bhar deta hai — yani **suite
+developer ki `.env` par munhasir thi.** Ek hi repo do machinon par do alag natije
+deta.
+
+`tests/conftest.py` ab app import se **pehle** `PAPER_MAKER_API_KEY` khali kar
+deta hai. Ye kaam karta hai kyunke `load_dotenv()` mojooda env vars ko override
+nahi karta — jo `database.py`:39 khud likhta hai.
+
+### ⚠ Aur us se ek bari cheez khuli: auth ka KOI TEST NAHI THA
+
+`grep -rn "API_KEY" tests/` sirf `ai_service` ki provider keys deta tha. Yani jo
+rule abhi abhi school ke LAN ka **asal security boundary** bana, wo sirf haath se
+`curl` chala kar dekha gaya tha. Aisi boundary agle refactor mein **khamoshi se
+khul sakti hai** — aur khulne par kuch bhi fail nahi hota.
+
+`tests/test_auth.py` — **8 tests**: auth off wala mode, bina header 401, ghalat key
+401, sahi key 200, header ka naam case-insensitive, error matn raasta deta hai, aur
+**sab se ahem: key ON hone par bhi `/static` khulta hai.** Wo aakhri guard is liye
+hai ke "sab kuch mehfooz kar do" wali neeyat se teacher ka safha band karna bilkul
+mumkin hai — aur phir wo app khol hi nahi payega.
+
+**Naap:** **1,106 pass** (8 naye), ruff saaf.
+
 ## 2026-09-08 — UI-106: school PC ka kaam — guide ko reality ke khilaf chalaya gaya
 
 Handoff ka Session 2. Maqsad wohi tha jo wahan likha hai: *"likha hua guide aur

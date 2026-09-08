@@ -30,10 +30,20 @@ Verify (CMD/PowerShell): `python --version` → `Python 3.12.x`.
 ## 2. Code laao
 
 ```
-git clone https://github.com/irfanali1418902-byte/paper-maker-mvp.git
-cd paper-maker-mvp
+git clone https://github.com/irfanali1418902-byte/paper-maker-backup.git
+cd paper-maker-backup
 ```
 (Ya repo ka ZIP copy karke server PC par rakh do.)
+
+> ⛔ **YE URL 2026-09-08 KO BADLA GAYA, AUR PURANA WALA SCHOOL KO GHALAT CODE DETA.**
+> Pehle yahan `paper-maker-mvp` likha tha. Naapa gaya 2026-09-06: us repo ka
+> `master` **is repo ki history mein hai hi nahi** (`git cat-file` us object par
+> fail karta hai — alag lineage), jab ke saara rozana kaam
+> `paper-maker-backup` par push hota hai. Guide par chalne wala school ek aisi
+> app utha leta jo ye project nahi hai.
+>
+> **Naam "backup" hai magar wo asal repo hai** — Irfan ka faisla, 2026-09-08.
+> Naam se dhoka mat khana; sach ye hai ke `master` wahin zinda hai.
 
 ---
 
@@ -161,8 +171,8 @@ kholenge **http://192.168.1.25:8000**.
   (Purani `start-local.bat` wali shortcut bhi chalti rahegi, wo isi ko bulati hai.)
 - **Service jaisa (auto-restart, background):** [NSSM](https://nssm.cc/download) se —
   ```
-  nssm install PaperMaker "C:\path\paper-maker-mvp\.venv\Scripts\python.exe" "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
-  nssm set PaperMaker AppDirectory "C:\path\paper-maker-mvp"
+  nssm install PaperMaker "C:\path\paper-maker-backup\.venv\Scripts\python.exe" "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+  nssm set PaperMaker AppDirectory "C:\path\paper-maker-backup"
   nssm set PaperMaker AppEnvironmentExtra DB_PATH=C:\PaperMakerData\paper_maker.db PAPER_MAKER_API_KEY=... GEMINI_API_KEY=...
   nssm start PaperMaker
   ```
