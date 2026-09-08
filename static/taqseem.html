@@ -8,15 +8,26 @@
 </head>
 <body data-page="Exam Taqseem">
 
-<aside class="app-sidebar sidenav__panel">
-  <div class="brand sidenav__brand">
+<!-- ===== PANZE SHELL (UI-100) — docs/design/mockup-panze.html ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
     <div class="logo">P</div>
     <div>
       <div class="name sidenav__brand-name">Parcha Paper Maker</div>
       <small class="sidenav__brand-sub">Exam Taqseem</small>
     </div>
+   </div>
+
+   <div class="pz-crumb"><b>Taqseem</b></div>
+   <div class="pz-spacer"></div>
   </div>
-  <nav class="app-nav sidenav">
+
+  <div class="pz-body">
+
+   <nav class="pz-rail app-nav sidenav">
     <a class="sidenav__link" href="/">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
@@ -51,7 +62,6 @@
     </a>
   </nav>
   <div class="sidebar-foot sidenav__foot">SLO ko N exams mein baanto. Auto-generate sequence ke hisaab se; phir chip par "move to exam" se hath se theek karo.</div>
-</aside>
 
 <main class="tq-main">
   <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
@@ -80,6 +90,10 @@
   <div id="pickNote" class="pick-note">Upar se class aur subject chuno — plan yahan dikhega.</div>
   <div class="board" id="board" style="display:none;"></div>
 </main>
+
+  </div>
+ </div>
+</div>
 
 <!-- Confirm modal -->
 <div class="overlay" id="overlay">

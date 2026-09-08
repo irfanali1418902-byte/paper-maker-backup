@@ -205,6 +205,19 @@ const EXPR = String.raw`(() => {
     // bina is ke probe nau jhoote failures deta hai.
     if (cs.clipPath && cs.clipPath !== 'none' && cs.position === 'absolute'
         && el.getBoundingClientRect().width <= 1) continue;
+    // font-size 0: icon-rail ka doosra tareeqa. Panze ke rail par labels DOM
+    // mein rehte hain (accessible naam) magar size sifar hota hai -- kyunke
+    // saat pages un ko <span> mein nahi, seedhe text node mein rakhte hain aur
+    // text node par koi selector nahi chalta.
+    if (parseFloat(cs.fontSize) === 0) continue;
+    // WCAG 1.4.3 "inactive user interface components" ko chhoot deta hai, aur
+    // is app ke disabled buttons opacity .5 par hain -- unhein ginna ek jhoota
+    // failure hai jo asli failures ko dhaanp leta hai.
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      if (n.disabled) { el.__skip = 1; break; }
+    }
+    if (el.__skip) continue;
 
     // Accumulated opacity: an ancestor at .7 dims this text too. D26's 'before'
     // case was exactly this and assuming 1 is how that row got inverted.

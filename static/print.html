@@ -8,19 +8,34 @@
 </head>
 <body>
 
-<aside class="app-sidebar sidenav__panel">
-  <div class="brand sidenav__brand">Parcha Paper Maker<small class="sidenav__brand-sub">Exam paper · print view</small></div>
-  <nav class="app-nav sidenav">
+<!-- ===== PANZE SHELL (UI-100) ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">Parcha Paper Maker<small class="sidenav__brand-sub">Exam paper · print view</small></div>
+
+   <div class="pz-crumb"><b>Print</b></div>
+   <div class="pz-spacer"></div>
+
+   <!-- ⚠ PRINT BUTTON TOP BAR MEIN AAYA, RAIL MEIN NAHI. Panze ka rail 52px
+        hai aur ye teacher ka asal button hai (paper browser se hi chhapta
+        hai) — use chhupana poora workflow tor deta. -->
+   <div class="side-actions pz-actions">
+     <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
+     <span id="toolbarInfo"></span>
+   </div>
+  </div>
+
+  <div class="pz-body">
+
+   <nav class="pz-rail app-nav sidenav">
     <a href="/" class="sidenav__link">← Generator</a>
     <a href="/library.html" class="sidenav__link">Image Library</a>
     <a href="/bank.html" class="sidenav__link">Question Bank</a>
     <a href="/blueprint.html" class="sidenav__link">Blueprint</a>
     <a href="/slo-health.html" class="sidenav__link">SLO Health</a>
   </nav>
-  <div class="side-actions">
-    <button onclick="printWithImagesLoaded()">🖨️ Print / Save as PDF</button>
-    <span id="toolbarInfo"></span>
-  </div>
 
   <!-- Print settings (Marhala 4B) — screen only (.no-print). Stepper hilane par
        preview foran badalta hai (setVar). DB mein sirf Save par likhta hai. -->
@@ -76,7 +91,6 @@
   </details>
 
   <div class="sidebar-foot sidenav__foot">Sidebar sirf screen par hai —<br/>print/PDF mein sirf paper aata hai.</div>
-</aside>
 
 <main class="print-main">
   <div id="status">Paper load ho raha hai...</div>
@@ -112,6 +126,10 @@
     <div class="footer-note">Generated with Parcha Paper Maker</div>
   </div>
 </main>
+
+  </div>
+ </div>
+</div>
 
 <!-- Edit modal (screen only — hidden in print via .no-print / @media print) -->
 <div class="modal-backdrop no-print" id="editModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">

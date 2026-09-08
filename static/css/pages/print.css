@@ -442,3 +442,63 @@
     margin: 0;
   }
 }
+
+/* ===========================================================================
+   UI-100 — PRINT SETTINGS PANEL, PANZE PAR.
+
+   Ye poora panel NAVY SIDEBAR ke liye ranga gaya tha: matn pale-blue,
+   stepper buttons gehre neele, values safed. (Qadrein yahan LIKHI NAHI ja rahin:
+   `unsanctioned_hex` ratchet comment ka matn bhi ginta hai aur pehle draft ne use
+   298 se 301 par charha diya tha -- is repo mein NAUWIN dafa. Purani qadrein
+   `99-legacy/print.css`:51-70 mein hain.) Panze shell mein sidebar hai hi nahi
+   -- panel ab board ke grey par baithta hai, aur wahan wo saara rang PADHA HI
+   NAHI JATA. Naapa gaya (`css_contrast_probe`, UI-100): gyarah elements, sab se
+   bura 1.07:1.
+
+   Panze ki zubaan mein ye ek safed card hai. Sirf RANG badla hai -- panel ka
+   dhaancha, spacing aur behaviour waise ke waise hain.
+
+   ⚠ Ye `pages/print.css` mein hai, `05-components/panze.css` mein NAHI: ye
+   panel sirf is page par hai. Skin file mein daalna use har page par bhejta.
+   =========================================================================== */
+@layer components {
+  .pz-board .print-settings {
+    background: var(--white);
+    border-radius: var(--panze-r-sm);
+    box-shadow: var(--panze-shadow);
+  }
+
+  .pz-board .print-settings > summary,
+  .pz-board .ps-value,
+  .pz-board .ps-range-all {
+    color: var(--panze-ink);
+  }
+
+  .pz-board .print-settings > summary::before,
+  .pz-board .ps-row .ps-label,
+  .pz-board .ps-range-sep,
+  .pz-board .ps-reset,
+  .pz-board .ps-range-info {
+    color: var(--panze-ink-2);
+  }
+
+  /* Stepper aur "Sab" ab halke surface par hain, navy par nahi. */
+  .pz-board .ps-stepper button,
+  .pz-board .ps-range-all {
+    background: var(--panze-board);
+  }
+
+  .pz-board .ps-stepper button {
+    color: var(--panze-ink);
+  }
+
+  .pz-board .ps-stepper button:hover,
+  .pz-board .ps-range-all:hover {
+    background: var(--panze-t-violet);
+  }
+
+  .pz-board .ps-reset:hover {
+    background: var(--panze-board);
+    color: var(--panze-ink);
+  }
+}

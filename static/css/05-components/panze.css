@@ -100,6 +100,13 @@
     color: var(--panze-ink);
   }
 
+  /* Brand ka sub-title navy sidebar ke liye ranga gaya tha (`--color-sidebar-
+     fg-muted`); board ke grey par wo 2.87:1 deta hai. Panze par ye saada muted
+     text hai. Naapa gaya `css_contrast_probe` se, `bank` par. */
+  .pz-logo .sidenav__brand-sub {
+    color: var(--panze-ink-2);
+  }
+
   .pz-crumb {
     font-size: 13px;
     color: var(--panze-muted);
@@ -154,6 +161,14 @@
     width: 42px;
     height: 42px;
     padding: 0;
+    /* ⚠ `font-size: 0` HI WO TAREEQA HAI JO DONO SHAKLON PAR CHALTA HAI. `index`
+       apne nav labels `<span>` mein rakhta hai, magar BAQI SAAT PAGES seedha
+       text node rakhte hain (naapa gaya 2026-09-08: saaton par span=0) -- aur
+       text node ko koi selector pakad hi nahi sakta. Pehli koshish sirf `span`
+       ko chhupati thi, to `bank` ke rail par poore labels dikh rahe the.
+       Text DOM mein rehta hai, yani accessible naam salamat hai; sirf uska
+       size sifar hota hai. Icon `.icon` se apni napi hui 17px lata hai. */
+    font-size: 0;
     border-radius: var(--panze-r-sm);
     display: flex;
     align-items: center;
@@ -306,3 +321,54 @@
       gap: 0;
     }
   }
+
+/* ⚠ @media print — YE BLOCK IS FILE KA SAB SE AHEM HISSA HAI.
+
+   `print.html` teacher ka asal output hai: parcha browser ke Ctrl+P se chhapta
+   hai. Panze ka grey page aur board KAGAZ PAR BHI CHHAP JATE -- har parche ke
+   peeche grey, gol kone, aur shadow.
+
+   Aur purana bachao ab kaam nahi karta: `99-legacy/print.css`:196 par
+   `.app-sidebar { display: none !important }` hai, magar wo class UI-100 ke baad
+   `print.html` mein hai hi nahi (`<aside class="app-sidebar">` ab
+   `<div class="pz-rail">` hai). Yani bina is block ke rail bhi chhapta.
+
+   Chhapte waqt Panze ka poora shell ghayab ho jata hai aur sirf `.sheet` bachta
+   hai -- wahi jo pehle hota tha. */
+@media print {
+  .pz-wrap {
+    padding: 0;
+    background: none;
+    min-height: 0;
+  }
+
+  .pz-board {
+    display: block;
+    padding: 0;
+    min-height: 0;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .pz-top,
+  .pz-rail {
+    display: none !important;
+  }
+
+  .pz-body {
+    display: block;
+    margin-top: 0;
+    gap: 0;
+  }
+}
+
+/* Sidebar ka footer aur page ke muted notes navy ke liye rangey gaye thay;
+   board ke grey par wo 2.87:1 aur 4.34:1 par gir jate hain (naapa gaya, `plan`
+   aur `taqseem`). Panze par inhein ink ka muted qadam milta hai. */
+.pz-body .sidenav__foot,
+.pz-body .plan-note,
+.pz-body .pick-note,
+.pz-board .js-status {
+  color: var(--panze-ink-2);
+}

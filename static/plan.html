@@ -11,12 +11,23 @@
 <!-- Sidebar poora naye tree se (.sidenav__*). Is page par `.app-sidebar`,
      `.brand`, `.app-nav`, `.sidebar-foot` jaan-boojh kar NAHI hain — wo legacy
      naam hain aur is page ka koi legacy file nahi. -->
-<aside class="sidenav__panel">
-  <div class="sidenav__brand">
+<!-- ===== PANZE SHELL (UI-100) ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
     <div class="sidenav__brand-name">Parcha Paper Maker</div>
     <small class="sidenav__brand-sub">Hafta-war Plan</small>
+   </div>
+
+   <div class="pz-crumb"><b>Hafta-war Plan</b></div>
+   <div class="pz-spacer"></div>
   </div>
-  <nav class="sidenav">
+
+  <div class="pz-body">
+
+   <nav class="pz-rail sidenav">
     <a href="/" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
@@ -51,7 +62,6 @@
     </a>
   </nav>
   <div class="sidenav__foot">Kaunsa topic kis hafte parhaya jayega. Excel se bharo, ya table mein hafta chuno. Coverage report Marhala 3 mein aayegi.</div>
-</aside>
 
 <main class="plan-main">
   <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
@@ -119,6 +129,10 @@
 
   <div class="plan-note" id="pickNote">Upar se subject aur grade chuno — plan yahan dikhega.</div>
 </main>
+
+  </div>
+ </div>
+</div>
 
 <script src="/apiClient.js"></script>
 <script src="/static/js/brand.js"></script>

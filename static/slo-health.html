@@ -8,12 +8,23 @@
 </head>
 <body data-page="SLO Health">
 
-<aside class="app-sidebar sidenav__panel">
-  <div class="brand sidenav__brand">
+<!-- ===== PANZE SHELL (UI-100) — docs/design/mockup-panze.html ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
     <div class="name sidenav__brand-name">Parcha Paper Maker</div>
     <small class="sidenav__brand-sub">SLO Health</small>
+   </div>
+
+   <div class="pz-crumb"><b>Slo Health</b></div>
+   <div class="pz-spacer"></div>
   </div>
-  <nav class="app-nav sidenav">
+
+  <div class="pz-body">
+
+   <nav class="pz-rail app-nav sidenav">
     <a href="/" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
@@ -48,7 +59,6 @@
     </a>
   </nav>
   <div class="sidebar-foot sidenav__foot">Dono taraf ka gap — bina question wale SLO, aur bina SLO tag wale questions. Sab classes/subjects ke liye.</div>
-</aside>
 
 <main class="slo-main">
   <!-- .pagehead is display:flex — the inner <div> is what keeps the title,
@@ -131,6 +141,10 @@
     <div class="empty-state" id="pendingEmpty" style="display:none;">Har syllabus grade/subject ka SLO maujood hai.</div>
   </div>
 </main>
+
+  </div>
+ </div>
+</div>
 
 <script src="/apiClient.js"></script>
 <script src="/static/js/brand.js"></script>

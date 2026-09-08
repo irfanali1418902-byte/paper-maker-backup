@@ -8,12 +8,23 @@
 </head>
 <body data-page="Image Library">
 
-<aside class="app-sidebar sidenav__panel">
-  <div class="brand sidenav__brand">
+<!-- ===== PANZE SHELL (UI-100) — docs/design/mockup-panze.html ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
     <div class="name sidenav__brand-name">Parcha Paper Maker</div>
     <small class="sidenav__brand-sub">Image Library</small>
+   </div>
+
+   <div class="pz-crumb"><b>Library</b></div>
+   <div class="pz-spacer"></div>
   </div>
-  <nav class="app-nav sidenav">
+
+  <div class="pz-body">
+
+   <nav class="pz-rail app-nav sidenav">
     <a href="/" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
       Generator
@@ -36,7 +47,6 @@
     </a>
   </nav>
   <div class="sidebar-foot sidenav__foot">Shared images — syllabus topics se linked, auto-suggest ke liye.</div>
-</aside>
 
 <main class="lib-main">
   <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
@@ -217,6 +227,10 @@
     <div id="paginationBar" style="display:none;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;"></div>
   </div>
 </main>
+
+  </div>
+ </div>
+</div>
 
 <!-- ===== FLOATING SELECTION BAR ===== -->
 <div id="selectionBar" class="bulk-action-bar">
