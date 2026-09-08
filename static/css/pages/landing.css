@@ -131,3 +131,45 @@
     margin-top: 2px;
   }
 }
+
+/* ===========================================================================
+   UI-103 — HERO PANZE KE VIOLET PAR. Irfan, 2026-09-08.
+
+   Hero `99-legacy/landing.css`:18 par navy gradient tha -- purane design ka
+   aakhri bara tukra jo Panze ke baad bhi reh gaya tha. Panze mockup mein hero
+   hai hi nahi (wo ek app-shell hai, marketing page nahi), is liye ye qadr
+   mockup se nahi, us ke BRAND token se aayi hai.
+
+   ⚠ Naya hex nahi: gradient ke dono sire `--panze-violet` aur `--panze-violet-d`
+   hain, wohi do jo har primary button par lagte hain. Is tarah hero aur "Paper
+   banao" button ek hi rang par hain.
+
+   Gol kone is liye ke hero ab board ke ANDAR baithta hai (UI-102): 26px ke gol
+   board mein ek chokor patti ajeeb lagti thi.
+   =========================================================================== */
+@layer components {
+  .pz-board .hero {
+    background: linear-gradient(150deg, var(--panze-violet) 0%, var(--panze-violet-d) 100%);
+    border-radius: var(--panze-r);
+  }
+
+  /* ⚠ HERO KE DO TEXTS NAVY KE LIYE CHUNE GAYE THAY AUR VIOLET PAR FAIL KARTE
+     HAIN. Yeh `css_contrast_probe` NE NAHI PAKRA -- aur wo us ki apni darj-shuda
+     kami hai: hero ka background ek GRADIENT hai aur probe sirf
+     `background-color` parhta hai, is liye us ne teenon ko board ke grey par
+     naapa (jhoote 1.10/1.39/2.00). Asal adad haath se nikale gaye, gradient ke
+     DONO siron par -- kyunke sab se halka sira hi asal imtihan hai:
+
+       safed (h1 30px/700, name 20px/700)   4.86 / 6.19   large text, 3.0 chahiye  -> PASS
+       lead  15.5px/400                     3.19 / 4.06   4.5 chahiye              -> FAIL
+       tag   12px/400                        2.21 / 2.82   4.5 chahiye              -> FAIL
+
+     Dono safed par le jaye gaye: 4.86 sab se bure sire par bhi 4.5 se ooper hai.
+     Darja ab rang se nahi, size aur weight se banta hai -- jo waise bhi behtar
+     hai. Jab bhi kisi gradient par matn rakho, adad KHUD nikalo; probe wahan
+     jhoota jawab deta hai. */
+  .pz-board .hero p.lead,
+  .pz-board .hero .tag {
+    color: var(--white);
+  }
+}

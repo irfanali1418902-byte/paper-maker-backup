@@ -1,5 +1,39 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-103: `landing` ka hero violet — aur ek failure jo probe dekh hi nahi sakti thi
+
+Irfan: hero bhi violet karo. Wo purane design ka aakhri bara tukra tha —
+`99-legacy/landing.css`:18 par navy gradient. Ab wo Panze ke **apne brand tokens**
+par hai (`--panze-violet` → `--panze-violet-d`), yani hero aur har primary button
+ek hi rang par. Naya hex nahi. Gol kone bhi, kyunke hero ab 26px ke gol board ke
+andar baithta hai.
+
+### ⚠ Do texts violet par fail kar rahe thay, aur `css_contrast_probe` ne wo NAHI pakra
+
+Ye us auzaar ki **apni darj-shuda kami** hai: hero ka background ek **gradient**
+hai aur probe sirf `background-color` parhta hai. Us ne teenon texts ko board ke
+grey par naapa aur jhoote adad diye (1.10 / 1.39 / 2.00).
+
+Asal adad haath se nikale gaye — **gradient ke DONO siron par**, kyunke sab se
+halka sira hi asal imtihan hai:
+
+```
+safed (h1 30px/700, name 20px/700)   4.86 / 6.19   large text, 3.0 chahiye  -> PASS
+lead  15.5px/400                     3.19 / 4.06   4.5 chahiye              -> FAIL
+tag   12px/400                       2.21 / 2.82   4.5 chahiye              -> FAIL
+```
+
+Wo do pale blues navy ke liye chune gaye thay. Dono safed par gaye: **4.86 sab se
+bure sire par bhi 4.5 se ooper.** Darja ab rang se nahi, size aur weight se banta
+hai — jo waise bhi behtar hai.
+
+**Sabaq, aur wo `pages/landing.css` mein likha hai: jab bhi kisi gradient par matn
+rakho, adad KHUD nikalo. Probe wahan jhoota jawab deta hai** — aur wo jhoot
+"sab theek hai" ki taraf nahi, "sab kharab hai" ki taraf jhukta hai, is liye use
+nazarandaz karne ki aadat khatarnak hai.
+
+**Naap:** 1,098 pass, ruff saaf, `unsanctioned_hex` **298**.
+
 ## 2026-09-08 — UI-102: das ke das pages Panze par, aur rail par NAAM aa gaye
 
 `blueprint` (jo `o-shell` par tha) aur `landing` (jis par shell hai hi nahi) bhi
