@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AII Paper Maker — Panze Full App</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#D9D9E3; --board:#F4F4F7; --white:#fff;
+  --ink:#14141B; --ink-soft:#3A3A47; --muted:#8A8A9A; --muted-2:#B4B4C2; --line:#EAEAF1;
+  --coal:#151519;
+  --violet:#6C5CE7; --violet-d:#5A4BD4;
+  --blue:#3B9EF5; --orange:#F5892E; --purple:#8B3DF0; --red:#F0455B; --green:#22C58B;
+  --pink-t:#FDE9EE; --peach-t:#FDEEE4; --blue-t:#E8F1FD; --mint-t:#E4F7F0; --violet-t:#EEEBFD; --amber-t:#FDF4E3;
+  --font:"IBM Plex Sans",system-ui,sans-serif; --serif:"Source Serif 4",Georgia,serif; --nastaliq:"Noto Nastaliq Urdu",serif;
+  --r:20px; --r-sm:14px; --r-pill:999px;
+  --shadow:0 1px 3px rgba(20,20,27,.04),0 10px 30px rgba(20,20,27,.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14px;}
+.wrap{padding:16px;min-height:100vh;}
+.board{background:var(--board);border-radius:26px;min-height:calc(100vh - 32px);padding:22px 26px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+.top{display:flex;align-items:center;gap:20px;margin-bottom:8px;}
+.logo{font-weight:700;font-size:22px;letter-spacing:-.03em;display:flex;align-items:center;gap:3px;}
+.logo b{color:var(--violet);font-family:var(--nastaliq);} .logo small{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.15em;align-self:flex-end;margin-bottom:5px;}
+.pill-nav{display:flex;gap:4px;background:var(--white);border-radius:var(--r-pill);padding:5px;margin:0 auto;box-shadow:var(--shadow);}
+.pill-nav button{border:0;background:transparent;color:var(--ink-soft);font:inherit;font-weight:600;font-size:13px;padding:9px 20px;border-radius:var(--r-pill);cursor:pointer;}
+.pill-nav button.on{background:var(--coal);color:#fff;}
+.top-ic{width:42px;height:42px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);cursor:pointer;box-shadow:var(--shadow);position:relative;}
+.top-ic .d{position:absolute;top:9px;right:11px;width:7px;height:7px;border-radius:50%;background:var(--red);}
+.theme-btn{border:0;background:var(--white);border-radius:var(--r-pill);padding:11px 16px;font:inherit;font-weight:600;font-size:12.5px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:7px;color:var(--ink);}
+
+.body{display:flex;gap:22px;flex:1;margin-top:14px;}
+.rail{width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:8px;}
+.rail a{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:.14s;position:relative;}
+.rail a:hover{background:var(--white);color:var(--ink);}
+.rail a.on{background:var(--coal);color:#fff;}
+.rail .sp{flex:1;}
+
+.content{flex:1;min-width:0;}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;}
+.head .k{font-size:15px;color:var(--muted);font-weight:500;}
+.head .h1{font-size:38px;font-weight:700;letter-spacing:-.03em;margin:2px 0 0;}
+.head .h1.sm{font-size:30px;}
+.search{display:flex;align-items:center;gap:11px;background:var(--white);border-radius:var(--r-pill);padding:13px 20px;min-width:300px;color:var(--muted);font-size:13.5px;box-shadow:var(--shadow);}
+.search .ic{width:32px;height:32px;border-radius:50%;background:var(--board);display:flex;align-items:center;justify-content:center;margin:-4px -6px -4px -8px;}
+.btn-solid{background:var(--coal);color:#fff;border:0;padding:13px 22px;border-radius:var(--r-pill);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:var(--shadow);}
+.btn-line{background:var(--white);color:var(--ink);border:0;padding:13px 22px;border-radius:var(--r-pill);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:var(--shadow);}
+
+.card{background:var(--white);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);}
+.card .ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card .ch .tt{font-weight:700;font-size:16px;}
+.mini-ic{width:30px;height:30px;border-radius:50%;background:var(--board);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);cursor:pointer;border:0;}
+
+.grid-dash{display:grid;grid-template-columns:340px 1fr 1fr;gap:20px;align-items:start;}
+.wide{grid-column:1 / 3;}
+.seg{display:flex;gap:6px;margin-bottom:12px;}
+.seg button{border:0;background:var(--board);color:var(--ink-soft);font:inherit;font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:var(--r-pill);cursor:pointer;}
+.seg button.on{background:var(--coal);color:#fff;}
+.ongoing{display:flex;align-items:center;justify-content:space-between;background:var(--board);border-radius:var(--r-pill);padding:11px 16px;font-size:13px;font-weight:600;margin-bottom:14px;}
+.ongoing .cnt{background:var(--coal);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.task{border-radius:var(--r-sm);padding:15px;margin-bottom:11px;position:relative;}
+.task.t1{background:var(--peach-t);} .task.t2{background:var(--blue-t);} .task.t3{background:var(--pink-t);}
+.task .ic{width:26px;height:26px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+.task.t1 .ic{color:var(--red);} .task.t2 .ic{color:var(--ink);} .task.t3 .ic{color:var(--violet);}
+.task .tt{font-weight:700;font-size:14px;} .task .ds{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.4;opacity:.85;}
+.task .chk{position:absolute;top:15px;right:15px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;color:var(--green);}
+
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.donut{width:180px;height:180px;border-radius:50%;background:conic-gradient(var(--blue) 0 25%,var(--orange) 25% 57%,var(--board) 57% 100%);display:flex;align-items:center;justify-content:center;position:relative;}
+.donut::after{content:"";width:114px;height:114px;border-radius:50%;background:var(--white);}
+.dleg{display:flex;flex-direction:column;gap:9px;width:100%;}
+.dleg .row{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;}
+.dleg .row b{margin-left:auto;font-weight:700;} .dleg i{width:11px;height:11px;border-radius:4px;}
+
+.chart{position:relative;height:200px;margin-top:6px;}
+.tooltip{position:absolute;top:6px;left:50%;background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:9px 13px;font-size:11.5px;font-weight:600;z-index:2;}
+.tooltip .r{display:flex;align-items:center;gap:6px;} .tooltip i{width:8px;height:8px;border-radius:50%;}
+.xaxis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:8px;}
+
+.inv{display:flex;flex-direction:column;gap:20px;margin-top:6px;}
+.inv .rt{display:flex;align-items:center;justify-content:space-between;font-size:14px;margin-bottom:9px;}
+.inv .rt .lbl{font-weight:600;} .inv .rt .val{color:var(--muted);font-size:13px;} .inv .rt .val b{color:var(--ink);}
+.ibar{height:15px;border-radius:var(--r-pill);background:var(--board);overflow:hidden;}
+.ibar i{display:block;height:100%;border-radius:var(--r-pill);}
+
+.meet{background:var(--board);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:11px;}
+.meet .tt{font-weight:600;font-size:13.5px;} .meet .tm{font-size:12px;color:var(--muted);margin-top:3px;}
+.see{font-size:13px;color:var(--violet);font-weight:600;cursor:pointer;}
+
+/* form bits */
+.two{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+.two-eq{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+label{display:block;margin-top:14px;font-size:11.5px;font-weight:600;color:var(--ink-soft);}
+label:first-of-type{margin-top:0;}
+input,select,textarea{width:100%;min-height:46px;padding:12px 15px;margin-top:7px;background:var(--board);border:1px solid transparent;border-radius:var(--r-sm);color:var(--ink);font:inherit;font-size:14px;transition:.14s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--violet);background:var(--white);}
+.field-row{display:flex;gap:12px;} .field-row>div{flex:1;}
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:9px;}
+.chip{font-size:13px;font-weight:600;padding:9px 15px;background:var(--board);border-radius:var(--r-pill);cursor:pointer;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+.chip.on{background:var(--coal);color:#fff;}
+.actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+.btn-primary{flex:1;min-width:170px;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--violet);color:#fff;border:0;padding:14px 18px;border-radius:var(--r-pill);font:inherit;font-weight:600;font-size:14px;cursor:pointer;}
+.btn-primary:hover{background:var(--violet-d);}
+.btn-ghost{flex:1;min-width:140px;background:var(--board);border:0;color:var(--ink);padding:14px 18px;border-radius:var(--r-pill);font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;}
+
+.mini-title{font-weight:700;font-size:15px;margin-bottom:12px;}
+.srow{display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line);}
+.srow:last-child{border-bottom:0;} .srow span{color:var(--muted);} .srow b{font-weight:600;}
+.tag-pill{font-size:11px;font-weight:700;padding:4px 11px;border-radius:var(--r-pill);background:var(--violet-t);color:var(--violet);}
+.spill{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:var(--r-pill);background:var(--mint-t);color:var(--green);}
+.spill.warn{background:var(--amber-t);color:var(--orange);} .spill.bad{background:var(--pink-t);color:var(--red);}
+
+.ai-box{border-radius:var(--r-sm);padding:16px;background:var(--amber-t);display:flex;gap:12px;margin-top:14px;}
+.ai-box .ic{width:32px;height:32px;border-radius:9px;background:var(--white);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--orange);}
+.ai-box .t{font-size:13px;font-weight:700;color:var(--orange);}
+.ai-box .m{font-size:12px;color:var(--ink-soft);margin-top:3px;line-height:1.5;}
+.ai-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:9px;}
+.retry-btn{margin-top:10px;background:var(--white);border:0;color:var(--orange);padding:8px 14px;border-radius:var(--r-pill);font:inherit;font-weight:600;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.spin{animation:sp 1s linear infinite;}@keyframes sp{to{transform:rotate(360deg);}}
+
+.qcard{border-radius:var(--r-sm);padding:15px;margin-top:12px;}
+.qcard.c1{background:var(--peach-t);} .qcard.c2{background:var(--blue-t);} .qcard.c3{background:var(--mint-t);}
+.qcard .r1{display:flex;align-items:center;gap:12px;}
+.thumb{width:40px;height:40px;border-radius:11px;background:var(--white);display:flex;align-items:center;justify-content:center;color:var(--ink);font-weight:700;flex-shrink:0;font-size:13px;}
+.tt2{font-weight:700;font-size:14px;} .st2{font-size:12px;color:var(--ink-soft);margin-top:1px;opacity:.85;}
+.r2{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:12px;opacity:.85;}
+
+.upload-zone{border:2px dashed var(--muted-2);border-radius:var(--r-sm);padding:28px;text-align:center;background:var(--board);margin-top:8px;cursor:pointer;transition:.14s;}
+.upload-zone:hover{border-color:var(--violet);background:var(--violet-t);}
+.upload-zone .ic{width:46px;height:46px;border-radius:12px;background:var(--white);color:var(--violet);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.upload-zone .big{font-weight:700;font-size:14px;} .upload-zone .sm{font-size:12px;color:var(--muted);margin-top:3px;}
+.info-box{border-radius:var(--r-sm);padding:16px;background:var(--violet-t);}
+.info-box .k{font-size:10px;color:var(--violet);letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+.info-box .v{font-size:12.5px;color:var(--ink-soft);line-height:1.55;} .info-box .v b{color:var(--ink);}
+
+.sheet{background:#FEFEFC;color:#1A1A1A;border-radius:var(--r-sm);padding:24px 26px;}
+.sh-head{text-align:center;border-bottom:2px solid #1A1A1A;padding-bottom:12px;margin-bottom:13px;}
+.sh-logo{width:38px;height:38px;border-radius:9px;margin:0 auto 7px;background:var(--violet-t);color:var(--violet);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+.sh-en{font-family:var(--serif);font-size:18px;font-weight:700;}
+.sh-ur{font-family:var(--nastaliq);font-size:15px;margin:4px 0;direction:rtl;}
+.sh-exam{font-size:11px;color:#666;}
+.sh-q{display:flex;gap:9px;margin:12px 0;}
+.sh-q .num{color:var(--violet);font-weight:700;font-size:12.5px;}
+.q-en{font-weight:500;font-size:13px;} .q-ur{text-align:right;direction:rtl;font-family:var(--nastaliq);font-size:13.5px;color:#444;margin-top:2px;line-height:1.9;}
+
+.bars{display:flex;align-items:flex-end;gap:14px;height:170px;padding:14px 0;}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;}
+.bar .col{width:100%;max-width:50px;border-radius:8px 8px 0 0;}
+.bar .lb{font-size:11px;color:var(--muted);font-weight:500;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;border-bottom:1px solid var(--line);}
+td{padding:12px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:0;}
+
+.paper-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--r-sm);margin-top:11px;}
+.paper-row.p1{background:var(--peach-t);} .paper-row.p2{background:var(--blue-t);} .paper-row.p3{background:var(--pink-t);}
+.paper-row .ic{width:40px;height:40px;border-radius:11px;background:var(--white);color:var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.paper-row .meta{flex:1;} .paper-row .meta b{font-weight:700;font-size:14px;} .paper-row .meta span{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px;opacity:.85;}
+
+.screen{display:none;} .screen.on{display:block;}
+.foot-note{margin-top:14px;color:var(--muted);font-size:12px;padding-left:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="board">
+    <div class="top">
+      <div class="logo"><b>پ</b>archa <small>AII</small></div>
+      <div class="pill-nav"><button>Today</button><button>This Week</button><button class="on">This Month</button><button>Reports</button></div>
+      <button class="theme-btn" onclick="toggleTheme()"><span id="ti">🌙</span> <span id="tl">Dark</span></button>
+      <div class="top-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"></path><path d="m22 6-10 7L2 6"></path></svg></div>
+      <div class="top-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg><span class="d"></span></div>
+    </div>
+
+    <div class="body">
+      <nav class="rail">
+        <a data-go="dashboard" class="on" title="Dashboard"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg></a>
+        <a data-go="generate" title="Generate"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></a>
+        <a data-go="syllabus" title="Syllabus"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 20h16"></path></svg></a>
+        <a data-go="adaptive" title="Adaptive"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></a>
+        <a data-go="results" title="Results"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="11" width="3" height="7" fill="currentColor" stroke="none"></rect><rect x="11" y="6" width="3" height="12" fill="currentColor" stroke="none"></rect><rect x="16" y="14" width="3" height="4" fill="currentColor" stroke="none"></rect></svg></a>
+        <a data-go="analytics" title="Analytics"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></a>
+        <a data-go="mypapers" title="My Papers"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></a>
+        <span class="sp"></span>
+        <a data-go="settings" title="Settings"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 2h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 22h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"></path></svg></a>
+      </nav>
+
+      <div class="content">
+
+        <!-- ===== DASHBOARD ===== -->
+        <section class="screen on" data-screen="dashboard">
+          <div class="head"><div><div class="k">Manage and track your papers</div><div class="h1">Paper Dashboard</div></div><div class="search"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>Search papers, subjects, results…</div></div>
+          <div class="grid-dash">
+            <div class="card">
+              <div class="ch"><div class="tt">Recent Papers</div><button class="mini-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button></div>
+              <div class="seg"><button class="on">This week</button><button>Older</button></div>
+              <div class="ongoing"><span>On going drafts</span><span class="cnt">3</span></div>
+              <div class="task t1"><div class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l6 5 6-5v18l-6-4-6 4z"></path></svg></div><div class="tt">First Term – Math – Class 4</div><div class="ds">10 questions · bilingual · Bloom balanced</div></div>
+              <div class="task t2"><div class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg></div><div class="tt">Science Quiz – Class 5</div><div class="ds">15 questions · MCQ + short · exported</div></div>
+              <div class="task t3"><div class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div><div class="ic" style="font-family:var(--nastaliq);font-weight:700;font-size:15px">اردو</div><div class="tt">اردو ٹیسٹ – کلاس 3</div><div class="ds">8 questions · draft · Urdu review pending</div></div>
+            </div>
+            <div class="card">
+              <div class="ch"><div class="tt">Paper Status</div><button class="mini-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"></path></svg></button></div>
+              <div class="donut-wrap"><div class="donut"></div><div class="dleg"><div class="row"><i style="background:var(--blue)"></i>In progress <b>14</b></div><div class="row"><i style="background:var(--orange)"></i>Exported <b>32</b></div><div class="row"><i style="background:var(--board)"></i>Draft <b>50</b></div></div></div>
+            </div>
+            <div class="card">
+              <div class="ch"><div class="tt">Questions Generated</div><button class="mini-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"></path></svg></button></div>
+              <div class="chart">
+                <div class="tooltip"><div class="r"><i style="background:var(--blue)"></i>AI-made: 246</div><div class="r" style="margin-top:3px"><i style="background:var(--orange)"></i>From bank: 132</div></div>
+                <svg width="100%" height="170" viewBox="0 0 380 170" preserveAspectRatio="none">
+                  <defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B9EF5" stop-opacity=".25"></stop><stop offset="1" stop-color="#3B9EF5" stop-opacity="0"></stop></linearGradient><linearGradient id="go" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5892E" stop-opacity=".22"></stop><stop offset="1" stop-color="#F5892E" stop-opacity="0"></stop></linearGradient></defs>
+                  <path d="M0,90 C40,60 60,50 90,70 C120,90 140,40 170,55 C200,70 220,110 250,80 C280,55 310,60 340,45 L380,50 L380,170 L0,170 Z" fill="url(#gb)"></path>
+                  <path d="M0,90 C40,60 60,50 90,70 C120,90 140,40 170,55 C200,70 220,110 250,80 C280,55 310,60 340,45 L380,50" fill="none" stroke="var(--blue)" stroke-width="2.5"></path>
+                  <path d="M0,130 C40,120 60,140 90,125 C120,110 140,135 170,128 C200,120 220,138 250,132 C280,126 310,140 340,120 L380,124 L380,170 L0,170 Z" fill="url(#go)"></path>
+                  <path d="M0,130 C40,120 60,140 90,125 C120,110 140,135 170,128 C200,120 220,138 250,132 C280,126 310,140 340,120 L380,124" fill="none" stroke="var(--orange)" stroke-width="2.5"></path>
+                  <circle cx="250" cy="80" r="5" fill="#fff" stroke="var(--blue)" stroke-width="2.5"></circle><line x1="250" y1="80" x2="250" y2="132" stroke="var(--muted-2)" stroke-width="1" stroke-dasharray="3 3"></line><circle cx="250" cy="132" r="5" fill="#fff" stroke="var(--orange)" stroke-width="2.5"></circle>
+                </svg>
+                <div class="xaxis"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span></div>
+              </div>
+            </div>
+            <div class="card wide">
+              <div class="ch"><div class="tt">Bloom Coverage</div><button class="mini-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="16" x2="20" y2="16"></line></svg></button></div>
+              <div class="inv">
+                <div><div class="rt"><span class="lbl">Remember + Understand</span><span class="val">62% | <b>Strong</b></span></div><div class="ibar"><i style="width:62%;background:var(--purple)"></i></div></div>
+                <div><div class="rt"><span class="lbl">Apply + Analyse</span><span class="val">28% | <b>Needs work</b></span></div><div class="ibar"><i style="width:28%;background:var(--red)"></i></div></div>
+                <div><div class="rt"><span class="lbl">Evaluate + Create</span><span class="val">10% | <b>Low</b></span></div><div class="ibar"><i style="width:10%;background:var(--orange)"></i></div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ch"><div class="tt">Upcoming Exams</div></div>
+              <div class="meet"><div class="tt">Math – Class 4 (First Term)</div><div class="tm">12 Sep · 9:00 AM</div></div>
+              <div class="meet"><div class="tt">Science – Class 5</div><div class="tm">14 Sep · 11:00 AM</div></div>
+              <div class="see">See all exams →</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== GENERATE ===== -->
+        <section class="screen" data-screen="generate">
+          <div class="head"><div><div class="k">Build a bilingual, Bloom-tagged paper</div><div class="h1 sm">Generate Paper</div></div><button class="btn-solid"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New paper</button></div>
+          <div class="two">
+            <div>
+              <div class="card">
+                <div class="mini-title">Paper setup</div>
+                <div class="field-row"><div><label>Subject select karen</label><select><option>Mathematics</option><option>Science</option><option>Urdu</option></select></div><div><label>Class / Grade select karen</label><select><option>Class 4</option><option>Class 5</option></select></div></div>
+                <label>Topic select karen (syllabus se)</label><select><option>Fractions</option><option>Decimals</option></select>
+                <div class="field-row" style="margin-top:14px"><div><label>Total questions</label><input type="number" value="10" /></div><div><label>Difficulty</label><select><option>Easy</option><option selected>Medium</option><option>Hard</option></select></div></div>
+                <label>Question types</label><div class="chips"><div class="chip on">Multiple choice</div><div class="chip">Short answer</div><div class="chip">Essay</div></div>
+                <div class="field-row" style="margin-top:14px"><div><label>Bloom distribution</label><select><option>Balanced</option><option>Foundational</option><option>Advanced</option></select></div><div><label>Paper type</label><select id="ptype" onchange="toggleRatio(this)"><option>Mixed (sab types)</option><option>MCQ-only</option><option>Subjective</option><option value="custom">Custom ratio (MCQ vs Subjective)</option></select></div></div>
+                <div id="ratioBox" style="display:none">
+                  <label>MCQ vs Subjective ratio</label>
+                  <div class="chips"><div class="chip">20/80</div><div class="chip">30/70</div><div class="chip on">50/50</div><div class="chip">70/30</div><div class="chip">80/20</div></div>
+                  <label>MCQ % (baaki subjective)</label><input type="number" value="50" />
+                </div>
+                <label>Paper title / naam (optional)</label><input placeholder="e.g. First Term – Math – Class 4" value="First Term – Math – Class 4" />
+                <div class="actions"><button class="btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4 12.7 8.3 17 10 12.7 11.7 11 16 9.3 11.7 5 10 9.3 8.3z"></path></svg>1. Generate with AI</button><button class="btn-ghost">2. Build from bank</button></div>
+                <div class="ai-box"><div class="ic"><svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.5"></path></svg></div><div style="flex:1"><div class="t">AI retry in progress…</div><div class="m">Pehli attempt timeout hui — model dobara try kar raha hai. 8 / 10 ban chuke.</div><div class="ai-meta"><span>Attempt 2 of 3 · backoff 3s</span><span>80%</span></div><button class="retry-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"></path></svg>Retry now</button></div></div>
+              </div>
+              <div class="qcard c1"><div class="r1"><div class="thumb">Q1</div><div><div class="tt2">Which is equal to ½?</div><div class="st2">MCQ · Remember · Fractions</div></div><span class="spill" style="margin-left:auto">Ready</span></div><div class="r2"><span>Bilingual ✓</span><span>4 options</span></div></div>
+              <div class="qcard c2"><div class="r1"><div class="thumb">Q2</div><div><div class="tt2">Pizza fraction problem</div><div class="st2">MCQ · Apply · Fractions</div></div><span class="spill warn" style="margin-left:auto">Review</span></div><div class="r2"><span>Bilingual ✓</span><span>Urdu check pending</span></div></div>
+            </div>
+            <div class="card"><div class="mini-title">This paper</div><div class="srow"><span>Subject</span><b>Mathematics</b></div><div class="srow"><span>Topic</span><b>Fractions</b></div><div class="srow"><span>Questions</span><b>10</b></div><div class="srow"><span>Language</span><b>Urdu + English</b></div><div class="srow"><span>Bloom mix</span><span class="tag-pill">Balanced</span></div><button class="btn-primary" style="width:100%;margin-top:16px" onclick="go('results')">Export &amp; preview →</button></div>
+          </div>
+        </section>
+
+        <!-- ===== SYLLABUS ===== -->
+        <section class="screen" data-screen="syllabus">
+          <div class="head"><div><div class="k">PDF/textbook se topics nikaalein</div><div class="h1 sm">Syllabus Upload</div></div></div>
+          <div class="two">
+            <div class="card">
+              <div class="field-row"><div><label>Subject</label><select><option>Mathematics</option></select></div><div><label>Class / Grade</label><select><option>Class 4</option></select></div></div>
+              <label>Single PDF (text-based ya scanned)</label>
+              <div class="upload-zone"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 20h16"></path></svg></div><div class="big">PDF yahan drop karen</div><div class="sm">ya click karke choose karen</div></div>
+              <div class="actions"><button class="btn-primary">Upload &amp; extract topics</button></div>
+              <label style="margin-top:20px">Ya ZIP (multiple PDF + images)</label>
+              <div class="upload-zone"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg></div><div class="big">ZIP yahan drop karen</div><div class="sm">multiple files ek saath</div></div>
+              <div class="actions"><button class="btn-ghost">Upload ZIP &amp; extract topics</button></div>
+            </div>
+            <div class="info-box"><div class="k">How it works</div><div class="v">AII PDF/images parse karke chapters aur sub-topics nikaalta hai, phir unhe save kar deta hai. <b>Subject + grade dono bharna zaroori hai.</b></div></div>
+          </div>
+        </section>
+
+        <!-- ===== ADAPTIVE ===== -->
+        <section class="screen" data-screen="adaptive">
+          <div class="head"><div><div class="k">Class ki weak Bloom levels par focus</div><div class="h1 sm">Adaptive Paper</div></div></div>
+          <div class="two">
+            <div class="card"><label>Learn from paper ID (jiska result upload hua hai)</label><input placeholder="e.g. PAP-2026-0043" /><div class="info-box" style="margin-top:14px"><div class="v">Total questions aur difficulty upar <b>Generate paper</b> screen ke fields se liye jate hain.</div></div><div class="actions"><button class="btn-primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg>Generate adaptive paper</button></div></div>
+            <div class="info-box"><div class="k">AII suggests</div><div class="v">Jin Bloom levels par class sab se kam score karti hai, un par zyada questions allocate kiye jate hain — taake practice un kamzoriyon par ho.</div></div>
+          </div>
+        </section>
+
+        <!-- ===== RESULTS ===== -->
+        <section class="screen" data-screen="results">
+          <div class="head"><div><div class="k">Live paper dekh kar export karein</div><div class="h1 sm">Results &amp; Preview</div></div><button class="btn-line" onclick="go('generate')">← Back to generate</button></div>
+          <div class="two">
+            <div class="sheet"><div class="sh-head"><div class="sh-logo">AII</div><div class="sh-en">Ameen Islamic Institute</div><div class="sh-ur">امین اسلامی انسٹیٹیوٹ</div><div class="sh-exam">First Term — Mathematics — Class 4</div></div><div class="sh-q"><div class="num">1.</div><div><div class="q-en">Which of these is equal to ½?</div><div class="q-ur">ان میں سے کون سا ½ کے برابر ہے؟</div></div></div><div class="sh-q"><div class="num">2.</div><div><div class="q-en">A pizza has 8 slices. You eat 3. What fraction is left?</div><div class="q-ur">ایک پیزا کے 8 حصے ہیں۔ آپ نے 3 کھائے۔ کتنا باقی بچا؟</div></div></div><div class="sh-q"><div class="num">3.</div><div><div class="q-en">Explain why 2/4 and 1/2 are equivalent fractions.</div><div class="q-ur">وضاحت کریں کہ 2/4 اور 1/2 مساوی کسر کیوں ہیں۔</div></div></div></div>
+            <div class="card"><div class="mini-title">Actions</div><div class="actions" style="margin-top:0;flex-direction:column"><button class="btn-primary" style="width:100%">Per-question details</button><button class="btn-ghost" style="width:100%">Print / PDF dekhen</button><button class="btn-ghost" style="width:100%">Result dashboard dekhen</button></div><div class="srow" style="margin-top:16px;padding-top:14px"><span>📥 Result CSV</span><b style="color:var(--violet);cursor:pointer">Download</b></div><div class="srow"><span>📤 Filled CSV</span><b style="color:var(--violet);cursor:pointer">Upload</b></div></div>
+          </div>
+        </section>
+
+        <!-- ===== ANALYTICS ===== -->
+        <section class="screen" data-screen="analytics">
+          <div class="head"><div><div class="k">Difficulty & discrimination, Bloom comparison</div><div class="h1 sm">Analytics</div></div></div>
+          <div class="field-row" style="max-width:700px;margin-bottom:20px"><div><label>Paper ID</label><input placeholder="paper banane ke baad jo ID milti hai" /></div><div><label>Kaunsa upload (newest pehle)</label><select><option>24 Aug 2026 · 42 students</option><option>18 Aug 2026 · 39 students</option></select></div><div style="display:flex;align-items:flex-end"><button class="btn-primary" style="min-width:0">Analytics dekhen</button></div></div>
+          <div class="two-eq">
+            <div class="card"><div class="mini-title">Per-question item analysis</div><table><thead><tr><th>Q</th><th>P (diff)</th><th>D (disc)</th><th>Verdict</th></tr></thead><tbody><tr><td>Q1</td><td>0.72</td><td>0.41</td><td><span class="spill">Good</span></td></tr><tr><td>Q2</td><td>0.55</td><td>0.28</td><td><span class="spill warn">Review</span></td></tr><tr><td>Q3</td><td>0.31</td><td>0.12</td><td><span class="spill bad">Problematic</span></td></tr><tr><td>Q4</td><td>0.68</td><td>0.39</td><td><span class="spill">Good</span></td></tr></tbody></table></div>
+            <div class="card"><div class="mini-title">Bloom's Taxonomy comparison</div><div class="bars"><div class="bar"><div class="col" style="height:80%;background:var(--purple)"></div><div class="lb">Remember</div></div><div class="bar"><div class="col" style="height:62%;background:var(--blue)"></div><div class="lb">Understand</div></div><div class="bar"><div class="col" style="height:40%;background:var(--orange)"></div><div class="lb">Apply</div></div><div class="bar"><div class="col" style="height:26%;background:var(--red)"></div><div class="lb">Analyse</div></div></div><p style="font-size:12.5px;color:var(--muted);margin-top:6px">Kaunse cognitive levels kamzor hain — marks-weighted average.</p></div>
+          </div>
+        </section>
+
+        <!-- ===== MY PAPERS ===== -->
+        <section class="screen" data-screen="mypapers">
+          <div class="head"><div><div class="k">Naam, subject, date se dhoondein</div><div class="h1 sm">My Papers</div></div><button class="btn-solid" onclick="go('generate')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Generate</button></div>
+          <div class="card">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px"><input placeholder="Paper naam ya subject se dhoondein…" style="margin-top:0" /><button class="btn-line" style="flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><path d="M23 4v6h-6"></path><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"></path></svg>Refresh</button></div>
+            <div class="seg"><button class="on">All</button><button>Math</button><button>Science</button><button>Urdu</button></div>
+            <div class="paper-row p1"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="meta"><b>First Term – Math – Class 4</b><span>Mathematics · 10 Q · 24 Aug 2026</span></div><span class="tag-pill">Exported</span></div>
+            <div class="paper-row p2"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="meta"><b>Science Quiz – Class 5</b><span>Science · 15 Q · 21 Aug 2026</span></div><span class="spill">Ready</span></div>
+            <div class="paper-row p3"><div class="ic" style="font-family:var(--nastaliq);font-weight:700">ا</div><div class="meta"><b>اردو ٹیسٹ – کلاس 3</b><span>Urdu · 8 Q · 18 Aug 2026</span></div><span class="spill warn">Draft</span></div>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS ===== -->
+        <section class="screen" data-screen="settings">
+          <div class="head"><div><div class="k">Letterhead har paper par lagega</div><div class="h1 sm">School Settings</div></div></div>
+          <div class="two">
+            <div class="card">
+              <label>Logo</label>
+              <div class="upload-zone" style="padding:20px"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="2"></circle><path d="M21 15l-5-5L5 21"></path></svg></div><div class="big">Logo upload karen</div></div>
+              <label>School/Institute name (English)</label><input value="Ameen Islamic Institute" />
+              <label>School/Institute name (Urdu)</label><input style="text-align:right;font-family:var(--nastaliq)" value="امین اسلامی انسٹیٹیوٹ" />
+              <label>Address</label><input value="Mingora, Swat" />
+              <label>Accent colour (letterhead line)</label>
+              <div style="display:flex;gap:12px;align-items:center;margin-top:7px"><input type="color" value="#6C5CE7" style="width:52px;min-height:46px;padding:4px;cursor:pointer" /><div class="chips" style="margin-top:0"><div class="chip on"><span style="width:14px;height:14px;border-radius:50%;background:var(--violet);display:inline-block"></span>Violet</div><div class="chip"><span style="width:14px;height:14px;border-radius:50%;background:var(--blue);display:inline-block"></span>Blue</div><div class="chip"><span style="width:14px;height:14px;border-radius:50%;background:#16294A;display:inline-block"></span>Navy</div></div></div>
+              <div class="actions"><button class="btn-primary">Settings save karen</button></div>
+            </div>
+            <div class="card"><div class="mini-title">Header preview</div><div class="sheet" style="margin:0"><div class="sh-head" style="border-bottom-color:var(--violet)"><div class="sh-logo">AII</div><div class="sh-en">Ameen Islamic Institute</div><div class="sh-ur">امین اسلامی انسٹیٹیوٹ</div><div class="sh-exam">Examination — 2026</div></div></div></div>
+          </div>
+        </section>
+
+        <div class="foot-note"><b>Panze-style full prototype</b> — icon rail se koi bhi screen kholein. Sab aapke asal content par. Yeh abhi visual mockup hai (buttons real kaam nahi karte, sirf navigation).</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function go(name){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.dataset.screen===name));
+    document.querySelectorAll('.rail a').forEach(n=>n.classList.toggle('on', n.dataset.go===name));
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.rail a[data-go]').forEach(n=>n.addEventListener('click',()=>go(n.dataset.go)));
+  function toggleRatio(sel){
+    document.getElementById('ratioBox').style.display = sel.value==='custom' ? 'block' : 'none';
+  }
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',function(){
+    // toggle within same chip group
+    const sibs=this.parentElement.querySelectorAll('.chip');
+    if(this.parentElement.querySelectorAll('.chip.on').length<=1 || !this.classList.contains('on')){
+      // ratio presets = single select; question types = multi. Simple: ratio row single, others toggle.
+    }
+    this.classList.toggle('on');
+  }));
+  function toggleTheme(){
+    // Note: yeh prototype light-first hai. Full dark palette baad mein token-system mein add hoga.
+    alert('Dark mode full integration ke waqt token-system mein add hoga. Abhi prototype light hai.');
+  }
+</script>
+</body>
+</html>

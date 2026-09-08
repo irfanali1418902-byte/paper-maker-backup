@@ -144,11 +144,16 @@
      ⚠ NOTHING IN THE GATE SEES THIS. css_type_probe.mjs and
      css_selector_probe.mjs are both fixed at 1280x900. Verified with a
      viewport override at 720px. */
-  @media (max-width: 760px) {
-    .app-sidebar {
-      display: none;
-    }
-  }
+  /* ⚠ `.app-sidebar { display: none }` YAHAN SE HAT GAYA -- UI-096. Wo class
+     ab `index.html` mein hai hi nahi: grid par jate waqt `<aside class="app-
+     sidebar sidenav__panel">` `<div class="o-shell__nav sidenav__panel">` ban
+     gaya. Rule reh jata to KISI CHEEZ SE MATCH NA KARTA aur agla parhne wala
+     samajhta ke mobile par sidebar chhupana ab bhi yahan se hota hai. Us ka
+     kaam ab is file ke aakhir wale UI-096 block mein hai
+     (`.o-shell__nav { display: none }` @760), jahan poori grid single-column
+     hoti hai. Ooper ka lamba note us waqt ka hai jab ye rule zinda thi aur us
+     ki wajah (layer(legacy) se layer(components) mein aana) ab bhi durust hai
+     -- isi liye wo rakha gaya hai, sirf rule hatai gayi. */
 
   /* THE BRAND ROW, page-scoped, UI-068. index took `.sidenav__brand` for its
      padding — which was already byte-identical at `2px 22px 20px`, so that
@@ -429,3 +434,41 @@
     color: var(--muted);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   PANZE — SIRF `index` KE APNE FARQ. Shell aur skin `05-components/panze.css`
+   mein hai (UI-099). Yahan wohi teen cheezein hain jo is page ki apni hain:
+   lang toggle (jo sirf index par hai), brand ka tag, aur `.content` wrapper.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .pz-logo .tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--panze-muted);
+  }
+
+  .pz-top .lang-toggle {
+    border-color: var(--panze-line);
+    margin: 0;
+  }
+
+  .pz-top .lang-toggle button:not([data-active="1"]) {
+    color: var(--panze-ink-2);
+  }
+
+  .pz-top .lang-toggle button[data-active="1"] {
+    background: var(--panze-coal);
+  }
+
+  .pz-logo .tag {
+    background: none;
+    color: var(--panze-ink-2);
+  }
+
+  .pz-body .content {
+    padding: 0;
+    max-width: none;
+  }
+}

@@ -199,6 +199,12 @@ const EXPR = String.raw`(() => {
 
     const cs = getComputedStyle(el);
     if (cs.visibility === 'hidden') continue;
+    // Visually-hidden labels: screen reader ke liye DOM mein, aankh ke liye
+    // nahi. Icon-rail nav apne naam isi tareeqe se rakhti hai (index). Inka
+    // getClientRects() 1px deta hai, is liye upar wala check kaafi nahi -- aur
+    // bina is ke probe nau jhoote failures deta hai.
+    if (cs.clipPath && cs.clipPath !== 'none' && cs.position === 'absolute'
+        && el.getBoundingClientRect().width <= 1) continue;
 
     // Accumulated opacity: an ancestor at .7 dims this text too. D26's 'before'
     // case was exactly this and assuming 1 is how that row got inverted.

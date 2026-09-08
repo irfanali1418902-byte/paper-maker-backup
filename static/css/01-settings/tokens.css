@@ -241,4 +241,58 @@
      library picker. This is the two most common numbers (16/48) on --slate-900,
      so it tints the same navy --shadow-1 does instead of adding a third black. */
   --shadow-2: 0 16px 48px rgba(15, 23, 42, 0.22);
+  /* ══ PANZE PALETTE — naya design target, Irfan 2026-09-07 ═══════════════════
+     `docs/design/mockup-panze.html`. Ye `mockup-modern.html` ki jagah leta hai,
+     us ka refinement NAHI hai: page grey hota hai jis par ek inset "board"
+     baithta hai, 248px labelled sidebar ki jagah 52px ICON RAIL, indigo ki
+     jagah VIOLET, aur buttons pill.
+
+     ⚠ YE QADREIN YAHAN HAIN AUR SIRF YAHAN HO SAKTI THIN. `unsanctioned_hex`
+     ratchet poore tree mein hex ginta hai aur SIRF is file ko chhoot deta hai
+     (`token_hex`). Kisi component ya page file mein ye likhna us adad ko charha
+     deta -- wahi jo 2026-09-07 ko ek comment se hua tha.
+
+     ⚠ PURANI MODERN QADREIN DELETE NAHI KI GAYIN. Nau pages abhi un par chal
+     rahe hain; jab tak sab Panze par na aa jayen, dono set zinda rehne chahiyen.
+     Jo aakhri page migrate kare wo `--indigo-*` / `--navy-*` ki safai kare. */
+
+  /* surfaces: page grey, board, aur cards ki safedi */
+  --panze-bg:      #D9D9E3;   /* poore page ka grey — board is par tairta hai */
+  --panze-board:   #F4F4F7;   /* inset board, aur inputs/segments ka rest state */
+  --panze-line:    #EAEAF1;
+
+  /* ink */
+  --panze-ink:     #14141B;
+  --panze-ink-2:   #3A3A47;
+  --panze-muted:   #8A8A9A;
+  --panze-muted-2: #B4B4C2;
+  --panze-coal:    #151519;   /* active pill / active rail item */
+
+  /* brand: violet */
+  --panze-violet:   #6C5CE7;
+  --panze-violet-d: #5A4BD4;
+
+  /* accents (charts, status) */
+  --panze-blue:   #3B9EF5;
+  --panze-orange: #F5892E;
+  --panze-purple: #8B3DF0;
+  --panze-red:    #F0455B;
+  --panze-green:  #22C58B;
+
+  /* pastel tints — Panze ki sab se numayan cheez: cards khud rangeen hote hain */
+  --panze-t-pink:   #FDE9EE;
+  --panze-t-peach:  #FDEEE4;
+  --panze-t-blue:   #E8F1FD;
+  --panze-t-mint:   #E4F7F0;
+  --panze-t-violet: #EEEBFD;
+  --panze-t-amber:  #FDF4E3;
+
+  /* shape: Panze bohat zyada gol hai */
+  --panze-r-board: 26px;
+  --panze-r:       20px;
+  --panze-r-sm:    14px;
+  --panze-r-pill:  999px;
+
+  /* Panze ka apna shadow — --shadow-1 se alag tint (20,20,27 banaam 15,23,42) */
+  --panze-shadow: 0 1px 3px rgba(20, 20, 27, 0.04), 0 10px 30px rgba(20, 20, 27, 0.06);
 }

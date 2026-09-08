@@ -233,6 +233,16 @@
    first draft named was deleted by UI-060 on 2026-08-16. Probed: 17x17 on all
    nine icon-bearing pages, 0 deltas. Read its header. */
 @import url("05-components/icon.css")      layer(components);
+
+/* UI-099 — PANZE shell aur skin. Design target `docs/design/mockup-panze.html`.
+   ⚠ SAB SE AAKHIR MEIN, AUR YE NAAPNE PAR TAY HUA. Pehle ise `row.css` ke baad
+   rakha gaya tha aur teen cheezein chup-chaap haar gayin: rail item ka radius
+   (`nav.css` se), input ka min-height (`field.css` ke `.ctl-stack` se), aur card
+   ka box. Teenon barabar specificity par thin, to jo file BAAD mein import hoti
+   wo jeet jati. Skin ko har us component ke BAAD aana chahiye jise wo dobara
+   rangti hai. Jin pages par `.pz-wrap` markup nahi, un par ye file ek rule bhi
+   nahi lagati. */
+@import url("05-components/panze.css")     layer(components);
 /* @import url("05-components/table-data.css") layer(components); */
 
 /* UI-050..052 */

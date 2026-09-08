@@ -6,14 +6,14 @@
     "inline_style_attrs": 466,
     "inline_style_non_display": 385,
     "hardcoded_hex": 0,
-    "hardcoded_hex_inline": 76,
-    "legacy_css_lines": 1873,
-    "shared_css_lines": 4015,
-    "total_css_lines": 1873,
-    "stylesheet_hex": 309,
-    "total_hardcoded_hex": 385,
-    "token_hex": 29,
-    "unsanctioned_hex": 356
+    "hardcoded_hex_inline": 74,
+    "legacy_css_lines": 1601,
+    "shared_css_lines": 6294,
+    "total_css_lines": 1601,
+    "stylesheet_hex": 274,
+    "total_hardcoded_hex": 348,
+    "token_hex": 50,
+    "unsanctioned_hex": 298
   },
   "per_page": {
     "bank.html": {
@@ -22,7 +22,7 @@
       "inline_style_attrs": 90,
       "inline_style_non_display": 76,
       "hardcoded_hex": 0,
-      "hardcoded_hex_inline": 15
+      "hardcoded_hex_inline": 13
     },
     "blueprint.html": {
       "style_blocks": 0,
@@ -489,6 +489,7 @@
       "id=\"bloomShortfall\"",
       "id=\"classSettingsStatus\"",
       "id=\"classSize\"",
+      "id=\"crumbScreen\"",
       "id=\"csvDownloadBtn\"",
       "id=\"csvFileInput\"",
       "id=\"csvUploadBtn\"",
@@ -522,6 +523,7 @@
       "id=\"printBtn\"",
       "id=\"qdetailsWrap\"",
       "id=\"quickStats\"",
+      "id=\"railLabel\"",
       "id=\"ratioBlock\"",
       "id=\"replaceCandidates\"",
       "id=\"replaceModal\"",

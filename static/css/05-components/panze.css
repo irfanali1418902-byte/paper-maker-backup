@@ -1,0 +1,308 @@
+/* =========================================================================
+   05-components/panze.css — PANZE SHELL AUR SKIN
+
+   Design target: `docs/design/mockup-panze.html` (Irfan, 2026-09-07). Ye
+   `mockup-modern.html` ki JAGAH leta hai, us ka refinement nahi: grey page par
+   ek inset board, 248px labelled sidebar ki jagah 52px ICON RAIL, indigo ki
+   jagah violet, aur buttons pill.
+
+   ⚠ YE FILE UI-098 MEIN `pages/index.css` KE ANDAR LIKHI GAYI THI AUR UI-099
+   MEIN YAHAN AAYI. Wajah saaf hai: wahan rehte hue har page ko is ki naqal
+   chahiye hoti -- nau copies, yani theek wohi bimari jis ke liye ye poora epic
+   shuru hua tha (`PLAN.md` §1: "the same shell, card, button and modal are
+   redefined 4-9 times and drift independently").
+
+   ⚠ EK BHI HEX YAHAN NAHI. Poori palette `01-settings/tokens.css` ke
+   `--panze-*` tokens mein hai, kyunke `unsanctioned_hex` ratchet sirf usi file
+   ko chhoot deta hai.
+
+   ⚠ SHELL LAYOUT HAI MAGAR SKIN BHI -- board ka apna rang aur shadow hai. Is
+   liye ye `04-objects/` mein nahi hai: us folder ka apna qaida "layout only,
+   zero cosmetics" hai (`shell.css` ka header). Agar kabhi Panze ka layout aur
+   uski skin alag karni ho to `.pz-wrap`/`.pz-board`/`.pz-body` object ban sakte
+   hain aur baqi yahan reh sakta hai.
+
+   MARKUP jo ye file maangti hai:
+
+     div.pz-wrap > div.pz-board > div.pz-top      (logo + crumb + spacer)
+                                > div.pz-body     (nav.pz-rail + main)
+   ========================================================================= */
+
+/* ⚠ IS FILE MEIN `@layer components { }` WRAPPER JAAN-BOOJH KAR NAHI HAI, AUR
+   YE EK NAAPI HUI GHALTI KA NATIJA HAI. Pehli koshish mein wrapper tha (kyunke
+   ye rules `pages/index.css` se yahan aaye, jahan wo zaroori hai). Natija: file
+   `layer(components)` ke saath import hoti hai AUR apne andar bhi wahi layer
+   kholti hai, jis se `components.components` ek NESTED SUB-LAYER ban jata hai --
+   aur nested sub-layer apne parent ke seedhe rules se HAARTA hai.
+
+   Us ka nishaan bilkul saaf tha aur pehchanne mein waqt laga: panze ka har
+   SAME-LAYER muqabla haar raha tha (card ka radius, input ka min-height, rail
+   item ka rang) magar cross-layer muqable jeet raha tha (legacy ka `.gen-btn`,
+   elements ka `input`). Ek hi rule ke andar kuch declarations lagna aur kuch na
+   lagna isi ki alaamat hai.
+
+   Baqi tamam `05-components/*.css` files plain rules rakhti hain aur layer
+   sirf `main.css` ke `@import ... layer(components)` se aati hai. Ye file bhi
+   wahi karti hai. `card.css` mein `@layer` ki ginti SIFAR hai -- wohi namoona. */
+
+  /* ── shell: grey page + inset board ─────────────────────────────────────
+     Panze ka sab se numayan faisla: page khud grey hai aur saara app ek gol
+     safed-ish board par tairta hai. */
+
+  .pz-wrap {
+    padding: 16px;
+    min-height: 100vh;
+    background: var(--panze-bg);
+  }
+
+  .pz-board {
+    background: var(--panze-board);
+    border-radius: var(--panze-r-board);
+    min-height: calc(100vh - 32px);
+    padding: 22px 26px;
+    box-shadow: var(--panze-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── top bar ─────────────────────────────────────────────────────────── */
+
+  .pz-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+
+  .pz-logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  /* Logo ka tile ab violet hai, purana `--primary` neela nahi. */
+
+  .pz-logo .logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--panze-violet);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .pz-logo .name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--panze-ink);
+  }
+
+  .pz-crumb {
+    font-size: 13px;
+    color: var(--panze-muted);
+    font-weight: 600;
+  }
+
+  /* ⚠ DO CHEEZEIN JO PURANE NAVY SHELL KE LIYE RANGI GAYI THIN. `css_contrast_
+     probe` ne board ke grey par naapa: اردو button 2.00:1, aur brand ka tag
+     2.98:1 (us par teal `--color-accent-soft` ka background tha). Panze mein
+     brand tag saada hai aur toggle board par baithta hai. */
+
+  /* ⚠ MOCKUP SE EK JAAN-BOOJH KAR FARQ, AUR WO DARJ HAI. Panze khud is jagah
+     `--muted` rakhta hai (`.logo small`), magar wo 10px/600 par board ke grey
+     par 3.09:1 deta hai -- AA se neeche. Ek qadam gehra (`--panze-ink-2`) 8.9:1
+     par le aata hai. Ye wahi faisla hai jo D26/D41 par hua: adad pehle, mockup
+     ki harf-ba-harf naqal baad mein. Agar Irfan chahe ke bilkul mockup jaisa ho
+     to ye chaar lines hata dein. */
+
+  .pz-crumb b {
+    color: var(--panze-ink);
+  }
+
+  .pz-spacer {
+    flex: 1;
+  }
+
+  /* ── body: rail + content ────────────────────────────────────────────── */
+
+  .pz-body {
+    display: flex;
+    gap: 22px;
+    flex: 1;
+    margin-top: 14px;
+    min-height: 0;
+  }
+
+  /* ⚠ ICON RAIL. `.sidenav` component `background`, `gap` aur `flex-direction`
+     deta hai; yahan wo panel-chaurai chhor kar 52px ho jata hai aur us ka navy
+     background board ke rang mein ghul jata hai (yani ghayab). */
+
+  .pz-rail {
+    width: 52px;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 0 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .pz-rail .sidenav__link {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: var(--panze-r-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--panze-muted);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .pz-rail .sidenav__link:hover {
+    background: var(--white);
+    color: var(--panze-ink);
+  }
+
+  /* Active item COAL hai, violet nahi -- Panze ka apna faisla (`.rail a.on`). */
+
+  .pz-rail .sidenav__link[data-active="1"] {
+    background: var(--panze-coal);
+    color: var(--white);
+    box-shadow: none;
+  }
+
+  /* ⚠ LABELS NAZAR SE HATTE HAIN, DOM SE NAHI. `display: none` un ka
+     accessible naam bhi le jata aur icon-only nav bina naam ke screen reader
+     par be-maani ho jata. Ye clip wala tareeqa naam chhorta hai. */
+
+  /* ⚠ "Workspace" BHI YAHIN AATA HAI, AUR WO PEHLE DELETE HO GAYA THA. Panze
+     ke rail mein group heading nahi hoti, to pehli koshish mein wo `<div>`
+     markup se nikal diya gaya -- aur frozen-inventory guard ne use MISSING
+     `data-i18n="sidebar.workspace"` ke tor par pakra. Wo guard theek tha: ek
+     tarjuma-shuda string chup-chaap gayab ho rahi thi. Ab wo nav ka
+     `aria-labelledby` hai -- nazar se hata hua, magar landmark ka naam bana. */
+
+  .pz-rail .sidenav__link span,
+
+  .pz-rail .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+
+    /* `padding: 0` lazmi hai: legacy `.nav-label` 6px/22px padding rakhta hai,
+       jis se 1px ka box 45px chaura ho jata tha -- nazar se to phir bhi chhupa
+       tha, magar `css_contrast_probe` ka "kya ye waqai chhupa hai" wala check
+       chaurai par chalta hai aur use jhoota failure mila. */
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ⚠ SIDEBAR KA FOOTER FILHAL CHHUPA HAI, AUR YE FAISLA-TALAB HAI. Panze ke
+     rail mein 52px hai -- us tagline ki koi jagah nahi. Mockup us ko board ke
+     neeche `.foot-note` ke tor par rakhta hai. DOM se hataya NAHI gaya taake
+     wapas laana ek line ka kaam rahe. */
+
+  .pz-body .sidebar-foot {
+    display: none;
+  }
+
+  /* ── content ─────────────────────────────────────────────────────────── */
+
+  .pz-body .main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Board khud padding rakhta hai, is liye `.content` ki apni padding sirf
+     ooper-neeche rehti hai -- warna dono jama ho kar bohat zyada ho jati. */
+
+  /* ── Panze ki shakl: cards, buttons, inputs ──────────────────────────── */
+
+  .pz-board .card {
+    border-radius: var(--panze-r);
+    box-shadow: var(--panze-shadow);
+    border-color: var(--panze-line);
+  }
+
+  /* Inputs Panze mein safed nahi, BOARD ke grey par baithte hain aur focus par
+     safed ho kar violet border lete hain. */
+
+  .pz-board input,
+
+  .pz-board select,
+
+  .pz-board textarea {
+    background: var(--panze-board);
+    border: 1px solid transparent;
+    border-radius: var(--panze-r-sm);
+    min-height: 46px;
+  }
+
+  .pz-board input:focus,
+
+  .pz-board select:focus,
+
+  .pz-board textarea:focus {
+    background: var(--white);
+    border-color: var(--panze-violet);
+  }
+
+  /* Buttons pill hain aur primary violet. */
+
+  .pz-board .gen-btn,
+
+  .pz-board .btn-primary {
+    background: var(--panze-violet);
+    border-radius: var(--panze-r-pill);
+  }
+
+  .pz-board .gen-btn:hover,
+
+  .pz-board .btn-primary:hover {
+    background: var(--panze-violet-d);
+  }
+
+  .pz-board .ghost-btn,
+
+  .pz-board .btn-line {
+    background: var(--white);
+    border: 0;
+    border-radius: var(--panze-r-pill);
+    color: var(--panze-ink);
+    box-shadow: var(--panze-shadow);
+  }
+
+  /* ── mobile ──────────────────────────────────────────────────────────── */
+
+  @media (max-width: 760px) {
+
+    .pz-wrap {
+      padding: 0;
+      background: var(--panze-board);
+    }
+
+    .pz-board {
+      border-radius: 0;
+      padding: 0;
+      min-height: 100vh;
+      box-shadow: none;
+    }
+
+    .pz-top,
+
+    .pz-rail {
+      display: none;
+    }
+
+    .pz-body {
+      margin-top: 0;
+      gap: 0;
+    }
+  }

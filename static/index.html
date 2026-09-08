@@ -7,20 +7,38 @@
 <link rel="stylesheet" href="/static/css/pages/index.css">
 </head>
 <body data-page="Generator">
-<div class="shell">
+<!-- ============ PANZE SHELL (UI-098) ============
+     `docs/design/mockup-panze.html`: grey page, us par ek inset board, board ke
+     andar top bar + icon rail + content. -->
+<div class="pz-wrap">
+ <div class="pz-board">
 
-  <!-- ============ SIDEBAR (desktop) ============ -->
-  <aside class="app-sidebar sidenav__panel">
-    <div class="brand sidenav__brand">
+  <div class="pz-top">
+    <!-- ⚠ `brand` class LAZMI hai: `brand.js` school ka naam/logo
+         `.brand .name` par lagati hai. Restructure mein ye class hat gayi thi
+         aur `tests/test_brand_hooks.py` ne pakra -- wahi test jo D57 ke liye
+         likha gaya tha. Bina us ke naam chup-chaap na lagta. -->
+    <div class="pz-logo brand">
       <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"></path><path d="M19 8v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h8z"></path><path d="M9 13h6M9 17h4"></path></svg></div>
       <div><div class="name sidenav__brand-name">Parcha Paper Maker</div><div class="tag" data-i18n="brand.tag">Phase 1 · MVP</div></div>
     </div>
+
+    <div class="pz-crumb"><b id="crumbScreen">My Papers</b></div>
+    <div class="pz-spacer"></div>
     <div class="lang-toggle">
       <button data-lang-opt="en" data-active="1" onclick="applyLang('en')">EN</button>
       <button data-lang-opt="ur" data-active="0" class="urdu" onclick="applyLang('ur')">اردو</button>
     </div>
-    <div class="nav-label" data-i18n="sidebar.workspace">Workspace</div>
-    <nav class="app-nav sidenav">
+  </div>
+
+  <div class="pz-body">
+
+  <!-- ============ ICON RAIL — Panze ka nav ============
+       Labels DOM mein hain aur jaan-boojh kar hain: CSS unhein nazar se hataati
+       hai magar screen reader ke liye chhorti hai. `display: none` naam bhi le
+       jata, aur icon-only nav bina naam ke na-qaabil-e-istemal hai. -->
+    <nav class="pz-rail app-nav sidenav" aria-labelledby="railLabel">
+      <div class="nav-label" id="railLabel" data-i18n="sidebar.workspace">Workspace</div>
       <a class="sidenav__link" data-nav="adaptive" onclick="showScreen('adaptive')"><svg class="icon"><use href="/static/icons.svg#i-adaptive"></use></svg><span data-i18n="nav.adaptive">Adaptive paper</span></a>
 
       <a class="sidenav__link" data-nav="analytics" onclick="showScreen('analytics')"><svg class="icon"><use href="/static/icons.svg#i-analytics"></use></svg><span data-i18n="nav.analytics">Analytics</span></a>
@@ -37,7 +55,6 @@
     <div class="sidebar-foot sidenav__foot">
       <div class="box" data-i18n="sidebar.foot">AI · bilingual · Bloom-tagged questions &amp; balanced papers.</div>
     </div>
-  </aside>
 
   <!-- ============ MAIN ============ -->
   <div class="main">
@@ -576,6 +593,8 @@
       <div class="nav-i" data-nav="settings" onclick="showScreen('settings')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg><span data-i18n="navShort.more">More</span></div>
     </div>
   </div>
+  </div>
+ </div>
 </div>
 
 <!-- ===== Replace-question modal (manual question selection) ===== -->
@@ -844,6 +863,26 @@ function showScreen(name) {
   document.querySelectorAll('[data-nav]').forEach(n => {
     n.dataset.active = (n.dataset.nav === name) ? '1' : '0';
   });
+  // UI-096: top bar ka crumb. Naam usi nav link se aata hai jo abhi active hua
+  // -- alag list rakhne se wo list nav se hat jati (D24 wali bimari, jahan
+  // markup ek key parhta tha jo table mein thi hi nahi).
+  //
+  // Selector string JORHI nahi ja rahi, aur ye jaan-boojh kar hai: attribute
+  // selector ko quote-jorh kar banane par frozen-inventory scanner
+  // (CLAUDE.md 12.7) us string ko MARKUP ka attribute samajh kar naya izafa
+  // report karta hai -- wo raw file parhta hai, JS aur markup mein farq nahi
+  // karta. Ye wohi shakl hai jo `unsanctioned_hex` ke saath saat dafa hui:
+  // guard COMMENT ka matn bhi ginta hai. Ooper wali loop pehle se har nav
+  // element par chal rahi hai; crumb wahin se le liya jata hai.
+  const crumb = document.getElementById('crumbScreen');
+  if (crumb) {
+    document.querySelectorAll('[data-nav]').forEach(n => {
+      if (n.dataset.nav === name) {
+        const label = n.querySelector('span');
+        if (label) crumb.textContent = label.textContent;
+      }
+    });
+  }
   // Analytics screen: load papers dropdown (pre-select currentPaperId if set).
   if (name === 'analytics') initAnalyticsScreen();
   // Adaptive screen: load papers dropdown (restores selection if pre-set).
