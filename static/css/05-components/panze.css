@@ -148,6 +148,35 @@
     flex: 1;
   }
 
+  /* Lock button — `static/apiClient.js` ise JS SE yahan lagati hai, kisi page ke
+     HTML mein ye mojood nahi (wajah wahin likhi hai: nau pages aur frozen
+     inventory). Ye sirf tab aata hai jab key waqai stored ho.
+
+     Ye saada rakha gaya hai, violet nahi: violet is design mein asal kaam ka
+     rang hai (Generate / Save), aur lock ek auzaar hai, manzil nahi. Ise wahi
+     wazan dena teacher ki nazar ghalat jagah kheenchta.
+
+     Print ka koi rule nahi chahiye — `.pz-top` khud print mein `display: none`
+     hai (neeche dono print blocks), to ye us ke saath hi chala jata hai. */
+  .pz-lock {
+    flex: none;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--panze-line);
+    border-radius: var(--panze-r-pill);
+    background: var(--white);
+    color: var(--panze-ink-2);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .pz-lock:hover {
+    background: var(--panze-board);
+    color: var(--panze-ink);
+  }
+
   /* ── body: rail + content ────────────────────────────────────────────── */
 
   .pz-body {

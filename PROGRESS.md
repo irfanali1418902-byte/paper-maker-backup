@@ -1,5 +1,101 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-108: idle auto-lock — shared school PC ka surakh band
+
+Irfan ka sawal tha: *"es ma authentication ka koye tariqakar nahe ha."* Ye baat
+sahi hai, aur naap ne us ki asal shakl saaf ki.
+
+### Jo naapa gaya, pehle
+
+`app/api/auth.py` ek **shared key** deta hai — `x-api-key`, har `/api` call par,
+`apiFetch()` ke ek hi choke-point se (105 calls, 9 pages). Wo kaam karta hai.
+Magar DB par sawal chalaya to:
+
+```
+identity-ish tables (user/login/session/role/audit): KOI NAHI
+kul tables: 14
+```
+
+**Key sirf ye sabit karti hai ke "tum andar aa sakte ho" — ye nahi ke "tum kaun
+ho".** Is ka natija: koi role nahi (har teacher poora admin hai, bank delete kar
+sakta hai), koi revoke nahi (ek key — ek banda jaye to sab ki badalni pare), aur
+koi audit trail nahi (200 sawal kis ne mitaye — jaanne ka koi zariya nahi).
+
+### Aur jo kal school PC par sach ho jata
+
+`apiClient.js` key `localStorage` mein rakhta tha, aur **`localStorage` hamesha ke
+liye rehta hai.** Irfan ne 2026-09-08 ko tasdeeq ki ke **kai teachers ek hi PC
+share karte hain**, to silsila ye banta: teacher subah key daalta hai → uth kar
+chala jata hai → koi bacha usi PC par app kholta hai aur **bina kuch kiye andar
+hai, agla parcha khula hua.** Exam system ke liye sab se mehnga rasta, aur is
+mein koi hunar nahi chahiye.
+
+### Jo kiya gaya
+
+Key ke saath ab aakhri **insaani** harkat ka waqt likha jata hai. 30 minute tak
+koi click/keypress na ho to key mit jati hai aur gate wapas aa jata hai. Saath ek
+**Lock** button — PC chhorne se pehle dabane ke liye.
+
+- **Waqt sirf insaani harkat par barhta hai, `apiFetch` par nahi.** Warna koi bhi
+  timer-driven page kabhi lock na hota. Naapa gaya: `grep -rn "setInterval"
+  static/*.html static/*.js` **khali** hai — aaj koi page poll nahi karta, is liye
+  "30 min koi harkat nahi" ka matlab waqai "banda chala gaya" hai. Polling aaye to
+  ye faisla dobara dekhna hoga.
+- **Lock button JS se lagta hai, HTML se nahi.** Ye file nau pages par chalti hai;
+  button HTML mein daalne ka matlab nau files chhoona aur `css_baseline.py` ki
+  frozen inventory hilana hota. Wahi tareeqa jo key-gate pehle se use karta hai.
+- Button sirf tab dikhta hai jab key waqai stored ho — dev mode mein teacher ko
+  aisa button nahi dikhta jo kuch na kare.
+
+### Ek bug jo probe ne pakra, aur wo bilkul is epic wali bimari tha
+
+Pehla draft `pmGetKey()` mein expiry par key **chup-chaap** gira deta tha.
+`auth_lock_probe.mjs` ka case 2 us par **fail** hua: `key=nahi gate=band`. Sabab —
+pages ki apni scripts `apiFetch` ko `DOMContentLoaded` se **pehle** chala deti
+hain, to key `pmInit` ke chalne se pehle hi mit chuki hoti thi, `pmInit` ko kuch
+milta hi nahi tha, aur **gate kabhi nahi aata**. Us soorat mein page khula rehta —
+teacher ke data ke saath, bas API calls tooti hui. Ab expiry ka pata jis raste se
+bhi chale, `pmLock()` wahin bulaya jata hai.
+
+Dusra: expiry ka check pehle sirf 60-second interval par tha, yani purani key **ek
+poora minute** zinda reh sakti thi. Ab load par bhi check hota hai — gate usi
+lamhe aata hai jis lamhe page khulta hai.
+
+### Gate
+
+Is repo mein JS ka koi test harness nahi (`package.json` tak nahi), to pytest ise
+dekh hi nahi sakta. `scripts/auth_lock_probe.mjs` (naya) headless Edge par chaar
+case chalata hai: taaza key, 31-minute purani key, koi key nahi (dev), aur Lock
+button dabana. **4/4 pass.**
+
+Probe **apna server khud chalata hai, auth OFF kar ke** — do wajah: (1) auth ON ho
+to har load 401 par gate khol deta hai aur phir gate ki wajah alag nahi ki ja
+sakti; (2) UI-107 ka sabaq — jis din `.env` mein key aayi, poore 1,106 tests
+`assert 401 == 200` par gir gaye. `PAPER_MAKER_API_KEY=""` set kiya jata hai, unset
+nahi: khali bhi `os.environ` mein mojood ginti hai aur `load_dotenv(override=False)`
+use nahi bharta.
+
+`--shot` se tasveer bhi milti hai — kyunke `querySelector` ye sabit karta hai ke
+button **mojood** hai, ye nahi ke wo **theek dikhta** hai. Dekha gaya: button
+`EN/اردو` toggle ke baayen, topbar salamat.
+
+### Adad
+
+- `auth_lock_probe.mjs` **4/4**, pytest **1,106 pass**, ruff saaf
+- Ratchet: mera hissa **`shared_css_lines` +29, naya hex 0**. `git stash` se
+  sabit kiya gaya — HEAD par mere kaam ke baghair `unsanctioned_hex` pehle hi
+  297 aur `shared_css_lines` 6525 hain, yani `-1` aur `+231` **pehle se committed
+  kaam ka drift hai**. `BASELINE.json` aakhri baar `24885c7` par likhi gayi thi,
+  `76f7c67` se pehle. **Dobara likhna Irfan ka faisla hai, task ka nahi.**
+- Chhua: `static/apiClient.js`, `static/css/05-components/panze.css` (+29,
+  sirf `--panze-*` tokens), `scripts/auth_lock_probe.mjs` (naya)
+
+### ⚠ Ye authentication NAHI hai
+
+Key ab bhi shared secret hai. Ye sirf shared-PC wala surakh band karta hai. Asli
+users / roles / activity-log **`D68`** mein hai, aur Irfan ne 2026-09-08 ko us ka
+scope chun liya: **poore per-teacher accounts.**
+
 ## 2026-09-08 — UI-107: dono school faisle laagu — aur ek security boundary jise koi gate nahi dekh raha tha
 
 Irfan ke do jawab: **backup wala repo use karo**, aur **API key set kar do**.

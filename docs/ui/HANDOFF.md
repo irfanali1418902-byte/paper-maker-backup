@@ -38,6 +38,25 @@ yahan aazmaya gaya aur kya nahi.
    guzarna nahi.**
 8. Us device par ek dafa **Access key** daalo, phir ek **parcha khol kar Ctrl+P**
    karo — wahi cheez teacher ke haath mein jati hai.
+9. **Topbar mein `Lock` button dikhna chahiye** (UI-108, `EN/اردو` toggle ke
+   baayen). Wo sirf tab aata hai jab key waqai daali ja chuki ho — yani us ka
+   nazar aana khud is baat ki tasdeeq hai ke auth chal rahi hai.
+
+### ⚠ Teachers ko ye ek baat batani hai
+
+**PC chhorne se pehle `Lock` dabayen.** Aur agar 30 minute tak koi click ya
+keypress na ho, app khud lock ho jati hai aur key dobara maangti hai.
+
+Ye is liye hai ke **kai teachers ek PC share karte hain** (Irfan, 2026-09-08).
+Bina lock ke key browser mein **hamesha** ke liye pari rehti thi: teacher subah
+key daalta, uth kar chala jata, aur koi bacha usi PC par app khol kar **bina kuch
+kiye andar** hota — agla parcha khula hua.
+
+⚠ **Ye authentication nahi hai.** Key ab bhi sab ke liye ek hi hai; system ko
+aaj bhi nahi pata ke banda kaun hai, aur koi audit trail nahi. Asli per-teacher
+accounts `DEFERRED.md` **`D68`** hain, aur Irfan ne un ka scope chun liya hai.
+**School ka pehla din khud wo maloomat dega jo un roles ka design tay karegi —
+kitne teachers, kaun kya karta hai. Wo dekh kar hi D68 shuru karna.**
 
 ### Jo yahan pehle se sabit hai (dobara mat naapo)
 

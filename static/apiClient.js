@@ -7,10 +7,91 @@
 //
 // Classic (non-module) script hai, is liye `apiFetch` global scope mein aata hai
 // aur baaki page-scripts isse naam se call kar sakti hain.
+//
+// ─── IDLE AUTO-LOCK (2026-09-08) ────────────────────────────────────────────
+// KYUN. `localStorage` HAMESHA ke liye rehta hai. School PC par kai teachers
+// ek hi machine share karte hain (Irfan ne 2026-09-08 ko tasdeeq ki), to bina
+// lock ke silsila ye banta hai: teacher subah key daalta hai -> chala jata hai
+// -> koi BACHA usi PC par app kholta hai aur bina kuch kiye ANDAR hai, agla
+// parcha khula hua. Ek exam system ke liye ye sab se mehnga rasta hai aur is
+// mein koi hunar nahi chahiye.
+//
+// Key ab bhi localStorage mein hai (session-scope karne se teacher har baar
+// key daalta, jo rozana rukawat hai), magar us ke saath aakhri INSAANI harkat
+// ka waqt likha jata hai. 30 minute tak koi click/keypress na ho to key mit
+// jati hai aur gate wapas aa jata hai.
+//
+// ⚠ WAQT SIRF INSAANI HARKAT PAR BARHTA HAI, `apiFetch` par NAHI. Agar har API
+// call touch karti to koi bhi timer-driven page kabhi lock na hota. Naapa gaya
+// 2026-09-08: `grep -rn "setInterval" static/*.html static/*.js` khali hai --
+// aaj koi page poll nahi karta, is liye "30 min koi harkat nahi" ka matlab
+// waqai "banda uth kar chala gaya" hai. Agar kabhi polling aaye to ye faisla
+// dobara dekhna hoga, warna lock waqt se pehle lag sakta hai.
+//
+// ⚠ YE AUTHENTICATION NAHI HAI. Key ab bhi ek shared secret hai -- system ko
+// aaj bhi nahi pata ke banda KAUN hai, aur koi role ya audit trail nahi
+// (`identity tables: KOI NAHI`, naapa gaya 2026-09-08). Ye sirf shared-PC wala
+// surakh band karta hai. Asli users/roles/activity-log alag kaam hai.
 
 const _rawFetch = window.fetch.bind(window);
 const PM_KEY_STORAGE = "pm_api_key";
-const pmGetKey = () => localStorage.getItem(PM_KEY_STORAGE) || "";
+const PM_SEEN_STORAGE = "pm_api_key_seen"; // aakhri insaani harkat, ms
+const PM_IDLE_MS = 30 * 60 * 1000;
+
+// localStorage private-mode/disabled par throw kar sakta hai. Key gate us
+// soorat mein har baar khulega -- kaam chalta rahega, bas yaad nahi rahega.
+function pmStore(k, v) {
+  try {
+    localStorage.setItem(k, v);
+  } catch {
+    /* storage band hai */
+  }
+}
+function pmRead(k) {
+  try {
+    return localStorage.getItem(k) || "";
+  } catch {
+    return "";
+  }
+}
+function pmDrop(k) {
+  try {
+    localStorage.removeItem(k);
+  } catch {
+    /* storage band hai */
+  }
+}
+
+// Har naya tab bhi "harkat" hai -- warna ek purana `seen` naye tab ko foran
+// lock kar deta.
+const pmTouch = () => pmStore(PM_SEEN_STORAGE, String(Date.now()));
+
+function pmIdleExpired() {
+  const seen = Number(pmRead(PM_SEEN_STORAGE));
+  // Koi timestamp na ho (purana browser jahan key pehle se pari hai) to use
+  // expired NAHI maanenge -- pehli harkat par likh jayega. Warna upgrade ke
+  // din har teacher bila wajah bahar ho jata.
+  if (!seen) return false;
+  return Date.now() - seen > PM_IDLE_MS;
+}
+
+const PM_IDLE_MSG = "30 minute tak koi harkat nahi hui, is liye lock ho gaya.";
+
+// ⚠ EXPIRY MILE TO GATE WAHIN KHULTA HAI — key chup-chaap girana kaafi NAHI.
+// Pehla draft yahan sirf `pmDrop` karta tha, aur `auth_lock_probe.mjs` ka case 2
+// us par fail hua. Sabab ye tha: page ki apni scripts `apiFetch` ko
+// DOMContentLoaded se PEHLE chala deti hain, to key `pmInit` ke chalne se pehle
+// hi khamoshi se mit chuki hoti thi; `pmInit` ko phir kuch milta hi nahi tha aur
+// gate kabhi nahi aata. Us soorat mein page khula rehta -- teacher ke data ke
+// saath, bas API calls tooti hui. `pmLock` ko yahin bulane se expiry ka pata jis
+// bhi raste se chale, natija ek hi hai.
+function pmGetKey() {
+  if (pmRead(PM_KEY_STORAGE) && pmIdleExpired()) {
+    pmLock(PM_IDLE_MSG);
+    return "";
+  }
+  return pmRead(PM_KEY_STORAGE);
+}
 
 function pmShowKeyGate(msg) {
   let gate = document.getElementById("pm-key-gate");
@@ -30,7 +111,10 @@ function pmShowKeyGate(msg) {
     const save = () => {
       const v = gate.querySelector("#pm-key-input").value.trim();
       if (v) {
-        localStorage.setItem(PM_KEY_STORAGE, v);
+        pmStore(PM_KEY_STORAGE, v);
+        // Key ke saath hi ghadi shuru -- warna nayi key foran expired lagti
+        // agar purana `seen` 30 min se bhi purana para ho.
+        pmTouch();
         location.reload();
       }
     };
@@ -59,8 +143,84 @@ async function apiFetch(url, opts = {}) {
     Object.assign({ cache: "no-store" }, opts, { headers }),
   );
   if (res.status === 401) {
-    localStorage.removeItem(PM_KEY_STORAGE);
+    pmDrop(PM_KEY_STORAGE);
+    pmDrop(PM_SEEN_STORAGE);
     pmShowKeyGate("Key ghalat ya missing hai — dobara daalein.");
   }
   return res;
+}
+
+// ── Lock: haath se, ya khud bekari se ────────────────────────────────────────
+
+function pmLock(msg) {
+  const tha = !!pmRead(PM_KEY_STORAGE);
+  pmDrop(PM_KEY_STORAGE);
+  pmDrop(PM_SEEN_STORAGE);
+  if (tha) pmShowKeyGate(msg || "Lock ho gaya — key dobara daalein.");
+  return tha;
+}
+
+// Harkat par ghadi aage. Throttle 30s: `pointerdown`/`keydown` teez chalte
+// hain aur har ek par localStorage likhna faltu hai.
+let pmLastTouch = 0;
+function pmOnActivity() {
+  const now = Date.now();
+  if (now - pmLastTouch < 30000) return;
+  pmLastTouch = now;
+  if (pmRead(PM_KEY_STORAGE)) pmTouch();
+}
+addEventListener("pointerdown", pmOnActivity, { passive: true });
+addEventListener("keydown", pmOnActivity, { passive: true });
+
+// Har minute dekho. Sirf tab lock karo jab key WAQAI pari ho -- dev mode
+// (koi key nahi) mein ye kuch nahi karta.
+setInterval(() => {
+  if (pmRead(PM_KEY_STORAGE) && pmIdleExpired()) {
+    pmLock(PM_IDLE_MSG);
+  }
+}, 60000);
+
+// Lock button `.pz-top` mein JS SE lagta hai, HTML mein nahi -- aur ye
+// jaan-boojh kar hai. Ye file nau pages par chalti hai; button HTML mein
+// daalne ka matlab nau files chhoona aur `css_baseline.py` ki frozen inventory
+// (id / onclick / name / data-*) hilana hota. Wahi tareeqa jo upar key-gate
+// pehle se use karta hai.
+//
+// Button sirf tab dikhta hai jab key stored ho: agar server par auth off hai
+// (local dev) to key hoti hi nahi, aur teacher ko ek aisa button nahi dikhta
+// jo kuch na kare.
+function pmMountLockButton() {
+  if (!pmRead(PM_KEY_STORAGE)) return;
+  const top = document.querySelector(".pz-top");
+  if (!top || top.querySelector(".pz-lock")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "pz-lock";
+  btn.textContent = "Lock";
+  btn.title = "Key bhool jao — PC chhorne se pehle dabayein";
+  btn.addEventListener("click", () => pmLock("Lock kar diya — key dobara daalein."));
+  // `.lang-toggle` se pehle, taake language switch kona sab pages par apni
+  // jagah rahe. Wo na mile to aakhir mein.
+  const lang = top.querySelector(".lang-toggle");
+  if (lang) top.insertBefore(btn, lang);
+  else top.appendChild(btn);
+}
+
+// ⚠ EXPIRY KA CHECK LOAD PAR BHI HOTA HAI, sirf upar wale interval par NAHI.
+// Bila iske silsila ye banta: teacher subah lock chhore baghair chala jata,
+// sham ko koi page kholta, aur key 60 second tak (interval ke pehle tick tak)
+// zinda rehti. Wo poora waqt app khuli hoti. Load par dekhne se gate usi lamhe
+// aata hai jis lamhe page khulta hai.
+function pmInit() {
+  if (pmRead(PM_KEY_STORAGE) && pmIdleExpired()) {
+    pmLock(PM_IDLE_MSG);
+    return; // key ja chuki — lock button lagane ko kuch nahi bacha
+  }
+  pmMountLockButton();
+}
+
+if (document.readyState === "loading") {
+  addEventListener("DOMContentLoaded", pmInit);
+} else {
+  pmInit();
 }
