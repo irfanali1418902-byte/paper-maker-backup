@@ -192,12 +192,19 @@
     gap: 11px;
   }
 
+  /* ⚠ `background` AUR `color` PANZE PAR AA GAYE (UI-105). Pehle ye tile teal
+     (`--accent`) par tha aur harf gehra -- purane Modern palette ka accent. Panze
+     ka brand violet hai aur `05-components/panze.css` har page ko wahi deta hai,
+     magar ye file `main.css` ke BAAD import hoti hai to barabar specificity par
+     yahi jeet jati thi: das pages mein sirf `taqseem` ka logo teal reh gaya tha.
+     Sirf tasveer se pakra gaya. Baqi declarations (napi hui 34px, radius, grid)
+     is page ki apni hain aur waise hi hain. */
   .brand .logo {
     width: 34px;
     height: 34px;
     border-radius: 9px;
-    background: var(--accent);
-    color: #12181f;
+    background: var(--panze-violet);
+    color: var(--white);
     display: grid;
     place-items: center;
     font-family: var(--font-display);

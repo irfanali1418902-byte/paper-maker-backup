@@ -255,8 +255,25 @@
   /* ⚠ LOGO KA HARF SAFED HONA CHAHIYE. `blueprint` ka logo ek `<div>P</div>` hai
      (baaki pages par `<svg>` hai jis ka stroke markup mein safed likha hai). Us
      tile par ab violet hai, aur harf `--fg` par reh gaya tha: 3.67:1. */
+  /* ⚠ TILE KA RANG YAHAN HAI, PAGE FILES MEIN NAHI. Har page apne logo tile ko
+     apni marzi ka rang deta tha: `taqseem` teal (`--accent`), `index` neela
+     (`--primary`), baqi kuch aur. Panze ka brand ek hi hai. Tasveeron mein ye
+     saaf dikha -- teal tile violet app ke beech ajeeb lagta tha. */
   .pz-logo .logo {
+    background: var(--panze-violet);
     color: var(--white);
+  }
+
+  /* `.btn--accent` purane Modern palette ka teal action tha (`taqseem` ka
+     "Sequence se auto-generate"). Panze mein primary action violet hai; do
+     alag "primary" rang ek hi app mein nahi ho sakte. */
+  .pz-board .btn--accent {
+    background: var(--panze-violet);
+    border-radius: var(--panze-r-pill);
+  }
+
+  .pz-board .btn--accent:hover {
+    background: var(--panze-violet-d);
   }
 
   /* ⚠ SIDEBAR KA FOOTER FILHAL CHHUPA HAI, AUR YE FAISLA-TALAB HAI. Panze ke
@@ -264,8 +281,22 @@
      neeche `.foot-note` ke tor par rakhta hai. DOM se hataya NAHI gaya taake
      wapas laana ek line ka kaam rahe. */
 
-  .pz-body .sidebar-foot {
+  /* ⚠ DONO CLASSES CHAHIYEN. Zyadatar pages footer ko `sidebar-foot sidenav__foot`
+     dete hain, magar `plan` sirf `sidenav__foot` deta hai -- aur wahan wo
+     `.pz-body` ka SEEDHA flex-item ban kar jagah kha jata tha: `plan-main` 203px
+     par simat gaya aur poora page dayein kinare par ek patli patti bana. Sirf
+     tasveer se pakra gaya (`css_shot.mjs`); har adad theek tha. */
+  .pz-body > .sidebar-foot,
+  .pz-body > .sidenav__foot {
     display: none;
+  }
+
+  /* ⚠ `height: 100vh` BOARD KE ANDAR GHALAT HAI. Chand pages apne main ko poori
+     viewport ki oonchai dete hain (`plan-main`, jo pehle seedha body ka beta
+     tha). Board khud 100vh se chhota hai (padding + wrap), to wo main board se
+     bahar nikal jata. Board apni oonchai khud sambhalta hai. */
+  .pz-body > main {
+    height: auto;
   }
 
   /* ── content ─────────────────────────────────────────────────────────── */

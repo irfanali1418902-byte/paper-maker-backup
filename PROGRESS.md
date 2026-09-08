@@ -1,5 +1,42 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-105: das ke das pages dekhe gaye, aur do par kaam baqi tha
+
+Irfan: "sab pages ki tasveer dikha do." Das ke das dekhe — aur **do par asli
+masle** the jo har adad ke saaf hone ke bawajood mojood thay.
+
+### `plan` ka layout toota hua tha
+
+Content dayein kinare par ek **203px** ki patli patti mein simat gaya tha. Do
+wajahein, dono naapi gayin:
+
+* **Footer flex-item ban kar jagah kha raha tha.** Zyadatar pages footer ko
+  `sidebar-foot sidenav__foot` dete hain, magar `plan` sirf `sidenav__foot` deta
+  hai — meri hide-rule `.pz-body .sidebar-foot` us par lagi hi nahi.
+* **`.plan-main` ka `height: 100vh`** board ke andar ghalat hai; board khud 100vh
+  se chhota hai (wrap ki padding), to main us se bahar nikal jata.
+
+Dono `05-components/panze.css` mein theek hue — `plan-main` **203px → 934px**.
+
+### `taqseem` akela teal par reh gaya tha
+
+Us ka logo tile aur "Sequence se auto-generate" button purane Modern palette ke
+`--accent` (teal) par thay. **Das pages mein sirf ek** — violet app ke beech wo
+saaf ajnabi lagta tha.
+
+Tile ka rang ab `panze.css` mein hai (har page ke liye ek jagah), aur
+`.btn--accent` bhi violet pill. `pages/taqseem.css` ki apni rule bhi palti gayi,
+kyunke wo file `main.css` ke **baad** aati hai aur barabar specificity par jeet
+rahi thi. Us ke saath ek hardcoded hex bhi gaya: `unsanctioned_hex` **298 → 297**.
+
+**Dono cheezein sirf tasveer se pakri gayin.** Contrast, computed styles, gate,
+1,098 tests — sab is se pehle bhi saaf thay.
+
+**Naap:** 1,098 pass, ruff saaf, `unsanctioned_hex` **297**. Contrast: `index`,
+`print`, `plan`, `taqseem`, `slo` — 0 fail. Jo bacha wo purana hai (`bank` 357,
+`slo-health` 9, `library` 1, `blueprint` 4) ya `landing` ke 4 jo probe ki
+gradient wali maloom kami hain.
+
 ## 2026-09-08 — UI-103: `landing` ka hero violet — aur ek failure jo probe dekh hi nahi sakti thi
 
 Irfan: hero bhi violet karo. Wo purane design ka aakhri bara tukra tha —
