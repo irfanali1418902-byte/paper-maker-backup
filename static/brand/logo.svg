@@ -1,5 +1,18 @@
+<!-- Rang PANZE ka brand violet hai (token naam: panze_violet), UI-104 / D13.
+     WARNING: ye qadr yahan HARDCODED hai aur is ke siwa chara nahi. Ek SVG
+     file CSS custom property nahi parh sakti, aur ye file `<img src>` se
+     aati hai (landing.html), yani us ke andar `currentColor` bhi nahi
+     pahunchta. Yehi baat D13 mahinon se darj kar rahi thi. Palette dobara
+     badle to YE FILE HAATH SE BADALNI PAREGI; 01-settings/tokens.css ka
+     panze_violet is ka waahid sacha maalik hai.
+
+     Aur ek cheez jo pehli koshish mein toot gayi thi: XML comment ke andar
+     do hyphen ek saath likhna MANA hai. Pehle draft mein token ka asal naam
+     (do hyphen se shuru hone wala) likha gaya aur poori SVG parse hi na hui,
+     browser ne toota hua image dikhaya. Isi liye yahan har jagah token ka
+     naam underscore ke saath likha gaya hai. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
-  <rect width="40" height="40" rx="11" fill="#2E5AAC"/>
+  <rect width="40" height="40" rx="11" fill="#6C5CE7"/>
   <g transform="translate(8,8)" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14 3v5h5"/>
     <path d="M19 8v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h8z"/>
