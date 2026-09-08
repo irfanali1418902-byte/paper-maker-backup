@@ -74,6 +74,12 @@
     flex-direction: column;
   }
 
+  /* `landing` jaise page ke liye jahan nav hai hi nahi: board sirf frame hai,
+     flex column ki zaroorat nahi aur content apni poori chaurai leta hai. */
+  .pz-board--plain {
+    display: block;
+  }
+
   /* ── top bar ─────────────────────────────────────────────────────────── */
 
   .pz-top {
@@ -157,34 +163,32 @@
      background board ke rang mein ghul jata hai (yani ghayab). */
 
   .pz-rail {
-    width: 52px;
+    width: 210px;
     flex-shrink: 0;
-    align-items: center;
-    gap: 6px;
+    align-items: stretch;
+    gap: 2px;
     padding: 8px 0 0;
     background: transparent;
-    overflow: visible;
+    overflow-y: auto;
   }
 
   .pz-rail .sidenav__link {
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    /* ⚠ `font-size: 0` HI WO TAREEQA HAI JO DONO SHAKLON PAR CHALTA HAI. `index`
-       apne nav labels `<span>` mein rakhta hai, magar BAQI SAAT PAGES seedha
-       text node rakhte hain (naapa gaya 2026-09-08: saaton par span=0) -- aur
-       text node ko koi selector pakad hi nahi sakta. Pehli koshish sirf `span`
-       ko chhupati thi, to `bank` ke rail par poore labels dikh rahe the.
-       Text DOM mein rehta hai, yani accessible naam salamat hai; sirf uska
-       size sifar hota hai. Icon `.icon` se apni napi hui 17px lata hai. */
-    font-size: 0;
-    border-radius: var(--panze-r-sm);
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--panze-muted);
+    justify-content: flex-start;
+    gap: 11px;
+    width: auto;
+    height: auto;
+    padding: 10px 12px;
+    border-radius: var(--panze-r-sm);
+    color: var(--panze-ink-2);
     background: transparent;
     box-shadow: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Mockup rail icons 19px par rakhta hai; `icon.css` ka mushtarka 17px hai.
@@ -218,21 +222,41 @@
      tarjuma-shuda string chup-chaap gayab ho rahi thi. Ab wo nav ka
      `aria-labelledby` hai -- nazar se hata hua, magar landmark ka naam bana. */
 
-  .pz-rail .sidenav__link span,
+  /* ⚠ LABELS AB DIKHTE HAIN, AUR YE MOCKUP SE JAAN-BOOJH KAR FARQ HAI.
+     Panze ka rail 52px ka icon-only rail hai. Irfan, 2026-09-08: "sab ke saath
+     naam bhi hona chahiye taake pata to chale -- icon to hai lekin naam bhi
+     zaroori hai." Ye usability ka faisla hai aur mockup par bhaari hai: is app
+     ke gyarah destinations ke icons apne aap mein khud-bayaan nahi hain.
 
+     Pehle yahan `font-size: 0` tha (aur us se pehle sirf `span` par clip), jo
+     do alag markup shaklon ko sambhalne ke liye tha -- `index` labels ko span
+     mein rakhta hai, baqi saat seedhe text node mein. Ab dono soorton mein naam
+     dikhta hai, is liye koi chhupane wali rule nahi chahiye.
+
+     "Workspace" wala group heading bhi ab nazar aata hai; wo `.nav-label` hai
+     aur mockup ka `.nav .grp` usi kirdaar mein hai. */
   .pz-rail .nav-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
+    padding: 14px 12px 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    /* `--panze-muted` yahan 3.09:1 deta hai (10.5px par, board ke grey par) --
+       AA se neeche. Ek qadam gehra. Wahi faisla jo D26/D41 par hua. */
+    color: var(--panze-ink-2);
+  }
 
-    /* `padding: 0` lazmi hai: legacy `.nav-label` 6px/22px padding rakhta hai,
-       jis se 1px ka box 45px chaura ho jata tha -- nazar se to phir bhi chhupa
-       tha, magar `css_contrast_probe` ka "kya ye waqai chhupa hai" wala check
-       chaurai par chalta hai aur use jhoota failure mila. */
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  /* `blueprint` isi kirdaar ko `.sidenav__group` kehta hai (`nav.css` ka apna
+     naam) aur us ka rang navy sidebar ke liye tha -- board par 2.87:1. */
+  .pz-rail .sidenav__group {
+    color: var(--panze-ink-2);
+  }
+
+  /* ⚠ LOGO KA HARF SAFED HONA CHAHIYE. `blueprint` ka logo ek `<div>P</div>` hai
+     (baaki pages par `<svg>` hai jis ka stroke markup mein safed likha hai). Us
+     tile par ab violet hai, aur harf `--fg` par reh gaya tha: 3.67:1. */
+  .pz-logo .logo {
+    color: var(--white);
   }
 
   /* ⚠ SIDEBAR KA FOOTER FILHAL CHHUPA HAI, AUR YE FAISLA-TALAB HAI. Panze ke

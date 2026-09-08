@@ -8,23 +8,27 @@
 </head>
 <body data-page="Blueprint Builder">
 
-<div class="o-shell">
-  <div class="brand o-shell__brand">
+<!-- ===== PANZE SHELL (UI-102) ===== -->
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
     <div class="logo">P</div>
     <div>
       <b class="name">Parcha Paper Maker</b>
       <small>Blueprint Builder</small>
     </div>
+   </div>
+
+   <div class="pz-crumb"><b>Blueprint</b></div>
+   <div class="pz-spacer"></div>
+   <span class="chip">Section-by-section paper</span>
   </div>
 
-  <div class="o-shell__top appbar">
-    <div class="appbar__crumbs">Parcha Paper Maker · <b>Blueprint</b></div>
-    <div class="o-shell__spacer"></div>
-    <span class="chip">Section-by-section paper</span>
-    <div class="appbar__avatar">P</div>
-  </div>
+  <div class="pz-body">
 
-  <nav class="o-shell__nav sidenav">
+   <nav class="pz-rail sidenav">
     <div class="sidenav__group">Menu</div>
     <a href="/" class="sidenav__link">
       <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
@@ -48,7 +52,7 @@
     </a>
   </nav>
 
-  <main class="main o-shell__main">
+   <main class="main">
   <!-- .pagehead is display:flex — the inner <div> is what keeps the title and
        subtitle stacked. Without it h1 and p become flex items and sit side by
        side, which is what this page did until 2026-08-15. See mockup-modern.html:279. -->
@@ -168,6 +172,10 @@
     <div class="bp-list" id="bpList"></div>
   </div>
 </main>
+
+  </div>
+ </div>
+</div>
 </div><!-- /.app -->
 
 <script src="/apiClient.js"></script>

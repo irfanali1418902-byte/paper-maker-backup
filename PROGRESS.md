@@ -1,5 +1,44 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-102: das ke das pages Panze par, aur rail par NAAM aa gaye
+
+`blueprint` (jo `o-shell` par tha) aur `landing` (jis par shell hai hi nahi) bhi
+aa gaye. **Ab poora app ek hi design par hai.**
+
+### Rail ab labelled hai — mockup se jaan-boojh kar farq
+
+Panze ka rail 52px ka **icon-only** hai. Irfan, 2026-09-08: *"sab ke saath naam
+bhi hona chahiye taake pata to chale — icon to hai lekin naam bhi zaroori hai."*
+
+Ye usability ka faisla hai aur mockup par bhaari hai, aur wo durust hai: is app
+ke gyarah destinations ke icons apne aap mein khud-bayaan nahi hain (`Taqseem`,
+`SLO Health`, `Blueprint` — koi bhi icon se nahi pehchana jata). Rail ab **210px**
+hai (mockup ka apna `compact` variant bhi 210px hai), icon + naam, aur active item
+wahi coal wala.
+
+Is se `font-size: 0` wali sari machinery **hat gayi** — wo do alag markup shaklon
+ko sambhalne ke liye thi (`index` labels ko `<span>` mein rakhta hai, baqi saat
+seedhe text node mein). Ab dono soorton mein naam dikhta hai, to chhupane wali
+koi rule chahiye hi nahi.
+
+### `landing` ko sirf FRAME mila
+
+Us par nav hai hi nahi — koi rail, koi top bar. Grey page + inset board bas.
+Rail zabardasti lagana ek khali 210px ka column banata jis mein kuch na hota.
+
+### Naya auzaar apna kaam kar raha hai
+
+`css_shot.mjs` (UI-101) ne is batch mein bhi teen cheezein pakrin jo kisi adad
+par fail nahi hui thin: `blueprint` ke logo ka harf violet tile par gehra reh
+gaya tha (3.67:1), `MENU` heading navy-era rang par thi, aur `index` ka
+"Workspace" — wo teenon ab theek hain.
+
+**Naap:** 1,098 pass, ruff saaf, `unsanctioned_hex` **298**, `legacy_css_lines`
+**1601**. Contrast: `index`, `print`, `plan`, `taqseem`, `slo` — 0 fail.
+Jo bacha wo purana hai: `bank` (357 — `.qmeta`, badges), `slo-health` (9 — warn
+tags), `library` (1), `blueprint` (4). **`landing` ke 4 probe ki maloom limitation
+hain** — us ka hero gradient par hai aur probe sirf `background-color` parhta hai.
+
 ## 2026-09-06 — D67 band: PY2 aur PY3 bhi 1-mark par — 572 rows migrate
 
 **Irfan ka faisla: teenon Pre Year grades 1-mark par hon.** D67 usi din khuli thi jab
