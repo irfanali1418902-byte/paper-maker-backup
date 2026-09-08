@@ -54,9 +54,15 @@ App SQLite ka **ek file** use karti hai. Data ko repo se bahar ek stable folder 
 taake git operations/updates se mehfooz rahe:
 
 1. Folder banao: `C:\PaperMakerData\`
-2. **Real data (247 questions, 27 papers…):** verified backup file
-   `paper_maker_prod_20260704.db` ko us folder mein **`paper_maker.db`** naam se copy karo.
+2. **School ka asal data:** apni maujooda `paper_maker.db` us folder mein copy karo.
    *(Ya fresh khaali DB chahiye to ye step chhod do — app pehli baar khud bana legi.)*
+
+   > ⚠ **Ye step pehle ek file ka naam leta tha jo mojood nahi hai** —
+   > `paper_maker_prod_20260704.db`, "247 questions, 27 papers". Dono baatein
+   > basi thin: wo file repo mein nahi hai, aur **2026-09-08 ko naapa gaya to
+   > bank mein 1,238 sawal aur 33 papers thay.** Adad yahan dobara likhne ka
+   > koi faida nahi — wo har seeding run par badalte hain. **Jo DB aaj chal rahi
+   > hai wohi copy karo**, aur us ka naam `paper_maker.db` rakho.
 3. Neeche `DB_PATH` isi file ko point karega.
 
 > ⚠️ Agar cloud (Railway/Northflank) copies bhi chal rahi hain to data alag-alag ho jayega
@@ -170,6 +176,31 @@ Safe copy ke liye (app chalte hue) SQLite `.backup` behtar hai:
 ```
 python -c "import sqlite3; s=sqlite3.connect(r'C:\PaperMakerData\paper_maker.db'); d=sqlite3.connect(r'D:\backups\paper_maker_%DATE%.db'); s.backup(d); print('ok')"
 ```
+
+---
+
+## 10b. Kya is machine par aazmaya gaya — 2026-09-08
+
+Guide ke qadam ek dev machine par chala kar naape gaye (UI-106). **School PC par
+ye dobara chalane parenge**, magar jo yahan tootta hai wo wahan bhi tootega:
+
+| qadam | natija |
+|---|---|
+| Python 3.12 | ✅ 3.12.10 |
+| `.venv` + `requirements.txt` | ✅ mojood, app chalti hai |
+| **LAN par serving** | ✅ **naapa gaya** — `--host 0.0.0.0` par bind hua aur LAN IP se pages **aur** `/api` dono mile |
+| `start-school.bat` ke chaar checks | ✅ code parha gaya: venv, DB file ka HONA, API key, firewall — chaaron waqai hote hain |
+| `DB_PATH` ka khatra | ✅ **tasdeeq-shuda** — `C:/PaperMaker/nowhere/typo.db` chup-chaap resolve ho jata hai, koi error nahi |
+| Firewall rule | ⛔ is machine par **mojood nahi tha** — launcher warning deta hai |
+| `PAPER_MAKER_API_KEY` | ⛔ set nahi — LAN se `/api` **bina key ke 200 deta hai** |
+| Docker | ❓ **is machine par Docker install hi nahi** — wo raasta untested hai |
+
+> ⚠ **LAN test ki hadd:** server apne hi LAN IP par apne aap se check hua. Us se
+> **binding** sabit hoti hai, **firewall se guzarna nahi**. Doosre device se
+> connect karne ke liye step 6 ka rule laazmi hai.
+
+> ⚠ **`Dockerfile` port 8080 par hai, ye guide 8000 par.** Agar kabhi container
+> chalao to `-p 8000:8080` karna paregi, warna teacher ka purana URL nahi chalega.
 
 ---
 

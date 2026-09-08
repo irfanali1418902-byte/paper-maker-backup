@@ -1,5 +1,57 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-08 — UI-106: school PC ka kaam — guide ko reality ke khilaf chalaya gaya
+
+Handoff ka Session 2. Maqsad wohi tha jo wahan likha hai: *"likha hua guide aur
+chalta hua system do alag cheezein hain."* Guide ke qadam ek dev machine par chala
+kar naape gaye.
+
+### Jo CHALA — aur sab se ahem cheez sabit ho gayi
+
+**LAN par serving kaam karti hai.** Ek alag port (8011) par `--host 0.0.0.0` se
+server uthaya gaya aur LAN IP se **pages aur `/api` dono** 200 dete hain. Ye school
+ki buniyadi zaroorat thi (20 teachers, ek PC) aur ab wo andaza nahi, naap hai.
+
+`start-school.bat` ke chaaron checks ka code parha gaya aur wo waqai hote hain —
+khaas kar DB wala, jo `DB_PATH` app se hi resolve kar ke **file ka HONA** check
+karta hai.
+
+**`DB_PATH` ka khatra tasdeeq-shuda hai:** `C:/PaperMaker/nowhere/typo.db` chup-chaap
+resolve ho jata hai, koi error nahi — bilkul jaisa guide kehta hai.
+
+### Jo TOOTA
+
+* **`.env.example` mein `DB_PATH=` ki line thi hi nahi.** Guide step 5 kehta hai
+  "`.env.example` ki copy banao" aur teen lines dikhata hai jin mein **pehli
+  DB_PATH hai** — yani jo bhi guide par chalta, us ki `.env` mein wahi ek var
+  ghayab hota **jise guide khud "sab se ahem line" kehta hai.** Line daal di gayi,
+  us chetawni ke saath jo naap se aayi.
+* **Step 4 basi tha:** wo `paper_maker_prod_20260704.db` naam ki file maangta tha
+  jo **mojood nahi**, aur "247 questions, 27 papers" kehta tha jab ke aaj bank mein
+  **1,238 sawal aur 33 papers** hain. Ab wo adad dobara nahi likhe (wo har seeding
+  run par badalte hain) — ab wo kehta hai "jo DB aaj chal rahi hai wohi copy karo".
+* **Firewall rule is machine par mojood nahi tha** aur **`PAPER_MAKER_API_KEY` set
+  nahi hai** — LAN se `/api` bina key ke 200 deta hai.
+* **Docker is machine par install hi nahi**, to wo raasta **untested** hai. Aur
+  `Dockerfile` port **8080** par hai jab ke guide aur launcher **8000** par —
+  container chalane par `-p 8000:8080` karna paregi.
+
+Ye sab guide ke naye **§10b "Kya is machine par aazmaya gaya"** mein table ki shakl
+mein hai, in do haddon ke saath jo saaf likhi hain: **LAN test ne binding sabit ki,
+firewall se guzarna nahi** (server ne apne hi LAN IP par khud ko check kiya), aur
+school PC par ye qadam **dobara** chalane parenge.
+
+### Do faisle jo Irfan ke muntazir hain
+
+1. **School kaun sa repo clone kare?** Guide `paper-maker-mvp` kehta hai; saara kaam
+   `paper-maker-backup` par push hota hai, aur pehle repo ka `master` is repo ki
+   history mein hai hi nahi (alag lineage, naapa 2026-09-06).
+2. **`PAPER_MAKER_API_KEY` school par set ho ya nahi?** Na ho to LAN par `/api`
+   khula rehta hai — guide kehta hai "trusted network ho to theek", magar wo
+   faisla likha jana chahiye.
+
+**Naap:** 1,098 pass, ruff saaf. Koi code nahi badla — sirf `.env.example` aur guide.
+
 ## 2026-09-08 — UI-105: das ke das pages dekhe gaye, aur do par kaam baqi tha
 
 Irfan: "sab pages ki tasveer dikha do." Das ke das dekhe — aur **do par asli
