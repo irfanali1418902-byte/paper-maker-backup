@@ -13,6 +13,7 @@ Behaviour deliberately do-modes hai:
     hai — HTML/JS bina key ke load hona chahiye.)
 """
 
+import hmac
 import logging
 import os
 
@@ -23,6 +24,9 @@ API_KEY_HEADER = "x-api-key"
 
 # Secret yahin, module load par, ek baar read hoti hai. Empty = auth disabled.
 API_KEY = os.environ.get("PAPER_MAKER_API_KEY") or ""
+
+# Is se chhoti key par startup warning (crash nahi) — wajah neeche likhi hai.
+MIN_KEY_LEN = 20
 
 # auto_error=False: header missing hone par FastAPI khud 403 na de — hum
 # apna 401 + Hinglish detail dena chahte hain (aur dev-mode mein pass karna hai).
@@ -80,6 +84,24 @@ if not API_KEY:
         "Ye sirf local dev ke liye theek hai. Production deploy se pehle host ke "
         "environment variables mein PAPER_MAKER_API_KEY zaroor set karo."
     )
+elif len(API_KEY) < MIN_KEY_LEN:
+    # Sirf warning, crash NAHI. Jo key aaj school par chal rahi hai wo agar chhoti
+    # nikli to app ka start na hona teachers ko subah subah bahar kar dena hai —
+    # us se bura koi "security fix" nahi. Admin ko batao, faisla us ka.
+    #
+    # KYUN 20. Key ka koi quality check tha hi nahi: `PAPER_MAKER_API_KEY=1234`
+    # bhi app khushi se qubool karti thi, aur /api par galat keys maarne par koi
+    # rate-limit ya lockout bhi nahi hai (2026-09-12 tak) — yani chhoti key LAN
+    # par bethe kisi bhi bande ke liye sirf waqt ki baat hai. 20 harf random
+    # us hamle ko na-mumkin bana dete hain. Aaj school ki key 48 harf ki hai,
+    # to ye warning wahan chalegi nahi.
+    _logger.warning(
+        "PAPER_MAKER_API_KEY sirf %d harf ki hai — kam az kam %d harf ki koi "
+        "random string rakho. Chhoti key andaze se pata chal sakti hai, aur galat "
+        "keys try karne par abhi koi rok (rate-limit/lockout) nahi hai.",
+        len(API_KEY),
+        MIN_KEY_LEN,
+    )
 
 
 def require_api_key(provided_key: str = Security(_api_key_header)) -> None:
@@ -87,7 +109,17 @@ def require_api_key(provided_key: str = Security(_api_key_header)) -> None:
     dev-mode (pass). Warna `x-api-key` header ka exact match zaroori."""
     if not API_KEY:
         return
-    if provided_key == API_KEY:
+    # ⚠ `==` NAHI — `hmac.compare_digest`. Sada `==` pehla mukhtalif harf milte hi
+    # ruk jata hai, to jawab ka waqt batata hai ke kitne shuruaati harf sahi the;
+    # kaafi requests se key harf-ba-harf nikali ja sakti hai. compare_digest poori
+    # lambai par barabar waqt leta hai. (LAN par ye khatra kam hai, magar ROADMAP
+    # 2026-08-25 se ye control MOJOOD bata raha tha jab ke tha nahi — 2026-09-12.)
+    # `provided_key` None ho sakti hai (header hi nahi aaya) aur compare_digest
+    # None par throw karta hai, is liye khali string par gira dete hain. Bytes
+    # mein isliye ke str-mode compare_digest sirf ASCII par chalta hai — kisi ne
+    # key mein Urdu ya koi non-ASCII harf daala to TypeError = 500, aur auth
+    # crash se 401 dena kahin behtar hai.
+    if hmac.compare_digest((provided_key or "").encode("utf-8"), API_KEY.encode("utf-8")):
         return
     raise HTTPException(
         status_code=401,

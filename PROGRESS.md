@@ -1,5 +1,58 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-12 — SEC-01: auth audit ke chaar chhote fixes
+
+Poore project ka auth audit hua. Bari cheezein (asli users/roles, activity log,
+rate-limit, static images ka khula rehna) alag kaam hain aur abhi khuli hain —
+neeche sirf wo chaar hain jo chhote the aur usi din band ho gaye.
+
+### 1. Docker image ab fail-closed hai — **ye sab se ahem tha**
+
+`Dockerfile` mein `ENV PAPER_MAKER_REQUIRE_API_KEY=1`.
+
+`auth.py` ka fail-closed check sirf Railway ke markers (`RAILWAY_*`) ya is flag
+par chalta hai. Cloud plan 2026-08-31 ko band hua — koi Railway rahi hi nahi — aur
+naya target Docker/school PC hai, jahan **koi marker nahi hota**. Matlab
+`PAPER_MAKER_API_KEY` bhoolne par container chup-chaap **bina auth ke** chal
+parta, aur kuch fail na hota. Ab wo soorat loud crash hai. Local dev par koi asar
+nahi (wahan ye var set hi nahi hota).
+
+### 2. `==` → `hmac.compare_digest` (`app/api/auth.py`)
+
+Sada `==` pehla mukhtalif harf milte hi ruk jata hai, to jawab ka waqt bata deta
+hai ke kitne shuruaati harf sahi the. Bytes mode use kiya (str-mode sirf ASCII
+par chalta hai — key mein koi non-ASCII harf aata to `TypeError` = 500).
+
+### 3. ROADMAP ka jhoota row theek (`docs/ROADMAP.md`, section A)
+
+**Wo row 2026-08-25 se "timing-safe key compare" ka dawa kar raha tha jab ke code
+mein `==` tha.** Row par nishaan laga diya hai. Wahi purana sabaq: row par
+bharosa mat karo, code naapo — aur ek jhoota "healthy" row us khaami se zyada
+khatarnak hai jise koi claim hi na kare, kyunke phir koi dekhta bhi nahi.
+
+### 4. Chhoti key par startup warning (`MIN_KEY_LEN = 20`)
+
+Key ki quality ka koi check tha hi nahi: `PAPER_MAKER_API_KEY=1234` bhi qubool ho
+jati thi, aur galat keys try karne par abhi **koi rate-limit ya lockout nahi hai**
+— yani chhoti key LAN par sirf waqt ki baat hai. Warning hai, crash nahi: chalti
+hui school key agar chhoti nikle to app ka na khulna teachers ko subah bahar kar
+dena hoga. School ki maujooda key 48 harf ki hai, to wahan ye chalegi nahi.
+
+### Naap
+
+`1106 passed` (poora suite), `ruff` saaf. Auth ka behaviour nahi badla —
+`tests/test_auth.py` ke chhe tests jaise the waise pass hain.
+
+### Jo abhi bhi khula hai (audit se, tarteeb se)
+
+| # | Baat | Kitna bara |
+|---|---|---|
+| 1 | Koi identity/role/audit-trail nahi — ek shared key, sab barabar, kisne kya delete kiya kahin record nahi | Bara — apni PR |
+| 2 | Galat keys par koi rate-limit/lockout/log nahi | Aadha din |
+| 3 | `/docs`, `/redoc`, `/openapi.json` bina key ke khule | Chhota |
+| 4 | `static/uploads` (1,269 files) + `static/library` bina key ke serve hote hain — exam images | Faisla chahiye |
+| 5 | Idle-lock sirf browser mein hai; server par key hamesha valid | #1 ke saath hi band hoga |
+
 ## 2026-09-08 — UI-109: key-gate jhoot bolta tha — sahi key ko ghalat kehta tha
 
 **Irfan ne UI-108 check karte waqt kaha: *"key mange raha hai, jo maine daala wo
