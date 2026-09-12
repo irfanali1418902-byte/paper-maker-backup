@@ -518,6 +518,60 @@ class TestNoLeak:
         assert "scrypt$" not in login(client, "irfan", ADMIN_PW).text
 
 
+# ── create_admin.py — wo script jo school par haath se chalti hai ────────────
+
+
+class TestCreateAdminScript:
+    """DONO TESTS EK HI DIN KI DO ASLI NAKAMIYON SE PAIDA HUE (2026-09-12), jab
+    script ko waqai chala kar dekha gaya. Dono is qism ke the jo suite mein
+    nazar hi nahi aate: script ka koi test tha hi nahi, aur wo bilkul us jagah
+    chalti hai jahan sab se zyada nuqsaan pahuncha sakti hai -- school ke server
+    par, admin ke haath mein, pehle setup ke waqt.
+    """
+
+    def test_bina_terminal_ke_saaf_error_deti_hai_latakti_nahi(self, monkeypatch, capsys):
+        """NAKAMI #1: script CHUP-CHAAP LATAK GAYI THI -- 120 second, na koi
+        paighaam, na error. Sabab: Windows par `getpass` password seedha console
+        se parhta hai, pipe/redirect se NAHI, to bina terminal ke wo hamesha ke
+        liye intezaar karta hai. Khamoshi se latakna sab se bura anjaam hai:
+        chalane wale ko ye bhi nahi pata chalta ke masla kya hai."""
+        import sys
+
+        sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent / "scripts"))
+        import create_admin
+
+        monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
+        with pytest.raises(SystemExit):
+            create_admin._ask_password()
+        assert "terminal" in capsys.readouterr().out.lower()
+
+    def test_har_print_windows_console_par_chhap_sakta_hai(self):
+        """NAKAMI #2: account BAN CHUKA tha, aur us ke foran baad `⚠` Windows
+        console (cp1252) par `UnicodeEncodeError` de gaya -- yani admin ko sab
+        se ahem jumle ("ab /api sirf login se khulta hai") ki jagah Python ka
+        traceback mila.
+
+        Ye test har `print(...)` wali line ko cp1252 mein encode kar ke dekhta
+        hai. Comments mein Unicode bilkul theek hai (wo chhapte nahi), is liye
+        comment-lines chhoot jati hain."""
+        from pathlib import Path
+
+        script = Path(__file__).resolve().parent.parent / "scripts" / "create_admin.py"
+        bad = []
+        for lineno, line in enumerate(script.read_text(encoding="utf-8").splitlines(), 1):
+            if "print(" not in line or line.lstrip().startswith("#"):
+                continue
+            for ch in line:
+                try:
+                    ch.encode("cp1252")
+                except UnicodeEncodeError:
+                    bad.append((lineno, hex(ord(ch))))
+        assert bad == [], (
+            f"create_admin.py ki in lines ka print Windows console par crash karega: {bad}. "
+            "print() ke andar sirf ASCII rakho."
+        )
+
+
 # ── static surface ───────────────────────────────────────────────────────────
 
 

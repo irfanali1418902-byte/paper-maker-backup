@@ -32,11 +32,35 @@ from app.repositories import users_repository  # noqa: E402
 from app.services import session_service, user_service  # noqa: E402
 from app.services.exceptions import UserValidationError  # noqa: E402
 
+_NO_TTY_MSG = """  [X] Ye script ek ASLI terminal maangti hai, aur abhi koi nahi hai.
+
+      Windows par `getpass` password seedha console se parhta hai -- pipe ya
+      redirect se NAHI. Is ka matlab ye hai ke aise chalane par script chup-chaap
+      LATAK jati hai (na koi paighaam, na koi error, bas ruki rehti hai), aur
+      wahi sab se bura anjaam hai. Naapa gaya 2026-09-12: `printf 'pw\\npw\\n' |
+      python scripts/create_admin.py` 120 second tak khamoshi se ruka raha.
+
+      Chalane ka sahi tareeqa -- PowerShell ya CMD khol kar seedha:
+
+          python scripts\\create_admin.py
+
+      (Claude Code ke andar se: prompt mein `!` laga kar wahi command likho --
+      wo tumhare apne terminal mein chalti hai.)
+
+      Password command-line par dene ka koi flag JAAN-BOOJH KAR nahi hai: wo
+      shell ki history mein reh jata, aur Windows par PSReadLine us file ko
+      disk par likh deta hai."""
+
 
 def _ask_password() -> str:
     """Do dafa poochho. Ek dafa poochne ka matlab hai ke pehli typo ka pata us
     waqt chale jab admin login ki koshish kare — aur tab tak use ye bhi nahi
     pata hoga ke ghalti kahan hui."""
+    # ⚠ PEHLE YE. Bina terminal ke `getpass` latak jata hai (upar wajah), is
+    # liye us soorat ko yahin, saaf paighaam ke saath, kaata jata hai.
+    if not sys.stdin.isatty():
+        print(_NO_TTY_MSG)
+        raise SystemExit(2)
     while True:
         pw = getpass.getpass("Password: ")
         if len(pw) < user_service.MIN_PASSWORD_LEN:
@@ -117,8 +141,15 @@ def main() -> int:
     # Ye jumla sab se ahem hai jo ye script chhap sakti hai: pehla user banate
     # hi poori app ka auth mode badal jata hai. Jo admin ye chala raha hai use
     # ye maloom hona chahiye us se PEHLE ke teachers subah aayen.
-    if user_service.list_users() and len(user_service.list_users()) == 1:
-        print("\n  ⚠ Ye is app ka PEHLA user hai — ab /api sirf login se khulta hai.")
+    #
+    # ⚠ IS FUNCTION KE `print()` MEIN SIRF ASCII. Yahan pehle "⚠" tha, aur
+    # 2026-09-12 ko chala kar dekhne par wo Windows console (cp1252) par
+    # `UnicodeEncodeError` de gaya -- account BAN CHUKA hota tha aur admin ko
+    # us ke foran baad Python ka traceback milta, theek us jumle ki jagah jo
+    # sab se zaroori tha. Comments mein Unicode theek hai (wo chhapte nahi);
+    # `print` ke andar nahi.
+    if len(user_service.list_users()) == 1:
+        print("\n  [!] Ye is app ka PEHLA user hai - ab /api sirf login se khulta hai.")
         print("    Shared key (PAPER_MAKER_API_KEY) ab /api ke liye nahi chalegi.")
         print("    Teachers ko batao: http://<server>:8000/login.html")
     return 0

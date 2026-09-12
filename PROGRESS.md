@@ -1,5 +1,62 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-12 — SEC-03: `create_admin.py` ko WAQAI chala kar dekha — do bug nikle
+
+**SEC-02 mein sab kuch green tha: 1,174 tests, ruff saaf, aur asli server par
+poora login flow curl se naapa hua. Phir Irfan ne kaha "create_admin.py chala kar
+dekho" — aur wo script dono dafa gir gayi.** Dono bug theek us jagah the jahan
+suite dekh hi nahi sakti thi: script ka koi test tha hi nahi, aur wo bilkul us
+jagah chalti hai jahan sab se zyada nuqsaan pahuncha sakti hai — school ke
+server par, admin ke haath mein, pehle setup ke waqt.
+
+### Bug 1 — script CHUP-CHAAP LATAK GAYI (sab se bura anjaam)
+
+`printf 'pw\npw\n' | python scripts/create_admin.py` **120 second tak khamosh
+ruka raha**: na paighaam, na error, na prompt.
+
+Sabab: Windows par `getpass` password **seedha console** se parhta hai, pipe ya
+redirect se nahi. Bina terminal ke wo hamesha ke liye intezaar karta hai. Jo
+banda ye chalata hai use ye bhi nahi pata chalta ke masla kya hai — wo bas
+Ctrl+C dabata hai aur samajhta hai ke app kharab hai.
+
+Ab pehla kaam `sys.stdin.isatty()` ka check hai, aur us ke saath poora raasta:
+asli terminal khol kar chalao (ya Claude Code mein `!` laga kar). Password
+command-line par dene ka flag **ab bhi nahi** hai — wo shell history mein reh
+jata hai, aur PSReadLine use disk par likh deta hai.
+
+### Bug 2 — account ban gaya, phir traceback
+
+Ye us se bhi zyada bura dikhta hai: user **ban chuka** hota tha, aur us ke
+foran baad `⚠` Windows console (cp1252) par `UnicodeEncodeError` de deta tha.
+Yani admin ko sab se ahem jumle ki jagah Python ka traceback milta:
+
+> ⚠ Ye is app ka PEHLA user hai — ab /api sirf login se khulta hai.
+
+Theek wo ek line jo batati hai ke abhi abhi poori app ka auth mode badal gaya.
+Admin ye samajhta ke kuch fail ho gaya, jabke asal mein sab ho chuka tha.
+`print()` ke andar ab sirf ASCII (comments mein Unicode theek hai — wo chhapte
+nahi).
+
+### Sabaq
+
+**"Tests green" aur "script chal kar dikhi" do alag cheezein hain.** SEC-02 ka
+API surface curl se naapa gaya tha, magar wo script kabhi chalai hi nahi gayi
+thi — aur wohi ek cheez hai jo school par haath se chalegi.
+
+### Naap
+
+`1,176 passed` (do naye tests — `TestCreateAdminScript`, dono theek in hi do
+nakamiyon se paida hue), `ruff` saaf. Aur script ke saare raaste chala kar
+dekhe: naya admin (pehla-user wala paighaam), doosra user (wo paighaam nahi
+aata), `--list` ki table, duplicate par `[X]`, `--reset-password`, aur jo user
+mojood hi nahi us ka reset.
+
+⚠ Ye sab **scratch DB par** hua (`scratchpad/demo.db`). **Asli DB abhi bhi
+key/khule mode par hai** — `--list` kehti hai "Koi user nahi". School par mode
+tab badlega jab ye script wahan chalegi.
+
+---
+
 ## 2026-09-12 — SEC-02: asli users, sessions, roles aur auth ka log
 
 **SEC-01 ne audit ke chaar chhote fixes kiye. Ye us audit ka pehla bara row
