@@ -2307,6 +2307,32 @@ function setStatus(msg) { document.querySelectorAll('.js-status').forEach(el => 
 initLang();
 loadQuickStats();
 
+// ⚠ D69 — JO SCREEN MARKUP MEIN PEHLE SE KHULI HAI, US KA DATA BHI LOAD KARO.
+//
+// Is ke baghair app khulte hi "My Papers" KHALI dikhti thi jab ke DB mein 33
+// papers the. Sabab: `mpLoad()` sirf `showScreen()` ke andar se chalti hai, aur
+// page load par `showScreen` ko koi bulata hi nahi tha. Screen ka markup
+// khud ko active kehta hai, is liye wo DIKHTI thi magar BHARTI nahi thi —
+// fehrist tab aati jab teacher rail mein "My Papers" dabaye ya "Refresh".
+// Teacher ki PEHLI screen yehi hai, to pehla taassur yehi banta tha.
+//
+// Ye "My Papers" banne ke din se aisa tha (`git log -S "showScreen('mypapers')"`:
+// init par ye call kabhi thi hi nahi) — 2026-09-08 ko browser mein pakra gaya.
+//
+// NAAM YAHAN HARD-CODE NAHI HAI, aur ye jaan-boojh kar hai. `showScreen('mypapers')`
+// likhne ka matlab hota ke agar kal markup ki default screen badle to JS us ko
+// chupke se palat dega — do jagah do sach. Markup se poochhne par jo bhi screen
+// khuli ho wohi theek se shuru hoti hai.
+//
+// ⚠ SELECTOR MEIN `[data-active=...]` MAT LIKHNA. Frozen-inventory scanner
+// (CLAUDE.md §12.7) raw file parhta hai aur JS ki string mein likha hua
+// data-attribute bhi MARKUP ka naya attribute samajh leta hai — theek wahi
+// trap jo upar `showScreen` ke crumb wale hisse par darj hai. Isi liye yahan
+// `querySelectorAll('.screen')` + `dataset` hai, bilkul us ke jaisa.
+document.querySelectorAll('.screen').forEach(s => {
+  if (s.dataset.active === '1') showScreen(s.dataset.screen);
+});
+
 // ---- Adaptive Results (4-step wizard) ------------------------------------
 
 let adaptiveCurrentPaperId = null;

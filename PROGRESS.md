@@ -1,5 +1,75 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-12 — Audit + D69 band: teacher ki PEHLI screen khali aati thi
+
+### Pehle poore project ka audit (naya naap, `docs/ROADMAP.md` §0 update)
+
+```
+commits 459 · tests 1,176 · bank 1,238 sawal · 310 topics · 33 papers
+legacy_css_lines 1,601 (target 1,450) · DEFERRED 16 band / 47
+PRD: 22 rows mein se 19 ho chuke · 2 mansookh · 1 aadha (R8)
+```
+
+Do rows usi din kaati gayin (repo ka apna qaida — "row kaam ke usi din kaato"):
+**D68** (authentication — SEC-02 ne band ki) aur **D69** (neeche).
+
+⚠ **Audit ne ek baat pakri jo kisi % mein nazar nahi aati thi: PRD mein
+authentication ka zikr hai hi nahi.** Isi liye app do mahine ek shared key par
+chalti rahi aur har audit "95% mukammal" kehta raha. **"PRD ke hisaab se 95%"
+aur "school mein chalane ke qabil" do alag paimane hain** — ye ab §0 mein darj
+hai.
+
+### D69 — fix ek line, magar wo line row ki tajweez se alag hai
+
+App khulte hi "My Papers" **khali** aati thi jab ke DB mein 33 papers hain.
+`mpLoad()` sirf `showScreen()` ke andar se chalti hai, aur page load par
+`showScreen` ko koi bulata hi nahi tha. Screen ka markup khud ko active kehta
+hai, is liye wo **dikhti** thi magar **bharti** nahi. Teacher ki pehli screen
+yehi hai. Ye "My Papers" banne ke din se aisa tha.
+
+Row ne `showScreen('mypapers')` likhne ko kaha tha. Us ki jagah **markup se
+poochha jata hai** — jo screen `dataset.active === '1'` ho wohi shuru hoti hai.
+Naam hard-code karne ka matlab hota ke kal markup ki default screen badle aur
+JS use chupke se palat de: do jagah do sach. Ab bug ki poori **qism** band hai,
+sirf ye ek soorat nahi.
+
+⚠ **Trap:** selector mein `[data-active="1"]` likhna aasan tha, magar
+frozen-inventory scanner raw file parhta hai aur JS ki string mein likha
+data-attribute bhi markup ka naya attribute samajh leta hai — wahi trap jo
+`showScreen` ke crumb wale hisse par pehle se darj hai. Is liye `dataset`.
+
+### Asal kaam: ek GATE, kyunke is bug ko koi mojooda gate dekh hi nahi sakta tha
+
+`scripts/mypapers_probe.mjs` (headless Edge, `auth_lock_probe.mjs` ka naqsha).
+Wajah saaf hai: **pytest** ise nahi dekh sakta (API us waqt bhi 33 papers theek
+deti thi), **CSS ratchet** nahi (ek bhi rule/hex/inline-style nahi badli),
+`css_*_probe` nahi (wo **shakl** naapte hain, **mazmoon** nahi). Yani ek bug jo
+app ki pehli screen par baitha tha aur do mahine har gate ke saamne se guzar
+gaya — wo aakhir-kar kisi auzaar se nahi, **browser mein aankh se** pakra gaya.
+
+Probe pehle **DB se** ginti leta hai (`/api/papers`), phir **DOM se**, aur dono
+ka milna maangta hai — sirf "koi row hai" poochhna is bug ko pakadta hi nahi.
+
+**Aur gate ko ulta bhi chala kar dekha, jo asal tasdeeq hai:**
+
+| | fix ke baghair | fix ke saath |
+|---|---|---|
+| screen khuli hai | PASS | PASS |
+| `#mpStatus` bhara hua | **FAIL** (khali — `mpLoad` chali hi nahi) | PASS |
+| DOM rows == DB (33) | **FAIL** (0 rows) | PASS |
+
+Probe ka pehla draft khud bhi ghalat tha: `#mpList.children.length` ginta tha
+aur "DOM mein 1, DB mein 33" de kar aisa lagta tha jaise fix kaam nahi kar
+raha. Asal mein `mpList` mein ek wrapper `<div>` hai, rows `tbody` mein —
+**jawab theek tha, sawal ghalat tha.** Ab `#mpList tbody tr`.
+
+### Naap
+
+`1,176 passed`, ratchet + brand tests saaf. Probe: `3/3 pass` naye code par,
+`1/3` purane par.
+
+---
+
 ## 2026-09-12 — SEC-03: `create_admin.py` ko WAQAI chala kar dekha — do bug nikle
 
 **SEC-02 mein sab kuch green tha: 1,174 tests, ruff saaf, aur asli server par

@@ -10,26 +10,31 @@
 
 ---
 
-## 0. POORE PROJECT KA AUDIT — 2026-09-06 (pehle din se aaj tak)
+## 0. POORE PROJECT KA AUDIT — 2026-09-12 (pehle din se aaj tak)
 
 > **Ye section is file ke baqi hisse se ALAG SAWAL ka jawab hai.** Neeche ka §A/§B July
 > ka audit hai jise patch kiya jata raha. **Ye wala ye batata hai: shuru se ab tak kitna
-> kaam hua aur kitna baqi hai.** Sab kuch 2026-09-06 ko **naya naapa gaya** — `git log`,
+> kaam hua aur kitna baqi hai.** Sab kuch 2026-09-12 ko **naya naapa gaya** — `git log`,
 > `PRD.md`, DB, ratchet aur code se. **Jab bhi dobara poochha jaye, is section ko naap
 > kar update karo, naya mat likho.**
 >
-> ⚠ **Is dafa naap ne DO ROWS GHALAT PAKRIN jo 09-04 ke audit mein "khula" likhi thin —
+> ⚠ **09-06 ke naap ne DO ROWS GHALAT PAKRIN jo 09-04 ke audit mein "khula" likhi thin —
 > R5 aur R9 kab ke ho chuke hain.** Tafseel neeche. Ye wahi bimari hai jis ka hisaab §E
 > rakhta hai aur jis se P0 rows mahinon jhooti khuli rahin: **row par bharosa mat karo,
 > repo mein naapo.**
+>
+> ⚠ **09-12 ke naap ne ek AUR aisi hi row pakri, magar ulte rukh se: `DEFERRED.md` ki
+> D68 ("app ke paas authentication nahi hai") us waqt bhi khuli likhi thi jab kaam usi
+> din ho chuka tha** (SEC-02). Farq sirf itna hai ke is dafa row usi din kaat di gayi,
+> mahinon baad nahi. Yehi §E ka qaida 1 hai.
 
-### Do mahine kis cheez par gaye — naapa (`git log`, 439 commits)
+### Do mahine kis cheez par gaye — naapa (`git log`, 459 commits)
 
 | daur | commits | kaam ka rukh |
 |---|---:|---|
 | **July** | 226 | `feat` 85, epic 32, fix 18 — **product bana** |
 | **August** | 163 | epic 64, docs 64, feat 16 — **product ruk gaya, architecture + quality** |
-| **September** | 50 | epic ka tail, seeding, CSS rows, dastavez |
+| **September** | 70 | epic ka tail, seeding, CSS rows, dastavez — **aur 09-12 ko auth (SEC-01/02/03)** |
 
 **Asal product July mein ban gaya tha.** Baqi do mahine ka bara hissa architecture,
 tests aur dastavez par laga hai. **Ye ghalati nahi thi — magar plan banate waqt is ko
@@ -56,18 +61,49 @@ Word/PDF export `e2bdcc4` mein delete, browser print rah gaya.
 
 **22 mein se 19 ho chuke · 2 mansookh/band · 1 aadha (R8).**
 
-### Har bare kaam ka apna paimana — 2026-09-06 ko naapa
+### ⚠ AUTH — PRD ki koi row NAHI, phir bhi sab se bara khula masla tha (2026-09-12 ko band)
+
+PRD ke 22 rows mein authentication ka zikr hai hi nahi — F1–F13 aur R1–R9 mein wo kabhi
+likha hi na gaya. Is ka natija ye nikla ke app **do mahine** ek shared key par chalti
+rahi aur har audit "95% mukammal" kehta raha, halanke system ko ye pata hi nahi tha ke
+banda **kaun** hai. `DEFERRED.md` ki D68 (09-08, Irfan ne khud uthaya) wo waahid jagah
+thi jahan ye darj tha, aur wo PRD ke hisaab-kitaab se bahar thi.
+
+**SEC-01/02/03 (2026-09-12) ne use band kiya:** per-teacher account, scrypt password,
+server-side session (HttpOnly cookie, 30 min idle + 12 ghante sakht hadd), roles
+(admin/teacher), lockout (5 → 15 min, naam par), aur `auth_events` ka log. Mode **data**
+se badalta hai — koi user na ho to app haraf ba haraf purani (shared-key) tarah chalti
+hai. Tafseel `docs/AUTH.md`.
+
+**Sabaq jo darj hona chahiye: "PRD ke hisaab se 95%" aur "school mein chalane ke qabil"
+do alag paimane hain.** Pehle paimane par auth nazar hi nahi aata tha.
+
+### Har bare kaam ka apna paimana — 2026-09-12 ko naapa
 
 ```
 PRODUCT (PRD ke tay-shuda rows)   19/20 zinda rows        ~95%   (R8 aadha)
+AUTH (PRD se bahar, D68)          users/sessions/roles/log ~90%  ✓ 2026-09-12
+                                  baqi: school par chalana + images ka surface
 BANK (asli topics)                266/266                 100%   ✓ 2026-09-06
 BANK (kul rows, jaali samet)      266/310                 ~86%   (44 jaali baqi)
 CSS EPIC (legacy lines)           1873 -> 1601, target 1450
                                   272 nikleen / 423 chahiye ~64%
-DEFERRED rows                     14 band / 44            ~32%
-TESTS                             1,083 pass · ruff saaf
-                                  14.7k test-lines banaam 11.6k app-lines
+DEFERRED rows                     16 band / 47            ~34%   (D67, D68 naye band)
+R7 KA ISTEMAAL                    PY3 87 rows · PY1 5 · PY2 0 ~33%
+TESTS                             1,176 pass · ruff saaf
+                                  15.5k test-lines banaam 13.0k app-lines
 ```
+
+### ⚠ EK ZINDA BUG JO HAR AUDIT SE CHHOOTA RAHA — D69
+
+`My Papers` app ki **pehli screen** hai jo teacher dekhta hai, aur wo **khali** aati hai
+jab ke DB mein 33 papers hain. `static/index.html`:891 par `mpLoad()` sirf `showScreen()`
+ke andar se chalti hai, aur page load par `showScreen` ko koi bulata hi nahi. Ye "My
+Papers" banne ke din se aisa hai (`git log -S` se tasdeeq-shuda, 09-08).
+
+**Ye kisi % mein nazar nahi aata** — na PRD row hai, na CSS metric, na test failure.
+Isi liye yahan likha ja raha hai: **poore project ka sab se chhota aur sab se zyada
+dikhne wala baqi kaam yehi hai.**
 
 ### Bank — 2026-09-06 ko DB se naapa (`integrity_check` ok, **1,238 sawal**)
 
@@ -101,15 +137,23 @@ where t.grade='Pre Year 1' and q.marks <> 1` — **0 aana chahiye** (aaj 0 hai).
 * **CSS epic ka baqi safar** taqreeban poora `disagree` ke ~50 rules par khara hai, aur
   un mein se har ek Irfan ka ek faisla maangta hai. `agree` ka bila-faisla hissa
   **khatam** ho chuka.
-* **30 khuli `DEFERRED.md` rows** — 09-05/06 ko **14 band huin** (D9, D15, D19, D20,
-  D24, D26, D31, D41, D43, D51, D63, D64, D65, D66). Un mein se **teen** sirf is liye
-  khuli thin ke kaam pehle ho chuka tha aur row kaati nahi gayi.
+* **31 khuli `DEFERRED.md` rows** (47 mein se 16 band). 09-05/06 ko 14 band huin (D9,
+  D15, D19, D20, D24, D26, D31, D41, D43, D51, D63, D64, D65, D66); 09-06 ko D67; 09-12
+  ko **D68** (auth). Un mein se kai sirf is liye khuli thin ke kaam pehle ho chuka tha
+  aur row kaati nahi gayi.
 * **Product mein sirf R8 ka aadha hissa khula hai.**
 * **Bank ka sab se bara khali hissa 44 jaali topics hain** — data ka kaam, code ka nahi.
+* **R7 bana hua hai magar aadha khali khara hai** — PY3 ka plan poora (87 rows), PY1 par
+  sirf 5, PY2 par **sifar**. Ye bhi code ka kaam nahi: ek Excel bharna hai, aur PY3 ka
+  bhara hua namoona pehle se mojood hai.
+* **Auth ke kaam se do NAYE khule masle bane** (dono `docs/AUTH.md` mein darj): exam
+  images (`static/library`, `static/uploads`) ab bhi bina auth ke serve hote hain, aur
+  delete/edit jaise kaamon ka apna activity log nahi (`auth_events` ka shape tayyar hai).
 
 **Ek jumle mein:** product bana hua, chal raha, aur PRD ke hisaab se ~95% mukammal hai;
-bank do grades par poora ho chuka aur teesre par chhe topics door hai; **aur jo bacha
-hai us ka bara hissa Irfan ke faislon par ruka hai, kisi ke waqt par nahi.**
+bank ka asli hissa 100% ho chuka; 09-12 ko auth ka wo bara surakh band hua jo PRD mein
+likha hi nahi tha; **aur jo bacha hai us ka bara hissa ab bhi Irfan ke faislon aur data
+par ruka hai, kisi ke waqt par nahi — siwaye D69 ke, jo ek zinda bug hai.**
 
 ---
 
