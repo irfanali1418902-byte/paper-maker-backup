@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login — Parcha Paper Maker</title>
+<link rel="stylesheet" href="/static/css/pages/login.css">
+</head>
+<body data-page="Login">
+
+<!-- ===== PANZE FRAME — landing.html wala, aur usi wajah se =====
+     Is page par nav nahi hai: jo banda abhi andar aaya hi nahi, use "Question
+     Bank" / "Blueprint" ke link dikhana sirf us ke liye ek aur band darwaza
+     hai. Sirf frame: grey page, us par inset board. -->
+<div class="pz-wrap">
+ <div class="pz-board pz-board--plain">
+
+  <main class="login-wrap">
+    <div class="card login-card">
+
+      <div class="brand login-brand">
+        <div class="logo"><img src="/static/brand/logo.svg" alt="" /></div>
+        <div>
+          <div class="name">Parcha Paper Maker</div>
+          <div class="tag">Apne account se andar aayen</div>
+        </div>
+      </div>
+
+      <!-- ⚠ YE EK ASLI <form> HAI, div ka majmooa nahi. Is se teen cheezein
+           muft milti hain jo haath se likhni partin: Enter dabane par submit,
+           browser ka password manager (jo teacher ko lamba password rakhne
+           deta hai), aur required fields ka apna paighaam. -->
+      <form id="login-form" class="login-form" autocomplete="on">
+        <label class="login-label" for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" required />
+
+        <label class="login-label" for="password">Password</label>
+        <input id="password" name="password" type="password"
+               autocomplete="current-password" required />
+
+        <button id="login-btn" class="btn btn--primary login-btn" type="submit">Andar aayen</button>
+      </form>
+
+      <p id="login-msg" class="login-msg" role="alert"></p>
+
+      <p class="login-help">Password bhool gaye? School ke admin se reset karwayen.</p>
+    </div>
+  </main>
+
+ </div>
+</div>
+
+<!-- Branding har page par. `/api/brand` auth ke bahar hai (`app/main.py`), aur
+     yehi wajah hai ke ye script login page par bhi kaam karti hai — us waqt jab
+     banda andar aaya hi nahi. -->
+<script src="/static/js/brand.js"></script>
+<script>
+// ⚠ YE PAGE `apiClient.js` JAAN-BOOJH KAR LOAD NAHI KARTA. Wo file har 401 par
+// key-gate khol deti hai — aur login page par 401 ek NORMAL jawab hai (ghalat
+// password). Use yahan rakhne ka matlab hota: ghalat password par ek dusra,
+// purane daur ka darwaza teacher ke saamne khul jaye. Ye page seedha fetch
+// karta hai, aur yehi is app ki waahid aisi jagah hai.
+(function () {
+  const form = document.getElementById("login-form");
+  const msg = document.getElementById("login-msg");
+  const btn = document.getElementById("login-btn");
+
+  // Kahan wapas jana hai. `?next=` sirf usi soorat mein maana jata hai jab wo
+  // ek relative path ho -- `//kahin-aur.com` jaisi qeemat browser ke liye ek
+  // poora doosra domain hai, aur use maan lena open-redirect hai (teacher ko
+  // ek nakli login page par bhej dene ka aam raasta).
+  function safeNext() {
+    const raw = new URLSearchParams(location.search).get("next") || "/";
+    return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  }
+
+  function setMsg(text, kind) {
+    msg.textContent = text || "";
+    msg.className = "login-msg" + (kind ? " is-" + kind : "");
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    if (!username || !password) return;
+
+    btn.disabled = true;
+    setMsg("Check kar rahe hain…", "");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Cookie HttpOnly hai: JS use na parh sakta hai na likh sakta hai.
+        // `same-origin` (fetch ka default) us ko bhejne/rakhne ke liye kaafi
+        // hai, aur yehi chahiye -- is app ka frontend apne hi origin se aata hai.
+        body: JSON.stringify({ username: username, password: password }),
+      });
+      if (res.ok) {
+        // `location.replace`, `href` nahi: login page browser ki history mein
+        // nahi rehna chahiye, warna andar ja kar Back dabane par teacher wapas
+        // login form par aa girta hai.
+        location.replace(safeNext());
+        return;
+      }
+      const body = await res.json().catch(() => ({}));
+      // 429 = lockout. Us ka paighaam server se aata hai aur us mein waqt
+      // likha hota hai ("15 minute") -- use waisa ka waisa dikhana zaroori
+      // hai, kyunke wahan banda aksar asli teacher hota hai jo apna hi
+      // password bhool raha hai aur use "kab dobara" ka jawab chahiye.
+      setMsg(body.detail || "Login nahi ho saka. Dobara koshish karein.", "err");
+    } catch (err) {
+      setMsg("Server se rabta nahi ho raha. School ke server ko dekh lein.", "err");
+    } finally {
+      btn.disabled = false;
+      document.getElementById("password").value = "";
+    }
+  });
+
+  // Pehle se andar ho to yahan rukne ka koi faida nahi -- seedha app khol do.
+  // (Ye tab hota hai jab koi purana link ya bookmark login page par le aaye.)
+  fetch("/api/auth/me")
+    .then((r) => r.json())
+    .then((d) => {
+      if (d && d.user) location.replace(safeNext());
+    })
+    .catch(() => {});
+
+  document.getElementById("username").focus();
+})();
+</script>
+
+</body>
+</html>

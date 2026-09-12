@@ -398,3 +398,45 @@ class BrandResponse(BaseModel):
     full_name: str
     tagline: str
     logo: str
+
+
+# ── SEC-02: users aur login ──────────────────────────────────────────────────
+
+
+class UserPublic(BaseModel):
+    """Ek user, jaisa API se bahar jata hai.
+
+    ⚠ `password_hash` IS SHAKAL MEIN NAHI HAI, aur response_model hone ki wajah
+    se FastAPI use kaat deta hai chahe koi route ghalti se poora DB row hi kyun
+    na laut de. Ye us ghalti ke khilaf doosri deewar hai — pehli
+    `user_service.to_public()` hai."""
+
+    id: str
+    username: str
+    display_name: str
+    role: str
+    is_active: bool
+    created_at: str = ""
+    last_login_at: str = ""
+
+
+class AuthMeResponse(BaseModel):
+    """GET /api/auth/me — "main kaun hoon, aur is app ka auth kis mode par hai".
+
+    Ye endpoint KHUD auth ke peeche nahi hai (brand ki tarah): frontend ko app
+    kholte hi jawab chahiye hota hai, aur "login zaroori hai" khud ek jawab
+    hai, error nahi. Isi liye `user` khali ho sakta hai."""
+
+    mode: str
+    user: Optional[UserPublic] = None
+
+
+class AuthEvent(BaseModel):
+    """auth_events ki ek row — admin ke log view ke liye."""
+
+    id: int
+    at: str
+    event: str
+    username: str = ""
+    ip: str = ""
+    detail: str = ""

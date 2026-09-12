@@ -65,8 +65,15 @@ def test_baseline_is_valid_json_with_expected_shape(baseline):
     assert baseline["per_page"], "baseline records no pages"
 
 
-def test_measures_the_ten_real_pages():
+def test_measures_the_twelve_real_pages():
     """mockup-modern.html is a design reference and must stay out of the metrics.
+
+    TWELVE SINCE 2026-09-12 (SEC-02): login.html and users.html arrived with
+    real users, sessions and roles. Both followed plan.html's precedent below —
+    one @import each, no 99-legacy file, so `legacy_css_lines` is +0 for both.
+    login.html is also the only page in the app that does NOT load apiClient.js,
+    and that is deliberate: on a login page a 401 is a NORMAL answer (wrong
+    password), and apiClient's 401 handler would pop the old key-gate over it.
 
     TEN SINCE 2026-08-23, and the count is deliberately hard-coded rather than
     derived: adding a page to this app is a decision that should cost a test
@@ -91,7 +98,7 @@ def test_measures_the_ten_real_pages():
     Both are in docs/design/ now, so neither can drift back into a page count.
     """
     names = [p.name for p in page_paths()]
-    assert len(names) == 10, f"expected 10 real pages, found {len(names)}: {names}"
+    assert len(names) == 12, f"expected 12 real pages, found {len(names)}: {names}"
     assert "mockup-modern.html" not in names
     for mockup in ("mockup-modern.html", "papermaker-mockup.html"):
         assert (PROJECT_ROOT / "docs" / "design" / mockup).exists(), (

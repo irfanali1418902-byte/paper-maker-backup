@@ -80,11 +80,20 @@ if not exist "%RESOLVED_DB%" (
 )
 
 REM --- auth check ---------------------------------------------------------
-.venv\Scripts\python.exe -c "from app.api.auth import API_KEY; import sys; sys.exit(0 if API_KEY else 1)" >nul 2>&1
-if errorlevel 1 (
-  echo   Auth:     [!] PAPER_MAKER_API_KEY set nahi - LAN par /api khula hai
+REM Teen mein se ek jawab. Mode DB se tay hota hai, kisi flag se nahi (SEC-02):
+REM koi active user mojood ho to login laazmi, warna shared key, warna khula.
+REM Isi liye yahan `auth_mode()` se poochha jata hai, sirf key dekh kar farz
+REM nahi kiya jata -- warna users bana lene ke baad bhi ye "key" chhapta rehta.
+for /f "usebackq delims=" %%A in (`.venv\Scripts\python.exe -c "from app.api.auth import auth_mode; print(auth_mode())"`) do set "AUTH_MODE=%%A"
+
+if "%AUTH_MODE%"=="users" (
+  echo   Auth:     LOGIN ^(har teacher apne account se - /login.html^)
+) else if "%AUTH_MODE%"=="key" (
+  echo   Auth:     shared key ^(teachers ko ek hi Access key chahiye^)
+  echo             Behtar: python scripts\create_admin.py chala kar asli accounts banayen
 ) else (
-  echo   Auth:     ON ^(teachers ko Access key chahiye hogi^)
+  echo   Auth:     [!] KHULA - LAN par koi bhi /api use kar sakta hai
+  echo             Theek karne ke liye: python scripts\create_admin.py
 )
 
 REM --- firewall check -----------------------------------------------------

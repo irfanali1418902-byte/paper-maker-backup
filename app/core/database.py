@@ -423,5 +423,89 @@ def init_db() -> None:
         """)
     cur.execute("CREATE INDEX IF NOT EXISTS idx_topic_week_plan_week ON topic_week_plan(week_no)")
 
+    # ── SEC-02: asli users, sessions, aur auth ka log ────────────────────────
+    #
+    # KYUN. 2026-09-12 tak poori app ke peeche EK shared key thi. Us ka matlab
+    # ye tha: system ko nahi pata tha ke banda KAUN hai. Bees teachers ek hi
+    # qeemat jaante the, koi role nahi tha (har kisi ke paas delete ka wahi
+    # ikhtiyar tha jo kisi aur ke paas), aur "ye paper kis ne mitaya" ka jawab
+    # kahin darj hi nahi hota tha. Teen tables us teenon ko band karti hain.
+    #
+    # ⚠ TEENON KHALI SHURU HOTI HAIN, AUR YE JAAN-BOOJH KAR HAI. Jab tak `users`
+    # mein ek bhi active row nahi, app bilkul pehle jaisi chalti hai (key wali ya
+    # khuli). Pehla user banate hi mode badal jata hai. Yani ye migration kisi
+    # chalti hui school ko subah bahar nahi karti -- switch data hai, flag nahi.
+    # Tafseel: app/api/auth.py ka `auth_mode()`.
+
+    # username hi login ka naam hai (email nahi -- school ke teachers ke paas
+    # school ka email hai hi nahi; naapa 2026-09-12: school_settings.email ek
+    # hi idara-level pata rakhti hai). Lower-case mein store hota hai taake
+    # "Irfan" aur "irfan" do account na banen -- UNIQUE us par lagta hai.
+    #
+    # password_hash scrypt hai (app/services/user_service.py), plain nahi, aur
+    # salt hash ke andar hi hai -- alag column ki zaroorat nahi.
+    #
+    # is_active = 0 wala user "delete" ki jagah hai. Row mitane ka matlab hota
+    # ke us ke auth_events orphan ho jayen, aur wahi log to is kaam ka asal
+    # maqsad hai. Deactivate = login band, tareekh mehfooz.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id            TEXT PRIMARY KEY,
+            username      TEXT NOT NULL UNIQUE,
+            display_name  TEXT NOT NULL DEFAULT '',
+            password_hash TEXT NOT NULL,
+            role          TEXT NOT NULL DEFAULT 'teacher',
+            is_active     INTEGER NOT NULL DEFAULT 1,
+            created_at    TEXT DEFAULT CURRENT_TIMESTAMP,
+            last_login_at TEXT
+        )
+        """)
+
+    # Session server par rehti hai, cookie mein sirf token jata hai -- aur DB
+    # mein token ka SHA-256 hash, khud token NAHI. Wajah: DB ki copy (backup,
+    # bheja hua file, chori) kisi ke haath lage to us se koi session churai na
+    # ja sake. Yehi wo cheez hai jo purani localStorage wali key nahi kar sakti
+    # thi: wahan server ke paas "ye session khatam karo" ka koi tareeqa hi nahi
+    # tha, kyunke server ko session ka pata hi nahi tha.
+    #
+    # Do waqt alag alag hain aur dono zaroori: `last_seen_at` (30 min bekari =
+    # khatam, shared school PC ka asal khatra) aur `expires_at` (12 ghante ki
+    # sakht hadd, chahe banda kitna hi active ho).
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS sessions (
+            token_hash   TEXT PRIMARY KEY,
+            user_id      TEXT NOT NULL REFERENCES users(id),
+            created_at   TEXT NOT NULL,
+            last_seen_at TEXT NOT NULL,
+            expires_at   TEXT NOT NULL
+        )
+        """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)")
+
+    # Auth ka log. Do kaam karta hai, aur dono par is ka hona zaroori hai:
+    #   1. Jawab: "kaun andar aaya, kab, kis machine se."
+    #   2. Lockout ka hisaab -- login_fail ki ginti isi table se hoti hai, kisi
+    #      in-memory counter se nahi, warna server restart hamlawar ka counter
+    #      sifar kar deta (aur restart uske apne bas mein ho sakta hai).
+    #
+    # username TEXT hai, user_id FK nahi: nakaam login par aksar us naam ka koi
+    # user hota hi nahi, aur "kisi ne 'admin' 200 dafa try kiya" theek wohi
+    # cheez hai jo record honi chahiye.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS auth_events (
+            id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            at       TEXT NOT NULL,
+            event    TEXT NOT NULL,
+            username TEXT NOT NULL DEFAULT '',
+            user_id  TEXT,
+            ip       TEXT NOT NULL DEFAULT '',
+            detail   TEXT NOT NULL DEFAULT ''
+        )
+        """)
+    # Lockout ki query har login par chalti hai: "is naam ke pichhle 15 minute
+    # ke login_fail." Bina index ke wo poore log ka SCAN hai, aur ye table
+    # sirf barhti hai.
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_auth_events_lookup ON auth_events(username, event, at)")
+
     conn.commit()
     conn.close()

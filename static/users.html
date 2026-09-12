@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Users — Parcha Paper Maker</title>
+<link rel="stylesheet" href="/static/css/pages/users.css">
+</head>
+<body data-page="Users">
+
+<div class="pz-wrap">
+ <div class="pz-board">
+
+  <div class="pz-top">
+   <div class="pz-logo brand">
+    <div class="name sidenav__brand-name">Parcha Paper Maker</div>
+    <small class="sidenav__brand-sub">Users</small>
+   </div>
+   <div class="pz-crumb"><b>Users</b></div>
+   <div class="pz-spacer"></div>
+  </div>
+
+  <div class="pz-body">
+
+   <nav class="pz-rail app-nav sidenav">
+    <a href="/" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-generator"></use></svg>
+      Generator
+    </a>
+    <a href="/library.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-library"></use></svg>
+      Image Library
+    </a>
+    <a href="/bank.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-bank"></use></svg>
+      Question Bank
+    </a>
+    <a href="/blueprint.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-blueprint"></use></svg>
+      Blueprint
+    </a>
+    <a href="/slo.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-outcomes"></use></svg>
+      Learning Outcomes
+    </a>
+    <a href="/taqseem.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-taqseem"></use></svg>
+      Exam Taqseem
+    </a>
+    <a href="/plan.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-plan"></use></svg>
+      Hafta-war Plan
+    </a>
+    <a href="/slo-health.html" class="sidenav__link">
+      <svg class="icon"><use href="/static/icons.svg#i-slo-health"></use></svg>
+      SLO Health
+    </a>
+   </nav>
+
+   <main class="users-main">
+
+    <div class="pagehead">
+      <div>
+        <h1>Users</h1>
+        <p>Kis kis ka account hai, kaun admin hai, aur kaun kab andar aaya. Sirf admin ye safha khol sakta hai.</p>
+      </div>
+    </div>
+
+    <!-- Naya account -->
+    <div class="card">
+      <h2>Naya account</h2>
+      <p class="hint">Password kam az kam 8 harf ka. Teacher parche bana sakta hai; admin us ke ilawa users bhi manage karta hai.</p>
+      <form id="add-form" class="users-form">
+        <input id="new-username" type="text" placeholder="username" autocapitalize="none" spellcheck="false" required />
+        <input id="new-display" type="text" placeholder="poora naam" />
+        <input id="new-password" type="password" placeholder="password" autocomplete="new-password" required />
+        <select id="new-role">
+          <option value="teacher">teacher</option>
+          <option value="admin">admin</option>
+        </select>
+        <button class="btn btn--primary" type="submit">Banao</button>
+      </form>
+      <p id="add-msg" class="users-msg" role="alert"></p>
+    </div>
+
+    <!-- Mojooda accounts -->
+    <div class="card">
+      <h2>Accounts</h2>
+      <div class="users-tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th><th>Naam</th><th>Role</th><th>Haalat</th>
+              <th>Aakhri login</th><th>Kaam</th>
+            </tr>
+          </thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+      <p id="list-msg" class="users-msg" role="alert"></p>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <h2>Auth log</h2>
+      <p class="hint">Aakhri 100 waqiat — kaun aaya, kab, kahan se, aur kis naam par nakaam koshishein ho rahi hain. Yehi wo sawal hai jis ka jawab shared-key wale daur mein kahin tha hi nahi.</p>
+      <div class="users-tablewrap">
+        <table>
+          <thead><tr><th>Waqt (UTC)</th><th>Waqia</th><th>Username</th><th>IP</th><th>Tafseel</th></tr></thead>
+          <tbody id="events-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+   </main>
+  </div>
+ </div>
+</div>
+
+<script src="/static/js/brand.js"></script>
+<script src="/apiClient.js"></script>
+<script>
+(function () {
+  const usersBody = document.getElementById("users-body");
+  const eventsBody = document.getElementById("events-body");
+
+  function setMsg(el, text, kind) {
+    el.textContent = text || "";
+    el.className = "users-msg" + (kind ? " is-" + kind : "");
+  }
+
+  function td(text) {
+    const cell = document.createElement("td");
+    cell.textContent = text;
+    return cell;
+  }
+
+  // ⚠ HAR CELL `textContent` SE BHARTA HAI, innerHTML SE NAHI. Is table mein
+  // sirf aisi qeematein hain jo kisi insaan ne type ki thin (username, poora
+  // naam) -- yani theek wohi jagah jahan `<script>` likh kar rakh dena mumkin
+  // hai. `textContent` us ko harf samajhta hai, code nahi. Ye page admin ka
+  // hai, to yahan aisi ghalti ka nishana bhi admin hi hota.
+  function renderUsers(users) {
+    usersBody.replaceChildren();
+    users.forEach(function (u) {
+      const tr = document.createElement("tr");
+      if (!u.is_active) tr.className = "is-off";
+      tr.append(td(u.username), td(u.display_name), td(u.role));
+      tr.append(td(u.is_active ? "active" : "band"));
+      tr.append(td(u.last_login_at || "—"));
+
+      const actions = document.createElement("td");
+
+      const roleBtn = document.createElement("button");
+      roleBtn.type = "button";
+      roleBtn.className = "btn-ghost";
+      roleBtn.textContent = u.role === "admin" ? "Teacher banao" : "Admin banao";
+      roleBtn.addEventListener("click", function () {
+        save(u, { role: u.role === "admin" ? "teacher" : "admin" });
+      });
+
+      const offBtn = document.createElement("button");
+      offBtn.type = "button";
+      offBtn.className = "btn-ghost";
+      offBtn.textContent = u.is_active ? "Band karo" : "Khol do";
+      offBtn.addEventListener("click", function () {
+        save(u, { is_active: !u.is_active });
+      });
+
+      const pwBtn = document.createElement("button");
+      pwBtn.type = "button";
+      pwBtn.className = "btn-ghost";
+      pwBtn.textContent = "Password reset";
+      pwBtn.addEventListener("click", function () { resetPassword(u); });
+
+      actions.append(roleBtn, offBtn, pwBtn);
+      tr.append(actions);
+      usersBody.append(tr);
+    });
+  }
+
+  function renderEvents(events) {
+    eventsBody.replaceChildren();
+    events.forEach(function (e) {
+      const tr = document.createElement("tr");
+      if (e.event === "login_fail" || e.event === "locked_out") tr.className = "is-bad";
+      tr.append(td(e.at), td(e.event), td(e.username || "—"), td(e.ip || "—"), td(e.detail || ""));
+      eventsBody.append(tr);
+    });
+  }
+
+  async function load() {
+    const res = await apiFetch("/api/users");
+    if (res.status === 403) {
+      setMsg(document.getElementById("list-msg"), "Ye safha sirf admin ke liye hai.", "err");
+      return;
+    }
+    if (!res.ok) return;
+    renderUsers(await res.json());
+
+    const ev = await apiFetch("/api/auth/events?limit=100");
+    if (ev.ok) renderEvents(await ev.json());
+  }
+
+  // PATCH poora object bhejta hai, sirf badla hua field nahi -- aur ye is
+  // project ka seekha hua sabaq hai: `/api/school-settings` ka partial POST
+  // baqi fields wipe kar deta tha. Yahan har call teenon fields deti hai, to
+  // "role badlo" kabhi chup-chaap naam nahi uraata.
+  async function save(user, patch) {
+    const body = {
+      display_name: user.display_name,
+      role: user.role,
+      is_active: user.is_active,
+    };
+    Object.assign(body, patch);
+    const res = await apiFetch("/api/users/" + user.id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const out = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      setMsg(document.getElementById("list-msg"), out.detail || "Tabdeeli nahi hui.", "err");
+      return;
+    }
+    setMsg(document.getElementById("list-msg"), user.username + " badal diya. Us ki khuli hui sessions khatam.", "ok");
+    load();
+  }
+
+  async function resetPassword(user) {
+    // `prompt` yahan jaan-boojh kar hai, koi modal nahi: ye admin ka kaam hai
+    // jo mahine mein ek dafa hota hai, aur ek aur modal is page par sirf code
+    // barhata. (`alert`/`confirm` se farq ye hai ke prompt qeemat leta hai.)
+    const pw = prompt("'" + user.username + "' ka naya password (kam az kam 8 harf):");
+    if (!pw) return;
+    const res = await apiFetch("/api/users/" + user.id + "/password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ new_password: pw }),
+    });
+    const out = await res.json().catch(function () { return {}; });
+    setMsg(
+      document.getElementById("list-msg"),
+      res.ok ? user.username + " ka password badal diya — us ki saari sessions khatam." : (out.detail || "Reset nahi hua."),
+      res.ok ? "ok" : "err",
+    );
+  }
+
+  document.getElementById("add-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const msg = document.getElementById("add-msg");
+    const res = await apiFetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: document.getElementById("new-username").value.trim(),
+        display_name: document.getElementById("new-display").value.trim(),
+        password: document.getElementById("new-password").value,
+        role: document.getElementById("new-role").value,
+      }),
+    });
+    const out = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      setMsg(msg, out.detail || "Account nahi bana.", "err");
+      return;
+    }
+    setMsg(msg, out.username + " ban gaya.", "ok");
+    document.getElementById("add-form").reset();
+    load();
+  });
+
+  load();
+})();
+</script>
+
+</body>
+</html>

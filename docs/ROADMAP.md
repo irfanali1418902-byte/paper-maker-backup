@@ -116,6 +116,7 @@ hai us ka bara hissa Irfan ke faislon par ruka hai, kisi ke waqt par nahi.**
 ## A. Audit Snapshot — What's HEALTHY ✅
 
 - **Tests:** ~~242~~ **1,075 passing** (naapa 2026-08-25); services, repositories, and routes all covered; guard paths tested. `ruff` saaf.
+- **Auth (SEC-02, 2026-09-12):** asli users — per-teacher account, scrypt password, server-side session (HttpOnly cookie, 30 min idle + 12 ghante sakht hadd), roles (admin/teacher), lockout (5 → 15 min, naam par), aur `auth_events` ka log. Mode DATA se badalta hai: koi user na ho to app haraf ba haraf purani (shared-key) tarah chalti hai. Tafseel `docs/AUTH.md`.
 - **Security:** git history clean of secrets (`.env*`, `*.db`, `*.zip` ignored); auth fail-closed in prod **aur Docker image mein bhi** (`PAPER_MAKER_REQUIRE_API_KEY=1`, 2026-09-12); timing-safe key compare (`hmac.compare_digest`); minimum key-length warning on startup; Gemini key in header not URL; app key already rotated once successfully.
   > ⚠ **"timing-safe key compare" ye row 2026-08-25 se claim kar raha tha, jab ke code mein sada `==` tha** (`app/api/auth.py`). 2026-09-12 ke audit mein pakra gaya aur usi din laga diya gaya. Sabaq wahi jo P0 rows par likha hai: **row par bharosa mat karo, code naapo.** Ek jhoota "healthy" row us khaami se zyada khatarnak hai jise koi claim hi na kare — kyunke phir koi dekhta bhi nahi.
 - **Architecture:** clean layering (api → services → repositories → core) consistently followed; env reads at module boundary.

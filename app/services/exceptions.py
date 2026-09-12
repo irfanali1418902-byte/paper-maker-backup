@@ -36,6 +36,30 @@ class DuplicateSyllabusTopic(Exception):
     touch sqlite3 directly (CLAUDE.md §2)."""
 
 
+class UserValidationError(Exception):
+    """Raised by user_service jab naya/badla hua user qubool na ho: naam pehle
+    se mojood, password bohat chhota, ghalat role, ya "aakhri admin ko mat
+    hatao" wala rule. Paighaam pehle se teacher/admin ke parhne ke qabil hai,
+    to route ise seedha 400 par bhej deta hai (CLAUDE.md §2)."""
+
+
+class LoginFailed(Exception):
+    """Raised by session_service.login jab login na ho: ghalat naam/password,
+    band kiya hua account, ya lockout.
+
+    ⚠ `message` JAAN-BOOJH KAR MUBHAM HAI ghalat naam aur ghalat password ke
+    darmiyan -- dono par ek hi jumla. Farq batane ka matlab hai kisi ajnabi ko
+    ye batana ke kaun kaun se usernames is school mein waqai mojood hain, aur
+    phir wo sirf password par hamla karta hai. Lockout us se alag hai aur us ka
+    paighaam SAAF hai: wahan banda usually asli teacher hota hai jo apna hi
+    password bhool raha hai, aur use "15 minute baad" ka jawab chahiye.
+    """
+
+    def __init__(self, message: str, locked: bool = False):
+        self.locked = locked
+        super().__init__(message)
+
+
 class QuestionBankEmpty(Exception):
     """Raised by paper_service when a requested question group can't be filled
     because the bank has no questions of that kind (e.g. a custom-ratio paper

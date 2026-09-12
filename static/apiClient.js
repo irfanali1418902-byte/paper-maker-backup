@@ -32,6 +32,29 @@
 // aaj bhi nahi pata ke banda KAUN hai, aur koi role ya audit trail nahi
 // (`identity tables: KOI NAHI`, naapa gaya 2026-09-08). Ye sirf shared-PC wala
 // surakh band karta hai. Asli users/roles/activity-log alag kaam hai.
+//
+// ─── WO "ALAG KAAM" HO GAYA (SEC-02, 2026-09-12) ────────────────────────────
+// Upar wala paragraph apni jagah SACH hai aur is liye mita nahi -- wo key wale
+// mode ko bayan karta hai, jo un schoolon par aaj bhi chal raha hai jinhon ne
+// users nahi banaye. Magar ab ek doosra mode bhi hai: `users`. Wahan har
+// teacher ka apna account hai, session server par rehti hai (HttpOnly cookie,
+// JS us tak pahunch hi nahi sakta), role hai, aur har login `auth_events`
+// mein darj hota hai.
+//
+// IS FILE KE LIYE FARQ SIRF ITNA HAI: 401 par kahan bhejna hai. Server har
+// 401 ke saath `x-pm-auth-mode` header deta hai --
+//     users -> login page (key-gate NAHI; wahan key ka koi wajood nahi)
+//     key   -> wahi purana key-gate, haraf ba haraf
+// Header par chalne ka faida ye hai ke page load par mode poochhne ke liye ek
+// extra request nahi karni parti.
+//
+// ⚠ IDLE LOCK KA MATLAB DONO MODES MEIN ALAG HAI, aur ye farq jaan lena
+// zaroori hai. Key mode mein lock SIRF BROWSER mein hai: key localStorage se
+// mit jati hai, magar server ke nazdeek wo key us ke baad bhi utni hi durust
+// rehti hai -- yani DevTools se qeemat copy kar lene wale ke liye lock ka koi
+// wajood nahi. Users mode mein waqt ka faisla SERVER karta hai
+// (`sessions.last_seen_at`, 30 min) aur neeche wala lock sirf us ka aaina hai.
+// Yehi wo surakh tha jo ye file khud apne upar likh kar maan chuki thi.
 
 const _rawFetch = window.fetch.bind(window);
 const PM_KEY_STORAGE = "pm_api_key";
@@ -130,6 +153,13 @@ function pmShowKeyGate(msg) {
   gate.querySelector("#pm-key-input").focus();
 }
 
+// Login page ka raasta, `?next=` ke saath taake teacher jahan ja raha tha
+// wahin wapas pahunche. `replace` se login page history mein nahi rehta.
+function pmGoLogin() {
+  const next = encodeURIComponent(location.pathname + location.search);
+  location.replace("/login.html?next=" + next);
+}
+
 async function apiFetch(url, opts = {}) {
   const key = pmGetKey();
   const headers = Object.assign({}, opts.headers || {});
@@ -143,6 +173,12 @@ async function apiFetch(url, opts = {}) {
     Object.assign({ cache: "no-store" }, opts, { headers }),
   );
   if (res.status === 401) {
+    // Users mode: yahan key ka koi wajood hi nahi -- gate kholna teacher se
+    // ek aisi cheez maangna hoga jo us ke paas kabhi thi hi nahi. Login page.
+    if (res.headers.get("x-pm-auth-mode") === "users") {
+      pmGoLogin();
+      return res;
+    }
     // ⚠ PAIGHAAM DO ALAG HAALTON KA FARQ KARTA HAI, AUR PEHLE NAHI KARTA THA.
     // Pehle har 401 par ek hi jumla aata tha: "Key ghalat ya missing hai".
     // Yani jis banday ne ABHI TAK KOI KEY DAALI HI NAHI, use bhi ye bataya
@@ -223,12 +259,67 @@ function pmMountLockButton() {
 // sham ko koi page kholta, aur key 60 second tak (interval ke pehle tick tak)
 // zinda rehti. Wo poora waqt app khuli hoti. Load par dekhne se gate usi lamhe
 // aata hai jis lamhe page khulta hai.
+// ── Users mode ka top-bar: naam, Logout, aur admin ke liye Users ───────────
+//
+// Button yahan se lagte hain, HTML se nahi -- wahi tareeqa jo upar Lock button
+// ke liye likha hai, aur wahi wajah: ye file nau pages par chalti hai, to HTML
+// mein daalne ka matlab nau files chhoona aur `css_baseline.py` ki frozen
+// inventory hilana hota.
+function pmMountUserBar(me) {
+  const top = document.querySelector(".pz-top");
+  if (!top || top.querySelector(".pz-user")) return;
+
+  const who = document.createElement("span");
+  who.className = "pz-user";
+  // textContent -- naam wo qeemat hai jo kisi insaan ne type ki thi.
+  who.textContent = me.user.display_name || me.user.username;
+
+  const out = document.createElement("button");
+  out.type = "button";
+  out.className = "pz-lock";
+  out.textContent = "Logout";
+  out.title = "PC chhorne se pehle dabayein";
+  out.addEventListener("click", async () => {
+    // ⚠ SERVER PAR LOGOUT, SIRF BROWSER MEIN NAHI. Purane key wale lock ka
+    // asal aib yehi tha: wo localStorage saaf karta tha aur server ke nazdeek
+    // kuch nahi badalta tha. Yahan session DB se mit jati hai, to us cookie
+    // se dobara andar aana mumkin hi nahi rehta.
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    pmGoLogin();
+  });
+
+  const nodes = [who];
+  if (me.user.role === "admin") {
+    const link = document.createElement("a");
+    link.className = "pz-user-link";
+    link.href = "/users.html";
+    link.textContent = "Users";
+    nodes.push(link);
+  }
+  nodes.push(out);
+
+  const lang = top.querySelector(".lang-toggle");
+  nodes.forEach((n) => (lang ? top.insertBefore(n, lang) : top.appendChild(n)));
+}
+
 function pmInit() {
   if (pmRead(PM_KEY_STORAGE) && pmIdleExpired()) {
     pmLock(PM_IDLE_MSG);
     return; // key ja chuki — lock button lagane ko kuch nahi bacha
   }
   pmMountLockButton();
+
+  // Users mode hai ya nahi -- ye ek hi sawal hai aur jawab sasta hai (`me`
+  // auth ke peeche nahi). Key/khule mode par `user` khali aata hai aur yahan
+  // kuch nahi hota, yani purane setups par ye code chalta hi nahi.
+  _rawFetch("/api/auth/me")
+    .then((r) => (r.ok ? r.json() : null))
+    .then((me) => {
+      if (me && me.user) pmMountUserBar(me);
+    })
+    .catch(() => {
+      /* server band hai -- baqi page ka masla, yahan khamoshi */
+    });
 }
 
 if (document.readyState === "loading") {

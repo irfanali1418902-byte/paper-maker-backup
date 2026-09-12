@@ -1,0 +1,100 @@
+/* =========================================================================
+   pages/users.css — users.html ka waahid stylesheet (SEC-02)
+
+   `pages/plan.css` jaisa: SIRF EK @import (main.css), koi 99-legacy file
+   nahi — naya page purana qarz paida nahi karta. Is page ke aane se
+   `legacy_css_lines` +0 rehta hai.
+
+   Shell wahi jo bank/library/slo/slo-health chalate hain: body flex + apna
+   scrolling main column. `.slo-main` dobara istemal karne ke bajaye apna
+   `.users-main` is liye hai ke us object ka naam SLO ke do safhon se bandha
+   hua hai (04-objects/slo-main.css) — teesra consumer us naam ko jhoota bana
+   deta. Declarations wahi hain; naam sach bolta hai.
+
+   IS FILE MEIN EK BHI HEX NAHI — comment mein bhi nahi. Har rang Tier 2 role
+   se aata hai.
+   ========================================================================= */
+
+@import url("../main.css");
+
+@layer objects {
+  body {
+    display: flex;
+  }
+
+  /* min-width:0 load-bearing hai — wajah pages/plan.css par tafseel se likhi
+     hai: is ke baghair chaudi table flex item ko phaila deti hai aur sidebar
+     dab jata hai. */
+  .users-main {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: var(--space-inset);
+  }
+}
+
+@layer components {
+  /* Naya account ek hi qatar mein — chhoti screen par wrap ho jata hai. */
+  .users-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-gap-tight);
+    align-items: center;
+  }
+
+  .users-form input,
+  .users-form select {
+    min-width: 140px;
+  }
+
+  /* Dono tables apna scroll rakhti hain taake card ka header upar rahe. */
+  .users-tablewrap {
+    max-height: 55vh;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+  }
+
+  .users-tablewrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface-sunken);
+  }
+
+  /* Band kiya hua account dikhta HAI, gayab nahi hota — warna admin ko pata
+     hi na chale ke kis ka login band kiya gaya tha. Dabaya hua, mitaya nahi. */
+  .users-tablewrap tr.is-off td {
+    color: var(--color-text-muted);
+    background: var(--color-surface-sunken);
+  }
+
+  /* Nakaam login aur lockout log mein alag rang se — admin ki nazar seedha
+     wahan jani chahiye. Yehi wo rows hain jin ke liye ye log bana hai. */
+  .users-tablewrap tr.is-bad td {
+    color: var(--color-status-err-fg);
+    background: var(--color-status-err-bg);
+  }
+
+  /* Har row ke teen chhote buttons ek saath. */
+  .users-tablewrap td button {
+    margin-right: 6px;
+  }
+
+  /* Paighaam ki jagah hamesha ghiri rehti hai — warna jawab aate hi neeche ka
+     card khisak jata hai aur agla click ghalat cheez par parta hai. */
+  .users-msg {
+    min-height: 1.25rem;
+    margin: var(--space-gap-tight) 0 0;
+    font-size: var(--text-label);
+  }
+
+  .users-msg.is-err {
+    color: var(--color-danger);
+  }
+
+  .users-msg.is-ok {
+    color: var(--color-success);
+  }
+}

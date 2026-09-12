@@ -1,0 +1,86 @@
+/* =========================================================================
+   pages/login.css — login.html ka waahid stylesheet (SEC-02)
+
+   `pages/plan.css` ke naqsh-e-qadam par: SIRF EK @import (main.css), koi
+   99-legacy file nahi. Wajah wohi hai jo wahan likhi hai — is epic ka maqsad
+   99-legacy/ ki line count girana hai, to naya page wahan file daal kar ulti
+   simt mein nahi chalta. Naapa ja sakta hai: is page ke aane se
+   `legacy_css_lines` +0 rehta hai.
+
+   IS FILE MEIN EK BHI HEX NAHI — comment mein bhi nahi (nav.css:72 ka sabaq;
+   ratchet wahan saat dafa comment par hi phata hai). Har rang Tier 2 role se.
+
+   `.card`, `.btn--primary`, `.brand` teenon component tree se aate hain, yahan
+   dobara nahi likhe gaye. Is page ka apna hissa sirf itna hai: board ke beech
+   mein ek tang column.
+   ========================================================================= */
+
+@import url("../main.css");
+
+@layer objects {
+  /* Login ka box beech mein, oopar ki taraf jhuka hua (bilkul beech mein nahi).
+     Aankh form ko screen ke optical centre par dhoondti hai, jo hisaab ke
+     centre se thora upar hota hai — is liye `center` ke bajaye padding. */
+  .login-wrap {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-inset);
+  }
+}
+
+@layer components {
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .login-brand {
+    margin-bottom: var(--space-gap);
+  }
+
+  /* Labels aur inputs ek column mein. `gap` ke bajaye margin is liye ke label
+     apne input se chipka rehna chahiye, aur do jodon ke darmiyan faasla zyada
+     — ek hi gap dono ko barabar kar deta aur "kaun sa label kis ka hai" ka
+     jawab dhundla ho jata. */
+  .login-form {
+    display: block;
+  }
+
+  .login-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-strong);
+    color: var(--color-text);
+  }
+
+  .login-form input {
+    width: 100%;
+    margin-bottom: var(--space-gap-tight);
+  }
+
+  .login-btn {
+    width: 100%;
+    margin-top: var(--space-gap-tight);
+  }
+
+  /* Paighaam ki jagah HAMESHA ghiri rehti hai (`min-height`), chahe abhi koi
+     paighaam na ho. Warna ghalat password par poora form ek line neeche khisak
+     jata aur teacher ka agla click us button par parta jo ab wahan hai hi
+     nahi. */
+  .login-msg {
+    min-height: 1.25rem;
+    margin: var(--space-gap-tight) 0 0;
+    font-size: var(--text-label);
+  }
+
+  .login-msg.is-err {
+    color: var(--color-danger);
+  }
+
+  .login-help {
+    margin: var(--space-gap) 0 0;
+    font-size: var(--text-micro);
+    color: var(--color-text-muted-strong);
+  }
+}

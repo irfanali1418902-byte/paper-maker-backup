@@ -27,11 +27,40 @@ from app.api import (
     syllabus,
     taqseem,
     topic_plan,
+    users,
 )
-from app.api.auth import require_api_key
+from app.api.auth import API_KEY, require_auth
 from app.core.database import init_db
 
-app = FastAPI(title="AII Smart Paper Maker - Phase 1")
+# ── /docs, /redoc, /openapi.json — sirf khuli (dev) app par ──────────────────
+#
+# FastAPI ye teenon by-default banata hai aur teenon AUTH SE BAHAR hote hain:
+# routers par lagi dependency un par nahi lagti. Yani key/session set hone ke
+# baad bhi koi bhi bina kuch diye poora API surface parh sakta tha — har route,
+# har field, har delete/patch ka poora naqsha. Wo khud data nahi hai, magar
+# hamla karne wale ka pehla kaam yehi naqsha banana hota hai, aur hum use
+# mehman-nawazi se de rahe the.
+#
+# Faisla: jahan auth ki koi soorat mojood hai (key set hai, ya fail-closed flag
+# laga hai), wahan docs band. Local dev par — jahan na key hai na flag — docs
+# chalte rehte hain, kyunke wahan wo rozana ka auzaar hain.
+#
+# ⚠ USERS MODE IS FAISLE MEIN NAHI AA SAKTA, aur ye majboori hai, kotahi nahi:
+# ye faisla app BANTE waqt hota hai (startup), jabke users mode DB ki mojooda
+# haalat par hai aur wo chalte chalte badalti hai. Amal mein ye khatra nahi:
+# jo school users bana raha hai us ne key bhi set ki hoti hai (school-PC setup
+# guide dono ek saath kehti hai). Jis din ye galat sabit ho, asal hal docs ko
+# `Depends(require_auth)` wale apne route par khud serve karna hai.
+_DEPLOYISH = bool(API_KEY) or str(
+    os.environ.get("PAPER_MAKER_REQUIRE_API_KEY", "")
+).strip().lower() in ("1", "true", "yes")
+
+app = FastAPI(
+    title="AII Smart Paper Maker - Phase 1",
+    docs_url=None if _DEPLOYISH else "/docs",
+    redoc_url=None if _DEPLOYISH else "/redoc",
+    openapi_url=None if _DEPLOYISH else "/openapi.json",
+)
 
 
 # Cache-Control policy (priority order):
@@ -84,13 +113,18 @@ if _allowed_origins:
 
 init_db()
 
-# Har /api router API-key auth ke peeche. Static `/` mount (neeche) khula rehta
-# hai taake frontend HTML/JS bina key ke load ho sake.
-_api_auth = [Depends(require_api_key)]
+# Har /api router auth ke peeche. Mode (session / key / khula) `require_auth`
+# khud tay karti hai — dekho app/api/auth.py. Static `/` mount (neeche) khula
+# rehta hai taake frontend HTML/JS bina auth ke load ho sake.
+_api_auth = [Depends(require_auth)]
 # Branding cosmetic shell hai (koi secret/DB/AI-cost nahi) aur har page load par
 # chahiye — is liye ye jaan-boojh kar auth ke bahar hai, static `/` ki tarah. Warna
 # key set hone se pehle har page par key-gate khul jata.
 app.include_router(brand.router)
+# ⚠ AUTH DEPENDENCY KE BAGHAIR, AUR YE LAAZMI HAI: is router mein login khud
+# hai. Har route apni zaroorat andar se lagati hai (login/me khule, baqi
+# require_auth/require_admin ke peeche) — tafseel app/api/users.py ke sar par.
+app.include_router(users.router)
 app.include_router(adaptive_results.router, dependencies=_api_auth)
 app.include_router(bloom_suggestions.router, dependencies=_api_auth)
 app.include_router(blueprints.router, dependencies=_api_auth)

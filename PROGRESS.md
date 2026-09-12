@@ -1,5 +1,99 @@
 # PaperMaker — Fix / Feature Log
 
+## 2026-09-12 — SEC-02: asli users, sessions, roles aur auth ka log
+
+**SEC-01 ne audit ke chaar chhote fixes kiye. Ye us audit ka pehla bara row
+band karta hai: app ke paas ab ASLI AUTHENTICATION hai — pehle sirf ek band
+darwaza tha.**
+
+### Masla, ek jumle mein
+
+Ek shared key, bees teachers, aur system ko ye pata hi nahi ke andar **kaun**
+hai. Koi role nahi (har kisi ke paas delete ka wahi ikhtiyar), aur "ye parcha
+kis ne mitaya" ka jawab kahin darj hi nahi hota. Ye baat farz nahi ki gayi —
+`static/apiClient.js` 2026-09-08 se khud apne upar ye likh kar maan chuki thi:
+*"⚠ YE AUTHENTICATION NAHI HAI … asli users/roles/activity-log alag kaam hai."*
+
+Us par ek aur cheez: wahan ka idle auto-lock **sirf browser mein** tha. Key
+localStorage se mit jati thi, magar server ke nazdeek wo us ke baad bhi utni hi
+durust rehti thi — yani DevTools se qeemat copy kar lene wale ke liye lock ka
+koi wajood nahi tha. Ab waqt ka faisla server karta hai.
+
+### Sab se ahem faisla: mode DATA se badalta hai, flag se nahi
+
+| Mode | Kab | Kya chahiye |
+|---|---|---|
+| `users` | koi active user mojood hai | Login (session cookie) |
+| `key` | koi user nahi, key set hai | `x-api-key` — **haraf ba haraf purana behaviour** |
+| `open` | na user, na key | kuch nahi (local dev) |
+
+**Jab tak koi account nahi banta, app bilkul pehle jaisi chalti hai.** Ye is
+poore kaam ki bunyaad hai: ek chalti hui school par "auth upgrade" ka matlab
+hargiz ye nahi hona chahiye ke kisi subah teachers andar na aa sakein. Switch
+ek env var nahi, `users` table ki pehli row hai (`scripts/create_admin.py`).
+`tests/test_user_auth.py::TestModeFallback` ka kaam hi ye sabit karna hai.
+
+### Kya bana
+
+| Cheez | Faisla aur wajah |
+|---|---|
+| Password hash | `hashlib.scrypt` — **koi nayi dependency nahi**. bcrypt/argon2 ke liye pip package chahiye, aur school PC par `pip install` karne wala koi mojood nahi hota; ek missing wheel wahan poori app band kar deta hai |
+| Session | Cookie mein khaam token, **DB mein sirf SHA-256**. DB ki copy (backup, chori, bheja hua .db) se koi zinda session nahi milti |
+| Cookie | `HttpOnly` (JS parh hi nahi sakta — purani localStorage key ke bilkul ulta) + `SameSite=Lax` (CSRF ka aam raasta band). `Secure` sirf https par: LAN aaj plain http hai, wahan lagane se koi login kaam hi na karta |
+| Waqt | 30 min bekari + 12 ghante sakht hadd. Dono server par |
+| Lockout | 5 nakaam → 15 min, **naam par, IP par NAHI**. School ke bees teachers ek hi router ke peeche hain: IP par lock lagane ka matlab hota ek banda teen dafa ghalti kare aur poora staff room bahar |
+| Roles | `admin` / `teacher`. Admin = user management + log; teacher = baqi poori app |
+| Log | `auth_events` — login, nakami, lockout, logout, account banna/badalna. Lockout ka hisaab bhi isi table se, kisi in-memory counter se nahi (restart hamlawar ka counter sifar nahi karna chahiye) |
+| Aakhri admin | Us ka role/haalat badalna rad ho jata hai. Ek click user management ka darwaza hamesha ke liye band kar sakta tha |
+| `/docs` | Key ya fail-closed flag ho to band — poora API naqsha bina auth ke parha ja sakta tha |
+
+Naye pages: `login.html` (waahid page jo `apiClient.js` load **nahi** karta —
+wahan 401 ek normal jawab hai, aur apiClient us par purana key-gate khol deta),
+`users.html` (admin). Dono `plan.html` ke naqsh-e-qadam par: ek `@import`, koi
+99-legacy file nahi, `legacy_css_lines` +0, aur har ratcheted per-page metric
+par **0** (koi `<style>`, koi inline style, koi hex).
+
+### Naap — farz kuch nahi kiya
+
+`1,174 passed` (poora suite; SEC-01 ke baad 1,106 the, yani 68 naye — sab
+`tests/test_user_auth.py` mein), `ruff` saaf.
+
+Aur suite ke ilawa **asli server par (port 8077, alag DB) poora flow chala kar dekha**:
+
+| # | Kya | Natija |
+|---|---|---|
+| 1 | bina login `/api/papers` | `401` + `x-pm-auth-mode: users` |
+| 2 | sahi shared key ke saath | `401` — users mode mein key mar chuki hai |
+| 3 | `/docs` | `404` |
+| 4 | `/login.html` | `200` (static khula, warna login page hi na khulta) |
+| 5 | sahi login | `Set-Cookie: pm_session=…; HttpOnly; Max-Age=43200; Path=/; SameSite=lax` |
+| 6 | cookie se `/api/papers` | `200` |
+| 7 | teacher → `/api/users` | `403` (aur `/api/papers` `200`) |
+| 8 | 5 ghalat password | `401 ×5`, chhathi par `429` |
+| 9 | lock ke baad **sahi** password | `429` — lockout ka matlab yehi hai |
+| 10 | logout → phir `/api/papers` | `200` → `401` |
+| 11 | DB kholi | `auth_events` mein poora silsila; `sessions` mein sirf hash (cookie ka token wahan kahin nahi); `password_hash` = `scrypt$16384$8$1$…` |
+
+### Ek cheez jo raaste mein mili
+
+`BASELINE.json` regenerate karne par `stylesheet_hex` 274 se 273 ho gaya — ek
+hex jo maine chhua hi nahi. Wajah: `stylesheet_hex` **informational** metric hai,
+ratcheted nahi, to kisi purane commit mein ek hex gira aur koi test nahi bola.
+Ye is regeneration ne pakra, is kaam ne paida nahi kiya.
+
+### Abhi bhi khula
+
+| # | Baat | Kahan |
+|---|---|---|
+| 1 | `static/library` + `static/uploads` bina auth ke serve hote hain (exam images) — band karne ka matlab har `<img>` ke liye blob-fetch | faisla chahiye |
+| 2 | Destructive actions (parcha/sawal delete) ka apna activity log nahi — abhi sirf auth events | `auth_events` ka shape tayyar hai |
+| 3 | `/docs` ka faisla startup par hota hai, is liye `users` mode us mein shamil nahi | `app/main.py` |
+| 4 | HTTPS nahi — cookie plain http par jati hai | proxy/TLS lage to cookie khud `Secure` ho jayegi |
+
+Poori tafseel: `docs/AUTH.md`.
+
+---
+
 ## 2026-09-12 — SEC-01: auth audit ke chaar chhote fixes
 
 Poore project ka auth audit hua. Bari cheezein (asli users/roles, activity log,

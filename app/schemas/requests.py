@@ -735,3 +735,51 @@ class ClassPrintSettingsSave(BaseModel):
     font_size: int = Field(ge=11, le=20)
     q_gap: int = Field(ge=6, le=30)
     page_margin: int = Field(ge=10, le=25)
+
+
+# ── SEC-02: users aur login ──────────────────────────────────────────────────
+
+
+class LoginRequest(BaseModel):
+    """POST /api/auth/login. Username lower-case mein normalize service karti
+    hai (`user_service`), yahan sirf shape hai."""
+
+    username: str
+    password: str
+
+
+class UserCreateRequest(BaseModel):
+    """POST /api/users — naya account (admin, ya pehla admin bootstrap).
+
+    Password ki lambai ka check JAAN-BOOJH KAR yahan nahi hai, service mein hai
+    (`user_service.MIN_PASSWORD_LEN`). Do jagah likhne ka matlab hota ke kal
+    hadd badle aur ek jagah purani reh jaye — aur wo jagah chup-chaap kamzor
+    passwords qubool karti rahe."""
+
+    username: str
+    password: str
+    display_name: str = ""
+    role: str = "teacher"
+
+
+class UserUpdateRequest(BaseModel):
+    """PATCH /api/users/{id} — naam, role, ya account band/khol. Password yahan
+    NAHI badalta: us ka apna endpoint hai, kyunke us ke saath us bande ki saari
+    sessions khatam karni hoti hain."""
+
+    display_name: str = ""
+    role: str = "teacher"
+    is_active: bool = True
+
+
+class PasswordChangeRequest(BaseModel):
+    """POST /api/auth/password (apna) aur POST /api/users/{id}/password (admin).
+
+    `current_password` sirf apna password badalne par zaroori hai — wo us shakhs
+    ke khilaf bachao hai jo kisi ka khula hua browser paa leta hai aur chupke se
+    password badal kar account apne naam kar leta. Admin doosre ka password
+    badalte waqt ye nahi bhejta (us ke paas asal password hai hi nahi; admin hona
+    hi us ka ikhtiyar hai)."""
+
+    new_password: str
+    current_password: str = ""

@@ -177,6 +177,46 @@
     color: var(--panze-ink);
   }
 
+  /* SEC-02 — users mode ka top bar: kaun andar hai, aur (admin ke liye) Users
+     ka link. Dono `apiClient.js` se lagte hain, HTML se nahi, aur sirf usi
+     soorat mein jab app users mode par ho — key/khule mode par ye selectors
+     kisi element par nahi lagte.
+
+     `.pz-lock` ka jora hai: wahi qad, wahi mizaj. Alag naam is liye ke wo
+     button hai (dabta hai) aur ye nishaan hai (sirf batata hai ke kaun hai) —
+     ek hi naam dene ka matlab hota ke teacher ko apna naam ek button jaisa
+     dikhe aur wo us par click karta rahe. */
+  .pz-user {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 12px;
+    color: var(--panze-ink-2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .pz-user-link {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--panze-line);
+    border-radius: var(--panze-r-pill);
+    background: var(--white);
+    color: var(--panze-ink-2);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .pz-user-link:hover {
+    background: var(--panze-board);
+    color: var(--panze-ink);
+  }
+
   /* ── body: rail + content ────────────────────────────────────────────── */
 
   .pz-body {
